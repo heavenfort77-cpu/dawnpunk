@@ -1,0 +1,12 @@
+shots/boss_00.png 246657
+shots/boss_01.png 245496
+shots/boss_02.png 233173
+shots/boss_03.png 266178
+shots/boss_04.png 227015
+shots/boss_05.png 244030
+shots/boss_10.png 252600
+shots/boss_11.png 270561
+shots/boss_12.png 147255
+shots/boss_13.png 266494
+shots/boss_14.png 256612
+shots/boss_15.png 244009
