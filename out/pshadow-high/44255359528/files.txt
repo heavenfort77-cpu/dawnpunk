@@ -1,0 +1,4 @@
+shots/high.txt 1922
+shots/ps_still_high.jpg 144290
+shots/ps_walk_high.jpg 85067
+shots/ps_wall_high.jpg 112063

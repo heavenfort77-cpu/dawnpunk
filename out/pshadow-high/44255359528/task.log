@@ -1,0 +1,23 @@
+$ mkdir -p shots && node tools/playershadowshot.cjs high shots/ps_ > shots/high.txt 2>&1; cat shots/high.txt   (limit 50 min)
+PASS player shadow is on for tier high: {"on":true,"tier":"high","body":true,"blob":false,"active":true,"speed":0,"amp":0,"phase":0,"twist":0,"sun":[0.3812,0.5228,-0.7624],"passes":22,"passMs":9.2,"map":512}
+INFO sun direction 0.3812,0.5228,-0.7624 (elevation 31.5 deg); shadows fall toward -0.447,0.894
+INFO clear spot {"x":10,"z":1,"d":4.515867542417505}
+PASS walking: the body walks with the camera (speed 4 m/s, stride 1, phase 7.073)
+INFO wrote shots/ps_walk_high.jpg
+INFO walk shot pose {"on":true,"tier":"high","body":true,"blob":false,"active":true,"speed":4,"amp":1,"phase":14.362,"twist":0,"sun":[0.3812,0.5228,-0.7624],"passes":64,"passMs":19.3,"map":512}
+PASS standing: the stride has eased out (stride 0, speed 0)
+INFO wrote shots/ps_still_high.jpg
+INFO still view, body shown vs hidden (same frame): {"dark":24125,"bright":0,"ratio":0.913,"box":[562,324,734,599],"n":576000}
+PASS the body casts a visible shadow in the still view (24125 darker pixels, 4.19% of the view, shadow/lit brightness 0.913)
+PASS the shadow adds no light anywhere (0 brighter pixels)
+INFO house-shadow spot {"house":0,"x":44.445,"z":-4.535}
+INFO in a house shadow, body shown vs hidden: {"dark":0,"bright":0,"ratio":0,"box":[1000000000,1000000000,-1,-1],"n":576000}
+PASS in a house's shadow the body adds no second shadow (0 darker pixels against 24125 in the sun)
+INFO wall pick {"house":5,"off":1.2,"lit":0.85,"x":4.828,"z":6.125,"yaw":2.677945044588987,"pitch":-0.7573819049240812,"headOnWall":1.19}
+INFO wrote shots/ps_wall_high.jpg
+INFO frame time with the shadow (?pshadow=1), still view: mean 7784 ms, median 7750 ms; shadow passes 216, CPU time in them 51.6 ms (0.24 ms each)
+PASS with ?pshadow=0 nothing is built
+INFO frame time without the shadow (?pshadow=0), still view: mean 7191 ms, median 7166 ms
+INFO FRAMECOST high: with 7750 ms, without 7166 ms (median of 12 frames, software renderer, 960x600)
+PASS no page errors
+exit code 0
