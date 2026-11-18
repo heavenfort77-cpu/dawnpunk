@@ -103,4 +103,4 @@ jobs:
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$sha" --title "Dawnpunk $TAG" --notes-file rel/notes.md "${FLAGS[@]}" \
             "rel/dawnpunk-itch-$TAG.zip" "rel/dawnpunk-single-$TAG.html"
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,isDraft,isPrerelease,assets \
-            --jq '"url " + .url + " | draft " + (.isDraft|tostring) + " | prerelease " + (.isPrerelease|tostring)', '.assets[] | "asset " + .name + " " + (.size|tostring) + " " + .url'
+            --jq '("url " + .url + " | draft " + (.isDraft|tostring) + " | prerelease " + (.isPrerelease|tostring)), (.assets[] | "asset " + .name + " " + (.size|tostring) + " " + .url)'
