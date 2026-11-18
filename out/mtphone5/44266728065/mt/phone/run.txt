@@ -1,0 +1,239 @@
+1.2 STAGE start
+2.8 SNAP start_screen {"count":"","time":"","game":{"state":"menu","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":[]}
+7.0 ACT tapped #enter (the begin button)
+9.1 STAGE film
+24.8 SNAP film_1 {"count":"","time":"","game":{"state":"intro","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":120},"buttons":[]}
+92.6 SNAP film_2 {"cineCap":"MARLA: Up, Potts. Sun is wasting.","count":"","time":"","game":{"state":"intro","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":[]}
+97.5 NOTE watched the opening film for 55.2 game s
+99.0 STAGE base day 1: waking
+105.9 SNAP base_wake {"bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","jobCard":"Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE[pulse]"]}
+113.4 NOTE the job card closed by itself before 8 real seconds of reading
+122.5 SNAP base_after_card {"bprompt":"USE: talk to Marla, the Scout","bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE[pulse]"]}
+124.4 NOTE waking at -0.6,-9.3; Marla stands 2.5 m away; prompt: "USE: talk to Marla, the Scout"
+124.9 STAGE base day 1: talk to Marla
+127.4 NOTE prompt at Marla: "USE: talk to Marla, the Scout"
+131.9 ACT tapped USE (Marla)
+139.3 STAGE base day 1: Marla dialog
+146.3 SNAP marla_dialog_day1 {"bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","scout":"Marla, the Scout / \"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE"]}
+165.0 ACT tapped #go (Ride out)
+166.0 STAGE street by day
+170.8 SNAP street_start {"bprompt":"Stand by Marla to change your devices","count":"Houses 0/6 | Food 2 | Essentials 0 | Sun 11 | Walk speed 100%","time":"Daylight left 11h 30m","game":{"state":"play","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":114},"buttons":["bPause:||","bDusk:HOLD: start night"]}
+176.2 ACT a sleeping machine stands 13 m away (ticks): walking toward it to see what the game says
+198.1 SHORTCUT could not reach a sleeping machine in 8 game s; teleported
+207.8 SNAP street_sleeper {"marla":"Something waves in a house with 9 openings.","count":"Houses 0/6 | Food 2 | Essentials 0 | Sun 18 | Walk speed 100%","time":"Daylight left 8h 00m","game":{"state":"play","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":79},"buttons":["bPause:||","bDusk:HOLD: start night"]}
+208.5 STAGE street by day: to house 1
+208.8 ACT walking to the nearest unvisited door (house 4, 8 m)
+228.9 STAGE house 1 by day
+233.0 SNAP house1_inside {"marla":"Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.","count":"Crates left 4 | Food 2 | Essentials 0 | Sun 23 | Walk speed 100% | Floor 1 of 1","time":"Daylight left 6h 10m","game":{"state":"play","hp":100,"sun":23,"food":2,"machines":0,"drill":null,"dayLeft":61},"buttons":["bPause:||","bLeave:LEAVE","bDusk:HOLD: start night","b0:free 0/3[pulse]","b1:at night 0/2[sel]","bSwitch:⇄","bEat:EAT 2 home","bFire:FIRE"]}
+237.5 ACT house 1: going to the nearest door to place a collector
+248.8 SHORTCUT could not reach the nearest door in 8 game s; teleported
+253.1 ACT tapped SOLAR (#b0)
+255.4 NOTE house 1: collectors 0 -> 1; lines: ["marla: Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.","marla: Walk into the capsules to take them. Green food, blue essentials."]
+257.4 SNAP house_1_solar {"marla":"Walk into the capsules to take them. Green food, blue essentials.","count":"Crates left 4 | Food 2 | Essentials 0 | Sun 28 | Walk speed 100% | Floor 1 of 1","time":"Daylight left 5h 40m","game":{"state":"play","hp":100,"sun":28,"food":2,"machines":0,"drill":null,"dayLeft":56},"buttons":["bPause:||","bLeave:LEAVE","bDusk:HOLD: start night","b0:free 1/3","b1:at night 0/2[sel]","bSwitch:⇄","bEat:EAT 2 home","bFire:FIRE"]}
+257.9 ACT house 1: 4 capsules on this floor, 0 on another floor (the stairs were not used)
+268.3 SHORTCUT could not reach a capsule in 8 game s; teleported
+288.3 SHORTCUT could not reach a capsule in 8 game s; teleported
+316.9 SHORTCUT could not reach a capsule in 8 game s; teleported
+321.7 SNAP house1_after_capsules {"count":"Crates left 0 | Food 6 | Essentials 2 | Sun 47 | Walk speed 95% | Floor 1 of 1","time":"Daylight left 20m","game":{"state":"play","hp":100,"sun":47,"food":6,"machines":0,"drill":null,"dayLeft":2},"buttons":["bPause:||","bDusk:HOLD: start night","b0:free 1/3","b1:at night 0/2[sel]","bSwitch:⇄","bEat:EAT 6 home","bFire:FIRE"]}
+322.7 STAGE house 1: waiting for dusk
+323.4 NOTE staying here for the night; day clock {"left":0.4,"sun":47.5}
+325.2 NOTE day ended: the game moved to "night"
+325.9 STAGE night 1 drill
+330.0 SNAP dusk {"marla":"One machine. Tap FIRE, Potts.","dsub":"Aim at the ringed machine and tap FIRE.","count":"Food 6 | Essentials 2 | Sun 48 | Floor 1 of 1","time":"Dawn in 11h 50m","game":{"state":"play","hp":100,"sun":48,"food":6,"machines":1,"drill":"shoot","dayLeft":0},"buttons":["bPause:||","b1:12 Sun 0/2","b2:8 Sun 0/6[sel]","b3:6 Sun","bSwitch:⇄","bEat:EAT 6 home","bFire:FIRE hold: charged[pulse]","bSkip:Skip drill"]}
+332.3 ACT drill step: none -> shoot (the last one took 1.3 game s)
+337.3 SNAP drill_shoot {"marla":"One machine. Tap FIRE, Potts.","dsub":"Aim at the ringed machine and tap FIRE.","count":"Food 6 | Essentials 2 | Sun 48 | Floor 1 of 1","time":"Dawn in 11h 50m","game":{"state":"play","hp":92,"sun":48,"food":6,"machines":1,"drill":"shoot","dayLeft":0},"buttons":["bPause:||","b1:12 Sun 0/2","b2:8 Sun 0/6[sel]","b3:6 Sun","bSwitch:⇄","bEat:EAT 6 home","bFire:FIRE hold: charged[pulse]","bSkip:Skip drill"]}
+347.4 ACT tapped FIRE
+351.1 ACT drill step: shoot -> place (the last one took 12.0 game s)
+357.0 SNAP drill_place {"marla":"Device in its path. Tap the device.","dsub":"Tap the glowing device to place it where they walk in.","count":"Food 6 | Essentials 2 | Sun 47 | Floor 1 of 1","time":"Dawn in 11h 50m","game":{"state":"play","hp":4,"sun":47,"food":6,"machines":1,"drill":"place","dayLeft":0},"buttons":["bPause:||","b1:12 Sun 0/2","b2:8 Sun 0/6[pulse][sel]","b3:6 Sun","bSwitch:⇄","bEat:EAT 6 home","bFire:FIRE hold: charged","bSkip:Skip drill"]}
+358.6 ACT tapped the glowing device #b2
+358.6 NOTE night ended: the game moved to "end"
+358.6 STAGE dawn: night result
+364.9 SNAP night_result {"end":"The night took you. / Marla: \"Up you get. The sun owes us a rematch.\" Minimum payout: 1 food Next recruit: 11/30 food. / Back to the base","count":"","time":"","game":{"state":"end","hp":0,"sun":47,"food":6,"machines":1,"drill":"place","dayLeft":0},"buttons":[]}
+380.5 ACT tapped #again (Back to the base)
+381.8 STAGE base day 2
+390.7 SNAP base_day2 {"quest":"Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m to your right / +4 more (tap)","bstat":"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE"]}
+400.4 STAGE base day 2: Workshop
+449.5 SHORTCUT walking to the Workshop was blocked (straight-line steering; 7.9 m left); teleported next to it
+452.5 NOTE prompt at the Workshop: "USE: Talk to Oko (upgrades devices)"
+456.5 ACT tapped USE (the Workshop)
+462.8 SNAP day2_workshop {"bstat":"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food","panel":"Workshop / Oko, tinkerer: \"You again! Good. The lance has been sulking.\" / Check the board by the Workshop. / Essentials: 0 | Researchers: 1 / Pick a project. It costs essentials to start, then your researchers work on it each dawn. / Sturdy panels (level 0/3): +25% panel strength per level Start: 8 essentials, 2 days / Efficient turbines (level 0/3): +10% turbine Sun per level Start: 10 essentials, 2 days / Sun cells (level 0/3): +5 start Sun per level Start: 8 essentials, 2 days / Carry frame (level 0/2): +1 device slot per level Start: 16 essentials, 2 days / Unlock: Twin Lance (level 0/1): two pellets per shot Start: 12 essentials, 2 days / Unlock: Mist Coil (level 0/1): pellets chill and slow a Gloom Start: 12 essentials, 2 days / Unlock: Tall Trellis (level 0/1): a tall, tough panel; nothing shoots over it Start: 10 essentials, 2 days / Unlock: Biogas Flask (level 0/1): one-shot area burst where you aim Start: 16 essentials, 2 days / Unlock: Mulch Press (level 0/1): grinds one Gloom, then resets Start: 14 essentials, 2 days / Unlock: Shard Plate (level 0/1): floor plate that hurts Gloom walking over it Start: 8 essentials, 2 days / Unlock: Sling Press (level 0/1): lobs shots over walls Start: 14 essentials, 2 days / Unlock: Prism Lens (level 0/1): shots fired near it hit harder Start: 14 essentials, 2 days / Unlock: Chime Pole (level 0/1): a sound that pulls Gloom toward it Start: 8 essentials, 2 days / Unlock: Moon Panel (level 0/1): strong night Sun; shares the limit of 2 Sun makers with turbines Start: 36 essentials, 2 days / Close","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE"]}
+476.3 ACT tapped #qclose (close)
+479.3 STAGE base day 2: quest board
+536.5 SHORTCUT walking to the quest board was blocked (straight-line steering; 9.7 m left); teleported next to it
+539.3 NOTE prompt at the quest board: "USE: quest board (jobs from your people)"
+543.3 ACT tapped USE (the quest board)
+548.7 SNAP day2_quest_board {"quest":"Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)","bstat":"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food","panel":"Quest board / Carry a crate of seedlings from Workshop to Garden (+2 food) Take / Hunt down 6 Gloom on your next nights (0/6) (+4 food) Take / Bring home 4 essentials from collection runs (0/4) (+3 essentials) Take / Postings from your people: / Bram: take a crate of seedlings from the board to Storage (+4 food) Take / Oko: Bring home 4 essentials from collection runs (0/4) (+2 food, 3 essentials) Take / Pip: Hunt down 7 Gloom on your next nights (0/7) (+6 food, 1 essentials) Take / Rumour: golden paws wave near the water, and by the wind tower, and under the old tree. Hunters thin the Gloom and bring essentials; gatherers bring food each dawn. / OLD NOTICES / Lost: one Ticks unit, answers to 'Dusty'. Do NOT approach after dark. / Swap: three jars of honey for a working solar cell. Ask at the hatchery. / Reminder from the council of the green roofs: we don't wake the sleepers. Not for scrap. Not for a dare. Not for anything. / Close","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE"]}
+561.2 ACT tapped #qclose (close)
+564.0 STAGE base day 2: Marla, ring choice
+602.8 SHORTCUT walking to Marla was blocked (straight-line steering; 12.6 m left); teleported next to it
+604.7 NOTE prompt at Marla: "USE: talk to Marla, the Scout"
+607.4 ACT tapped USE (Marla)
+613.6 SNAP marla_dialog_day2 {"bstat":"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food","scout":"Marla, the Scout / \"You look terrible, Potts. Good. It means you tried. Sit, drink, then pick a ring.\" / Ride out: go loot the old street, then hold a house tonight. / Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend the house you are in until dawn. / Ring / 1 (10 km) · loot x1 · Gloom x1 / 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first / 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first / 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first / 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first / Devices: / Turbine / Lance / Panel / Mine / Turbine / Lance / Panel / Mine / Turbine / Lance / Panel / Mine / Solar (by day, free): place it by a door or window; it fills your Sun. / Turbine (12 Sun): makes Sun all night; place it first. At most 2 Sun makers. / Lance (8 Sun): shoots the nearest Gloom it can see through an opening or inside. / Panel (6 Sun): a shield across an opening; Gloom must break it to get in. Shoot heads over it. / Ride out / Stay at the base","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE"]}
+614.1 NOTE ring picker: 1 (10 km) · loot x1 · Gloom x1 | 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first [locked] | 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first [locked] | 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first [locked] | 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first [locked]
+623.0 ACT tapped #sback (Stay at the base)
+625.0 STAGE keys card (exploring)
+627.7 ACT tapped pause
+631.9 SNAP pause_menu {"bprompt":"USE: talk to Marla, the Scout","bstat":"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food","pause":"Paused / Resume / Hints: on / Music: on / Graphics: low (phone) / Keys / Journal / Map / Watch the opening / New game / Progress saves by itself in the base and at dawn.","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE"]}
+634.9 ACT tapped #pKeys (Keys)
+638.9 SNAP keys_card {"bprompt":"USE: talk to Marla, the Scout","bstat":"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food","keys":"Keys / Left thumb / walk / Right thumb / look; a quick tap fires (uses things in the base) / FIRE / shoot; hold it till the ring glows gold, then let go / Device button / one tap places it / Switch tab / opens all devices; tap one to pick it / SOLAR / solar collector (by day) / EAT / eat (heals) / LEAVE / leave a house at its door / HOLD / start the night (in a house) / Quest box / tap to see every quest / || / pause / Close","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE"]}
+
+TRANSCRIPT (game s | wall s | stage | source | text)
+3.4 | 6.7 | start | ACT | tapped #enter (the begin button)
+3.9 | 7.4 | start | cineCap | The night the grid failed, the machines came looking for power.
+3.9 | 7.4 | start | QUIET | 3.0 s with no guiding line on screen (from 0.9)
+23.4 | 31 | film | cineCap | They found us.
+23.4 | 31 | film | QUIET | 13.2 s with no guiding line on screen (from 10.1)
+35.4 | 52.7 | film | cineCap | We left the grid to them, and grew our own light.
+35.4 | 52.7 | film | QUIET | 5.3 s with no guiding line on screen (from 30.1)
+42.1 | 67.9 | film | cineCap | By day they sleep. We let them.
+49.8 | 80.5 | film | cineCap | Every panel-tender gets a guide. You got Marla.
+54.1 | 85.4 | film | cineCap | MARLA: Up, Potts. Sun is wasting.
+60.6 | 96.2 | film | jobCard | Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it
+60.8 | 97.2 | film | bstat | Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food
+60.8 | 97.2 | film | NOTE | watched the opening film for 55.2 game s
+68.6 | 112.6 | base day 1: waking | bprompt | USE: talk to Marla, the Scout
+68.8 | 113.1 | base day 1: waking | NOTE | the job card closed by itself before 8 real seconds of reading
+74.3 | 124.2 | base day 1: waking | NOTE | waking at -0.6,-9.3; Marla stands 2.5 m away; prompt: "USE: talk to Marla, the Scout"
+75.8 | 127.1 | base day 1: talk to Marla | NOTE | prompt at Marla: "USE: talk to Marla, the Scout"
+77.3 | 130.1 | base day 1: talk to Marla | scout | Marla, the Scout / "You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts." / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run
+78.1 | 131.6 | base day 1: talk to Marla | ACT | tapped USE (Marla)
+93.1 | 163.8 | base day 1: Marla dialog | bprompt | Stand by Marla to change your devices
+93.8 | 164.7 | base day 1: Marla dialog | marla | Six houses, Potts. Walk into a door to loot it.
+93.8 | 164.7 | base day 1: Marla dialog | ACT | tapped #go (Ride out)
+98.4 | 170.1 | street by day | bprompt | Stand by Marla to change your devices
+98.9 | 170.5 | street by day | marla | Green bar over a door: loot inside. Red: empty.
+103.8 | 175.5 | street by day | bprompt | Stand by Marla to change your devices
+104.3 | 175.9 | street by day | ACT | a sleeping machine stands 13 m away (ticks): walking toward it to see what the game says
+108.6 | 180.5 | street by day | aim | Ticks (asleep until dark): weak, quick and low to the ground.
+114.6 | 187.1 | street by day | bprompt | Walk in the door: 4 food, 2 essentials inside · 8 openings to guard · 1 floor
+118.3 | 190.9 | street by day | marla | That bar is your Sun. Your hand drinks it in.
+123.2 | 196.2 | street by day | bprompt | Walk to a house door
+124.9 | 197.8 | street by day | SHORTCUT | could not reach a sleeping machine in 8 game s; teleported
+125.4 | 198.3 | street by day | marla | Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight.
+130.5 | 203.5 | street by day | aim | Ticks (asleep until dark): weak, quick and low to the ground.
+132.8 | 205.9 | street by day | marla | Something waves in a house with 9 openings.
+135.5 | 208.5 | street by day: to house 1 | ACT | walking to the nearest unvisited door (house 4, 8 m)
+138.1 | 211.2 | street by day: to house 1 | marla | At dusk you defend the house you are in.
+143 | 216.7 | street by day: to house 1 | bprompt | Walk in the door: 4 food, 2 essentials inside · 8 openings to guard · 1 floor
+151.8 | 227.5 | street by day: to house 1 | marla | Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.
+151.8 | 227.5 | street by day: to house 1 | HP | health 100 (day; 0 machines inside or near, nearest none)
+156.1 | 231.8 | house 1 by day | marla | Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.
+160.2 | 235.9 | house 1 by day | marla | Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.
+161.6 | 237.2 | house 1 by day | ACT | house 1: going to the nearest door to place a collector
+168.6 | 245.8 | house 1 by day | marla | Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.
+170.8 | 248.6 | house 1 by day | SHORTCUT | could not reach the nearest door in 8 game s; teleported
+174.8 | 252.8 | house 1 by day | ACT | tapped SOLAR (#b0)
+176.3 | 254.3 | house 1 by day | marla | Walk into the capsules to take them. Green food, blue essentials.
+177 | 255.1 | house 1 by day | NOTE | house 1: collectors 0 -> 1; lines: ["marla: Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.","marla: Walk into the capsules to take them. Green food, blue essentials."]
+179.5 | 257.6 | house 1 by day | ACT | house 1: 4 capsules on this floor, 0 on another floor (the stairs were not used)
+181.8 | 259.9 | house 1 by day | marla | LEAVE at the door for the next house.
+186.5 | 265.7 | house 1 by day | marla | SOLAR by a door or window, in the house you will sleep in.
+188.7 | 268 | house 1 by day | SHORTCUT | could not reach a capsule in 8 game s; teleported
+189.4 | 268.7 | house 1 by day | marla | Loot is heavy: the more you carry, the slower you walk (Walk speed, top right).
+194.3 | 273.6 | house 1 by day | marla | HOLD DUSK to start the night early. Or wait for the bell.
+199.7 | 279 | house 1 by day | marla | Hold START NIGHT only when your Sun is full, Potts.
+204.8 | 284.2 | house 1 by day | msg | +2 essentials
+208.5 | 288 | house 1 by day | SHORTCUT | could not reach a capsule in 8 game s; teleported
+209 | 288.6 | house 1 by day | msg | +1 food
+215.2 | 296.6 | house 1 by day | marla | The bell, Potts! 2 hours of light left. Pick your house!
+215.2 | 296.6 | house 1 by day | QUIET | 4.3 s with no guiding line on screen (from 211.0)
+230 | 316.7 | house 1 by day | SHORTCUT | could not reach a capsule in 8 game s; teleported
+230.5 | 317.4 | house 1 by day | msg | +1 food
+230.5 | 317.4 | house 1 by day | QUIET | 10.5 s with no guiding line on screen (from 220.0)
+234.7 | 323.1 | house 1: waiting for dusk | NOTE | staying here for the night; day clock {"left":0.4,"sun":47.5}
+235.2 | 323.9 | house 1: waiting for dusk | marla | Sun is down, Potts. Turbine first, then lances, then panels.
+235.2 | 323.9 | house 1 by day | QUIET | 3.0 s with no guiding line on screen (from 232.2)
+236 | 325 | house 1: waiting for dusk | NOTE | day ended: the game moved to "night"
+237 | 326.3 | night 1 drill | marla | One machine. Tap FIRE, Potts.
+237 | 326.3 | night 1 drill | dsub | Aim at the ringed machine and tap FIRE.
+241.2 | 332.1 | night 1 drill | ACT | drill step: none -> shoot (the last one took 1.3 game s)
+244.5 | 336.7 | night 1 drill | HP | health 100 -> 92 (night; 1 machines inside or near, nearest walker 0.9 m)
+245.7 | 338.6 | night 1 drill | HP | health 92 -> 84 (night; 1 machines inside or near, nearest walker 0.9 m)
+246.7 | 340.2 | night 1 drill | HP | health 84 -> 76 (night; 1 machines inside or near, nearest walker 0.9 m)
+247.7 | 341.7 | night 1 drill | HP | health 76 -> 68 (night; 1 machines inside or near, nearest walker 0.9 m)
+249 | 343.8 | night 1 drill | HP | health 68 -> 60 (night; 1 machines inside or near, nearest walker 0.9 m)
+250.2 | 345.9 | night 1 drill | marla | Device in its path. Tap the device.
+250.2 | 345.9 | night 1 drill | dsub | Tap the glowing device to place it where they walk in.
+250.2 | 345.9 | night 1 drill | HP | health 60 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)
+251 | 347.2 | night 1 drill | HP | health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)
+251 | 347.2 | night 1 drill | ACT | tapped FIRE
+252 | 348.8 | night 1 drill | HP | health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)
+253.2 | 350.9 | night 1 drill | ACT | drill step: shoot -> place (the last one took 12.0 game s)
+253.2 | 350.9 | night 1 drill | HP | health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)
+254.2 | 352.5 | night 1 drill | HP | health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)
+255.7 | 355 | night 1 drill | HP | health 20 -> 12 (night; 1 machines inside or near, nearest walker 0.9 m)
+256.7 | 356.7 | night 1 drill | HP | health 12 -> 4 (night; 1 machines inside or near, nearest walker 0.9 m)
+257.7 | 358.3 | night 1 drill | end | The night took you. / Marla: "Up you get. The sun owes us a rematch." Minimum payout: 1 food Next recruit: 11/30 food. / Back to the base
+257.7 | 358.3 | night 1 drill | ACT | tapped the glowing device #b2
+257.7 | 358.3 | night 1 drill | NOTE | night ended: the game moved to "end"
+269.7 | 378.6 | dawn: night result | msg | Day 2. Home: +1 food, +0 essentials (run plus 0 food from gatherers, 0 essentials from hunters).
+269.7 | 378.6 | dawn: night result | quest | Quests: read the board by the Workshop / +4 more (tap)
+269.7 | 378.6 | dawn: night result | bstat | Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food
+270.5 | 380.2 | dawn: night result | ACT | tapped #again (Back to the base)
+271 | 381 | dawn: night result | marla | Workshop's on your right. Oko upgrades devices. Bring scrap.
+275.7 | 388.8 | base day 2 | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m to your right / +4 more (tap)
+286 | 405.5 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m ahead / +4 more (tap)
+290.5 | 413.6 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m ahead / +4 more (tap)
+291 | 414.5 | base day 2: Workshop | bprompt | Workshop: the door is round the front
+291 | 414.5 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)
+291 | 414.5 | base day 2 | QUIET | 15.3 s with no guiding line on screen (from 275.7)
+291.5 | 415.5 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 4 m ahead / +4 more (tap)
+296.7 | 425.8 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)
+297.2 | 426.7 | base day 2: Workshop | bprompt | Workshop: go inside (Oko upgrades devices)
+299 | 429.7 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m behind you / +4 more (tap)
+301.5 | 434.3 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m to your right / +4 more (tap)
+303 | 436.4 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m ahead / +4 more (tap)
+311 | 447.6 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 4 m ahead / +4 more (tap)
+311.5 | 448.4 | base day 2: Workshop | bprompt | Workshop: go inside (Oko upgrades devices)
+311.5 | 448.4 | base day 2: Workshop | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)
+311.5 | 448.4 | base day 2: Workshop | QUIET | 13.3 s with no guiding line on screen (from 298.2)
+312 | 449.3 | base day 2: Workshop | SHORTCUT | walking to the Workshop was blocked (straight-line steering; 7.9 m left); teleported next to it
+312.5 | 450.2 | base day 2: Workshop | bprompt | USE: Talk to Oko (upgrades devices)
+313.5 | 452.2 | base day 2: Workshop | NOTE | prompt at the Workshop: "USE: Talk to Oko (upgrades devices)"
+315 | 454.8 | base day 2: Workshop | panel | Workshop / Oko, tinkerer: "You again! Good. The lance has been sulking." / Check the board by the Workshop. / Essentials: 0 | Researchers: 1 / Pick a project. It costs essentials to start, then your researchers work on it each dawn. / Sturdy panels (level 0/3): +25% panel strength per level Start: 8
+315.7 | 456.2 | base day 2: Workshop | ACT | tapped USE (the Workshop)
+326.5 | 474.8 | base day 2: Workshop | bprompt | USE: Talk to Oko (upgrades devices)
+327.2 | 476.1 | base day 2: Workshop | ACT | tapped #qclose (close)
+341.2 | 498.5 | base day 2: quest board | bprompt | Workshop: go inside (Oko upgrades devices)
+341.2 | 498.5 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)
+341.7 | 499.4 | base day 2: quest board | bprompt | USE: quest board (jobs from your people)
+348 | 510.2 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 4 m behind you / +4 more (tap)
+348.5 | 511.3 | base day 2: quest board | bprompt | USE: Garden (food, and welcoming new people)
+348.5 | 511.3 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you / +4 more (tap)
+349 | 512.4 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you / +4 more (tap)
+349.7 | 513.8 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 10 m behind you / +4 more (tap)
+353.2 | 520.1 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 10 m to your right / +4 more (tap)
+357.7 | 528.7 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 10 m ahead / +4 more (tap)
+361 | 534.9 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 9 m ahead / +4 more (tap)
+361.5 | 535.6 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m ahead / +4 more (tap)
+362 | 536.2 | base day 2: quest board | SHORTCUT | walking to the quest board was blocked (straight-line steering; 9.7 m left); teleported next to it
+362 | 536.2 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m ahead / +4 more (tap)
+362.7 | 537.7 | base day 2: quest board | bprompt | USE: quest board (jobs from your people)
+362.7 | 537.7 | base day 2: quest board | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)
+363.5 | 539 | base day 2: quest board | NOTE | prompt at the quest board: "USE: quest board (jobs from your people)"
+365 | 541.8 | base day 2: quest board | panel | Quest board / Carry a crate of seedlings from Workshop to Garden (+2 food) Take / Hunt down 6 Gloom on your next nights (0/6) (+4 food) Take / Bring home 4 essentials from collection runs (0/4) (+3 essentials) Take / Postings from your people: / Bram: take a crate of seedlings from the board to Stor
+365.7 | 543 | base day 2: quest board | ACT | tapped USE (the quest board)
+376.5 | 559.8 | base day 2: quest board | bprompt | USE: quest board (jobs from your people)
+377.2 | 561 | base day 2: quest board | ACT | tapped #qclose (close)
+388 | 579.8 | base day 2: Marla, ring choice | bprompt | Workshop: go inside (Oko upgrades devices)
+388.5 | 580.5 | base day 2: Marla, ring choice | bprompt | USE: Talk to Oko (upgrades devices)
+394.7 | 591 | base day 2: Marla, ring choice | bprompt | Workshop: the door is round the front
+394.7 | 591 | base day 2: Marla, ring choice | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m behind you / +4 more (tap)
+395.1 | 591.5 | base day 2: Marla, ring choice | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m behind you / +4 more (tap)
+398.6 | 595.1 | base day 2: Marla, ring choice | quest | Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m to your right / +4 more (tap)
+403.1 | 602 | base day 2: Marla, ring choice | bprompt | USE: collect the eggs (6)
+403.1 | 602 | base day 2: Marla, ring choice | QUIET | 7.9 s with no guiding line on screen (from 395.1)
+403.3 | 602.5 | base day 2: Marla, ring choice | SHORTCUT | walking to Marla was blocked (straight-line steering; 12.6 m left); teleported next to it
+404.1 | 603.6 | base day 2: Marla, ring choice | bprompt | USE: talk to Marla, the Scout
+404.8 | 604.4 | base day 2: Marla, ring choice | NOTE | prompt at Marla: "USE: talk to Marla, the Scout"
+406.3 | 606.2 | base day 2: Marla, ring choice | scout | Marla, the Scout / "You look terrible, Potts. Good. It means you tried. Sit, drink, then pick a ring." / Ride out: go loot the old street, then hold a house tonight. / Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend th
+407.1 | 607.1 | base day 2: Marla, ring choice | ACT | tapped USE (Marla)
+412.8 | 613.9 | base day 2: Marla, ring choice | NOTE | ring picker: 1 (10 km) · loot x1 · Gloom x1 | 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first [locked] | 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first [locked] | 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first [locked] | 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 fir
+419.6 | 621.8 | base day 2: Marla, ring choice | bprompt | USE: talk to Marla, the Scout
+420.3 | 622.7 | base day 2: Marla, ring choice | ACT | tapped #sback (Stay at the base)
+423.6 | 626.5 | keys card (exploring) | pause | Paused / Resume / Hints: on / Music: on / Graphics: low (phone) / Keys / Journal / Map / Watch the opening / New game / Progress saves by itself in the base and at dawn.
+424.3 | 627.5 | keys card (exploring) | ACT | tapped pause
+429.3 | 633.8 | keys card (exploring) | keys | Keys / Left thumb / walk / Right thumb / look; a quick tap fires (uses things in the base) / FIRE / shoot; hold it till the ring glows gold, then let go / Device button / one tap places it / Switch tab / opens all devices; tap one to pick it / SOLAR / solar collector (by day) / EAT / eat (heals) / L
+430.1 | 634.7 | keys card (exploring) | ACT | tapped #pKeys (Keys)
+frames, wall s, game s: [1882,639.2172999999999,433.8284999999991]
+NO PAGE ERRORS
