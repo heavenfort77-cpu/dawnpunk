@@ -162,8 +162,9 @@ export function createPerson(cfg, key) {
     // ---- rest: slow weight shift from foot to foot, breathing, the gaze drifting
     const idle = 1 - gw; const sh = st.shift; sh.t += dt; if (sh.t >= sh.len) { sh.t = 0; sh.from = sh.to; sh.to = -sh.to * (0.6 + 0.4 * rnd()); sh.len = I.shift[0] + rnd() * (I.shift[1] - I.shift[0]); }
     st.sway2 = (st.sway2 || rnd() * 6.28) + dt * 2 * Math.PI / I.slow; const wsh = ((sh.from + (sh.to - sh.from) * sstep(sh.t / Math.min(sh.len, I.move))) * (1 - I.slowShare) + Math.sin(st.sway2) * I.slowShare) * idle;
+    // (the drifting gaze is smaller while the person looks at you; that share changes over about 0.3 s, as it jumped the head when you came or went)
     st.breath += dt * 2 * Math.PI / I.breath; const br = Math.sin(st.breath);
-    st.drift[0] += dt * 0.37; st.drift[1] += dt * 0.23; const dy = (Math.sin(st.drift[0]) + 0.5 * Math.sin(st.drift[0] * 2.3 + 1)) * I.look * idle * (o.gaze ? 0.35 : 1), dp = (Math.sin(st.drift[1] * 1.7) * 0.6) * I.look * 0.5 * idle;
+    st.drift[0] += dt * 0.37; st.drift[1] += dt * 0.23; st.gz = st.gz == null ? 1 : st.gz + ((o.gaze ? 0.35 : 1) - st.gz) * (1 - Math.exp(-dt / 0.3)); const dy = (Math.sin(st.drift[0]) + 0.5 * Math.sin(st.drift[0] * 2.3 + 1)) * I.look * idle * st.gz, dp = (Math.sin(st.drift[1] * 1.7) * 0.6) * I.look * 0.5 * idle;
     // ---- hips: over the standing foot (walk) or the weighted foot (rest); the free side drops a little; thighs turned back so the feet stay where they stand
     const stepShift = lift * -liftSide * T.stepSway;
     const hipX = sway + wsh * I.hip + stepShift, hipRoll = sw * G.roll * gw + wsh * I.roll, legComp = -hipX / legLen - hipRoll;
@@ -253,7 +254,12 @@ export function createPerson(cfg, key) {
     if (!st.init) { st.init = true; st.feet = root.rotation.y; st.head.x = st.chest.x = st.hips.x = st.feet; }
     // a long gap (the scene was left) is not played through: at most M.maxSlices slices, and the feet are let go
     const h = M.slice; st.acc += dt; let n = Math.floor(st.acc / h + 1e-6); st.acc -= n * h; if (n > M.maxSlices) { n = M.maxSlices; st.acc = 0; lock[0].w = lock[1].w = 0; lock[0].on = lock[1].on = false; }
-    let v = st.speed.x; for (let i = 0; i < n; i++) v = slice(h, o);
+    // the caller's aim and gaze are known once per frame: the slices in between take them on a straight line from last frame's, as a faster frame rate would have given them
+    let v = st.speed.x; const pf = st.pFace, pg = st.pGaze, si = st.si || (st.si = { gaze: null, ga: [0, 0, 0] });
+    for (let i = 0; i < n; i++) { const a = (i + 1) / n; si.go = o.go; si.carry = o.carry; si.move = o.move; si.face = o.face == null || pf == null ? o.face : pf + wrap(o.face - pf) * a;
+      if (o.gaze && pg) { for (let k = 0; k < 3; k++) si.ga[k] = pg[k] + (o.gaze[k] - pg[k]) * a; si.gaze = si.ga; } else si.gaze = o.gaze || null;
+      v = slice(h, si); }
+    st.pFace = o.face == null ? null : o.face; if (o.gaze) { st.pGaze = st.pGaze || [0, 0, 0]; for (let k = 0; k < 3; k++) st.pGaze[k] = o.gaze[k]; } else st.pGaze = null;
     root.rotation.y = st.feet;
     if (scn) { const q = rot(-st.feet, st.off[0], st.off[1]); scn.position.set(scn0.x + q[0], scn0.y, scn0.z + q[1]); }
     apply(st.hipX, -st.drop);

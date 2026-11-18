@@ -201,6 +201,19 @@
    "timeout": 45
   },
   {
+   "name": "playershadowcheck_phone",
+   "script": "tools/playershadowcheck.cjs",
+   "args": [
+    "low",
+    "{dist}/index_single.html",
+    "{out}/psc_"
+   ],
+   "tier": "phone",
+   "quality": "low",
+   "timeout": 30,
+   "note": "player shadow Stage 2 (on by default): the blob under you in the base, on a footbridge, in the street, on house floors, hidden on the ladder and in the opening film, kept at night"
+  },
+  {
    "name": "panelfixcheck",
    "script": "tools/panelfixcheck.cjs",
    "args": [
@@ -375,6 +388,19 @@
    "quality": "high",
    "timeout": 40,
    "note": "Stage 1 player-shadow SAMPLE (?pshadow=1): three desktop pictures printed into the job log as base64 (PSIMG lines), frame time with and without"
+  },
+  {
+   "name": "playershadowcheck_desktop",
+   "script": "tools/playershadowcheck.cjs",
+   "args": [
+    "high",
+    "{dist}/index_single.html",
+    "{out}/psc_"
+   ],
+   "tier": "desktop",
+   "quality": "high",
+   "timeout": 45,
+   "note": "player shadow Stage 2 (on by default): body shadow by day, moves with you, only darkens, no doubling in shade, follows floors/stairs/ladder, none in the opening film, faint at night"
   },
   {
    "name": "marlasoak",
