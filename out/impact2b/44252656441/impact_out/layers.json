@@ -1,0 +1,177 @@
+{
+ "target": {
+  "hit": {
+   "strikeGain": -26,
+   "weightGain": -31,
+   "slapGain": -30,
+   "splashGain": -33,
+   "sprayGain": -35,
+   "rattleGain": -35
+  },
+  "head": {
+   "crackGain": -31,
+   "glassGain": -33,
+   "fizzGain": -34
+  },
+  "charged": {
+   "steamGain": -31,
+   "sizzleGain": -37
+  },
+  "destroyed": {
+   "strikeGain": -24,
+   "rumbleGain": -28,
+   "crunchGain": -31,
+   "settleGain": -36,
+   "staticGain": -34,
+   "sparkGain": -35
+  },
+  "shot": {
+   "jetGain": -28,
+   "pushGain": -31,
+   "dropGain": -35,
+   "valveGain": -31
+  }
+ },
+ "before": {
+  "hit.ALL": -23.8048251967592,
+  "hit.strikeGain": -26.422098675650414,
+  "hit.weightGain": -31.492396142356284,
+  "hit.slapGain": -29.678217836967466,
+  "hit.splashGain": -32.92144747704804,
+  "hit.sprayGain": -34.400266781621845,
+  "hit.rattleGain": -40.24044566644835,
+  "head.ALL": -23.128218438988583,
+  "head.crackGain": -32.34737623080988,
+  "head.glassGain": -34.215663117166045,
+  "head.fizzGain": -35.400885608853,
+  "charged.ALL": -21.093698768023405,
+  "charged.steamGain": -31.256068157697324,
+  "charged.sizzleGain": -38.44868488141115,
+  "destroyed.ALL": -21.963559037832027,
+  "destroyed.strikeGain": -21.879037127642196,
+  "destroyed.rumbleGain": -27.644837664206154,
+  "destroyed.crunchGain": -32.525903232127696,
+  "destroyed.settleGain": -36.893904876876995,
+  "destroyed.staticGain": -34.61217070701665,
+  "destroyed.sparkGain": -36.7356035647155,
+  "shot.ALL": -24.168166232203816,
+  "shot.jetGain": -28.2906783474931,
+  "shot.pushGain": -30.300885341671528,
+  "shot.dropGain": -36.23930653429474,
+  "shot.valveGain": -31.38618797981749
+ },
+ "gains": {
+  "hit.strikeGain": [
+   2.09,
+   2.19
+  ],
+  "hit.weightGain": [
+   2.72,
+   2.88
+  ],
+  "hit.slapGain": [
+   3.86,
+   3.72
+  ],
+  "hit.splashGain": [
+   0.342,
+   0.339
+  ],
+  "hit.sprayGain": [
+   3.68,
+   3.43
+  ],
+  "hit.rattleGain": [
+   16,
+   29.3
+  ],
+  "head.crackGain": [
+   2.76,
+   3.22
+  ],
+  "head.glassGain": [
+   14.8,
+   17
+  ],
+  "head.fizzGain": [
+   1.94,
+   2.28
+  ],
+  "charged.steamGain": [
+   0.37,
+   0.381
+  ],
+  "charged.sizzleGain": [
+   1.01,
+   1.19
+  ],
+  "destroyed.strikeGain": [
+   2.56,
+   2.01
+  ],
+  "destroyed.rumbleGain": [
+   2.07,
+   1.99
+  ],
+  "destroyed.crunchGain": [
+   3.09,
+   3.68
+  ],
+  "destroyed.settleGain": [
+   17.3,
+   19.2
+  ],
+  "destroyed.staticGain": [
+   0.777,
+   0.834
+  ],
+  "destroyed.sparkGain": [
+   2.37,
+   2.89
+  ],
+  "shot.jetGain": [
+   0.806,
+   0.833
+  ],
+  "shot.pushGain": [
+   2.99,
+   2.76
+  ],
+  "shot.dropGain": [
+   2.63,
+   3.03
+  ],
+  "shot.valveGain": [
+   27.2,
+   28.4
+  ]
+ },
+ "after": {
+  "hit.ALL": -22.585317418594148,
+  "hit.strikeGain": -25.539979128266626,
+  "hit.weightGain": -33.08955159045734,
+  "hit.slapGain": -30.716052372084324,
+  "hit.splashGain": -33.19663269951369,
+  "hit.sprayGain": -35.28578916888268,
+  "hit.rattleGain": -33.86105312397211,
+  "head.ALL": -22.669457561258067,
+  "head.crackGain": -30.860024944563794,
+  "head.glassGain": -31.504902506886406,
+  "head.fizzGain": -32.98188235980093,
+  "charged.ALL": -19.198829193116982,
+  "charged.steamGain": -30.931044705515472,
+  "charged.sizzleGain": -36.77128660437841,
+  "destroyed.ALL": -23.19364970524914,
+  "destroyed.strikeGain": -25.44368637401575,
+  "destroyed.rumbleGain": -27.300973192921834,
+  "destroyed.crunchGain": -30.594433505306608,
+  "destroyed.settleGain": -36.42861131010883,
+  "destroyed.staticGain": -34.26269611476234,
+  "destroyed.sparkGain": -34.196683220166854,
+  "shot.ALL": -24.60408028570863,
+  "shot.jetGain": -27.96878893720742,
+  "shot.pushGain": -31.637303220293443,
+  "shot.dropGain": -33.95186764587334,
+  "shot.valveGain": -30.790548067004597
+ }
+}
