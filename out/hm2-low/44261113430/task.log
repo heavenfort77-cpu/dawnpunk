@@ -1,0 +1,14 @@
+$ mkdir -p hm && node tools/humanmotioncheck.cjs low "$PWD/dist/index_single.html" --frames hm --json hm/low.json   (limit 90 min)
+[2 s, 60 fps] base entered; waiting for the people
+[16 s, 60 fps] base done (81 s of game time)
+[84 s, 60 fps] street done, 54 ms per frame
+[116 s, 60 fps] night done, 26 ms per frame
+[177 s, 60 fps] film done (14.0 s, 67 ms per frame)
+FAIL crashed page.evaluate: TypeError: window.__game.cfg is not a function
+    at eval (eval at evaluate (:311:30), <anonymous>:1:33)
+    at UtilityScript.evaluate (<anonymous>:313:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at pass (/home/runner/work/dawnpunk/dawnpunk/tools/humanmotioncheck.cjs:250:20)
+    at async /home/runner/work/dawnpunk/dawnpunk/tools/humanmotioncheck.cjs:369:14
+SOME FAILED
+exit code 1
