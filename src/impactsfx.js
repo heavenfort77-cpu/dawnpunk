@@ -35,6 +35,10 @@ export const IMPACT_SFX = {
   hitGap: 0.045,
   // a hit that would have to wait longer than this (s) is dropped
   hitQueue: 0.25,
+  // peak softener on every sound: level where it starts to round off the rare sharp spikes of ticks and knocks (0..1, before the pan)
+  limitKnee: 0.35,
+  // highest level it lets through (0..1, before the pan; the centre pan lowers each side by a further 3 dB)
+  limitCeil: 0.7,
 
   // THE ROOM: a generated impulse response shared by every sound
   room: {
@@ -67,7 +71,7 @@ export const IMPACT_SFX = {
     // wet slap: length (s)
     slapLen: 0.035,
     // wet slap: loudness
-    slapGain: 3.86,
+    slapGain: 3.72,
     // splash: highpass noise cutoff at the start (Hz)
     splashF0: 3200,
     // splash: cutoff at the end (Hz)
@@ -77,7 +81,7 @@ export const IMPACT_SFX = {
     // splash: length (s)
     splashLen: 0.15,
     // splash: loudness
-    splashGain: 0.342,
+    splashGain: 0.339,
     // spray: number of droplet grains
     spray: 18,
     // spray: time span of the droplets (s)
@@ -89,13 +93,13 @@ export const IMPACT_SFX = {
     // spray: bandpass Q
     sprayQ: 1.2,
     // spray: loudness of the first droplet (later ones are quieter)
-    sprayGain: 3.68,
+    sprayGain: 3.43,
     // thud: length of the knock on the metal (s; shorter = brighter strike)
     strikeLen: 0.0022,
     // thud: lowpass on the strike (Hz; lower = softer, duller strike)
     strikeLp: 2200,
     // thud: loudness of the strike into the resonances
-    strikeGain: 2.09,
+    strikeGain: 2.19,
     // thud: resonances of the dented panel (Hz)
     modes: [118, 187, 263, 349, 446, 571, 760],
     // thud: Q of each resonance (higher = rings longer; these are heavily damped)
@@ -109,7 +113,7 @@ export const IMPACT_SFX = {
     // weight: length (s)
     weightLen: 0.07,
     // weight: loudness
-    weightGain: 2.72,
+    weightGain: 2.88,
     // rattle: number of loose-panel knocks
     rattle: 4,
     // rattle: first knock (s)
@@ -121,7 +125,7 @@ export const IMPACT_SFX = {
     // rattle: Q of those resonances
     rattleQ: [16, 18, 20],
     // rattle: loudness of the first knock
-    rattleGain: 16,
+    rattleGain: 29.3,
   },
 
   // HEAD SHOT: the body hit plus a brittle screen crack and electrical static
@@ -139,13 +143,13 @@ export const IMPACT_SFX = {
     // crack: highpass on the ticks (Hz)
     crackHp: 2600,
     // crack: loudness of the first tick
-    crackGain: 2.76,
+    crackGain: 3.22,
     // crack: tiny glass resonances (Hz)
     glassModes: [2950, 4370, 5830, 7690],
     // crack: Q of the glass resonances
     glassQ: [28, 30, 32, 34],
     // crack: loudness of the glass resonances (struck by the same ticks)
-    glassGain: 14.8,
+    glassGain: 17,
     // static: number of crackle bursts
     fizz: 34,
     // static: first burst (s)
@@ -159,7 +163,7 @@ export const IMPACT_SFX = {
     // static: bandpass Q
     fizzQ: 0.6,
     // static: loudness of the loudest burst
-    fizzGain: 1.94,
+    fizzGain: 2.28,
   },
 
   // CHARGED SHOT HIT: the body hit made heavier (these scale it) plus steam hissing on hot metal
@@ -185,7 +189,7 @@ export const IMPACT_SFX = {
     // steam: length (s)
     steamLen: 0.55,
     // steam: loudness
-    steamGain: 0.37,
+    steamGain: 0.381,
     // sizzle: number of small crackles in the steam
     sizzle: 26,
     // sizzle: length of a crackle (s)
@@ -193,7 +197,7 @@ export const IMPACT_SFX = {
     // sizzle: highpass (Hz)
     sizzleHp: 3200,
     // sizzle: loudness of the loudest crackle
-    sizzleGain: 1.01,
+    sizzleGain: 1.19,
   },
 
   // GLOOM DESTROYED (machines only; devices and panels keep sfxBreak): the body slumps and settles, the screen's static dies, a few sparks
@@ -213,7 +217,7 @@ export const IMPACT_SFX = {
     // collapse: loudness of each resonance
     modeGain: [1, 0.85, 0.75, 0.6, 0.45, 0.35, 0.25],
     // collapse: strike loudness into the resonances
-    strikeGain: 2.56,
+    strikeGain: 2.01,
     // collapse: length of a strike (s)
     strikeLen: 0.0026,
     // rumble: lowpass noise cutoff at the start (Hz)
@@ -223,7 +227,7 @@ export const IMPACT_SFX = {
     // rumble: length (s)
     rumbleLen: 0.4,
     // rumble: loudness
-    rumbleGain: 2.07,
+    rumbleGain: 1.99,
     // crunch: grains of torn sheet metal in the first moment
     crunch: 7,
     // crunch: time span (s)
@@ -235,7 +239,7 @@ export const IMPACT_SFX = {
     // crunch: bandpass Q
     crunchQ: 0.7,
     // crunch: loudness of the first grain
-    crunchGain: 3.09,
+    crunchGain: 3.68,
     // settling: number of small knocks as it comes to rest
     settle: 7,
     // settling: first knock (s)
@@ -247,7 +251,7 @@ export const IMPACT_SFX = {
     // settling: Q of those resonances
     settleQ: [14, 16, 18],
     // settling: loudness of the first knock
-    settleGain: 17.3,
+    settleGain: 19.2,
     // static: first burst (s)
     staticFrom: 0.03,
     // static: last burst (s)
@@ -265,7 +269,7 @@ export const IMPACT_SFX = {
     // static: bandpass Q
     staticQ: 0.45,
     // static: loudness of the first burst (it fades out)
-    staticGain: 0.777,
+    staticGain: 0.834,
     // sparks: number of crackles
     sparks: 6,
     // sparks: first (s)
@@ -277,7 +281,7 @@ export const IMPACT_SFX = {
     // sparks: highpass (Hz)
     sparkHp: 4500,
     // sparks: loudness of the loudest crackle
-    sparkGain: 2.37,
+    sparkGain: 2.89,
   },
 
   // THE CANNON SHOT (the player's own, not panned): a pressurised water jet released through a brass valve
@@ -297,7 +301,7 @@ export const IMPACT_SFX = {
     // jet: length (s)
     jetLen: 0.2,
     // jet: loudness
-    jetGain: 0.806,
+    jetGain: 0.833,
     // air push: lowpass noise cutoff at the start (Hz)
     pushF0: 900,
     // air push: cutoff at the end (Hz)
@@ -305,7 +309,7 @@ export const IMPACT_SFX = {
     // air push: length (s)
     pushLen: 0.05,
     // air push: loudness
-    pushGain: 2.99,
+    pushGain: 2.76,
     // wet edge: number of droplet grains as the jet leaves the nozzle
     drops: 14,
     // wet edge: time span of the droplets (s)
@@ -315,7 +319,7 @@ export const IMPACT_SFX = {
     // wet edge: bandpass centres of the two droplet layers (Hz)
     dropHz: [2500, 5200],
     // wet edge: loudness of the first droplet
-    dropGain: 2.63,
+    dropGain: 3.03,
     // valve clack: brass resonances (Hz)
     valveModes: [1180, 2470, 3720, 5310],
     // valve clack: Q of those resonances
@@ -323,7 +327,7 @@ export const IMPACT_SFX = {
     // valve clack: loudness of each resonance
     valveGains: [1, 0.7, 0.5, 0.3],
     // valve clack: strike loudness
-    valveGain: 27.2,
+    valveGain: 28.4,
     // valve clack: lowpass on the strike (Hz)
     valveLp: 7000,
     // valve clack: the valve reseats this long after firing (s)
@@ -334,6 +338,9 @@ export const IMPACT_SFX = {
 };
 
 const NOISE = new WeakMap();
+const SOFT = new Map();
+// the peak softener's curve: straight below the knee, then a tanh bend that never passes the ceiling
+function softCurve(k, c) { const key = k + ':' + c; let v = SOFT.get(key); if (v) return v; v = new Float32Array(2048); for (let i = 0; i < 2048; i++) { const x = i / 1023.5 - 1, m = Math.abs(x); v[i] = Math.sign(x) * (m <= k ? m : k + (c - k) * Math.tanh((m - k) / (c - k))); } SOFT.set(key, v); return v; }
 const ROOMS = new WeakMap();
 function noiseBuf(a) { let b = NOISE.get(a); if (b) return b; b = a.createBuffer(1, a.sampleRate, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; NOISE.set(a, b); return b; }
 function env(g, t, peak, attack, len) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + attack + len); }
@@ -384,16 +391,17 @@ function room(a, dest, R, out) {
   r = { inp }; const o = m.get(dest) || {}; o[key] = r; m.set(dest, o); return r;
 }
 
-// the output chain of one sound: gain (vol, distance, variation) -> voice-band dip -> air lowpass -> pan -> dest, plus a send into the room. po = { pan (-1..1), dist (m) }
+// the output chain of one sound: gain (vol, distance, variation) -> voice-band dip -> air lowpass -> peak softener -> pan -> dest, plus a send into the room. po = { pan (-1..1), dist (m) }
 export function impactOut(a, dest, po, C, gain, wet, outdoors) {
   const dist = Math.max(0, (po && po.dist) || 0), pan = Math.max(-1, Math.min(1, (po && po.pan) || 0)), near = Math.min(1, dist / C.reach), R = C.room;
-  const g = a.createGain(), dip = a.createBiquadFilter(), air = a.createBiquadFilter(), send = a.createGain();
+  const g = a.createGain(), dip = a.createBiquadFilter(), air = a.createBiquadFilter(), send = a.createGain(), soft = a.createWaveShaper();
+  soft.curve = softCurve(C.limitKnee, C.limitCeil); soft.oversample = '2x';
   g.gain.value = C.vol * gain * Math.max(C.minGain, 1 - near);
   dip.type = 'peaking'; dip.frequency.value = C.dipHz; dip.Q.value = C.dipQ; dip.gain.value = C.dipDb;
   air.type = 'lowpass'; air.Q.value = 0.5; air.frequency.value = C.airNear * Math.pow(C.airFar / C.airNear, near);
   send.gain.value = (outdoors ? R.wetOut : R.wetIn) * (wet === undefined ? 1 : wet) * (1 + R.farWet * near);
-  g.connect(dip); dip.connect(air); air.connect(send); send.connect(room(a, dest, R, outdoors).inp); let last = air;
-  if (a.createStereoPanner) { const sp = a.createStereoPanner(); sp.pan.value = pan; air.connect(sp); last = sp; }
+  g.connect(dip); dip.connect(air); air.connect(soft); soft.connect(send); send.connect(room(a, dest, R, outdoors).inp); let last = soft;
+  if (a.createStereoPanner) { const sp = a.createStereoPanner(); sp.pan.value = pan; soft.connect(sp); last = sp; }
   last.connect(dest || a.destination); return g;
 }
 
