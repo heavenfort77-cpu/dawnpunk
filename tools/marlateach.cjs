@@ -43,7 +43,7 @@ class Phase extends Error { constructor(p) { super('phase ' + p); this.phase = p
       let guide = false;
       for (const [n, s, g] of SRC) { const t = txt(s); if (t && g) guide = true; if (t !== (last[n] || '')) { last[n] = t; if (t) W.__log.push({ gt: +W.__gt.toFixed(1), wt: +(performance.now() / 1000).toFixed(1), st: W.__stage, k: n, t }); } }
       { const g = W.__game, s = g && g.sim; if (s && g.state === 'play') { const hp = Math.round(s.player.hp); if (last.hp === undefined || Math.abs(hp - last.hp) >= 5 || (hp === 0 && last.hp !== 0)) { const P = s.player; let nd = 1e9, nk = ''; for (const q of s.gloom) { const d = Math.hypot(q.x - P.x, q.z - P.z); if (d < nd) { nd = d; nk = q.kind; } } W.__log.push({ gt: +W.__gt.toFixed(1), wt: +(performance.now() / 1000).toFixed(1), st: W.__stage, k: 'HP', t: 'health ' + (last.hp === undefined ? '' : last.hp + ' -> ') + hp + ' (' + s.phase + '; ' + s.gloom.length + ' machines inside or near, nearest ' + (nd < 1e8 ? nk + ' ' + nd.toFixed(1) + ' m' : 'none') + ')' }); last.hp = hp; } } else last.hp = undefined; }
-      { const g = W.__game, s = g && g.sim, F = W.__hpFloor; if (F && s && g.state === 'play' && s.phase === 'night' && !s.done) { const inDrill = !!(g.drillInfo && g.drillInfo()), lim = inDrill ? F.drill : F.night; if (lim && s.player.hp > 0 && s.player.hp < lim) { s.player.hp += 30; W.__hpTops = (W.__hpTops || 0) + 1; W.__log.push({ gt: +W.__gt.toFixed(1), wt: +(performance.now() / 1000).toFixed(1), st: W.__stage, k: 'SHORTCUT', t: 'health under ' + lim + (inDrill ? ' during the lesson' : '') + ': +30 health so the play goes on (top-up ' + W.__hpTops + ')' }); } } }
+      { const g = W.__game, s = g && g.sim, F = W.__hpFloor; if (F && s && g.state === 'play' && s.phase === 'night' && !s.done) { const inDrill = !!(g.drillInfo && g.drillInfo()), lim = inDrill ? F.drill : F.night; if (lim && s.player.hp > 0 && s.player.hp < lim) { s.player.hp = Math.min(s.player.hp + 40, 100); W.__hpTops = (W.__hpTops || 0) + 1; W.__log.push({ gt: +W.__gt.toFixed(1), wt: +(performance.now() / 1000).toFixed(1), st: W.__stage, k: 'SHORTCUT', t: 'health under ' + lim + (inDrill ? ' during the lesson' : '') + ': +30 health so the play goes on (top-up ' + W.__hpTops + ')' }); } } }
       const v = W.__marlaVoice; if (v && v.n !== (last.vn || 0)) { last.vn = v.n; W.__log.push({ gt: +W.__gt.toFixed(1), wt: +(performance.now() / 1000).toFixed(1), st: W.__stage, k: 'VOICE', t: v.last + ' (' + v.via + '): ' + v.lastText }); }
       if (!guide && W.__stage !== 'load') { if (qStart === null) { qStart = W.__gt; qStage = W.__stage; } }
       else if (qStart !== null) { const d = W.__gt - qStart; if (d >= 3) W.__log.push({ gt: +W.__gt.toFixed(1), wt: +(performance.now() / 1000).toFixed(1), st: qStage, k: 'QUIET', t: d.toFixed(1) + ' s with no guiding line on screen (from ' + qStart.toFixed(1) + ')' }); qStart = null; }
@@ -196,7 +196,7 @@ class Phase extends Error { constructor(p) { super('phase ' + p); this.phase = p
 
   // =================================================================== NIGHT
   async function nightPart() {
-    expect = 'night'; await ev(() => { window.__hpFloor = { drill: 25, night: 15 }; }); await stage('night 1 drill'); await waitG(0.5); await shot('dusk');
+    expect = 'night'; await ev(() => { window.__hpFloor = { drill: 25, night: 30 }; }); await stage('night 1 drill'); await waitG(0.5); await shot('dusk');
     const drill = () => ev(() => { const d = window.__game.drillInfo(); return d ? d.step : null; });
     let drillSaves = 0, aimDbg = 0; const drillLog = []; let lastStep = 'none', stepG = await gt(); const g0 = await gt(); let started = false;
     while ((await gt()) - g0 < 240) {
@@ -216,7 +216,13 @@ class Phase extends Error { constructor(p) { super('phase ' + p); this.phase = p
       else await p.waitForTimeout(300);
     }
     await note('drill steps [step, game s it took]: ' + JSON.stringify(drillLog));
-    await stage('night 1 after the drill'); await shot('after_drill'); let fires = 0, eats = 0, saves = 0, lastShot = await gt(); const n0 = await gt();
+    await stage('night 1 after the drill'); await shot('after_drill');
+    // follow the dusk order "Turbine first, then lances, then panels": a turbine and two lances where he stands (panels need an opening; tried once at the nearest one)
+    { const kinds = await ev(() => { const g = window.__game; return [...document.querySelectorAll('#slots .b.dev')].map((e) => e.id + ':' + e.innerText.replace(/\s+/g, ' ')); }); await note('device bar after the drill: ' + JSON.stringify(kinds));
+      const placeK = async (k, label) => { if (DESK) { await press('Digit' + k, label); await waitG(0.4, 20); await rightClick(label); } else { await tapDev('#b' + k); await act('tapped ' + label + ' (#b' + k + ')'); } await waitG(0.8, 20); await act('after placing: ' + JSON.stringify(await lastLines(1)), 'NOTE'); };
+      await placeK(1, 'Turbine'); await placeK(2, 'Lance'); await turn(1.5); await placeK(2, 'Lance');
+      const op = await ev(() => { const s = window.__game.sim, P = s.player; const b = s.breaches.filter((q) => q.floor === P.floor).sort((a, c) => Math.hypot(a.inX - P.x, a.inZ - P.z) - Math.hypot(c.inX - P.x, c.inZ - P.z))[0]; return b ? { x: b.inX, z: b.inZ, ox: b.x, oz: b.z } : null; });
+      if (op) { await walkTo(async () => ({ x: op.x, z: op.z }), { reach: 0.8, maxG: 6, label: 'an opening for a panel' }); await faceTo(op.ox, op.oz); await placeK(3, 'Panel'); } } let fires = 0, eats = 0, saves = 0, lastShot = await gt(); const n0 = await gt();
     while ((await gt()) - n0 < 400) {
       await guard();
       const s = await ev(() => { const s = window.__game.sim; if (!s) return null; return { hp: s.player.hp, max: (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).player.hp, food: s.food, n: s.gloom.length }; }); if (!s) break;
