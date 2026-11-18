@@ -674,5 +674,21 @@ check('eating heals and costs carried food', (() => { const e = createSim({ cfg:
   const ms = fs.readFileSync('src/main.js', 'utf8'), tpl = fs.readFileSync('index.template.html', 'utf8');
   check('voice: it plays only in state play (never the base), stops while paused or hidden, the pause menu has Voice next to Music', /MV\.tick\(dt, state === 'play' && !!\(run \|\| sim\), paused \|\| document\.hidden,/.test(ms) && /id="bMusic">Music: on<\/button><button class="big" id="bVoice">Voice: on<\/button>/.test(tpl) && /\* MV\.duck\(\)/.test(ms));
 }
+// IMPACT SOUNDS (owner approved round 2, Nov 18): the CONFIG switch and values, the module with no AudioContext, the positions on the 'shot' event
+{ const IM = await import('./src/impactsfx.js'), I = CONFIG.sfx.impact, ks = Object.keys(IM.IMPACT_SFX);
+  check('impact: CONFIG.sfx.impact has on (true) and every IMPACT_SFX value (' + ks.length + ' keys); the old shot sound is kept for impact.on false', !!I && I.on === true && ks.every((k) => I[k] === IM.IMPACT_SFX[k]) && I.vol > 0 && I.hitGap > 0 && I.hitQueue > 0 && !!(I.room && I.hit && I.head && I.charged && I.destroyed && I.shot) && CONFIG.sfx.shot.vol > 0);
+  let r = null; try { const S = IM.createImpactSfx(() => (typeof AudioContext !== 'undefined' ? new AudioContext() : null), () => I, () => true, () => false); r = [S.shot(), S.hit({ pan: 0.3, dist: 4 }, false), S.hit({ pan: 0, dist: 4 }, true), S.charged({ pan: -0.2, dist: 6 }), S.destroyed({ pan: 1, dist: 30 })]; } catch (e) { r = String(e); }
+  check('impact: createImpactSfx with no AudioContext returns safely (every sound returns 0, nothing throws)', Array.isArray(r) && r.every((v) => v === 0), JSON.stringify(r));
+  const t = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 1 }), P = t.player, mk = (id, z) => ({ id, x: 0.1, z, floor: 0, hp: 1e6, maxhp: 1e6, phase: 'inside', bp: 0, timer: 0, cd: 1e9, face: 0 });
+  const fire = (ch) => { P.x = 0; P.z = 0; P.floor = 0; P.yaw = 0; P.pitch = -0.1; P.energy = 100; P.cd = 0; t.log.length = 0; t.fireCannon('ray', 1, ch, null); return t.log.slice(); };
+  t.gloom.length = 0; t.gloom.push(mk(801, -4)); const e1 = fire(false).find((e) => e.e === 'shot');
+  check('impact: a normal shot\'s event carries the hit machine\'s x, z, floor', !!e1 && e1.hit && e1.x === 0.1 && e1.z === -4 && e1.floor === 0, JSON.stringify(e1));
+  t.gloom[0].hp = 1; const e2 = fire(false), s2 = e2.find((e) => e.e === 'shot'), p2 = e2.find((e) => e.e === 'pop');
+  check('impact: a killing shot\'s event and its pop event name the same machine position (main.js plays destroyed instead of the hit)', !!s2 && !!p2 && s2.x === p2.x && s2.z === p2.z && s2.floor === p2.floor);
+  t.gloom.length = 0; t.gloom.push(mk(802, -3), mk(803, -6)); const e3 = fire(true).find((e) => e.e === 'shot'), h3 = (e3 && e3.hits) || [];
+  check('impact: a charged shot\'s event lists { x, z, floor, head } for every machine on its line', !!e3 && e3.charged && h3.length === 2 && h3.every((q) => q.x === 0.1 && q.floor === 0 && typeof q.head === 'boolean') && h3.map((q) => q.z).sort().join() === '-3,-6', JSON.stringify(e3));
+  const ms = (await import('fs')).readFileSync('src/main.js', 'utf8');
+  check('impact: main.js plays the shot through shotSfx (3 places in doFire) and runs impactEvents in doFire and the frame loop', (ms.match(/hands\.fire\(\); shotSfx\(\);/g) || []).length === 3 && !/hands\.fire\(\); sfxShot\(\)/.test(ms) && /const evs = sim\.log\.splice\(0\); impactEvents\(evs\);/.test(ms));
+}
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(' | ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);

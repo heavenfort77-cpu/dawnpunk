@@ -80,6 +80,18 @@
    "timeout": 35
   },
   {
+   "name": "impactcheck",
+   "script": "tools/impactcheck.cjs",
+   "args": [
+    "low",
+    "{dist}/index.html"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 30,
+   "note": "impact sounds wired in (phone context: touch, low tier): a hit on a Gloom calls the shot + hit sounds, a kill plays destroyed, a charged shot one per machine"
+  },
+  {
    "name": "freshfixcheck",
    "script": "tools/freshfixcheck.cjs",
    "args": [
@@ -318,6 +330,17 @@
    "tier": "desktop",
    "quality": "high",
    "timeout": 70
+  },
+  {
+   "name": "impactcheck_desktop",
+   "script": "tools/impactcheck.cjs",
+   "args": [
+    "high",
+    "{dist}/index_single.html"
+   ],
+   "tier": "desktop",
+   "quality": "high",
+   "timeout": 45
   },
   {
    "name": "humanmotioncheck_desktop",
