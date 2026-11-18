@@ -1,0 +1,63 @@
+$ mkdir -p perfshots && NOEXTRA=1 FRAMES=2 node tools/perfcheck.cjs medium,high perfshots 2>&1 | tee perf.txt   (limit 200 min)
+INFO dist sizes MB: index.html 12.5, index_single.html 61.9, solardg-itch.zip 35.9, models/ 24.3, tex/ 7.2, music/ 3.1, voice/ 2.3
+INFO medium: page up 6 s, 33.1 MB so far
+INFO hub loaded 27 s 35.7 MB so far
+PERF medium hub: calls 1169 (screen 1139), triangles 1.70 M (screen 1.70 M), frame 7195 ms (software GPU), downloaded 35.7 MB, cam 3.0,1.6,7.0 yaw 0.00 far 90
+INFO wrote perfshots/medium_hub.png
+INFO medium downloaded before the hub was ready: 35.7 MB (78 requests)
+INFO base loaded 193 s 35.7 MB so far
+INFO run loaded 230 s 40.1 MB so far
+PERF medium street: calls 554 (screen 524), triangles 1.53 M (screen 1.52 M), frame 8639 ms (software GPU), downloaded 40.1 MB, cam 0.0,1.6,0.0 yaw 0.00 far 82
+INFO wrote perfshots/medium_street.png
+INFO base loaded 379 s 40.1 MB so far
+INFO run loaded 420 s 42.3 MB so far
+INFO night loaded 513 s 42.3 MB so far
+INFO night: first Gloom {"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0}}
+INFO night gloom loaded 559 s 42.4 MB so far
+INFO Gloom present: walker,ticks,walker,walker,walker,ticks
+PERF medium house: calls 690 (screen 660), triangles 1.69 M (screen 1.68 M), frame 6891 ms (software GPU), downloaded 42.4 MB, cam -1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 438/1267
+INFO wrote perfshots/medium_house.png
+INFO base loaded 657 s 42.4 MB so far
+INFO run loaded 694 s 46.7 MB so far
+INFO boss view {"x":-3.543984156606088,"z":7.508194474288627,"dd":17.995876745199016} {"model":"ready","boss":true}
+PERF medium boss: calls 681 (screen 651), triangles 1.68 M (screen 1.68 M), frame 7435 ms (software GPU), downloaded 46.9 MB, cam -3.5,1.6,7.5 yaw 2.16 far 36 nightcull 316/1268
+INFO wrote perfshots/medium_boss.png
+INFO medium total downloaded 46.9 MB in 97 requests; models fetched: marla_hi.glb @1s, gloom_walker_hi.glb @1s, gloom_ticks_hi.glb @1s, gloom_stilt_hi.glb @1s, gloom_lantern_hi.glb @1s, bram_scan_hi.glb @7s, oko_hi.glb @7s, pip_hi.glb @7s, gloom_lurcher_hi.glb @198s, gloom_hauler_hi.glb @198s, gloom_warden_hi.glb @384s, boss_beckoner_hi.glb @662s
+INFO no page errors (medium)
+INFO high: page up 10 s, 33.1 MB so far
+INFO hub loaded 29 s 35.7 MB so far
+PERF high hub: calls 2070 (screen 1158), triangles 4.44 M (screen 2.85 M), frame 11861 ms (software GPU), downloaded 35.7 MB, cam 3.0,1.6,7.0 yaw 0.00 far 90
+INFO wrote perfshots/high_hub.png
+INFO high downloaded before the hub was ready: 35.7 MB (78 requests)
+INFO base loaded 286 s 35.7 MB so far
+INFO run loaded 337 s 40.1 MB so far
+PERF high street: calls 828 (screen 516), triangles 4.41 M (screen 2.75 M), frame 11743 ms (software GPU), downloaded 40.1 MB, cam 0.0,1.6,0.0 yaw 0.00 far 82
+INFO wrote perfshots/high_street.png
+INFO base loaded 559 s 40.1 MB so far
+INFO run loaded 615 s 42.3 MB so far
+INFO night loaded 755 s 42.3 MB so far
+INFO night: first Gloom {"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0}}
+INFO night gloom loaded 827 s 42.4 MB so far
+INFO Gloom present: walker,ticks,walker,walker,walker,ticks
+PERF high house: calls 1013 (screen 660), triangles 4.46 M (screen 2.62 M), frame 10844 ms (software GPU), downloaded 42.4 MB, cam -1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 353/1137
+INFO wrote perfshots/high_house.png
+INFO base loaded 974 s 42.4 MB so far
+INFO run loaded 1028 s 46.7 MB so far
+INFO boss view {"x":-3.543984156606088,"z":7.508194474288627,"dd":17.995876745199016} {"model":"ready","boss":true}
+PERF high boss: calls 1071 (screen 663), triangles 4.19 M (screen 2.56 M), frame 10548 ms (software GPU), downloaded 46.9 MB, cam -3.5,1.6,7.5 yaw 2.16 far 36 nightcull 256/1122
+INFO wrote perfshots/high_boss.png
+INFO high total downloaded 46.9 MB in 97 requests; models fetched: marla_hi.glb @1s, gloom_walker_hi.glb @1s, gloom_ticks_hi.glb @1s, gloom_stilt_hi.glb @1s, gloom_lantern_hi.glb @1s, bram_scan_hi.glb @11s, oko_hi.glb @11s, pip_hi.glb @11s, gloom_lurcher_hi.glb @294s, gloom_hauler_hi.glb @294s, gloom_warden_hi.glb @567s, boss_beckoner_hi.glb @983s
+INFO no page errors (high)
+PERFJSON [{"tier":"medium","spot":"hub","calls":1169,"tris":1701642,"sCalls":1139,"sTris":1698942,"ms":7195,"mb":35.7,"cam":"3.0,1.6,7.0 yaw 0.00 far 90","startMB":35.7},{"tier":"medium","spot":"street","calls":554,"tris":1526298,"sCalls":524,"sTris":1523598,"ms":8639,"mb":40.1,"cam":"0.0,1.6,0.0 yaw 0.00 far 82"},{"tier":"medium","spot":"house","calls":690,"tris":1686630,"sCalls":660,"sTris":1683930,"ms":6891,"mb":42.4,"cam":"-1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 438/1267"},{"tier":"medium","spot":"boss","calls":681,"tris":1680539,"sCalls":651,"sTris":1677839,"ms":7435,"mb":46.9,"cam":"-3.5,1.6,7.5 yaw 2.16 far 36 nightcull 316/1268"},{"tier":"high","spot":"hub","calls":2070,"tris":4438923,"sCalls":1158,"sTris":2852753,"ms":11861,"mb":35.7,"cam":"3.0,1.6,7.0 yaw 0.00 far 90","startMB":35.7},{"tier":"high","spot":"street","calls":828,"tris":4405182,"sCalls":516,"sTris":2748827,"ms":11743,"mb":40.1,"cam":"0.0,1.6,0.0 yaw 0.00 far 82"},{"tier":"high","spot":"house","calls":1013,"tris":4459487,"sCalls":660,"sTris":2623007,"ms":10844,"mb":42.4,"cam":"-1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 353/1137"},{"tier":"high","spot":"boss","calls":1071,"tris":4188956,"sCalls":663,"sTris":2562162,"ms":10548,"mb":46.9,"cam":"-3.5,1.6,7.5 yaw 2.16 far 36 nightcull 256/1122"}]
+FAIL medium: downloaded before the hub is ready 35.7 MB (target < 20)
+PASS medium: no page errors
+FAIL medium hub: 1169 draw calls per frame (target < 500)
+FAIL medium hub: 1.70 M triangles per frame (target < 0.50 M)
+FAIL medium street: 554 draw calls per frame (target < 500)
+FAIL medium street: 1.53 M triangles per frame (target < 0.50 M)
+FAIL medium house: 690 draw calls per frame (target < 500)
+FAIL medium house: 1.69 M triangles per frame (target < 0.50 M)
+FAIL medium boss: 681 draw calls per frame (target < 500)
+FAIL medium boss: 1.68 M triangles per frame (target < 0.50 M)
+PERF CHECK FAILED (9)
+exit code 0

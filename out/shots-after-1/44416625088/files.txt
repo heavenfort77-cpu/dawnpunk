@@ -1,0 +1,9 @@
+perfshots/high_boss.png 821153
+perfshots/high_house.png 677730
+perfshots/high_hub.png 1143235
+perfshots/high_street.png 1126210
+perfshots/medium_boss.png 801543
+perfshots/medium_house.png 670124
+perfshots/medium_hub.png 1080866
+perfshots/medium_street.png 1060628
+perf.txt 5890
