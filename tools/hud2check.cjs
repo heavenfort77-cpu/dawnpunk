@@ -85,9 +85,11 @@ async function buttons(p, b) {
     tx = await clockText(p); ok(DAY.test(tx), 'desktop house by day: clock in hours "' + tx + '"');
     let pc = await pics(p); ok(pc.length >= 2 && pc.every((q) => q[1]), 'desktop by day: each shown slot has a picture ' + JSON.stringify(pc));
     const t0 = await p.evaluate(() => [window.__game.sim.total, window.__game.sim.spawns.length, window.__game.run.wakeExtra]);
-    await p.evaluate(() => window.__game.endDay()); await wait(p, 2500);
-    const t1 = await p.evaluate(() => [window.__game.sim.total, window.__game.sim.spawns.length, window.__game.sim.phase]);
-    ok(t1[2] === 'night' && t1[0] === t0[0] + t0[2] && t1[1] === t0[1] + t0[2] && t0[2] > 0, 'tonight\'s Gloom count rose by the woken amount: ' + t0[0] + ' -> ' + t1[0] + ' (+' + t0[2] + ')');
+    // the count is read in the first frame after dusk adds the woken ones: from 2 s into night 1 the drill (main.js drillTick) takes the waves off sim.spawns until it ends, so a later read depends on the runner's speed
+    await p.evaluate(() => window.__game.endDay());
+    await p.waitForFunction(() => { const s = window.__game.sim; if (!s || !s.wakeAdded) return false; const d = window.__game.drillInfo(); window.__duskCount = [s.total, s.spawns.length, s.phase, d ? d.step : 'none', +s.t.toFixed(2)]; return true; }, null, { polling: 'raf', timeout: 60000 });
+    const t1 = await p.evaluate(() => window.__duskCount); await wait(p, 2500);
+    ok(t1[2] === 'night' && t1[0] === t0[0] + t0[2] && t1[1] === t0[1] + t0[2] && t0[2] > 0, 'tonight\'s Gloom count rose by the woken amount: total ' + t0[0] + ' -> ' + t1[0] + ', spawn list ' + t0[1] + ' -> ' + t1[1] + ' (+' + t0[2] + '; phase ' + t1[2] + ', drill ' + t1[3] + ', night t ' + t1[4] + ' s)');
     await p.evaluate(() => { const s = window.__game.sim; s.t = 40; s.player.energy = 30; s.player.hp = 100; });
     for (let k = 0; k < 40 && !(await p.evaluate(() => window.__game.sim.gloom.length)); k++) await p.waitForTimeout(1000);
     await p.evaluate(() => window.__game.say('Gloom on your left. Look awake, Potts.')); await wait(p, 800);

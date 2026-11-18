@@ -15,13 +15,18 @@ const { chromium } = require('playwright');
   await p.evaluate(() => { const g = window.__game; (typeof g.cfg === 'function' ? g.cfg() : g.cfg).gloomLook.kindLineAfter = 1e9; window.__game.nightfall(); }); await p.waitForTimeout(1500);
   const L = await p.evaluate(() => ({ nights: window.__game.save ? (window.__game.save.nights || 0) : -1, phase: window.__game.sim && window.__game.sim.phase }));
   out.push(['first night running (nights done ' + L.nights + ', phase ' + L.phase + ')', L.nights === 0 && L.phase === 'night']);
-  let hint = '';
-  for (let i = 0; i < 40 && !/\bH\b/.test(hint); i++) { await p.waitForTimeout(500); hint = await p.evaluate(() => { window.__game.marlaNightTips(30); return document.getElementById('marla').textContent; }); }
-  out.push(['H reminder on the first night: ' + hint, /\bH\b/.test(hint)]);
-  await p.waitForTimeout(6000);
+  // the player is kept alive while it waits: on a fast runner the night's machines reach the house and can end the first night (no first night = no line), and each real hit
+  // also calls marlaStreak, so the game may say the streak line itself (then its streakCd of 20 s holds the next one): every poll reads the card, and the streak loop runs past the cooldown
+  const RX = /collecting|Bold plan|Allegedly|renting|doorstop/, look = () => p.evaluate(() => { const g = window.__game, s = g.sim; if (s && s.player) s.player.hp = 100; return { txt: document.getElementById('marla').textContent, phase: s && s.phase, t: s ? +s.t.toFixed(1) : -1, nights: g.save ? g.save.nights || 0 : -1 }; });
+  let hint = '', streakSeen = '', last = null;
+  for (let i = 0; i < 40 && !/\bH\b/.test(hint); i++) { await p.waitForTimeout(500); last = await look(); if (RX.test(last.txt)) streakSeen = last.txt; hint = await p.evaluate(() => { window.__game.marlaNightTips(30); return document.getElementById('marla').textContent; }); }
+  out.push(['H reminder on the first night: ' + hint + (/\bH\b/.test(hint) ? '' : '  (' + JSON.stringify(last) + ')'), /\bH\b/.test(hint)]);
+  for (let i = 0; i < 12; i++) { await p.waitForTimeout(500); last = await look(); if (RX.test(last.txt)) streakSeen = last.txt; }
   let st = '';
-  for (let i = 0; i < 12 && !/collecting|Bold plan|Allegedly|renting|doorstop/.test(st); i++) { st = await p.evaluate(() => { const g = window.__game; g.marlaStreak(); g.marlaStreak(); g.marlaStreak(); return document.getElementById('marla').textContent; }); if (!/collecting|Bold plan|Allegedly|renting|doorstop/.test(st)) await p.waitForTimeout(1000); }
-  out.push(['three quick hits give a sarcastic line: ' + st, /collecting|Bold plan|Allegedly|renting|doorstop/.test(st)]);
+  for (let i = 0; i < 30 && !RX.test(st); i++) { st = await p.evaluate(() => { const g = window.__game; g.sim.player.hp = 100; g.marlaStreak(); g.marlaStreak(); g.marlaStreak(); return document.getElementById('marla').textContent; }); if (!RX.test(st)) await p.waitForTimeout(1000); }
+  if (!RX.test(st) && streakSeen) st = streakSeen + ' (said by the game on real hits)';
+  if (!RX.test(st)) last = await look();
+  out.push(['three quick hits give a sarcastic line: ' + st + (RX.test(st) ? '' : '  (' + JSON.stringify(last) + ')'), RX.test(st)]);
   await p.evaluate(() => { window.__game.save.nights = 1; document.getElementById('marla').textContent = ''; }); await p.waitForTimeout(25000);
   await p.evaluate(() => { const g = window.__game; g.marlaStreak(); g.marlaStreak(); g.marlaStreak(); g.marlaNightTips(60); });
   const st2 = await p.evaluate(() => document.getElementById('marla').textContent);

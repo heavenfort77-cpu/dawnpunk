@@ -54,7 +54,7 @@ body.keysoff #dkeys{display:none !important}body:is(.keysoff,.nohints) #hud:not(
 }
 /* desktop only: each on-screen control shows its key (player feedback, Nov 15) */
 @media (pointer:fine){.b[data-key]::after{content:attr(data-key);position:absolute;top:-9px;right:-6px;background:#f4e7b0;color:#1b2a22;border-radius:6px;padding:1px 5px;font-size:13px;font-weight:700;line-height:1.3;white-space:nowrap;box-shadow:0 1px 2px #0008}}
-body.portraitOk #rot{display:none!important}#rot small{font-size:13px;opacity:.8}#rot button{margin-top:14px;font-size:16px;padding:10px 14px;border-radius:10px;border:0;background:#f4e7b0;color:#123a44}#bMus{position:fixed;z-index:35;top:calc(8px + env(safe-area-inset-top));left:50%;margin-left:30px;width:var(--tap,44px);height:var(--tap,44px);border-radius:10px;border:0;font-size:20px;background:#0b1020a0;color:#f4e7b0;cursor:pointer}#bMus.off{opacity:.45;text-decoration:line-through}#rot{display:none;position:fixed;inset:0;z-index:30;background:#0b1020;color:#eef3ff;align-items:center;justify-content:center;text-align:center;font-size:20px;padding:24px}
+body.portraitOk #rot{display:none!important}#rot small{font-size:13px;opacity:.8}#rot button{margin-top:14px;font-size:16px;padding:10px 14px;min-height:var(--tap,44px);border-radius:10px;border:0;background:#f4e7b0;color:#123a44}#bMus{position:fixed;z-index:35;top:calc(8px + env(safe-area-inset-top));left:50%;margin-left:30px;width:var(--tap,44px);height:var(--tap,44px);border-radius:10px;border:0;font-size:20px;background:#0b1020a0;color:#f4e7b0;cursor:pointer}#bMus.off{opacity:.45;text-decoration:line-through}#rot{display:none;position:fixed;inset:0;z-index:30;background:#0b1020;color:#eef3ff;align-items:center;justify-content:center;text-align:center;font-size:20px;padding:24px}
 body.tall #rot{display:flex}body.ios #rotFs{display:none}
 #bPause{position:fixed;z-index:6;top:calc(8px + env(safe-area-inset-top));left:50%;margin-left:-22px;width:48px;height:44px;margin-left:-24px;font-size:16px}
 #hud.base #hpb,#hud.base #enb,#hud.base #time,#hud.base #count,#hud.base #coins,#hud.base #b1,#hud.base #b2,#hud.base #b3,#hud.base #b4,#hud.base #b5,#hud.base #bEat{display:none}
@@ -245,8 +245,8 @@ body:has(#menu:not([style*="none"])) #bMus{left:auto;right:calc(16px + env(safe-
 #scout.first #scoutSetup{display:none}#scout.first.setup #scoutSetup{display:flex}#scout:not(.first) #ssetup{display:none}#scout #scoutRide{text-align:center;font-size:15px;color:#ffe9b0}
 #scout button.lnk{background:none;border:0;box-shadow:none;color:#ffe9b0;text-decoration:underline;font-weight:600;font-size:15px;padding:8px 14px}
 #pause{justify-content:center}#pause>button.big{width:min(78vw,300px)}
-#pSaveNote{margin:10px 0 0;font-size:13px;opacity:.75;text-align:center;border:0;padding:0;width:auto;max-width:none}
-@media (max-height:620px){#pSaveNote{flex:0 0 100%;margin:2px 0 0;font-size:12px}}
+#pSaveNote{margin:10px 0 0;font-size:13px;opacity:1;color:#d9cca6;text-align:center;border:0;padding:0;width:auto;max-width:none}@media (pointer:coarse){#pSaveNote{font-size:14px}}
+@media (max-height:620px){#pSaveNote{flex:0 0 100%;margin:2px 0 0}}
 @media (max-height:620px){#pause{flex-flow:row wrap;align-content:center;gap:7px;padding-top:8px}#pause>h1{flex:0 0 100%;margin:0;font-size:22px}#pause>button.big{flex:0 0 min(44vw,250px);width:auto;padding:7px 14px;font-size:15px}}
 body:has(#pause[style*="flex"]) #bMus,body:has(#keys[style*="flex"]) #bMus,body:has(#bigmap[style*="flex"]) #bMus{left:auto!important;right:calc(16px + env(safe-area-inset-right))!important;margin-left:0!important;top:calc(10px + env(safe-area-inset-top))!important}
 #keys{justify-content:center}#keys .kcard{display:flex;flex-direction:column;align-items:center;gap:8px;max-height:calc(100vh - 28px);overflow:auto;padding:12px 18px 14px;border:1px solid #b08a4a;border-radius:6px;background:#07120ef2;box-shadow:0 0 0 3px #0a120c,0 8px 26px #000c}

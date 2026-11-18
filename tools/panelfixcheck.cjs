@@ -1,8 +1,8 @@
 // Interface fix pass check (panel review, Nov 17). PASS/FAIL lines only. Usage: node tools/panelfixcheck.cjs [abs page.html]
 // 1. Tap targets on a phone (touch) at 844x390 and 390x844: every button the player taps is at least CONFIG.ui.tap px on both sides
-//    (music, pause, quest box, HOLD, LEAVE, devices, EAT, FIRE, title links, every panel button: hatchery, board, Oko, crew, kit, Scout), and LEAVE sits off the screen centre.
+//    (music, pause, quest box, HOLD, LEAVE, devices, EAT, FIRE, start button, pause menu, every panel button: hatchery, board, Oko, crew, kit, Scout), and LEAVE sits off the screen centre.
 // 2. Phone device buttons: one text line, picture shown, a "need N" + crossed-sun state when the Sun is short.
-// 3. Text size: the count line, the base line, the quest box and the title menu are at least CONFIG.ui.minPx (desktop 13, phone 14).
+// 3. Text size: the count line, the base line, the quest box, the start screen and the pause menu are at least CONFIG.ui.minPx (desktop 13, phone 14).
 // 4. Contrast of HUD text over the scene, measured on screenshots: a bright day frame (looking at the sky) and a night frame, desktop 1280x720 and phone 844x390.
 //    Background = the most common colour inside the element's box on the screenshot (its backing over the real scene); text = its CSS colour. Needs 4.5:1.
 // One headless browser, software renderer, low tier (the HUD is DOM: the same on both tiers).
@@ -15,9 +15,9 @@ const { chromium } = require('playwright');
     await p.addInitScript(() => { window.__dtMax = 0.5; if (!sessionStorage.getItem('pfc')) { sessionStorage.setItem('pfc', '1'); try { localStorage.clear(); } catch (e) { /* none */ } } });
     await p.goto('file://' + page + '?quality=low&seed=777', { timeout: 240000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 180000 }); return { ctx, p }; };
   // sizes of the visible ones among the selectors
-  const sizes = (p, sels) => p.evaluate((sels) => { const r = []; for (const s of sels) for (const e of document.querySelectorAll(s)) { const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden') continue; let b = e.getBoundingClientRect(); { const sc = e.closest('.pbody'); if (sc) { const c = sc.getBoundingClientRect(); b = { left: b.left, right: b.right, width: b.width, top: Math.max(b.top, c.top), bottom: Math.min(b.bottom, c.bottom), height: Math.min(b.bottom, c.bottom) - Math.max(b.top, c.top) }; } } if (b.width < 1 || b.height < 1) continue; r.push([s + (e.id ? '' : '[' + (e.textContent || '').trim().slice(0, 18) + ']'), Math.round(b.width), Math.round(b.height), [b.left, b.top, b.right, b.bottom]]); } return r; }, sels);
+  const sizes = (p, sels) => p.evaluate((sels) => { const r = []; for (const s of sels) for (const e of document.querySelectorAll(s)) { const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden') continue; let b = e.getBoundingClientRect(); const full = [Math.round(b.width), Math.round(b.height)]; { const sc = e.closest('.pbody'); if (sc) { const c = sc.getBoundingClientRect(); b = { left: b.left, right: b.right, width: b.width, top: Math.max(b.top, c.top), bottom: Math.min(b.bottom, c.bottom), height: Math.min(b.bottom, c.bottom) - Math.max(b.top, c.top) }; } } if (b.width < 1 || b.height < 1) continue; r.push([s + (e.id ? '' : '[' + (e.textContent || '').trim().slice(0, 18) + ']'), Math.round(b.width), Math.round(b.height), [b.left, b.top, b.right, b.bottom], full]); } return r; }, sels);
   const overlaps = (s) => { const o = []; for (let i = 0; i < s.length; i++) for (let j = i + 1; j < s.length; j++) { const a = s[i][3], c = s[j][3]; const inside = (a[0] >= c[0] && a[1] >= c[1] && a[2] <= c[2] && a[3] <= c[3]) || (c[0] >= a[0] && c[1] >= a[1] && c[2] <= a[2] && c[3] <= a[3]); if (!inside && a[0] < c[2] - 1 && c[0] < a[2] - 1 && a[1] < c[3] - 1 && c[1] < a[3] - 1) o.push(s[i][0] + ' / ' + s[j][0]); } return o; };
-  const tapCheck = async (p, where, sels, min) => { const s = await sizes(p, sels); { const ov = overlaps(s); add(where + ': no two tap targets overlap' + (ov.length ? ' (' + ov.join(', ') + ')' : ''), !ov.length); } const small = s.filter((q) => Math.min(q[1], q[2]) < min); add(where + ': ' + s.length + ' tap targets, smallest ' + (s.length ? Math.min(...s.map((q) => Math.min(q[1], q[2]))) : '-') + ' px' + (small.length ? ' (under ' + min + ': ' + small.map((q) => q[0] + ' ' + q[1] + 'x' + q[2]).join(', ') + ')' : ''), s.length > 0 && !small.length); return s; };
+  const tapCheck = async (p, where, sels, min) => { const s = await sizes(p, sels); { const ov = overlaps(s); add(where + ': no two tap targets overlap' + (ov.length ? ' (' + ov.join(', ') + ')' : ''), !ov.length); } const small = s.filter((q) => Math.min(q[1], q[2]) < min); add(where + ': ' + s.length + ' tap targets, smallest ' + (s.length ? Math.min(...s.map((q) => Math.min(q[1], q[2]))) : '-') + ' px' + (small.length ? ' (under ' + min + ': ' + small.map((q) => q[0] + ' ' + q[1] + 'x' + q[2] + (q[4][1] !== q[2] ? ' (whole button ' + q[4][0] + 'x' + q[4][1] + ', the rest scrolled out of the panel)' : '')).join(', ') + ')' : ''), s.length > 0 && !small.length); return s; };
   // contrast of the visible text elements on a screenshot, measured inside the page
   const contrast = async (p, where, sels) => {
     const png = (await p.screenshot({ timeout: 240000 })).toString('base64');
@@ -50,12 +50,22 @@ const { chromium } = require('playwright');
       await p.evaluate(() => { const c = document.getElementById('qclose'); if (c) c.click(); document.getElementById('qb').style.display = 'none'; }); }
     await p.evaluate(() => { document.getElementById('scout').style.display = 'flex'; }); await tapCheck(p, where + ' Scout panel', PANEL_BTNS, min); await p.evaluate(() => { document.getElementById('scout').style.display = 'none'; document.getElementById('kit').style.display = 'flex'; }); await tapCheck(p, where + ' kit panel', PANEL_BTNS, min); await p.evaluate(() => { document.getElementById('kit').style.display = 'none'; });
   };
+  // the title page is gone (start flow, Nov 17): the first screen is the loading page with its begin button (#enter, shown when loading is done), and the title's options are in the pause menu
+  const startScreen = async (p, where, T, min) => { await p.waitForFunction(() => /ph-ready/.test(document.getElementById('spl').className), null, { timeout: 120000 }).catch(() => {}); await p.waitForTimeout(600);
+    if (T) await tapCheck(p, where + ' start screen', ['#enter'], T); await fontMin(p, where + ' start screen text', ['#enter', '#srow', '#slore'], min); };
+  const pauseMenu = async (p, where, T, min) => { await p.evaluate(() => document.getElementById('bPause').click()); await p.waitForTimeout(600);
+    const shown = await p.evaluate(() => document.getElementById('pause').style.display === 'flex'); add(where + ' pause menu opens from the pause button', shown);
+    if (T) await tapCheck(p, where + ' pause menu', ['#pause > button'], T); await fontMin(p, where + ' pause menu text', ['#pause > button', '#pSaveNote'], min);
+    const off = await p.evaluate(() => [...document.querySelectorAll('#pause > button, #pSaveNote')].filter((e) => getComputedStyle(e).display !== 'none').filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.top < 0 || r.right > innerWidth + 0.5 || r.bottom > innerHeight + 0.5; }).map((e) => e.id));
+    add(where + ' pause menu: every button and the save note on screen' + (off.length ? ' (off: ' + off.join(', ') + ')' : ''), !off.length);
+    await p.evaluate(() => document.getElementById('resume').click()); await p.waitForTimeout(400); };
   const TXT = ['#time', '#count', '#bprompt', '#msg', '#marla', '#aim', '#bstat', '#bq', '#mlook', '#dkeys', '#hchip', '#clk', '#vit .l2'];
   // ---- PHONE 844x390 (touch)
   { const { ctx, p } = await open({ width: 844, height: 390 }, true); const T = await p.evaluate(() => (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).ui.tap), MP = await p.evaluate(() => (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).ui.minPx[1]);
-    await tapCheck(p, 'phone 844x390 title', ['#enter', '#tlinks button'], T); await fontMin(p, 'phone title menu text', ['#tlinks button', '#tkick'], MP);
+    await startScreen(p, 'phone 844x390', T, MP);
     await p.evaluate(() => document.getElementById('enter').click()); await p.waitForTimeout(2500);
     await tapCheck(p, 'phone 844x390 base HUD', ['#bMus', '#bPause', '#bq'], T); await fontMin(p, 'phone base line and quest box', ['#bstat', '#bq'], MP);
+    await pauseMenu(p, 'phone 844x390', T, MP);
     await panels(p, 'phone 844x390', T);
     await p.evaluate(() => { document.getElementById('selRing').value = '0'; window.__game.startRun(0); }); await p.waitForTimeout(2500);
     await tapCheck(p, 'phone 844x390 street by day', ['#bMus', '#bPause', '#bDusk', '#b0'], T); await fontMin(p, 'phone count line', ['#count'], MP);
@@ -75,16 +85,18 @@ const { chromium } = require('playwright');
   // ---- PHONE 390x844 (upright)
   { const { ctx, p } = await open({ width: 390, height: 844 }, true); const T = await p.evaluate(() => (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).ui.tap);
     await p.waitForTimeout(1200); await tapCheck(p, 'phone 390x844 rotate screen', ['#rotFs', '#rotAny'], T);
-    await p.evaluate(() => document.getElementById('rotAny').click()); await p.waitForTimeout(300); await tapCheck(p, 'phone 390x844 title', ['#enter', '#tlinks button'], T);
+    await p.evaluate(() => document.getElementById('rotAny').click()); await p.waitForTimeout(300); await startScreen(p, 'phone 390x844', T, 14);
     await p.evaluate(() => document.getElementById('enter').click()); await p.waitForTimeout(2500); await tapCheck(p, 'phone 390x844 base HUD', ['#bMus', '#bPause', '#bq'], T);
+    await pauseMenu(p, 'phone 390x844', T, 14);
     await panels(p, 'phone 390x844', T);
     await p.evaluate(() => { document.getElementById('selRing').value = '0'; window.__game.startRun(0); window.__game.enterHouse(0); }); await p.waitForTimeout(2000); await p.evaluate(() => window.__game.endDay()); await p.waitForTimeout(1500);
     await tapCheck(p, 'phone 390x844 night', ['#bMus', '#bPause', '#b1', '#b2', '#b3', '#bEat', '#bFire'], T);
     await ctx.close(); }
   // ---- DESKTOP 1280x720 (mouse)
   { const { ctx, p } = await open({ width: 1280, height: 720 }, false); const MD = await p.evaluate(() => (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).ui.minPx[0]);
-    await fontMin(p, 'desktop title menu text', ['#tlinks button', '#tkick'], MD);
+    await startScreen(p, 'desktop', 0, MD);
     await p.evaluate(() => document.getElementById('enter').click()); await p.waitForTimeout(2500); await fontMin(p, 'desktop base line and quest box', ['#bstat', '#bq'], MD);
+    await pauseMenu(p, 'desktop', 0, MD);
     const bp = await p.evaluate(() => getComputedStyle(document.getElementById('bPause')).display !== 'none'); add('pause button shows in the base', bp);
     await p.evaluate(() => { document.getElementById('selRing').value = '0'; window.__game.startRun(0); }); await p.waitForTimeout(2500); await fontMin(p, 'desktop count line', ['#count'], MD);
     await p.evaluate(() => { const g = window.__game; g.setPitch(0.75); g.say('Bright sky test line, Potts.'); }); await p.waitForTimeout(1500); await contrast(p, 'desktop day contrast over the bright sky', TXT);

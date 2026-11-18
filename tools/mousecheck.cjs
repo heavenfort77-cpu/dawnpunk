@@ -6,10 +6,18 @@ const { chromium, devices } = require('playwright');
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } }); await ctx.addInitScript(() => { window.__fakeLock = false; }); const p = await ctx.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(String(e)));
   await p.goto('file://' + __dirname + '/../dist/index_single.html?seed=777&quality=' + q, { timeout: 180000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 180000 });
   await p.evaluate(() => window.__game.enterBase()); await p.waitForTimeout(2500);
-  ok(await p.evaluate(() => getComputedStyle(document.getElementById('mlook')).display) === 'block', 'the base shows "Click to look with the mouse"');
+  // a fresh player (no talk with Marla yet) gets the waking prompt (CONFIG.fresh, Nov 18) in place of the mouse hint: one centre prompt, and it still says to click
+  const w0 = await p.evaluate(() => [window.__game.wakeText(), getComputedStyle(document.getElementById('mlook')).display]);
+  ok(/^Click to start/.test(w0[0]) && w0[1] === 'none', 'a fresh player in the base sees the waking prompt "Click to start", not two prompts ("' + w0[0] + '", mouse hint ' + w0[1] + ')');
+  await p.evaluate(() => { window.__game.save.talkedMarla = true; });
   await p.mouse.click(640, 300); await p.waitForTimeout(600); ok(await p.evaluate(() => window.__game.mouseHeld && window.__lockAsks >= 1), 'one click asks the browser for the pointer');
   const y0 = await p.evaluate(() => window.__game.yaw); await p.evaluate(() => dispatchEvent(new MouseEvent('mousemove', { movementX: 90, movementY: 10 }))); await p.waitForTimeout(300); const y1 = await p.evaluate(() => window.__game.yaw);
   ok(Math.abs(y1 - y0) > 0.05, 'moving the mouse turns the view with no button held (' + y0.toFixed(2) + ' -> ' + y1.toFixed(2) + ')');
+  // once the mouse was taken and Marla talked to, losing the pointer in the base brings back the mouse hint
+  await p.evaluate(() => { window.__fakeLock = false; }); await p.waitForTimeout(800);
+  const m1 = await p.evaluate(() => [getComputedStyle(document.getElementById('mlook')).display, window.__game.wakeText()]);
+  ok(m1[0] === 'block' && m1[1] === '', 'the base shows "Click to look with the mouse" when the pointer is let go (hint ' + m1[0] + ', waking prompt "' + m1[1] + '")');
+  await p.mouse.click(640, 300); await p.waitForTimeout(600); ok(await p.evaluate(() => window.__game.mouseHeld), 'a click takes the pointer back');
   await p.evaluate(() => { const g = window.__game; document.getElementById('selRing').value = '0'; g.startRun(0); g.enterHouse(0); g.endDay(); }); await p.waitForTimeout(3000);
   if (!(await p.evaluate(() => window.__game.mouseHeld))) { await p.mouse.click(640, 300); await p.waitForTimeout(600); }
   ok(await p.evaluate(() => window.__game.mouseHeld), 'the pointer is held at night');

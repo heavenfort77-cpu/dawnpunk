@@ -8,7 +8,8 @@ const tier = process.argv[2] || 'low', K = ['walker', 'lurcher', 'hauler', 'stil
 const ok = (name, pass) => out.push([name, !!pass]);
 async function open(b, gm) {
   const p = await b.newPage({ viewport: { width: 640, height: 360 } }), errs = [];
-  await p.addInitScript(() => { window.__dtMax = 1.5; }); p.on('pageerror', (e) => errs.push(String(e)));
+  // the night-1 drill is skipped (tools/drillcheck.cjs tests it): it holds the night clock at about 2 s and places its machine where the camera looks, so part 2's seeded night never ran past 3 s
+  await p.addInitScript(() => { window.__dtMax = 1.5; try { localStorage.setItem('dawnpunk.drill', '{"skip":true}'); } catch (e) { /* none */ } }); p.on('pageerror', (e) => errs.push(String(e)));
   await p.goto('file://' + __dirname + '/../dist/index.html?quality=' + tier + '&seed=777' + (gm ? '' : '&gm=0'), { timeout: 180000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 180000 });
   return { p, errs };
 }
@@ -82,7 +83,7 @@ async function open(b, gm) {
   for (const [L, arr] of [[A.log, arrA], [B.log, arrB]]) for (const [t, gs] of L) for (const g of gs) if (g[4] !== 'approach' && arr[g[0]] === undefined) arr[g[0]] = t;
   const arrIds = Object.keys(arrA).filter((id) => arrB[id] !== undefined), arrSame = arrIds.filter((id) => arrA[id] === arrB[id]).length;
   for (const k of Object.keys(kinds)) ok(`in game, ${k}: ground position and phase identical with and without the motion at every sim step (${kinds[k].n.size} machines)`, kinds[k].bad === 0);
-  ok(`in game: ${steps} sim steps compared (${A.T.toFixed(1)} s of night), ${diff} differences; arrivals at an opening identical: ${arrSame} of ${arrIds.length}`, steps > 50 && diff === 0 && arrSame === arrIds.length);
+  ok(`in game: ${steps} sim steps compared (${A.T.toFixed(1)} s of night), ${diff} differences; arrivals at an opening identical: ${arrSame} of ${arrIds.length}`, steps > 50 && A.T >= 20 && diff === 0 && arrSame === arrIds.length && arrIds.length > 0);
   ok(`in game: every machine stands where the sim says (${A.checked} checks, ${A.misplaced} off)`, A.checked > 0 && A.misplaced === 0);
   ok(`in game: freezes happen in play (${A.freezes} so far), no NaN (${A.nan})`, A.freezes > 0 && A.nan === 0);
   ok(`in game: machines still say their lines with the motion on (${A.lines} lines started, captions on screen at once at most ${A.caps})`, A.lines > 0 && A.caps <= 1);

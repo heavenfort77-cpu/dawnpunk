@@ -28,7 +28,9 @@ const path = require('path');
     if (out) await p.screenshot({ path: out + String(t).replace('.', '_') + '.png', timeout: 300000 });
     console.log('INFO t=' + t + ' ' + JSON.stringify(info));
   }
-  await p.evaluate(() => { window.__dtMax = 0.5; window.__game.introAt(window.__game.cfg.opening.parts[4] - 0.2); }); await p.waitForTimeout(tier === 'high' ? 15000 : 5000);
+  // waits for the base, not a fixed time: the "Your job" card closes by itself CONFIG.lore.jobCardSecs (15 s) after it opens, and a fixed 15 s wait on high ran past it
+  await p.evaluate(() => { window.__dtMax = 0.5; window.__game.introAt(window.__game.cfg.opening.parts[4] - 0.2); });
+  await p.waitForFunction(() => window.__game.state === 'base', null, { timeout: 240000 }).catch(() => {}); await p.waitForTimeout(1500);
   const end = await p.evaluate(() => { const g = window.__game, s = g.save, sp = g.B.scoutPos(s); return { state: g.state, hint: sp.hint, cine: document.getElementById('cine').style.display, hud: document.getElementById('hud').style.display, msg: document.getElementById('msg').textContent, day: s.day, nights: s.nights, seen: s.seenIntro, pos: g.basePos(), filter: document.getElementById('c').style.filter }; });
   ok('played to the end it stands you in the base with Marla at your door', end.state === 'base' && end.hint === 'at your door' && end.cine === 'none' && end.hud === 'block' && !end.filter, JSON.stringify(end));
   ok('the save is the first day as before (day 1, no nights, opening marked seen)', end.day === 1 && end.nights === 0 && end.seen === true);
