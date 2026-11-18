@@ -1,0 +1,47 @@
+$ mkdir -p shots && CLEAN=gloom_0,gloom_1,gloom_2,gloom_3,gloom_4,gloom_5 node tools/itchshot.cjs gloom shots   (limit 120 min)
+INFO page up 26 s
+INFO base loaded 86 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 195 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":2,"cat":2,"houses":[{"i":0,"n":18,"L":2,"door":["42.7","-5.6"],"row":-1},{"i":1,"n":16,"L":2,"door":["-4.7","-6.0"],"row":-1},{"i":2,"n":14,"L":2,"door":["-44.0","6.5"],"row":1},{"i":3,"n":13,"L":2,"door":["51.9","6.7"],"row":1},{"i":4,"n":12,"L":2,"door":["-51.2","-6.9"],"row":-1},{"i":5,"n":11,"L":2,"door":["3.1","7.1"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO house 5
+INFO night: first Gloom {"t":4.399999999999992,"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0,"type":"window","floor":0},"H":7.275,"n":11}
+INFO turbine ok
+INFO close Gloom {"ok":true,"t":12.800000000000047}
+INFO target {"kind":"walker","d":"3.14","phase":"inside"}
+INFO fired [{"hit":true,"head":false}]
+INFO wrote shots/gloom_0.png (990 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 00m" hs=""
+CATVIEW gloom_0: none
+INFO wrote shots/gloom_0_clean.png
+INFO close Gloom {"ok":true,"t":15.700000000000037}
+INFO target {"kind":"walker","d":"0.90","phase":"inside"}
+INFO fired [{"hit":true,"head":false}]
+INFO wrote shots/gloom_1.png (1849 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="I am not carrying you home twice." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW gloom_1: none
+INFO wrote shots/gloom_1_clean.png
+INFO close Gloom {"ok":true,"t":18.40000000000007}
+INFO target {"kind":"walker","d":"0.90","phase":"inside"}
+INFO fired [{"hit":true,"head":false}]
+INFO wrote shots/gloom_2.png (2765 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="I am not carrying you home twice." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 30m" hs=""
+CATVIEW gloom_2: none
+INFO wrote shots/gloom_2_clean.png
+INFO close Gloom {"ok":true,"t":21.100000000000108}
+INFO target {"kind":"walker","d":"0.90","phase":"inside"}
+INFO fired [{"hit":true,"head":false}]
+INFO wrote shots/gloom_3.png (3696 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="Fall back. I am not hauling you home." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW gloom_3: none
+INFO wrote shots/gloom_3_clean.png
+INFO close Gloom {"ok":true,"t":23.600000000000144}
+INFO target {"kind":"ticks","d":"0.83","phase":"inside"}
+INFO fired []
+INFO wrote shots/gloom_4.png (4395 s) cam -2.68,1.60,-5.20 yaw -2.743 | HUD marla="" csay="" msg="" bprompt="" bstat="" time="" hs=""
+CATVIEW gloom_4: none
+INFO wrote shots/gloom_4_clean.png
+INFO close Gloom {"ok":true,"t":23.600000000000144}
+INFO target {"kind":"ticks","d":"0.83","phase":"inside"}
+INFO fired []
+INFO wrote shots/gloom_5.png (4869 s) cam -2.68,1.60,-5.20 yaw -2.743 | HUD marla="" csay="" msg="" bprompt="" bstat="" time="" hs=""
+CATVIEW gloom_5: none
+INFO wrote shots/gloom_5_clean.png
+NO PAGE ERRORS
+done 5079 s
+exit code 0

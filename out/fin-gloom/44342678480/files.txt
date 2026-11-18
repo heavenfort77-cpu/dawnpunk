@@ -1,0 +1,12 @@
+shots/gloom_0.png 1717079
+shots/gloom_0_clean.png 1944565
+shots/gloom_1.png 1719405
+shots/gloom_1_clean.png 1936189
+shots/gloom_2.png 1827542
+shots/gloom_2_clean.png 2094306
+shots/gloom_3.png 1780372
+shots/gloom_3_clean.png 1960676
+shots/gloom_4.png 583054
+shots/gloom_4_clean.png 567424
+shots/gloom_5.png 593083
+shots/gloom_5_clean.png 583056
