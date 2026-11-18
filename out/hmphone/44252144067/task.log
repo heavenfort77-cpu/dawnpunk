@@ -1,0 +1,6 @@
+$ mkdir -p hm && node tools/humanmotioncheck.cjs low "$PWD/dist/index_single.html" --frames hm/fr_low --json hm/low.json > hm/low.out 2> hm/low.err; tail -3 hm/low.err; grep -c "^FAIL" hm/low.out   (limit 60 min)
+[46 s, 30 fps] street done, 56 ms per frame
+[63 s, 30 fps] night done, 26 ms per frame
+[97 s, 30 fps] film done (14.0 s, 70 ms per frame)
+118
+exit code 0
