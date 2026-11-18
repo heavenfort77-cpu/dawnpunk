@@ -1,0 +1,22 @@
+$ mkdir -p shots && node tools/itchshot.cjs house shots   (limit 40 min)
+INFO page up 23 s
+INFO base loaded 43 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 114 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":2,"cat":2,"houses":[{"i":0,"n":18,"L":2,"door":["42.7","-5.6"],"row":-1},{"i":1,"n":16,"L":2,"door":["-4.7","-6.0"],"row":-1},{"i":2,"n":14,"L":2,"door":["-44.0","6.5"],"row":1},{"i":3,"n":13,"L":2,"door":["51.9","6.7"],"row":1},{"i":4,"n":12,"L":2,"door":["-51.2","-6.9"],"row":-1},{"i":5,"n":11,"L":2,"door":["3.1","7.1"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO house 5
+INFO night: first Gloom {"t":4.399999999999992,"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0,"type":"window","floor":0},"H":7.275,"n":11}
+INFO placed ok,ok,ok,ok
+INFO Gloom at the panel {"ok":true,"t":10.049999999999983}
+INFO wrote shots/house_0.png (697 s) cam -1.68,1.60,-6.10 yaw 1.730 | HUD marla="More of them behind. Lucky you." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 10m" hs=""
+CATVIEW house_0: none
+INFO wrote shots/house_0_clean.png
+INFO wrote shots/house_1.png (1019 s) cam -1.68,1.60,-6.10 yaw 1.730 | HUD marla="More of them behind. Lucky you." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 10m" hs=""
+CATVIEW house_1: none
+INFO wrote shots/house_1_clean.png
+INFO aim at walker
+INFO wrote shots/house_2.png (1351 s) cam -1.68,1.60,-6.10 yaw 1.758 | HUD marla="More of them behind. Lucky you." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 00m" hs=""
+CATVIEW house_2: none
+INFO wrote shots/house_2_clean.png
+NO PAGE ERRORS
+done 1469 s
+exit code 0
