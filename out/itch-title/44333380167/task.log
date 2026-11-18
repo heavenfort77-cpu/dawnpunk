@@ -1,0 +1,10 @@
+$ mkdir -p shots/sys shots/geo && fc-match Georgia; node tools/itchshot.cjs title shots/sys; (echo ttf-mscorefonts-installer msttcorefonts/accept-mscorefonts-eula select true | sudo debconf-set-selections; sudo apt-get install -y -q ttf-mscorefonts-installer >/dev/null 2>&1; fc-cache -f >/dev/null; fc-match Georgia); fc-match Georgia | grep -qi georgia && node tools/itchshot.cjs title shots/geo   (limit 20 min)
+DejaVuSerif.ttf: "DejaVu Serif" "Book"
+INFO page up 60 s
+INFO title font Georgia, serif 700 110px | tag Georgia, serif
+INFO stitle box {"x":51.203125,"y":266,"w":1177.59375,"h":188}
+INFO wrote title_card.png and title_alpha.png
+NO PAGE ERRORS
+done 1030 s
+DejaVuSerif.ttf: "DejaVu Serif" "Book"
+exit code 1

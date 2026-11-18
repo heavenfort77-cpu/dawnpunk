@@ -1,0 +1,2 @@
+shots/sys/title_alpha.png 432579
+shots/sys/title_card.png 1989016
