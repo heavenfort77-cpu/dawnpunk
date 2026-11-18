@@ -1,0 +1,8 @@
+ci_dump/bram_film_60.f32 241920
+ci_dump/labels60.json 25
+ci_dump/marla_film_60.f32 241920
+ci_dump/oko_film_60.f32 241920
+ci_dump/pip_film_60.f32 241920
+ci_dump/rec_gatherer_film_60.f32 241920
+ci_dump/rec_hunter_film_60.f32 241920
+ci_dump/rec_researcher_film_60.f32 241920
