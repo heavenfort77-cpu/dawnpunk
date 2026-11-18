@@ -145,9 +145,17 @@ export const CONFIG = {
     // slice: the motion runs in fixed steps of this many seconds (1/120: a 30 or 60 fps frame is a whole number of them, so the motion is the same at both); maxSlices: at most this many per frame (a longer gap is skipped)
     // turnAcc: walking, the body's turn rate changes by at most this many rad/s each second (30 = 1720 deg/s2; no snapped turns at a corner)
     // stepAcc: a pivot step turns the body with at most this angular acceleration (rad/s2; 80 = 4580 deg/s2, under the ~100 rad/s2 legs can give a turn); bigger turns take more steps
-    // swingRamp: the swing foot speeds up and slows down over this share of its swing each (0.2: its top speed is 1.25 x its mean, as a walking foot; 0.5 would be 2 x)
-    // lockRelease: a foot that lifts is let go of its spot over this many seconds; lockSlip: a foot more than this many m from where the leg puts it is let go (a teleport or a long pause)
-    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, swingRamp: 0.2, lockRelease: 0.12, lockSlip: 0.3 },
+    // swingRamp: the swing foot speeds up and slows down over this share of its swing each (0.15: its top speed is 1.18 x its mean; 0.5 would be 2 x)
+    // lockRelease: a foot that lifts is let go of its spot over this many seconds; lockSlip: a foot more than this many m from where the leg puts it is let go the same way
+    // plantV: above this ground speed (m/s) the feet stand by the walk's own stance phases (below it, standing: both feet, or the one not stepping)
+    // heelOff: walking at full stride, the knee bends this many rad as the heel lifts over the last heelOffAt share of a foot's time on the ground (then the swing starts from it)
+    // swingLift: walking at full stride, a foot is carried this many m above the ground at mid-swing (from where it left the ground to where it will land)
+    // walkLock: true = walking feet are held where they land too (false = they follow the gait's own leg swing, which slides them a little)
+    // landAhead: a walking foot lands this share of the ground the body covers during its stance ahead of the hip (the rest is behind it at toe-off)
+    // heelRise: at full stride the heel lifts this many m over the end of a foot's stance (heel off, so the leg leaves the ground bent); walkCrouch: m the pelvis is lowered walking
+    // reachMax: a held foot further from the hip than this share of the leg's length is let go like a lifted one (the knee never snaps from straight)
+    // stepLead: a pivot step's foot lifts for this share of the step before the body turns, and sets down for the same share after; recenter: after pivoting on one foot the body settles back over its middle in about this many s (while stepping or walking)
+    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, walkLock: true, landAhead: 0.42, heelRise: 0.1, walkCrouch: 0.09, reachMax: 1.03 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
@@ -522,6 +530,8 @@ export const CONFIG = {
       delay: 0.1,
       // decoded clips kept in memory at once (each is a few hundred KB decoded)
       cache: 16,
+      // true = a line queued to be said (the street lessons queued when a run starts) has its clip decoded at once, so her first street line starts with the text, not a decode later
+      warm: true,
     } },
   hud: { holdMs: 380 }, // hold a device button this long to read it instead of placing
   // UNCANNY GLOOM MOTION (owner Nov 16: "gloom to move uncanny"); src/gloommotion.js. Only the pose changes: where a machine is, how fast it goes and when it arrives stay the sim's.

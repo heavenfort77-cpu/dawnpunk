@@ -285,7 +285,7 @@ function tickWsTip(dt) { if (wsTipT <= 0 || state !== 'base' || ui) return; wsTi
   if (tipKind === 'hatchery') { if (!B.hatcheryTip(CONFIG, save)) return; save.toldHatchery = save.day; persist(); marlaHint(B.HATCHERY_TIP.replace('{d}', 'pond')); return; }
   if (!bview.rooms.WS || !B.markWorkshopTip(save)) return; persist(); const [x, z] = doorAt(bview.rooms.WS, 0); marlaHint(B.WORKSHOP_TIP.replace('{w}', whereWord({ x, z }))); }
 function marlaHint(text) { $('marla').textContent = text; marlaT = 5; sayAt = performance.now() / 1000 + 0.5; sayPrio = 3; } // for 3 s only a stairs alert may cut a hint
-function queueHint(delay, text, where, skip) { hintQ.push({ at: runT + delay, text, where, skip }); hintQ.sort((a, b) => a.at - b.at); }
+function queueHint(delay, text, where, skip) { hintQ.push({ at: runT + delay, text, where, skip }); hintQ.sort((a, b) => a.at - b.at); MV.warm(text); } // MV.warm: desktop voice decodes the line's clip ahead
 // a hint only shows where it makes sense (street or house); others wait their turn
 function dayHints(dt) { runT += dt; if (marlaT > 0.01) return; const here = sim ? 'house' : 'street', i = hintQ.findIndex((h) => runT >= h.at && (!h.where || h.where === here)); if (i < 0) return; const h = hintQ.splice(i, 1)[0]; if (!(h.skip && h.skip())) marlaHint(h.text); }
 function bellCheck(dayT) { if (run && !run.bell && dayT <= CONFIG.day.bell) { run.bell = true; sfxAlert('stair'); marlaHint('The bell, Potts! ' + H2.hoursWords(CONFIG.day.bell, false) + ' of light left. Pick your house!'); } }
@@ -623,6 +623,8 @@ function startRun() {
   run = RUN.createRun(B.makeCfg(CONFIG, save), +$('selRing').value, (() => { try { const q = new URLSearchParams(location.search).get('seed'); if (q) return +q; } catch (e) { /* no address */ } return (Math.random() * 1e9) | 0; })(), { gloomMult: B.gloomMult(CONFIG, save), extraEnergy: B.nightEnergyBonus(CONFIG, save) });
   if (CONFIG.boss && CONFIG.boss.on && run.ring === CONFIG.boss.ring) bossPreload(); // desktop: the boss model loads while you walk the street (src/bosshi.js)
   $('msg').textContent = ''; flashT = 0;
+  // a base line still on Marla's card (a base tip, said just before riding out) is cleared: it held back her first street line for the rest of its time, and base talk stays in the base
+  $('marla').textContent = ''; marlaT = 0;
   sim = null; runT = 0; hintQ.length = 0; hintN = 0; state = 'play'; paused = false; hurtT = 0; $('pause').style.display = 'none';
   $('menu').style.display = 'none'; $('end').style.display = 'none'; $('hud').style.display = 'block'; $('bFire').textContent = 'FIRE';
   yaw = 0; pitch = 0; run.px = 0; run.pz = 0; skyK = 0; enterTown();
