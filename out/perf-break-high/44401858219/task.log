@@ -1,0 +1,327 @@
+$ BREAK=1 FRAMES=2 node tools/perfcheck.cjs high 2>&1 | tee perf.txt   (limit 120 min)
+INFO dist sizes MB: index.html 12.5, index_single.html 84.1, solardg-itch.zip 52.5, models/ 41.1, tex/ 7.2, music/ 3.1, voice/ 2.3
+INFO high: page up 20 s, 53.3 MB so far
+INFO hub loaded 87 s 55.9 MB so far
+BREAK hub: in view 982 draws 2.42 M tris; whole scene 1543 draws 4.02 M tris; shadow casters 1241 draws 2.07 M tris; lights 15
+ BY TRIANGLES
+  1152.7k tris 530 draws 530 obj   | Mesh MeshStandardMaterial cs
+  1040.4k tris 108 draws 108 obj   | Mesh MeshStandardMaterial
+  36.0k tris 4 draws 4 obj  Scene/rig/body | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  32.6k tris 2 draws 2 obj  Scene/rig/scan_skin | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  30.3k tris 105 draws 105 obj   | Mesh MeshPhysicalMaterial cs
+  17.9k tris 3 draws 3 obj  Scene/rig/body | SkinnedMesh MeshStandardMaterial NOCULL
+  16.4k tris 3 draws 3 obj  Scene/rig/hair | SkinnedMesh MeshPhongMaterial NOCULL
+  11.1k tris 2 draws 2 obj  Scene/rig/hair | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  8.2k tris 4 draws 4 obj  rig/suit/suit_1 | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  8.0k tris 2 draws 2 obj  Scene/rig/scan_mouth | SkinnedMesh MeshStandardMaterial cs NOCULL
+  6.9k tris 2 draws 2 obj  Scene/rig/hair | SkinnedMesh MeshPhysicalMaterial NOCULL
+  6.1k tris 1 draws 1 obj  Scene/rig/eye_l | SkinnedMesh MeshStandardMaterial cs NOCULL
+  6.1k tris 1 draws 1 obj  Scene/rig/eye_r | SkinnedMesh MeshStandardMaterial cs NOCULL
+  5.3k tris 30 draws 30 obj   | Mesh MeshBasicMaterial cs
+  5.1k tris 4 draws 4 obj  rig/suit/suit_3 | SkinnedMesh MeshStandardMaterial cs NOCULL
+  4.8k tris 4 draws 4 obj  rig/suit/suit_2 | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  3.1k tris 1 draws 1 obj  Scene/rig/hair_under | SkinnedMesh MeshStandardMaterial NOCULL
+  2.2k tris 3 draws 3 obj  rig/suit/suit_4 | SkinnedMesh MeshStandardMaterial cs NOCULL
+  1.9k tris 3 draws 3 obj  rig/suit/suit_1 | SkinnedMesh MeshStandardMaterial NOCULL
+  1.8k tris 3 draws 3 obj  Scene/rig/cornea_l | SkinnedMesh MeshPhysicalMaterial NOCULL
+  1.8k tris 3 draws 3 obj  Scene/rig/cornea_r | SkinnedMesh MeshPhysicalMaterial NOCULL
+  1.7k tris 3 draws 3 obj  rig/suit/suit_2 | SkinnedMesh MeshStandardMaterial NOCULL
+  1.6k tris 3 draws 3 obj  rig/suit/suit_3 | SkinnedMesh MeshStandardMaterial NOCULL
+  1.1k tris 3 draws 3 obj  Scene/rig/lashes | SkinnedMesh MeshPhongMaterial NOCULL
+  1.1k tris 3 draws 3 obj  Scene/rig/lashes | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  1.0k tris 1 draws 1 obj   | Mesh MeshPhysicalMaterial
+  1.0k tris 4 draws 4 obj  Scene/rig/teeth_up | SkinnedMesh MeshStandardMaterial cs NOCULL
+  0.9k tris 1 draws 1 obj  rig/suit/suit_4 | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  0.8k tris 3 draws 3 obj  Scene/rig/teeth_up | SkinnedMesh MeshStandardMaterial NOCULL
+  0.8k tris 4 draws 4 obj  Scene/rig/teeth | SkinnedMesh MeshStandardMaterial cs NOCULL
+  0.7k tris 1 draws 1 obj   | Mesh ShaderMaterial NOCULL
+  0.7k tris 3 draws 3 obj  rig/suit/suit_4 | SkinnedMesh MeshStandardMaterial NOCULL
+  0.6k tris 2 draws 2 obj  Scene/rig/earring_l | SkinnedMesh MeshStandardMaterial cs NOCULL
+  0.6k tris 2 draws 2 obj  Scene/rig/earring_r | SkinnedMesh MeshStandardMaterial cs NOCULL
+  0.6k tris 3 draws 3 obj  Scene/rig/teeth | SkinnedMesh MeshStandardMaterial NOCULL
+ BY DRAWS
+  1152.7k tris 530 draws 530 obj   | Mesh MeshStandardMaterial cs
+  1040.4k tris 108 draws 108 obj   | Mesh MeshStandardMaterial
+  30.3k tris 105 draws 105 obj   | Mesh MeshPhysicalMaterial cs
+  0.1k tris 69 draws 69 obj   | Mesh MeshLambertMaterial cs
+  5.3k tris 30 draws 30 obj   | Mesh MeshBasicMaterial cs
+  0.4k tris 15 draws 15 obj   | Mesh MeshBasicMaterial
+  36.0k tris 4 draws 4 obj  Scene/rig/body | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  8.2k tris 4 draws 4 obj  rig/suit/suit_1 | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  4.8k tris 4 draws 4 obj  rig/suit/suit_2 | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  5.1k tris 4 draws 4 obj  rig/suit/suit_3 | SkinnedMesh MeshStandardMaterial cs NOCULL
+  0.8k tris 4 draws 4 obj  Scene/rig/teeth | SkinnedMesh MeshStandardMaterial cs NOCULL
+  1.0k tris 4 draws 4 obj  Scene/rig/teeth_up | SkinnedMesh MeshStandardMaterial cs NOCULL
+  17.9k tris 3 draws 3 obj  Scene/rig/body | SkinnedMesh MeshStandardMaterial NOCULL
+  0.5k tris 3 draws 3 obj  Scene/rig/collar | SkinnedMesh MeshStandardMaterial NOCULL
+  0.4k tris 3 draws 3 obj  Scene/rig/eye_l | SkinnedMesh MeshStandardMaterial NOCULL
+  0.4k tris 3 draws 3 obj  Scene/rig/eye_r | SkinnedMesh MeshStandardMaterial NOCULL
+  16.4k tris 3 draws 3 obj  Scene/rig/hair | SkinnedMesh MeshPhongMaterial NOCULL
+  1.1k tris 3 draws 3 obj  Scene/rig/lashes | SkinnedMesh MeshPhongMaterial NOCULL
+  1.9k tris 3 draws 3 obj  rig/suit/suit_1 | SkinnedMesh MeshStandardMaterial NOCULL
+  1.7k tris 3 draws 3 obj  rig/suit/suit_2 | SkinnedMesh MeshStandardMaterial NOCULL
+  1.6k tris 3 draws 3 obj  rig/suit/suit_3 | SkinnedMesh MeshStandardMaterial NOCULL
+  0.7k tris 3 draws 3 obj  rig/suit/suit_4 | SkinnedMesh MeshStandardMaterial NOCULL
+  0.6k tris 3 draws 3 obj  Scene/rig/teeth | SkinnedMesh MeshStandardMaterial NOCULL
+  0.8k tris 3 draws 3 obj  Scene/rig/teeth_up | SkinnedMesh MeshStandardMaterial NOCULL
+  0.1k tris 3 draws 3 obj  Scene/rig/belt | SkinnedMesh MeshStandardMaterial cs NOCULL
+  0.0k tris 3 draws 3 obj  Scene/rig/buckle | SkinnedMesh MeshStandardMaterial cs NOCULL
+  1.8k tris 3 draws 3 obj  Scene/rig/cornea_l | SkinnedMesh MeshPhysicalMaterial NOCULL
+  1.8k tris 3 draws 3 obj  Scene/rig/cornea_r | SkinnedMesh MeshPhysicalMaterial NOCULL
+  1.1k tris 3 draws 3 obj  Scene/rig/lashes | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  2.2k tris 3 draws 3 obj  rig/suit/suit_4 | SkinnedMesh MeshStandardMaterial cs NOCULL
+  0.4k tris 3 draws 3 obj  Scene/rig/eye_l | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  0.4k tris 3 draws 3 obj  Scene/rig/eye_r | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  0.1k tris 2 draws 2 obj  Scene/rig/belt | SkinnedMesh MeshStandardMaterial NOCULL
+  0.0k tris 2 draws 2 obj  Scene/rig/buckle | SkinnedMesh MeshStandardMaterial NOCULL
+  0.3k tris 2 draws 2 obj  Scene/rig/collar | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+PERF high hub: calls 2708 (screen 1503), triangles 5.41 M (screen 3.63 M), frame 16666 ms (software GPU), downloaded 55.9 MB, cam 3.0,1.6,7.0 yaw 0.00
+INFO high downloaded before the hub was ready: 55.9 MB (81 requests)
+INFO base loaded 402 s 55.9 MB so far
+INFO run loaded 498 s 55.9 MB so far
+BREAK street: in view 319 draws 2.43 M tris; whole scene 754 draws 5.41 M tris; shadow casters 378 draws 2.90 M tris; lights 11
+ BY TRIANGLES
+  1033.0k tris 102 draws 102 obj   | Mesh MeshStandardMaterial
+  645.3k tris 22 draws 22 obj   | Mesh MeshStandardMaterial cs
+  332.0k tris 83 draws 83 obj   | Mesh MeshStandardMaterial cs NOCULL
+  171.1k tris 12 draws 12 obj   | Mesh MeshStandardMaterial NOCULL
+  55.3k tris 7 draws 7 obj   | Mesh MeshPhysicalMaterial cs NOCULL
+  49.9k tris 2 draws 2 obj  tile | Mesh MeshStandardMaterial cs
+  15.6k tris 1 draws 1 obj  Scene/rig/scan_skin | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  11.3k tris 1 draws 1 obj  slab | Mesh MeshStandardMaterial cs
+  10.5k tris 2 draws 2 obj  leaf | Mesh MeshStandardMaterial cs
+  10.4k tris 1 draws 1 obj  Scene/rig/body | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  9.3k tris 1 draws 1 obj  Scene/hub/hub_m | Mesh MeshStandardMaterial cs
+  6.6k tris 1 draws 1 obj  dead | Mesh MeshStandardMaterial
+  6.6k tris 1 draws 1 obj  Scene/rig/hair | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  6.1k tris 1 draws 1 obj  Scene/rig/eye_l | SkinnedMesh MeshStandardMaterial cs NOCULL
+  6.1k tris 1 draws 1 obj  Scene/rig/eye_r | SkinnedMesh MeshStandardMaterial cs NOCULL
+  4.0k tris 1 draws 1 obj  Scene/rig/scan_mouth | SkinnedMesh MeshStandardMaterial cs NOCULL
+  4.0k tris 1 draws 1 obj  lump | Mesh MeshStandardMaterial cs
+  3.7k tris 1 draws 1 obj  stone | Mesh MeshStandardMaterial cs
+  3.6k tris 1 draws 1 obj  pend/head/head_m | Mesh MeshStandardMaterial cs
+  3.1k tris 1 draws 1 obj  Scene/rig/hair_under | SkinnedMesh MeshStandardMaterial NOCULL
+  2.9k tris 1 draws 1 obj  hip0/knee0/knee0_m | Mesh MeshStandardMaterial cs
+  2.9k tris 1 draws 1 obj  hip1/knee1/knee1_m | Mesh MeshStandardMaterial cs
+  2.9k tris 1 draws 1 obj  hip2/knee2/knee2_m | Mesh MeshStandardMaterial cs
+  2.6k tris 1 draws 1 obj  rig/suit/suit_1 | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  2.4k tris 1 draws 1 obj  mount0/hip0/hip0_m | Mesh MeshStandardMaterial cs
+  2.4k tris 1 draws 1 obj  mount1/hip1/hip1_m | Mesh MeshStandardMaterial cs
+  2.4k tris 1 draws 1 obj  mount2/hip2/hip2_m | Mesh MeshStandardMaterial cs
+  1.8k tris 3 draws 3 obj  lantern | Mesh MeshBasicMaterial cs
+  1.5k tris 1 draws 1 obj  Scene/rig/cornea_l | SkinnedMesh MeshPhysicalMaterial NOCULL
+  1.5k tris 1 draws 1 obj  Scene/rig/cornea_r | SkinnedMesh MeshPhysicalMaterial NOCULL
+  1.3k tris 1 draws 1 obj  can | Mesh MeshStandardMaterial cs
+  1.3k tris 1 draws 1 obj  rig/suit/suit_2 | SkinnedMesh MeshPhysicalMaterial cs NOCULL
+  1.3k tris 1 draws 1 obj  paper | Mesh MeshStandardMaterial cs
+  1.3k tris 1 draws 1 obj  rig/suit/suit_3 | SkinnedMesh MeshStandardMaterial cs NOCULL
+  1.1k tris 1 draws 1 obj  bottle | Mesh MeshStandardMaterial cs
+ BY DRAWS
+  1033.0k tris 102 draws 102 obj   | Mesh MeshStandardMaterial
+  332.0k tris 83 draws 83 obj   | Mesh MeshStandardMaterial cs NOCULL
+  645.3k tris 22 draws 22 obj   | Mesh MeshStandardMaterial cs
+  171.1k tris 12 draws 12 obj   | Mesh MeshStandardMaterial NOCULL
+  0.0k tris 10 draws 10 obj   | Mesh MeshBasicMaterial
+  55.3k tris 7 draws 7 obj   | Mesh MeshPhysicalMaterial cs NOCULL
+  0.9k tris 3 draws 3 obj  brick | Mesh MeshStandardMaterial cs
+  0.5k tris 3 draws 3 obj   | Mesh MeshLambertMaterial NOCULL
+  0.2k tris 3 draws 3 obj   | Mesh MeshLambertMaterial cs NOCULL
+  1.8k tris 3 draws 3 obj  lantern | Mesh MeshBasicMaterial cs
+  10.5k tris 2 draws 2 obj  leaf | Mesh MeshStandardMaterial cs
+  49.9k tris 2 draws 2 obj  tile | Mesh MeshStandardMaterial cs
+  0.4k tris 2 draws 2 obj  arm0/pend/head | Mesh MeshBasicMaterial cs
+  0.7k tris 1 draws 1 obj   | Mesh ShaderMaterial NOCULL
+  0.7k tris 1 draws 1 obj  ridge | Mesh MeshStandardMaterial cs
+  3.7k tris 1 draws 1 obj  stone | Mesh MeshStandardMaterial cs
+  11.3k tris 1 draws 1 obj  slab | Mesh MeshStandardMaterial cs
+  6.6k tris 1 draws 1 obj  dead | Mesh MeshStandardMaterial
+  4.0k tris 1 draws 1 obj  lump | Mesh MeshStandardMaterial cs
+  1.3k tris 1 draws 1 obj  paper | Mesh MeshStandardMaterial cs
+  1.3k tris 1 draws 1 obj  can | Mesh MeshStandardMaterial cs
+  1.1k tris 1 draws 1 obj  bottle | Mesh MeshStandardMaterial cs
+  0.6k tris 1 draws 1 obj  tyre | Mesh MeshStandardMaterial cs
+  1.0k tris 1 draws 1 obj  hub/arm0/arm0_m | Mesh MeshStandardMaterial cs
+  3.6k tris 1 draws 1 obj  pend/head/head_m | Mesh MeshStandardMaterial cs
+  0.0k tris 1 draws 1 obj  arm0/pend/head | Mesh MeshStandardMaterial
+  0.7k tris 1 draws 1 obj  arm0/pend/pend_m | Mesh MeshStandardMaterial cs
+  9.3k tris 1 draws 1 obj  Scene/hub/hub_m | Mesh MeshStandardMaterial cs
+  2.4k tris 1 draws 1 obj  mount0/hip0/hip0_m | Mesh MeshStandardMaterial cs
+  2.9k tris 1 draws 1 obj  hip0/knee0/knee0_m | Mesh MeshStandardMaterial cs
+  0.1k tris 1 draws 1 obj  hip0/knee0/ramr_knee0 | Mesh MeshStandardMaterial cs
+  0.2k tris 1 draws 1 obj  mount0/hip0/ramc_knee0 | Mesh MeshStandardMaterial cs
+  0.1k tris 1 draws 1 obj  mount0/hip0/ramr_hip0 | Mesh MeshStandardMaterial cs
+  0.7k tris 1 draws 1 obj  hub/mount0/mount0_m | Mesh MeshStandardMaterial cs
+  0.2k tris 1 draws 1 obj  hub/mount0/ramc_hip0 | Mesh MeshStandardMaterial cs
+PERF high street: calls 924 (screen 558), triangles 6.10 M (screen 3.66 M), frame 16369 ms (software GPU), downloaded 55.9 MB, cam 0.0,1.6,0.0 yaw 0.00
+INFO base loaded 739 s 55.9 MB so far
+INFO run loaded 829 s 55.9 MB so far
+INFO night loaded 1018 s 56 MB so far
+INFO night: first Gloom {"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0}}
+INFO night gloom loaded 1142 s 56 MB so far
+INFO Gloom present: walker,ticks,walker,walker,walker,ticks
+BREAK house: in view 442 draws 3.00 M tris; whole scene 957 draws 5.54 M tris; shadow casters 239 draws 2.76 M tris; lights 11
+ BY TRIANGLES
+  1158.4k tris 160 draws 160 obj   | Mesh MeshStandardMaterial
+  1004.0k tris 37 draws 37 obj   | Mesh MeshStandardMaterial cs
+  335.6k tris 84 draws 84 obj   | Mesh MeshStandardMaterial cs NOCULL
+  174.9k tris 12 draws 12 obj   | Mesh MeshStandardMaterial NOCULL
+  55.3k tris 7 draws 7 obj   | Mesh MeshPhysicalMaterial cs NOCULL
+  46.7k tris 2 draws 2 obj  pelvis/torso/torso_m | Mesh MeshStandardMaterial
+  44.7k tris 3 draws 3 obj  body/body_m/body_m_1 | Mesh MeshStandardMaterial
+  43.9k tris 2 draws 2 obj  tile | Mesh MeshStandardMaterial cs
+  22.0k tris 8 draws 8 obj  leaf | Mesh MeshStandardMaterial cs
+  11.3k tris 1 draws 1 obj  slab | Mesh MeshStandardMaterial cs
+  10.2k tris 2 draws 2 obj  hip0/knee0/knee0_m | Mesh MeshStandardMaterial
+  10.2k tris 2 draws 2 obj  hip1/knee1/knee1_m | Mesh MeshStandardMaterial
+  9.9k tris 2 draws 2 obj  head/head_m/head_m_1 | Mesh MeshStandardMaterial
+  7.9k tris 3 draws 3 obj  body/sg/sg_m | Mesh MeshStandardMaterial
+  7.8k tris 7 draws 7 obj  brick | Mesh MeshStandardMaterial cs
+  6.6k tris 1 draws 1 obj  dead | Mesh MeshStandardMaterial
+  5.3k tris 2 draws 2 obj  pelvis/hip0/hip0_m | Mesh MeshStandardMaterial
+  5.3k tris 2 draws 2 obj  pelvis/hip1/hip1_m | Mesh MeshStandardMaterial
+  4.0k tris 1 draws 1 obj  lump | Mesh MeshStandardMaterial cs
+  3.7k tris 1 draws 1 obj  stone | Mesh MeshStandardMaterial cs
+  3.2k tris 2 draws 2 obj  Scene/pelvis/pelvis_m | Mesh MeshStandardMaterial
+  3.1k tris 2 draws 2 obj  torso/arm0/arm0_m | Mesh MeshStandardMaterial
+  3.1k tris 2 draws 2 obj  torso/arm1/arm1_m | Mesh MeshStandardMaterial
+  2.1k tris 1 draws 1 obj  ridge | Mesh MeshStandardMaterial cs
+  2.1k tris 1 draws 1 obj  arm1/fore1/fore1_m | Mesh MeshStandardMaterial
+  2.1k tris 1 draws 1 obj  arm0/fore0/fore0_m | Mesh MeshStandardMaterial
+  1.9k tris 2 draws 2 obj  torso/neck/neck_m | Mesh MeshStandardMaterial
+  1.8k tris 4 draws 4 obj  ticks | Mesh MeshBasicMaterial
+  1.4k tris 1 draws 1 obj  cope | Mesh MeshStandardMaterial cs
+  1.3k tris 1 draws 1 obj  can | Mesh MeshStandardMaterial cs
+  1.3k tris 1 draws 1 obj  paper | Mesh MeshStandardMaterial cs
+  1.1k tris 1 draws 1 obj  bottle | Mesh MeshStandardMaterial cs
+  0.7k tris 1 draws 1 obj   | Mesh ShaderMaterial NOCULL
+  0.6k tris 1 draws 1 obj  pelvis/torso/arm0 | Mesh MeshBasicMaterial
+  0.6k tris 1 draws 1 obj  pelvis/torso/arm1 | Mesh MeshBasicMaterial
+ BY DRAWS
+  1158.4k tris 160 draws 160 obj   | Mesh MeshStandardMaterial
+  335.6k tris 84 draws 84 obj   | Mesh MeshStandardMaterial cs NOCULL
+  1004.0k tris 37 draws 37 obj   | Mesh MeshStandardMaterial cs
+  0.1k tris 25 draws 25 obj   | Mesh MeshBasicMaterial
+  174.9k tris 12 draws 12 obj   | Mesh MeshStandardMaterial NOCULL
+  22.0k tris 8 draws 8 obj  leaf | Mesh MeshStandardMaterial cs
+  7.8k tris 7 draws 7 obj  brick | Mesh MeshStandardMaterial cs
+  55.3k tris 7 draws 7 obj   | Mesh MeshPhysicalMaterial cs NOCULL
+  0.3k tris 5 draws 5 obj  pelvis/torso/arm0 | Mesh MeshStandardMaterial
+  0.3k tris 5 draws 5 obj  pelvis/torso/arm1 | Mesh MeshStandardMaterial
+  1.8k tris 4 draws 4 obj  ticks | Mesh MeshBasicMaterial
+  0.6k tris 3 draws 3 obj   | Mesh MeshLambertMaterial NOCULL
+  0.2k tris 3 draws 3 obj   | Mesh MeshLambertMaterial cs NOCULL
+  44.7k tris 3 draws 3 obj  body/body_m/body_m_1 | Mesh MeshStandardMaterial
+  0.6k tris 3 draws 3 obj  body/body_m/body_m_2 | Mesh MeshStandardMaterial
+  7.9k tris 3 draws 3 obj  body/sg/sg_m | Mesh MeshStandardMaterial
+  0.1k tris 3 draws 3 obj  Scene/body/sg | Mesh MeshBasicMaterial
+  0.1k tris 3 draws 3 obj  Scene/body/sg | Mesh MeshStandardMaterial
+  43.9k tris 2 draws 2 obj  tile | Mesh MeshStandardMaterial cs
+  5.3k tris 2 draws 2 obj  pelvis/hip0/hip0_m | Mesh MeshStandardMaterial
+  10.2k tris 2 draws 2 obj  hip0/knee0/knee0_m | Mesh MeshStandardMaterial
+  0.1k tris 2 draws 2 obj  hip0/knee0/ramr_knee0 | Mesh MeshStandardMaterial
+  0.6k tris 2 draws 2 obj  pelvis/hip0/ramc_knee0 | Mesh MeshStandardMaterial
+  0.1k tris 2 draws 2 obj  pelvis/hip0/ramr_hip0 | Mesh MeshStandardMaterial
+  5.3k tris 2 draws 2 obj  pelvis/hip1/hip1_m | Mesh MeshStandardMaterial
+  10.2k tris 2 draws 2 obj  hip1/knee1/knee1_m | Mesh MeshStandardMaterial
+  0.1k tris 2 draws 2 obj  hip1/knee1/ramr_knee1 | Mesh MeshStandardMaterial
+  0.6k tris 2 draws 2 obj  pelvis/hip1/ramc_knee1 | Mesh MeshStandardMaterial
+  0.1k tris 2 draws 2 obj  pelvis/hip1/ramr_hip1 | Mesh MeshStandardMaterial
+  3.2k tris 2 draws 2 obj  Scene/pelvis/pelvis_m | Mesh MeshStandardMaterial
+  0.6k tris 2 draws 2 obj  Scene/pelvis/ramc_hip0 | Mesh MeshStandardMaterial
+  0.6k tris 2 draws 2 obj  Scene/pelvis/ramc_hip1 | Mesh MeshStandardMaterial
+  3.1k tris 2 draws 2 obj  torso/arm0/arm0_m | Mesh MeshStandardMaterial
+  0.6k tris 2 draws 2 obj  torso/arm0/ramc_elbow0 | Mesh MeshStandardMaterial
+  3.1k tris 2 draws 2 obj  torso/arm1/arm1_m | Mesh MeshStandardMaterial
+PERF high house: calls 1275 (screen 827), triangles 7.77 M (screen 4.52 M), frame 19545 ms (software GPU), downloaded 56 MB, cam -1.9,1.6,-5.2 yaw 1.57
+INFO base loaded 1335 s 56 MB so far
+INFO run loaded 1496 s 63.3 MB so far
+INFO boss view {"x":-3.543984156606088,"z":7.508194474288627,"dd":17.995876745199016} {"model":"ready","boss":true}
+BREAK boss: in view 423 draws 2.78 M tris; whole scene 1229 draws 6.15 M tris; shadow casters 305 draws 3.02 M tris; lights 11
+ BY TRIANGLES
+  1040.9k tris 139 draws 139 obj   | Mesh MeshStandardMaterial
+  848.9k tris 41 draws 41 obj   | Mesh MeshStandardMaterial cs
+  350.8k tris 83 draws 83 obj   | Mesh MeshStandardMaterial cs NOCULL
+  200.7k tris 12 draws 12 obj   | Mesh MeshStandardMaterial NOCULL
+  83.2k tris 3 draws 3 obj  tile | Mesh MeshStandardMaterial cs
+  55.3k tris 7 draws 7 obj   | Mesh MeshPhysicalMaterial cs NOCULL
+  35.6k tris 9 draws 9 obj  leaf | Mesh MeshStandardMaterial cs
+  31.0k tris 1 draws 1 obj  body/body_m/body_m_1 | Mesh MeshStandardMaterial cs NOCULL
+  26.2k tris 1 draws 1 obj  Scene/base/base_m | Mesh MeshStandardMaterial cs NOCULL
+  25.2k tris 1 draws 1 obj  head/head_m/head_m_2 | Mesh MeshStandardMaterial cs NOCULL
+  11.3k tris 1 draws 1 obj  slab | Mesh MeshStandardMaterial cs
+  9.7k tris 8 draws 8 obj  brick | Mesh MeshStandardMaterial cs
+  6.6k tris 1 draws 1 obj  dead | Mesh MeshStandardMaterial
+  4.5k tris 1 draws 1 obj  beckonFore/beckonPaw/beckonPaw_m | Mesh MeshStandardMaterial cs NOCULL
+  3.9k tris 1 draws 1 obj  lump | Mesh MeshStandardMaterial cs
+  3.7k tris 1 draws 1 obj  stone | Mesh MeshStandardMaterial cs
+  3.1k tris 2 draws 2 obj  ridge | Mesh MeshStandardMaterial cs
+  3.1k tris 1 draws 1 obj  beckoner/slamPaw/slamPaw_m | Mesh MeshStandardMaterial cs NOCULL
+  2.0k tris 1 draws 1 obj  tyre | Mesh MeshStandardMaterial cs
+  1.6k tris 1 draws 1 obj  slamArm/slamFore/slamFore_m | Mesh MeshStandardMaterial cs NOCULL
+  1.4k tris 1 draws 1 obj  can | Mesh MeshStandardMaterial cs
+  1.4k tris 1 draws 1 obj  coin/coin_m/coin_m_1 | Mesh MeshStandardMaterial cs NOCULL
+  1.2k tris 1 draws 1 obj  cope | Mesh MeshStandardMaterial cs
+  1.2k tris 1 draws 1 obj  bottle | Mesh MeshStandardMaterial cs
+  1.1k tris 1 draws 1 obj  paper | Mesh MeshStandardMaterial cs
+  1.1k tris 1 draws 1 obj  body/beckonArm/beckonArm_m | Mesh MeshStandardMaterial cs NOCULL
+  1.0k tris 1 draws 1 obj  body/slamArm/slamArm_m | Mesh MeshStandardMaterial cs NOCULL
+  0.8k tris 1 draws 1 obj  beckonArm/plate0/plate0_m | Mesh MeshStandardMaterial cs NOCULL
+  0.8k tris 1 draws 1 obj  slamArm/plate1/plate1_m | Mesh MeshStandardMaterial cs NOCULL
+  0.7k tris 1 draws 1 obj   | Mesh ShaderMaterial NOCULL
+  0.6k tris 1 draws 1 obj  sheet | Mesh MeshStandardMaterial cs
+  0.6k tris 1 draws 1 obj  beckonArm/beckonFore/beckonFore_m | Mesh MeshStandardMaterial cs NOCULL
+  0.6k tris 1 draws 1 obj  beckonFore/plate4/plate4_m | Mesh MeshStandardMaterial cs NOCULL
+  0.6k tris 1 draws 1 obj  beckonArm/plate2/plate2_m | Mesh MeshStandardMaterial cs NOCULL
+  0.6k tris 1 draws 1 obj  slamArm/plate3/plate3_m | Mesh MeshStandardMaterial cs NOCULL
+ BY DRAWS
+  1040.9k tris 139 draws 139 obj   | Mesh MeshStandardMaterial
+  350.8k tris 83 draws 83 obj   | Mesh MeshStandardMaterial cs NOCULL
+  848.9k tris 41 draws 41 obj   | Mesh MeshStandardMaterial cs
+  0.4k tris 31 draws 31 obj   | Mesh MeshBasicMaterial
+  200.7k tris 12 draws 12 obj   | Mesh MeshStandardMaterial NOCULL
+  35.6k tris 9 draws 9 obj  leaf | Mesh MeshStandardMaterial cs
+  9.7k tris 8 draws 8 obj  brick | Mesh MeshStandardMaterial cs
+  55.3k tris 7 draws 7 obj   | Mesh MeshPhysicalMaterial cs NOCULL
+  0.1k tris 4 draws 4 obj  Scene/base/body | Mesh MeshBasicMaterial
+  0.0k tris 4 draws 4 obj  Scene/base/body | Mesh MeshStandardMaterial
+  83.2k tris 3 draws 3 obj  tile | Mesh MeshStandardMaterial cs
+  0.6k tris 3 draws 3 obj   | Mesh MeshLambertMaterial NOCULL
+  0.4k tris 3 draws 3 obj   | Mesh MeshLambertMaterial cs NOCULL
+  3.1k tris 2 draws 2 obj  ridge | Mesh MeshStandardMaterial cs
+  0.7k tris 1 draws 1 obj   | Mesh ShaderMaterial NOCULL
+  1.2k tris 1 draws 1 obj  cope | Mesh MeshStandardMaterial cs
+  0.6k tris 1 draws 1 obj  sheet | Mesh MeshStandardMaterial cs
+  3.7k tris 1 draws 1 obj  stone | Mesh MeshStandardMaterial cs
+  11.3k tris 1 draws 1 obj  slab | Mesh MeshStandardMaterial cs
+  6.6k tris 1 draws 1 obj  dead | Mesh MeshStandardMaterial
+  3.9k tris 1 draws 1 obj  lump | Mesh MeshStandardMaterial cs
+  1.4k tris 1 draws 1 obj  can | Mesh MeshStandardMaterial cs
+  1.1k tris 1 draws 1 obj  paper | Mesh MeshStandardMaterial cs
+  1.2k tris 1 draws 1 obj  bottle | Mesh MeshStandardMaterial cs
+  2.0k tris 1 draws 1 obj  tyre | Mesh MeshStandardMaterial cs
+  26.2k tris 1 draws 1 obj  Scene/base/base_m | Mesh MeshStandardMaterial cs NOCULL
+  1.1k tris 1 draws 1 obj  body/beckonArm/beckonArm_m | Mesh MeshStandardMaterial cs NOCULL
+  0.6k tris 1 draws 1 obj  beckonArm/beckonFore/beckonFore_m | Mesh MeshStandardMaterial cs NOCULL
+  0.3k tris 1 draws 1 obj  beckonPaw/beckonCore/beckonCore_m | Mesh MeshBasicMaterial cs NOCULL
+  4.5k tris 1 draws 1 obj  beckonFore/beckonPaw/beckonPaw_m | Mesh MeshStandardMaterial cs NOCULL
+  0.6k tris 1 draws 1 obj  beckonFore/plate4/plate4_m | Mesh MeshStandardMaterial cs NOCULL
+  0.4k tris 1 draws 1 obj  beckonArm/beckonFore/ramc_1080 | Mesh MeshStandardMaterial cs NOCULL
+  0.1k tris 1 draws 1 obj  beckonArm/beckonFore/ramr_1081 | Mesh MeshStandardMaterial cs NOCULL
+  0.8k tris 1 draws 1 obj  beckonArm/plate0/plate0_m | Mesh MeshStandardMaterial cs NOCULL
+  0.6k tris 1 draws 1 obj  beckonArm/plate2/plate2_m | Mesh MeshStandardMaterial cs NOCULL
+PERF high boss: calls 1208 (screen 759), triangles 7.13 M (screen 4.18 M), frame 18901 ms (software GPU), downloaded 63.5 MB, cam -3.5,1.6,7.5 yaw 2.16
+INFO high total downloaded 63.5 MB in 97 requests; models fetched: gloom_walker_hi.glb @0s, gloom_lurcher_hi.glb @0s, gloom_ticks_hi.glb @0s, gloom_hauler_hi.glb @0s, gloom_stilt_hi.glb @0s, gloom_lantern_hi.glb @0s, gloom_warden_hi.glb @8s, marla_hi.glb @8s, bram_scan_hi.glb @22s, oko_hi.glb @22s, pip_hi.glb @22s, boss_beckoner_hi.glb @1346s
+INFO no page errors (high)
+PERFJSON [{"tier":"high","spot":"hub","calls":2708,"tris":5407692,"sCalls":1503,"sTris":3629942,"ms":16666,"mb":55.9,"cam":"3.0,1.6,7.0 yaw 0.00","startMB":55.9},{"tier":"high","spot":"street","calls":924,"tris":6104900,"sCalls":558,"sTris":3662169,"ms":16369,"mb":55.9,"cam":"0.0,1.6,0.0 yaw 0.00"},{"tier":"high","spot":"house","calls":1275,"tris":7766565,"sCalls":827,"sTris":4521761,"ms":19545,"mb":56,"cam":"-1.9,1.6,-5.2 yaw 1.57"},{"tier":"high","spot":"boss","calls":1208,"tris":7125606,"sCalls":759,"sTris":4183739,"ms":18901,"mb":63.5,"cam":"-3.5,1.6,7.5 yaw 2.16"}]
+FAIL high: downloaded before the hub is ready 55.9 MB (target < 20)
+PASS high: no page errors
+FAIL high hub: 2708 draw calls per frame (target < 500)
+FAIL high hub: 5.41 M triangles per frame (target < 1.00 M)
+FAIL high street: 924 draw calls per frame (target < 500)
+FAIL high street: 6.10 M triangles per frame (target < 1.00 M)
+FAIL high house: 1275 draw calls per frame (target < 500)
+FAIL high house: 7.77 M triangles per frame (target < 1.00 M)
+FAIL high boss: 1208 draw calls per frame (target < 500)
+FAIL high boss: 7.13 M triangles per frame (target < 1.00 M)
+PERF CHECK FAILED (9)
+exit code 0
