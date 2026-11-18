@@ -4,6 +4,8 @@ const { chromium } = require('playwright');
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const p = await b.newPage({ viewport: { width: 844, height: 390 } }); const errs = [], out = [];
   p.on('pageerror', (e) => errs.push(String(e)));
   await p.goto('file://' + __dirname + '/../dist/index.html?quality=low'); await p.waitForFunction(() => window.__game && window.__game.enterBase);
+  // the night-1 drill holds back every spawn but its own Walker (src/main.js drillBegin): skip it, or only Walkers come in this check's window (phonefix Nov 18)
+  await p.evaluate(() => { try { localStorage.setItem('dawnpunk.drill', '{"skip":true}'); } catch (e) { /* none */ } });
   const K = ['walker', 'lurcher', 'hauler', 'stilt', 'lantern', 'ticks', 'warden'], tris = await p.evaluate((K) => K.map((k) => window.__game.gloomTris(k)), K);
   const budget = await p.evaluate(() => { const q = window.__game.quality(); return { tier: q.tier, max: window.CONFIG.quality[q.tier].machineTris }; });
   out.push(['triangles per machine within ' + budget.max + ' (' + budget.tier + ' graphics tier): ' + K.map((k, i) => k + ' ' + tris[i]).join(', '), tris.every((n) => n > 300 && n <= budget.max)]);

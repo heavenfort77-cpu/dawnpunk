@@ -38,7 +38,7 @@
     { "name": "gloomglbcheck", "script": "tools/gloomglbcheck.cjs", "args": ["walker,lurcher,hauler,stilt,lantern,ticks,warden"], "tier": "desktop", "quality": "high", "timeout": 100 },
     { "name": "gloommotioncheck", "script": "tools/gloommotioncheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
     { "name": "animcheck", "script": "tools/animcheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
-    { "name": "bosscheck", "script": "tools/bosscheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
+    { "name": "bosscheck", "script": "tools/bosscheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 160, "note": "a ring-5 night to dawn on the software renderer at desktop tier; did not finish in 70 min on the runner (CI Nov 18); prints its lines only at the end" },
     { "name": "openingcheck", "script": "tools/openingcheck.cjs", "args": ["high", "{out}/open_", "{dist}/index_single.html", "1280x720"], "tier": "desktop", "quality": "high", "timeout": 100 },
     { "name": "gloomhitcheck_desktop", "script": "tools/gloomhitcheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
     { "name": "qualitycheck", "script": "tools/qualitycheck.cjs", "args": [], "tier": "desktop", "quality": "both", "timeout": 35 },

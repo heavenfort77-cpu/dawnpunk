@@ -11,7 +11,8 @@ const { chromium } = require('playwright');
   await p.click('#enter').catch(() => {}); await p.waitForTimeout(800);
   await p.evaluate(() => window.__game.startRun(0)); await p.waitForTimeout(1200);
   const h = await p.evaluate(() => { const r = window.__game.run, hh = r.houses[0]; return [hh.doorX, hh.doorZ, hh.row]; }); await p.evaluate(([x, z, row]) => window.__game.setTown(x, z - row * 0.4), h); await p.waitForTimeout(900);
-  await p.evaluate(() => window.__game.nightfall()); await p.waitForTimeout(1500);
+  // the machines' kind lines ("Lurcher. Fast one...") take Marla's card on a slow runner; they are not what this check is about (CONFIG.gloomLook.kindLineAfter)
+  await p.evaluate(() => { const g = window.__game; (typeof g.cfg === 'function' ? g.cfg() : g.cfg).gloomLook.kindLineAfter = 1e9; window.__game.nightfall(); }); await p.waitForTimeout(1500);
   const L = await p.evaluate(() => ({ nights: window.__game.save ? (window.__game.save.nights || 0) : -1, phase: window.__game.sim && window.__game.sim.phase }));
   out.push(['first night running (nights done ' + L.nights + ', phase ' + L.phase + ')', L.nights === 0 && L.phase === 'night']);
   let hint = '';

@@ -176,7 +176,7 @@ check('cannon only hits Gloom on the player\'s floor', (() => { const t = create
   check('shooting too high misses over the Gloom', mk(Math.atan(0.3), false) === 100);
 }
 { // the aimed shot hits what is drawn (owner Nov 18, "on phone I can't hit Ticks"; CONFIG.cannon.shapes, measured by tools/gloomhitcheck.cjs): every kind, at 2, 5 and 10 m, facing you and side-on
-  const SH = CONFIG.cannon.shapes, PAD = CONFIG.cannon.shapePad, KS = Object.keys(SH);
+  const SH = CONFIG.cannon.shapes.low, PAD = CONFIG.cannon.shapePad, KS = Object.keys(SH);
   // fire at the point (lx, ly, lz) in the machine's own frame (as src/main.js turns its model: face + PI); returns '-' miss, 'h' hit, 'H' head shot
   // (angles: [yaw, pitch] given straight instead of a point)
   const W = (d, side, lx, ly, lz) => { const th = Math.atan2(0, -d) + (side ? Math.PI / 2 : 0) + Math.PI; return [lx * Math.cos(th) + lz * Math.sin(th), ly, -d - lx * Math.sin(th) + lz * Math.cos(th)]; };
@@ -204,6 +204,13 @@ check('cannon only hits Gloom on the player\'s floor', (() => { const t = create
     // the Ticks' near end (facing you, the machine's +z end is the near one), low down, 2 m away: the old cylinder put that shot into the ground before it reached the centre
     check('aimed shot: a Ticks hit low on its near end from 2 m (missed with the old cylinder)', shoot('ticks', 2, false, S[0], low, near) === 'h' && shoot('ticks', 2, false, S[0], low, near, true) === '-'); }
   check('aimed shot: a Gloom without a kind keeps the old cylinder (level shot hits, a shot 0.3 m over 2.4 m misses)', (() => { const t = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 2, boss: false }); t.spawns.length = 0; t.player.energy = 90; t.player.yaw = 0; t.player.pitch = 0; t.gloom.push({ id: 1, x: 0, z: -6, floor: 0, hp: 100, maxhp: 100, phase: 'inside', bp: 0, timer: 0, cd: 9, face: 0 }); t.fireCannon('ray', 1); const a = t.gloom[0].hp < 100; t.player.pitch = Math.atan((2.7 - 1.6) / 6); t.player.cd = 0; const h = t.gloom[0].hp; t.fireCannon('ray', 1); return a && t.gloom[0].hp === h; })());
+  { // per graphics tier (owner Nov 18 12:11): phones, bots and tests use shapes.low; desktop uses shapes.high, and a live shape (the model as drawn this frame) wins over both
+    const lo = CONFIG.cannon.shapes.low.stilt, hi = CONFIG.cannon.shapes.high.stilt, side = (S) => S[0] + S[2] + PAD;
+    // a level-ish shot passing just outside the desktop Stilt's side but inside the lenient phone shape (the phone's Stilt reaches further sideways)
+    const x = (side(lo) + side(hi)) / 2, aim = (o, live) => { const t = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 2, boss: false, ...o }); t.spawns.length = 0; const P = t.player; P.energy = 90; t.gloom.push({ id: 7, kind: 'stilt', x: 0, z: -5, floor: 0, hp: 1e6, maxhp: 1e6, phase: 'inside', bp: 0, timer: 0, cd: 9, face: Math.PI });
+      const th = 2 * Math.PI, wx = x * Math.cos(th), wz = -5 - x * Math.sin(th); P.yaw = Math.atan2(-wx, -wz); P.pitch = Math.atan2(1.0 - CONFIG.cannon.eye, Math.hypot(wx, wz)); t.fireCannon('ray', 1, false, live || null); return t.gloom[0].hp < 1e6; };
+    check('aimed shot per tier: a shot just past the desktop Stilt\'s side hits with the phone shapes (leeway) and misses with the desktop shapes', side(lo) > side(hi) + 0.1 && aim({}) && !aim({ shotTier: 'high' }), 'phone side ' + side(lo).toFixed(2) + ' m, desktop ' + side(hi).toFixed(2) + ' m');
+    check('aimed shot per tier: a live (as drawn) shape wins over the tier shapes', !aim({}, { 7: [0, 0, 0.2, 0.2, 2, 0, 0, 0.1, 0.1, 1.8, 2] }) && aim({ shotTier: 'high' }, { 7: [x, 0, 0.3, 0.3, 2, x, 0, 0.1, 0.1, 1.8, 2] })); }
   check('aimed shot: a Gloom halfway up the stairs is drawn (and hit) half a floor up (sim.gloomY)', (() => { const t = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 1 }); const g = { id: 1, kind: 'walker', x: 0, z: 0, floor: 0, hp: 9, maxhp: 9, phase: 'inside', bp: 0, timer: 0, cd: 9, face: 0, climb: { to: 1, t: 1, dur: 2 } }; return Math.abs(t.gloomY(g) - CONFIG.floorH / 2) < 1e-9; })());
 }
 { // the open stair and ladder gaps upstairs (owner Nov 18, CONFIG.fall): walking over one drops you to the floor below; the stair-top marker still takes the stairs

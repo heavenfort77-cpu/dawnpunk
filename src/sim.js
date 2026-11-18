@@ -50,6 +50,10 @@ export function makeBreaches(cfg, n, H, L) {
   return out;
 }
 
+// which CONFIG.cannon.shapes set the aimed shot uses (owner Nov 18 12:11: "desktop must be perfect; phone model allows more leeway on hit"): 'low' (phones, bots, tests) or 'high' (desktop);
+// src/main.js sets it once from the graphics tier; opts.shotTier overrides it for one sim
+let SHOT_TIER = 'low';
+export function setShotTier(t) { SHOT_TIER = t === 'high' ? 'high' : 'low'; }
 export function createSim(opts = {}) {
   const cfg = opts.cfg || DEFAULT;
   const ring = opts.ring || 0, house = opts.house || 0;
@@ -189,7 +193,7 @@ export function createSim(opts = {}) {
     s.food--; s.eaten++; p.hp = Math.min(cfg.player.hp, p.hp + cfg.food.heal); p.eatCd = cfg.food.eatCd; s.log.push({ e: 'eat' });
     return true;
   };
-  s.fireCannon = (mode = 'ray', hit = 1, charged = false) => { // charged: a held shot. It costs and hurts charge.cost / charge.dmg times as much and goes through every Gloom on its line
+  s.fireCannon = (mode = 'ray', hit = 1, charged = false, live = null) => { // charged: a held shot. It costs and hurts charge.cost / charge.dmg times as much and goes through every Gloom on its line
     const p = s.player, c = cfg.cannon, CH = charged ? c.charge : null, cost = c.cost * (CH ? CH.cost : 1), line = [];
     if (s.done || s.phase === 'day' || p.climb || (!CH && p.cd > 0) || p.energy < cost) return false;
     p.cd = 1 / c.rate; addEnergy(-cost);
@@ -204,7 +208,15 @@ export function createSim(opts = {}) {
       if (Math.abs(dv[1]) < 1e-9) { if (o[1] < y0 || o[1] > y1) return null; } else { let u = (y0 - o[1]) / dv[1], w = (y1 - o[1]) / dv[1]; if (u > w) { const q = u; u = w; w = q; } t0 = Math.max(t0, u); t1 = Math.min(t1, w); }
       return t0 <= t1 ? t0 : null; };
     // hitBox(): the entry distance into the body (t, m flat) and whether the shot also passes through the head (a head shot), or null for a miss; pad widens the body (a charged shot)
-    const hitBox = (g, S, pad) => { const th = g.face + Math.PI, co = Math.cos(th), si = Math.sin(th), wx = p.x - g.x, wz = p.z - g.z, q = c.shapePad || 0, e = q + pad;
+    // a live shape (desktop, src/main.js drawnShape): the shot against each drawn part's own box (in the part's frame), above the floor the machine stands on; { t, head } or null
+    // (t: where it meets the first part; head: that first part is a head part)
+    const hitParts = (Lv) => { const e0 = [p.x, c.eye + p.floor * cfg.floorH, p.z], dw = [fx, tn, fz]; let best = null, head = false;
+      let f0 = 0, f1 = c.range; if (Math.abs(tn) < 1e-9) { if (e0[1] < Lv.floor) return null; } else { const tf = (Lv.floor - e0[1]) / tn; if (tn < 0) f1 = Math.min(f1, tf); else f0 = Math.max(f0, tf); } if (f0 > f1) return null;
+      for (const P of Lv.parts) { const m = P.inv, o = [0, 1, 2].map((k) => m[k] * e0[0] + m[4 + k] * e0[1] + m[8 + k] * e0[2] + m[12 + k]), dv = [0, 1, 2].map((k) => m[k] * dw[0] + m[4 + k] * dw[1] + m[8 + k] * dw[2]);
+        const t = slabT(o, dv, [P.box[0], P.box[1], P.box[2]], [P.box[3], P.box[4], P.box[5]], f0, f1); if (t === null) continue; if (best === null || t < best) { best = t; head = P.head; } }
+      return best === null ? null : { t: best, head }; };
+    const slabT = (o, dv, lo, hi, t0, t1) => { for (let k = 0; k < 3; k++) { if (Math.abs(dv[k]) < 1e-12) { if (o[k] < lo[k] || o[k] > hi[k]) return null; continue; } let a = (lo[k] - o[k]) / dv[k], b = (hi[k] - o[k]) / dv[k]; if (a > b) { const q = a; a = b; b = q; } if (a > t0) t0 = a; if (b < t1) t1 = b; if (t0 > t1) return null; } return t0; };
+    const hitBox = (g, S, pad) => { if (S.parts) return hitParts(S); const th = g.face + Math.PI, co = Math.cos(th), si = Math.sin(th), wx = p.x - g.x, wz = p.z - g.z, q = c.shapePad || 0, e = q + pad;
       const o = [wx * co - wz * si, c.eye + p.floor * cfg.floorH - s.gloomY(g), wx * si + wz * co], dv = [fx * co - fz * si, tn, fx * si + fz * co];
       const t = tube(o, dv, S[0], S[1], S[2] + e, S[3] + e, 0, S[4] + q); if (t === null) return null;
       return { t, head: tube(o, dv, S[5], S[6], S[7] + q, S[8] + q, S[9] - q, S[10] + q) !== null }; };
@@ -230,9 +242,14 @@ export function createSim(opts = {}) {
       if (d > c.range || !openOK(p.x, p.z, g)) continue;
       if (mode === 'auto') { if (d < best) { best = d; target = g; covered = panelCross(g.x, g.z).length > 0; } }
       else {
-        // the drawn size of its kind (c.shapes) when there is one; a Gloom without a kind keeps the old cylinder (rayWidth round, gloomH tall, head shots above headZone)
-        const S = c.shapes && c.shapes[g.kind]; let along, hd;
-        if (S) { const r = hitBox(g, S, CH ? (CH.width - 1) * c.rayWidth : 0); if (!r || (!CH && r.t >= best)) continue; along = r.t; hd = r.head; }
+        // the shape it is drawn with: live[id] (desktop: its model's parts as drawn this frame, src/main.js liveShapes; not for the wider charged shot), else its kind's shape for this graphics tier (c.shapes.low / .high);
+        // a Gloom without a kind keeps the old cylinder (rayWidth round, gloomH tall, head shots above headZone)
+        const tier = opts.shotTier || SHOT_TIER, TS = c.shapes && c.shapes[tier] && c.shapes[tier][g.kind], Lv = !CH && live && live[g.id], S = Lv || TS; let along, hd;
+        if (S) { let r;
+          // desktop: the drawn parts decide alone; phones (leeway): the kind's lenient oval or the drawn parts give the hit, the drawn parts alone decide a head shot
+          if (Lv && Lv.parts) { const pr = hitParts(Lv); if (tier === 'high' || !TS) r = pr; else { const ro = hitBox(g, TS, 0); r = ro || pr ? { t: Math.min(ro ? ro.t : 1e9, pr ? pr.t : 1e9), head: !!(pr && pr.head) } : null; } }
+          else r = hitBox(g, S, CH ? (CH.width - 1) * c.rayWidth : 0);
+          if (!r || (!CH && r.t >= best)) continue; along = r.t; hd = r.head; }
         else {
           along = dx * fx + dz * fz; if (along < 0) continue;
           const perp = Math.abs(dx * fz - dz * fx); if (perp >= c.rayWidth * (CH ? CH.width : 1) || (!CH && along >= best)) continue;
