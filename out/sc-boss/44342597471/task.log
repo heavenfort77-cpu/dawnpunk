@@ -1,0 +1,41 @@
+$ mkdir -p shots && SCALE=0.5 node tools/itchshot.cjs boss shots   (limit 90 min)
+INFO page up 9 s
+INFO base loaded 28 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 83 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":4,"cat":2,"houses":[{"i":0,"n":22,"L":3,"door":["43.5","-6.3"],"row":-1},{"i":1,"n":20,"L":3,"door":["-4.3","-6.6"],"row":-1},{"i":2,"n":18,"L":2,"door":["-42.7","5.6"],"row":1},{"i":3,"n":17,"L":2,"door":["53.2","5.8"],"row":1},{"i":4,"n":16,"L":2,"door":["-52.7","-6.0"],"row":-1},{"i":5,"n":15,"L":2,"door":["4.5","6.2"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO boss {"model":"ready","built":"glb","boss":true}
+INFO moment summon glow true
+INFO look null
+INFO wrote shots/boss_00.png (505 s) cam -4.54,1.60,5.88 yaw 0.000 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_00: none
+INFO look {"x":-7.526039252209374,"z":4.711519390598413,"dd":19.767141664174368,"type":"window"}
+INFO wrote shots/boss_01.png (613 s) cam -7.53,1.60,4.71 yaw 2.392 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_01: none
+INFO look {"x":-4.397289389989577,"z":7.551176946579156,"dd":15.34067952652629,"type":"door"}
+INFO wrote shots/boss_02.png (717 s) cam -4.40,1.60,7.55 yaw 2.045 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_02: none
+INFO look {"x":-3.710264574949518,"z":7.619328728573855,"dd":17.795876745199013,"type":"door"}
+INFO wrote shots/boss_03.png (820 s) cam -3.71,1.60,7.62 yaw 2.160 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_03: none
+INFO look {"x":-7.676184509848251,"z":4.576062986014382,"dd":18.57023301855836,"type":"window"}
+INFO wrote shots/boss_04.png (928 s) cam -7.68,1.60,4.58 yaw 2.408 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_04: none
+INFO moment summoned true
+INFO look null
+INFO wrote shots/boss_10.png (1101 s) cam -7.68,1.60,4.58 yaw 2.408 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_10: none
+INFO look {"x":-7.526039252209374,"z":4.711519390598413,"dd":19.767141664174368,"type":"window"}
+INFO wrote shots/boss_11.png (1210 s) cam -7.53,1.60,4.71 yaw 2.392 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_11: none
+INFO look {"x":-4.397289389989577,"z":7.551176946579156,"dd":15.34067952652629,"type":"door"}
+INFO wrote shots/boss_12.png (1318 s) cam -4.40,1.60,7.55 yaw 2.045 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_12: none
+INFO look {"x":-3.710264574949518,"z":7.619328728573855,"dd":17.795876745199013,"type":"door"}
+INFO wrote shots/boss_13.png (1424 s) cam -3.71,1.60,7.62 yaw 2.160 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_13: none
+INFO look {"x":-7.676184509848251,"z":4.576062986014382,"dd":18.57023301855836,"type":"window"}
+INFO wrote shots/boss_14.png (1534 s) cam -7.68,1.60,4.58 yaw 2.408 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_14: none
+NO PAGE ERRORS
+done 1546 s
+exit code 0
