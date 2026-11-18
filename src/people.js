@@ -36,7 +36,7 @@ function legReach(th, ca, ft, T, hinge, kn) {
   const a = _H.distanceTo(_K), b = _K.distanceTo(_F), dm = a + b, ds = dm * REACH_SOFT, d0 = _H.distanceTo(T), d = clamp(d0 > ds ? ds + (dm - ds) * (1 - Math.exp(-(d0 - ds) / (dm - ds))) : d0, Math.abs(a - b) + 1e-3, dm - 1e-4);
   // the knee bends about the thigh's own hinge (not the plane of a nearly straight leg, which flips)
   th.getWorldQuaternion(_qa); _n.copy(hinge).applyQuaternion(_qa).normalize(); _u.subVectors(_H, _K); _w.subVectors(_F, _K);
-  const cr = _H.copy(_u).cross(_w), sn = _n.dot(cr), cur = Math.atan2(sn, _u.dot(_w)); if (Math.abs(sn) > 0.1 * a * b) kn.s = Math.sign(sn);
+  const cr = _H.copy(_u).cross(_w), sn = _n.dot(cr), cur = Math.atan2(sn, _u.dot(_w)); if (!kn.set && Math.abs(sn) > 0.1 * a * b) { kn.s = Math.sign(sn); kn.set = true; } // a knee bends one way only: the side is taken once
   const want = kn.s * Math.acos(clamp((a * a + b * b - d * d) / (2 * a * b), -1, 1)); _qb.setFromAxisAngle(_n, want - cur); turnWorld(ca, _qb.clone());
   th.getWorldPosition(_H); ft.getWorldPosition(_F);
   _u.subVectors(_F, _H).normalize(); _w.subVectors(T, _H).normalize(); turnWorld(th, new THREE.Quaternion().setFromUnitVectors(_u, _w));
@@ -232,7 +232,8 @@ export function createPerson(cfg, key) {
         lk.T.copy(tg); lk.last.copy(tg); legReach(th, ca, ft, tg, hinge[i], knee[i]); continue;
       }
       if (lk.sw) { lk.sw = false; if (planted) { lk.on = true; lk.w = 1; } else { lk.on = false; lk.rel = 0; } }
-      if (!planted || lk.w <= 0) lk.slip = false;
+      // a foot let go while walking stays with the leg until its next swing (taking hold again mid-stance jerked the knee)
+      if (!planted || (lk.w <= 0 && !st.walk)) lk.slip = false;
       if (planted && !lk.on && !lk.slip) { if (lk.w > 0) lk.T.copy(lk.last); else lk.T.copy(fk); lk.on = true; lk.w = 1; lk.ground = Math.min(lk.T.y, fk.y); }
       else if (!planted && lk.on) { lk.on = false; lk.rel = 0; }
       // a pivot step lets its foot go only once it is off the ground (eased from 0.1 to 0.6 of the step), so it does not drag along the floor first
