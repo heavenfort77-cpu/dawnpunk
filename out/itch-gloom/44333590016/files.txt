@@ -1,0 +1,3 @@
+shots/gloom_0.png 1763111
+shots/gloom_0_clean.png 1949610
+shots/gloom_1.png 1767192

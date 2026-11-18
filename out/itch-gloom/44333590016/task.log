@@ -1,0 +1,24 @@
+$ mkdir -p shots && node tools/itchshot.cjs gloom shots   (limit 40 min)
+INFO page up 32 s
+INFO base loaded 121 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 257 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":2,"cat":2,"houses":[{"i":0,"n":18,"L":2,"door":["42.7","-5.6"],"row":-1},{"i":1,"n":16,"L":2,"door":["-4.7","-6.0"],"row":-1},{"i":2,"n":14,"L":2,"door":["-44.0","6.5"],"row":1},{"i":3,"n":13,"L":2,"door":["51.9","6.7"],"row":1},{"i":4,"n":12,"L":2,"door":["-51.2","-6.9"],"row":-1},{"i":5,"n":11,"L":2,"door":["3.1","7.1"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO house 5
+INFO night: first Gloom {"t":4.399999999999992,"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0,"type":"window","floor":0},"H":7.275,"n":11}
+INFO turbine ok
+INFO close Gloom {"ok":true,"t":12.950000000000049}
+INFO target {"kind":"walker","d":"2.93","face":-1.5707963267948966,"phase":"inside"}
+INFO fired [{"hit":true,"head":true}]
+INFO wrote shots/gloom_0.png (1222 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 00m" hs="HEADSHOT x2"
+CATVIEW gloom_0: none
+INFO wrote shots/gloom_0_clean.png
+INFO close Gloom {"ok":true,"t":15.750000000000039}
+INFO target {"kind":"walker","d":"0.90","face":-1.5707963267948966,"phase":"inside"}
+INFO fired [{"hit":true,"head":false}]
+INFO wrote shots/gloom_1.png (2303 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="I am not carrying you home twice." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 50m" hs=""
+CATVIEW gloom_1: none
+FAIL crashed: page.evaluate: Target page, context or browser has been closed
+    at waitGame (/home/runner/work/dawnpunk/dawnpunk/tools/itchshot.cjs:28:40)
+    at /home/runner/work/dawnpunk/dawnpunk/tools/itchshot.cjs:137:88
+TIMED OUT after 40 min
+exit code 124
