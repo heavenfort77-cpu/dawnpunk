@@ -1,0 +1,111 @@
+0.0 === STAGE title
+0.3 shot teach_out/desk_01_title.jpg
+0.4 click #enter
+3.1 === STAGE opening
+4.6 state after begin: intro true
+34.7 shot teach_out/desk_02_opening.jpg
+94.4 opening watched in 90 s real
+95.2 === STAGE base day 1: waking
+102.4 shot teach_out/desk_03_jobcard.jpg
+103.2 stand still 6 s (reading)
+115.8 shot teach_out/desk_04_wake.jpg
+116.7 stand still 4 s (reading)
+120.7 click to start (as the prompt says)
+122.1 key KeyE
+125.6 Marla dialog open after the first E/USE from where you wake: true
+126.5 === STAGE base day 1: Marla dialog
+126.5 stand still 4 s (reading)
+135.5 shot teach_out/desk_05_dialog.jpg
+137.3 click #go
+140.5 === STAGE street day
+146.6 shot teach_out/desk_06_street.jpg
+147.2 stand still 8 s (reading)
+155.8 houses [{"i":0,"x":44.025,"z":-6.450000000000001,"row":-1,"n":14,"L":2},{"i":1,"x":51.214285714285715,"z":6.9,"row":1,"n":12,"L":2},{"i":2,"x":-44.97857142857143,"z":7.3500000000000005,"row":1,"n":10,"L":2},{"i":3,"x":2.2749999999999995,"z":7.575000000000001,"row":1,"n":9,"L":2},{"i":4,"x":-4.2,"z":-6,"row":-1,"n":8,"L":1},{"i":5,"x":-51.40714285714286,"z":-6.450000000000001,"row":-1,"n":7,"L":1}] sleeping machines [[29.6,-5.2],[10.6,-6.5],[-36,-5],[-7.9,-4.4]]
+156.3 === STAGE street: walking to house 4
+246.4 walk to house 4 door timed out
+246.4 SHORTCUT teleport near house 4 door (time out)
+248.4 === STAGE house 4 by day
+253.3 shot teach_out/desk_07_house_inside.jpg
+253.9 stand still 10 s (reading)
+264.4 capsules on this floor: 4
+298.7 walk to capsule timed out
+298.7 SHORTCUT teleport near capsule (time out)
+336.6 walk to capsule timed out
+336.6 SHORTCUT teleport near capsule (time out)
+372.2 walk to capsule timed out
+372.2 SHORTCUT teleport near capsule (time out)
+409.5 walk to capsule timed out
+409.5 SHORTCUT teleport near capsule (time out)
+410.8 after capsules: food 5 en 56.33972000000384
+410.8 stand still 4 s (reading)
+418.5 shot teach_out/desk_08_after_capsules.jpg
+419.9 === STAGE house 4: trying LEAVE as told
+462.0 walk to the door timed out
+462.0 SHORTCUT teleport near the door (time out)
+463.6 LEAVE button: flex LEAVE badge:"E"
+463.6 key KeyE
+469.5 shot teach_out/desk_09_leave_blocked.jpg
+470.6 === STAGE house 4: solar collector
+507.5 walk to a door timed out
+507.5 SHORTCUT teleport near a door (time out)
+509.7 key KeyQ
+512.3 after Solar: msg "undefined placed: undefined"
+512.9 first collector placed: true
+512.9 stand still 3 s (reading)
+519.0 shot teach_out/desk_10_solar_done.jpg
+521.3 reached the door in 1 s
+522.4 LEAVE button: flex LEAVE badge:"E"
+522.4 key KeyE
+525.7 === STAGE street after house 1
+525.7 stand still 6 s (reading)
+535.1 shot teach_out/desk_11_street_pack.jpg
+536.2 === STAGE street: back to the house with my collector
+541.0 walked into play:house on the way to house 4 door (5 s)
+542.7 === STAGE house 4: waiting for dusk
+546.0 === STAGE night 1: drill
+549.9 drill step now: shoot | Marla: "One machine. Shoot it, Potts. Left click." | sub: "Aim at the ringed machine and left click to fire."
+555.8 shot teach_out/desk_12_drill_shoot.jpg
+559.6 click the game to take the mouse (held was false)
+561.1 left click
+564.3 drill step now: place | Marla: "Device in its path. Right click. Go." | sub: "Right click to place it where they walk in."
+569.8 shot teach_out/desk_13_drill_place.jpg
+573.7 click the game to take the mouse (held was false)
+575.1 right click
+577.4 === STAGE night 1: after the drill
+584.1 shot teach_out/desk_14_drill_done.jpg
+586.3 === STAGE dawn
+593.0 shot teach_out/desk_15_end.jpg
+593.7 stand still 5 s (reading)
+598.9 click #again
+601.7 === STAGE base day 2
+608.8 shot teach_out/desk_16_base_day2.jpg
+609.5 stand still 22 s (reading)
+635.8 shot teach_out/desk_17_base_day2_later.jpg
+637.2 stations {"ws":[9,7],"board":[10.95,3.3],"scout":[13,-13],"tip":0}
+637.9 === STAGE base day 2: workshop
+711.0 walk to workshop timed out
+711.0 SHORTCUT teleport near workshop (time out)
+712.2 key KeyE
+720.7 shot teach_out/desk_18_workshop.jpg
+721.7 stand still 3 s (reading)
+725.3 key Escape
+729.0 === STAGE base day 2: quest board
+803.4 walk to quest board timed out
+803.4 SHORTCUT teleport near quest board (time out)
+804.5 key KeyE
+812.4 shot teach_out/desk_19_board.jpg
+813.2 stand still 3 s (reading)
+816.5 key Escape
+819.8 === STAGE base day 2: Marla and the ring
+840.0 reached Marla in 20 s
+840.8 key KeyE
+846.6 shot teach_out/desk_20_ring.jpg
+847.7 day-2 dialog {"ring":["1 (10 km) · loot x1 · Gloom x1","2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first [disabled]","3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first [disabled]","4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first [disabled]","5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first [disabled]"],"shown":true,"text":"Marla, the Scout \"You look terrible, Potts. Good. It means you tried. Sit, drink, then pick a ring.\" Ride out: go loot the old street, then hold a house tonight. Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend the house you are in until dawn. Ring 1 (10 km) · loot x1 · Gloom x1 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first Devices: Turbine Lance Panel Mine Turbine Lance Panel Mine Turbine Lance Panel Mine Solar (by day, free): place it by a door or window; it fills your Sun. Turbine (12 Sun): makes Sun all night; place it first. At most 2 Sun makers. Lance (8 Sun): shoots the nearest Gloom it can see through an opening or inside. Pa"}
+848.2 === STAGE keys card
+848.2 key Escape
+849.8 key KeyP
+851.7 pause menu: Paused Resume Hints: on Music: on Voice: on Graphics: low (phone) Keys Journal Map Watch the opening New game Progress saves by itself in the base and at dawn.
+852.3 click #pKeys
+856.5 shot teach_out/desk_21_keys.jpg
+857.5 keys card: Keys W A S D walk Mouse look (click the game first; Esc frees the mouse) Left click fire; hold it to charge, let go for a charged shot Right click place: the solar collector by day, the picked device at night 1 to 5 / wheel pick a device Q solar collector (by day) F eat (heals) E use, talk, leave a house at its door Hold N start the night (in a house) Tab quests (in the base) M music on or off Hold H this card and the key strip Esc / P pause; Esc also closes a panel Close
+858.1 page errors: 0 

@@ -1,0 +1,114 @@
+$ echo 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 | base64 -d | gunzip > teach_player.cjs && mkdir -p teach_out && node teach_player.cjs desk teach_out/   (limit 75 min)
+ACT 0.0 === STAGE title
+ACT 0.3 shot teach_out/desk_01_title.jpg
+ACT 0.4 click #enter
+ACT 3.1 === STAGE opening
+ACT 4.6 state after begin: intro true
+ACT 34.7 shot teach_out/desk_02_opening.jpg
+ACT 94.4 opening watched in 90 s real
+ACT 95.2 === STAGE base day 1: waking
+ACT 102.4 shot teach_out/desk_03_jobcard.jpg
+ACT 103.2 stand still 6 s (reading)
+ACT 115.8 shot teach_out/desk_04_wake.jpg
+ACT 116.7 stand still 4 s (reading)
+ACT 120.7 click to start (as the prompt says)
+ACT 122.1 key KeyE
+ACT 125.6 Marla dialog open after the first E/USE from where you wake: true
+ACT 126.5 === STAGE base day 1: Marla dialog
+ACT 126.5 stand still 4 s (reading)
+ACT 135.5 shot teach_out/desk_05_dialog.jpg
+ACT 137.3 click #go
+ACT 140.5 === STAGE street day
+ACT 146.6 shot teach_out/desk_06_street.jpg
+ACT 147.2 stand still 8 s (reading)
+ACT 155.8 houses [{"i":0,"x":44.025,"z":-6.450000000000001,"row":-1,"n":14,"L":2},{"i":1,"x":51.214285714285715,"z":6.9,"row":1,"n":12,"L":2},{"i":2,"x":-44.97857142857143,"z":7.3500000000000005,"row":1,"n":10,"L":2},{"i":3,"x":2.2749999999999995,"z":7.575000000000001,"row":1,"n":9,"L":2},{"i":4,"x":-4.2,"z":-6,"row":-1,"n":8,"L":1},{"i":5,"x":-51.40714285714286,"z":-6.450000000000001,"row":-1,"n":7,"L":1}] sleeping machines [[29.6,-5.2],[10.6,-6.5],[-36,-5],[-7.9,-4.4]]
+ACT 156.3 === STAGE street: walking to house 4
+ACT 246.4 walk to house 4 door timed out
+ACT 246.4 SHORTCUT teleport near house 4 door (time out)
+ACT 248.4 === STAGE house 4 by day
+ACT 253.3 shot teach_out/desk_07_house_inside.jpg
+ACT 253.9 stand still 10 s (reading)
+ACT 264.4 capsules on this floor: 4
+ACT 298.7 walk to capsule timed out
+ACT 298.7 SHORTCUT teleport near capsule (time out)
+ACT 336.6 walk to capsule timed out
+ACT 336.6 SHORTCUT teleport near capsule (time out)
+ACT 372.2 walk to capsule timed out
+ACT 372.2 SHORTCUT teleport near capsule (time out)
+ACT 409.5 walk to capsule timed out
+ACT 409.5 SHORTCUT teleport near capsule (time out)
+ACT 410.8 after capsules: food 5 en 56.33972000000384
+ACT 410.8 stand still 4 s (reading)
+ACT 418.5 shot teach_out/desk_08_after_capsules.jpg
+ACT 419.9 === STAGE house 4: trying LEAVE as told
+ACT 462.0 walk to the door timed out
+ACT 462.0 SHORTCUT teleport near the door (time out)
+ACT 463.6 LEAVE button: flex LEAVE badge:"E"
+ACT 463.6 key KeyE
+ACT 469.5 shot teach_out/desk_09_leave_blocked.jpg
+ACT 470.6 === STAGE house 4: solar collector
+ACT 507.5 walk to a door timed out
+ACT 507.5 SHORTCUT teleport near a door (time out)
+ACT 509.7 key KeyQ
+ACT 512.3 after Solar: msg "undefined placed: undefined"
+ACT 512.9 first collector placed: true
+ACT 512.9 stand still 3 s (reading)
+ACT 519.0 shot teach_out/desk_10_solar_done.jpg
+ACT 521.3 reached the door in 1 s
+ACT 522.4 LEAVE button: flex LEAVE badge:"E"
+ACT 522.4 key KeyE
+ACT 525.7 === STAGE street after house 1
+ACT 525.7 stand still 6 s (reading)
+ACT 535.1 shot teach_out/desk_11_street_pack.jpg
+ACT 536.2 === STAGE street: back to the house with my collector
+ACT 541.0 walked into play:house on the way to house 4 door (5 s)
+ACT 542.7 === STAGE house 4: waiting for dusk
+ACT 546.0 === STAGE night 1: drill
+ACT 549.9 drill step now: shoot | Marla: "One machine. Shoot it, Potts. Left click." | sub: "Aim at the ringed machine and left click to fire."
+ACT 555.8 shot teach_out/desk_12_drill_shoot.jpg
+ACT 559.6 click the game to take the mouse (held was false)
+ACT 561.1 left click
+ACT 564.3 drill step now: place | Marla: "Device in its path. Right click. Go." | sub: "Right click to place it where they walk in."
+ACT 569.8 shot teach_out/desk_13_drill_place.jpg
+ACT 573.7 click the game to take the mouse (held was false)
+ACT 575.1 right click
+ACT 577.4 === STAGE night 1: after the drill
+ACT 584.1 shot teach_out/desk_14_drill_done.jpg
+ACT 586.3 === STAGE dawn
+ACT 593.0 shot teach_out/desk_15_end.jpg
+ACT 593.7 stand still 5 s (reading)
+ACT 598.9 click #again
+ACT 601.7 === STAGE base day 2
+ACT 608.8 shot teach_out/desk_16_base_day2.jpg
+ACT 609.5 stand still 22 s (reading)
+ACT 635.8 shot teach_out/desk_17_base_day2_later.jpg
+ACT 637.2 stations {"ws":[9,7],"board":[10.95,3.3],"scout":[13,-13],"tip":0}
+ACT 637.9 === STAGE base day 2: workshop
+ACT 711.0 walk to workshop timed out
+ACT 711.0 SHORTCUT teleport near workshop (time out)
+ACT 712.2 key KeyE
+ACT 720.7 shot teach_out/desk_18_workshop.jpg
+ACT 721.7 stand still 3 s (reading)
+ACT 725.3 key Escape
+ACT 729.0 === STAGE base day 2: quest board
+ACT 803.4 walk to quest board timed out
+ACT 803.4 SHORTCUT teleport near quest board (time out)
+ACT 804.5 key KeyE
+ACT 812.4 shot teach_out/desk_19_board.jpg
+ACT 813.2 stand still 3 s (reading)
+ACT 816.5 key Escape
+ACT 819.8 === STAGE base day 2: Marla and the ring
+ACT 840.0 reached Marla in 20 s
+ACT 840.8 key KeyE
+ACT 846.6 shot teach_out/desk_20_ring.jpg
+ACT 847.7 day-2 dialog {"ring":["1 (10 km) · loot x1 · Gloom x1","2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first [disabled]","3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first [disabled]","4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first [disabled]","5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first [disabled]"],"shown":true,"text":"Marla, the Scout \"You look terrible, Potts. Good. It means you tried. Sit, drink, then pick a ring.\" Ride out: go loot the old street, then hold a house tonight. Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend the house you are in until dawn. Ring 1 (10 km) · loot x1 · Gloom x1 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first Devices: Turbine Lance Panel Mine Turbine Lance Panel Mine Turbine Lance Panel Mine Solar (by day, free): place it by a door or window; it fills your Sun. Turbine (12 Sun): makes Sun all night; place it first. At most 2 Sun makers. Lance (8 Sun): shoots the nearest Gloom it can see through an opening or inside. Pa"}
+ACT 848.2 === STAGE keys card
+ACT 848.2 key Escape
+ACT 849.8 key KeyP
+ACT 851.7 pause menu: Paused Resume Hints: on Music: on Voice: on Graphics: low (phone) Keys Journal Map Watch the opening New game Progress saves by itself in the base and at dawn.
+ACT 852.3 click #pKeys
+ACT 856.5 shot teach_out/desk_21_keys.jpg
+ACT 857.5 keys card: Keys W A S D walk Mouse look (click the game first; Esc frees the mouse) Left click fire; hold it to charge, let go for a charged shot Right click place: the solar collector by day, the picked device at night 1 to 5 / wheel pick a device Q solar collector (by day) F eat (heals) E use, talk, leave a house at its door Hold N start the night (in a house) Tab quests (in the base) M music on or off Hold H this card and the key strip Esc / P pause; Esc also closes a panel Close
+ACT 858.1 page errors: 0 
+DONE
+exit code 0
