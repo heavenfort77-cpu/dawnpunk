@@ -1,0 +1,14 @@
+$ mkdir -p shots && VIEWS='[[10.5,-8,11,-15],[10.8,-9.2,11.3,-15.5],[11.3,-9.8,11,-16]]' CLEAN=base_0,base_1 node tools/itchshot.cjs base shots   (limit 100 min)
+INFO page up 27 s
+INFO base loaded 100 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO wrote shots/base_0.png (524 s) cam 10.59,1.60,-7.15 yaw -0.071 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_0: none
+INFO wrote shots/base_0_clean.png
+INFO wrote shots/base_1.png (885 s) cam 11.46,1.60,-10.67 yaw -0.079 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_1: none
+INFO wrote shots/base_1_clean.png
+INFO wrote shots/base_2.png (1251 s) cam 11.62,1.60,-10.60 yaw 0.048 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_2: none
+NO PAGE ERRORS
+done 1263 s
+exit code 0
