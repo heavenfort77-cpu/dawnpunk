@@ -26,7 +26,7 @@ import { createMarla } from './marla.js';
 import { createPerson } from './people.js';
 import { createFx } from './fx.js';
 import { createPerfStep } from './perfstep.js';
-import { lodTick } from './lod.js';
+import { lodTick, lodFull } from './lod.js';
 import { createNightCull } from './nightcull.js';
 import { mergeStatic, HIT_LAYER } from './mergestatic.js';
 import { gloomPreload, glbHooks, glbCopy } from './gloomglb.js';
@@ -147,7 +147,7 @@ let gMesh = new Map(), dMesh = new Map(), bpGroup = new THREE.Group(), bpParts =
 scene.add(bpGroup);
 
 // remove an object and free its GPU memory (geometries, materials, label textures); nothing here is shared between objects
-function drop(o) { if (!o) return; scene.remove(o); o.traverse((q) => { if (q.geometry && !(QUALITY === 'high' && q.geometry.userData.shared)) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { if (m.userData.shared) continue; for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && t.userData.shared)) t.dispose(); } m.dispose(); } }); } // shared prop materials and textures (props.js) stay loaded
+function drop(o) { if (!o) return; scene.remove(o); o.traverse((q) => { if (q.isSkinnedMesh && q.userData.mergedDraw && q.skeleton) q.skeleton.dispose(); if (q.geometry && !(QUALITY === 'high' && q.geometry.userData.shared) && !q.geometry.userData.pool) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { if (m.userData.shared) continue; for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && t.userData.shared)) t.dispose(); } m.dispose(); } }); } // shared prop materials and textures (props.js) stay loaded
 // ---- light and depth inside a house: klad-painted contact shadows under things and pools of light on the floor at every opening
 const depthTex = (k) => { const t = texLoad(k); t.colorSpace = THREE.SRGBColorSpace; t.userData.shared = true; return t; };
 let shadeMat = null, poolMat = null;
@@ -1157,7 +1157,9 @@ setShotTier(QUALITY);
 const LVR = new THREE.Raycaster(), LVO = new THREE.Vector3(), LVD = new THREE.Vector3(), LVB = new THREE.Box3();
 // the phone-tier machines' merged pieces stay as invisible hit shapes on HIT_LAYER (src/mergestatic.js): the aimed shot still sees them, and skips the merged draw mesh
 LVR.layers.enable(HIT_LAYER);
-function drawnHit(m, P) { const L = CONFIG.cannon.live, headSet = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => headSet.add(q));
+// LAG FIX Nov 19: the hit test always uses the full meshes, also for a machine drawn with its far copy (src/lod.js lodFull)
+function drawnHit(m, P) { const back = lodFull(m); try { return drawnHit0(m, P); } finally { if (back) back(); } }
+function drawnHit0(m, P) { const L = CONFIG.cannon.live, headSet = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => headSet.add(q));
   const solid = (q) => { if (!q.isMesh || q.isSprite || q.userData.blob || q.userData.mergedDraw) return false; let v = q; while (v) { if (!v.visible) return false; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; return !(mt && (mt.blending === THREE.AdditiveBlending || (mt.transparent && (mt.opacity < L.minOpacity || q.geometry.type === 'PlaneGeometry')))); };
   m.updateMatrixWorld(true); let hv = 0, av = 0, top = -1e9;
   m.traverse((q) => { if (!solid(q)) return; const gm = q.geometry; if (!gm.boundingBox) gm.computeBoundingBox(); LVB.copy(gm.boundingBox).applyMatrix4(q.matrixWorld); const v = (LVB.max.x - LVB.min.x) * (LVB.max.y - LVB.min.y) * (LVB.max.z - LVB.min.z); av += v; if (headSet.has(q)) hv += v; if (LVB.max.y > top) top = LVB.max.y; });
@@ -1298,7 +1300,9 @@ async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
   LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
   try {
-    if (QUALITY === 'high' && kind !== 'home') { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
+    // the night's models are waited for under the NIGHT card only: the ride card shows the day street, which does not need them (they keep loading behind it).
+    // (Waiting on the ride card held the street hidden for up to maxWait s in the checks: playershadowcheck_desktop saw the card, not the street.)
+    if (QUALITY === 'high' && kind === 'night') { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
     if (kind === 'night') warmNight(); else dropWarm();
     fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
     warmG.visible = false;

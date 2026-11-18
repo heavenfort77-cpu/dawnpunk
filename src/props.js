@@ -101,14 +101,20 @@ export function catMesh(style) {
 
 // ---- effects: a water jet for every shot, splinters when something breaks, smoke when a Gloom is destroyed
 const UP = new THREE.Vector3(0, 1, 0);
+// LAG FIX Nov 19 (owner's rule: pool shots and particles): the shot's jet, its splash drops and a kill's smoke share one geometry each (made once, marked pool so
+// main.js drop() never frees it) and one material per colour (shared), instead of a new geometry and material for every shot. The jet is a cylinder 1 m long
+// stretched to the shot's length along its axis (a basic material has no lighting, so the stretch changes nothing); smoke is a unit ball scaled to its size.
+const PGEO = {};
+const pgeo = (k, make) => { if (!PGEO[k]) { PGEO[k] = make(); PGEO[k].userData.pool = true; PGEO[k].userData.shared = true; } return PGEO[k]; };
 export function jet(a, b, color) { // a thin stream from a to b: wider at the nozzle, with a brighter core
   const d = new THREE.Vector3().subVectors(b, a), len = d.length(), g = new THREE.Group(); g.position.copy(a).addScaledVector(d, 0.5); g.quaternion.setFromUnitVectors(UP, d.normalize());
-  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.04, len, 6, 1, true), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, depthWrite: false })));
-  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.014, len, 5, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }))); return g;
+  const o = new THREE.Mesh(pgeo('jetO', () => new THREE.CylinderGeometry(0.012, 0.04, 1, 6, 1, true)), mat('jetO' + color, () => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, depthWrite: false })));
+  const c = new THREE.Mesh(pgeo('jetC', () => new THREE.CylinderGeometry(0.005, 0.014, 1, 5, 1, true)), mat('jetC', () => new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false })));
+  o.scale.y = len; c.scale.y = len; g.add(o); g.add(c); return g;
 }
-export function droplet(color) { return new THREE.Mesh(new THREE.SphereGeometry(0.035, 5, 4), mat('drop' + color, () => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8 }))); }
+export function droplet(color) { return new THREE.Mesh(pgeo('drop', () => new THREE.SphereGeometry(0.035, 5, 4)), mat('drop' + color, () => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8 }))); }
 export function splinter(kind) { const m = bx(0.1 + Math.random() * 0.25, 0.03 + Math.random() * 0.03, 0.04 + Math.random() * 0.05, kind === 'panel' || kind === 'trellis' ? MT.wood : Math.random() < 0.5 ? MT.brass : MT.dark, 0, 0, 0); m.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); return m; }
-export function smoke() { const m = new THREE.Mesh(new THREE.SphereGeometry(0.16 + Math.random() * 0.14, 6, 5), mat('smoke', () => new THREE.MeshBasicMaterial({ map: ptex('gloom'), color: 0xb8a0e0, transparent: true, opacity: 0.75, depthWrite: false }))); return m; }
+export function smoke() { const m = new THREE.Mesh(pgeo('smoke', () => new THREE.SphereGeometry(1, 6, 5)), mat('smoke', () => new THREE.MeshBasicMaterial({ map: ptex('gloom'), color: 0xb8a0e0, transparent: true, opacity: 0.75, depthWrite: false }))); m.scale.setScalar(0.16 + Math.random() * 0.14); return m; }
 
 // ---- a chalk ring on the floor (opening you can barricade, stair foot, ladder foot). Its material is its own: main.js flashes it.
 export function ringMark(color, radius, opacity) {

@@ -7,6 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
 import { lodPrepare, lodCopy } from './lod.js';
+import { mergeGlb, rebindMerged } from './glbmerge.js';
 
 const FILES = { walker: 'models/gloom_walker_hi.glb', lurcher: 'models/gloom_lurcher_hi.glb', ticks: 'models/gloom_ticks_hi.glb', hauler: 'models/gloom_hauler_hi.glb', stilt: 'models/gloom_stilt_hi.glb', lantern: 'models/gloom_lantern_hi.glb', warden: 'models/gloom_warden_hi.glb' };
 const TPL = {};
@@ -29,7 +30,8 @@ function load(kind) {
   fetch(url).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => { o.userData.keep = true; if (!o.isMesh) return; o.geometry.userData.shared = true; const m = o.material; m.userData.shared = true; m.userData.relief = true; m.userData.pbr = true;
       for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap']) if (m[k]) { m[k].userData.shared = true; m[k].anisotropy = 4; } });
-    TPL[kind] = sc; glbState[kind] = 'ready'; lodPrepare(sc, 'gloom', false); if (glbHooks.ready) try { glbHooks.ready(kind, sc); } catch (e) { /* warm-up only */ } }, fail)).catch(fail);
+    // LAG FIX Nov 19: the parts drawn as one skinned mesh per material (src/glbmerge.js), before the far copies are made (the merged mesh gets one too)
+    mergeGlb(sc); TPL[kind] = sc; glbState[kind] = 'ready'; lodPrepare(sc, 'gloom', false); if (glbHooks.ready) try { glbHooks.ready(kind, sc); } catch (e) { /* warm-up only */ } }, fail)).catch(fail);
 }
 // LAG FIX Nov 19 (lag report finding 9): no model is fetched at page start any more. main.js asks for the kinds a run can meet when the run starts (its day on the street
 // comes first), and for the opening film's kinds on a first visit. The builder stands in for a kind that has not arrived, as before.
@@ -43,7 +45,7 @@ export function glbModel(kind) { return on(kind) && glbState[kind] === 'ready' ?
 // A copy of the model for one machine. tint: the machine's own paint shade as a colour the painted parts are multiplied by
 // (the R channel of the metal-rough picture is a paint mask, so bare steel, rust, grime and rubber keep their colour).
 export function glbCopy(kind, tint) {
-  const sc = TPL[kind].clone(true), mats = new Map(), u = { value: tint.clone() };
+  const sc = TPL[kind].clone(true), mats = new Map(), u = { value: tint.clone() }; rebindMerged(TPL[kind], sc);
   sc.traverse((o) => { if (!o.isMesh) return; const m0 = o.material; if (!m0.metalnessMap) return;
     if (!mats.has(m0)) { const m = m0.clone(); m.userData = { pbr: true, relief: true, tint: u }; m.onBeforeCompile = (s) => { s.uniforms.uTint = u;
         s.fragmentShader = 'uniform vec3 uTint;\n' + s.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n#ifdef USE_METALNESSMAP\n\tdiffuseColor.rgb *= mix( vec3( 1.0 ), uTint, texture2D( metalnessMap, vMetalnessMapUv ).r );\n#endif'); };

@@ -47,11 +47,11 @@ export function lodRegister(o, kind, temp) {
 export async function lodPrepare(root, kind, register) {
   const L = LG().lod, k = kindOf(kind); if (!L.on || !k || !root) return;
   try { await MeshoptSimplifier.ready; } catch (e) { lodState.failed++; return; }
-  const list = []; root.traverse((o) => { if (!o.isMesh || !o.geometry || !o.geometry.index) return; const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && (m.alphaTest > 0 || m.transparent)) return; if (tris(o.geometry) >= L.minTris) list.push(o); });
+  const list = []; root.traverse((o) => { if (!o.isMesh || !o.geometry || !o.geometry.index || o.userData.hitOnly) return; const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && (m.alphaTest > 0 || m.transparent)) return; if (tris(o.geometry) >= L.minTris) list.push(o); });
   for (const o of list) { try { simplify(o.geometry, k.ratio, k.error); } catch (e) { lodState.failed++; } if (register) lodRegister(o, kind, false); await new Promise((r) => setTimeout(r, 0)); }
 }
 // a copy of a prepared template (shares its geometry): register its meshes as passing ones
-export function lodCopy(root, kind) { if (!root) return; root.traverse((o) => { if (o.isMesh && LOW.get(o.geometry)) lodRegister(o, kind, true); }); }
+export function lodCopy(root, kind) { if (!root) return; root.traverse((o) => { if (o.isMesh && !o.userData.hitOnly && LOW.get(o.geometry)) lodRegister(o, kind, true); }); }
 
 const v = new THREE.Vector3(); let pruneN = 0;
 const inScene = (o) => { let p = o; while (p.parent) p = p.parent; return !!p.isScene; };
@@ -61,4 +61,12 @@ export function lodTick(cam) {
   if (++pruneN >= 120) { pruneN = 0; for (const [o, r] of REG) { if (!r.temp) continue; if (inScene(o)) r.gone = 0; else if (++r.gone >= 2) { o.geometry = r.full; REG.delete(o); } } lodState.meshes = REG.size; }
   for (const [o, r] of REG) { const e = o.matrixWorld.elements, dx = e[12] - cx, dy = e[13] - cy, dz = e[14] - cz, far = dx * dx + dy * dy + dz * dz > r.near2, g = far ? r.low : r.full; if (o.geometry !== g) o.geometry = g; if (far) low++; }
   lodState.low = low;
+}
+
+// the aimed shot (src/main.js drawnHit) must test the FULL mesh, never the far copy (a thin part of the far copy can miss where the full one is hit):
+// puts every registered mesh under root on its full geometry and returns a function that puts the far copies back (null when none was swapped)
+export function lodFull(root) {
+  if (!REG.size || !root) return null; const back = [];
+  root.traverse((o) => { const r = REG.get(o); if (r && o.geometry !== r.full) { back.push([o, o.geometry]); o.geometry = r.full; } });
+  return back.length ? () => { for (const [o, g] of back) o.geometry = g; } : null;
 }

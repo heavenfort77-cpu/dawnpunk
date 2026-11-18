@@ -1137,7 +1137,7 @@ export const CONFIG = {
       // order: the steps, one at a time, cheapest look loss first: ratio = sharpness cap down to `ratio`, ao = contact shading off, shadow = sun shadow maps down to `shadow` px, lights = machine screen lights down to `lights`
       order: ['ratio', 'ao', 'shadow', 'lights'], ratio: 1, shadow: 1024, lights: 1 },
     // card: the loading card at scene changes (owner Nov 19 05:49; src/main.js sceneCard): ride = base to the day street, night = day to night (short), home = night or dawn to the base.
-    // While it shows the game is held still (no game time passes) and the heavy work is done: the night's Gloom and boss models are waited for (at most maxWait s), their maps
+    // While it shows the game is held still (no game time passes) and the heavy work is done: the night card waits for the night's Gloom and boss models (at most maxWait s), their maps
     // uploaded, every shader of the scene built, and the sun shadow map drawn once. on: the switch; min: shortest time each card shows (s); titles: the card's line per change
     // mergeCell: the street's static pieces are merged per material and per square cell of this size (m) on the desktop builds (src/world.js), so out-of-view cells are culled
     mergeCell: 16,
@@ -1158,6 +1158,8 @@ export const CONFIG = {
     nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2 },
     // mergeGloom: phone tier, the still pieces of each Gloom machine drawn as one mesh per parent and material (src/mergestatic.js); on: the switch; probes: test poses
     // run to find the pieces that never move; perFrame: machines merged per frame at most (a burst of arrivals is spread over a few frames)
+    // glbMerge: desktop Gloom models drawn as one skinned mesh per material, each part a bone of it (src/glbmerge.js); on: the switch
+    glbMerge: { on: true },
     // transparent: see-through pieces (wear decals) of one material are merged too (only their drawing order among themselves can change)
     mergeGloom: { on: true, probes: 8, perFrame: 2, transparent: true },
     // smallCaster: a static piece smaller than this (bounding sphere radius, m) casts no sun shadow (owner's rule: small props castShadow off; their shadows were a few pixels)
