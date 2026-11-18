@@ -151,11 +151,13 @@ export const IMPACT_SFX = {
     // crack: loudness of the glass resonances (struck by the same ticks)
     glassGain: 17,
     // static: number of crackle bursts
-    fizz: 34,
+    fizz: 46,
     // static: first burst (s)
     fizzFrom: 0.02,
     // static: last burst (s)
-    fizzTo: 0.24,
+    fizzTo: 0.32,
+    // static: how fast it fades over that time (power; lower = holds longer)
+    fizzFade: 0.7,
     // static: length of a burst (s)
     fizzGrain: 0.004,
     // static: bandpass centre (Hz)
@@ -448,7 +450,7 @@ export function impactPlay(a, dest, kind, t, opt) {
     end = Math.max(end, grains(a, out, ht, ct, cg.map((x) => x * P.crackGain), P.crackTick, 'highpass', P.crackHp, 0.7, rnd));
     end = Math.max(end, grains(a, gr, ht, ct, cg.map((x) => x * P.glassGain), P.crackTick, 'highpass', P.crackHp, 0.7, rnd));
     const ft = times(P.fizz, P.fizzFrom, P.fizzTo, 1.3, rnd);
-    end = Math.max(end, grains(a, out, ht, ft, ft.map((x) => P.fizzGain * nk * Math.pow(1 - (x - P.fizzFrom) / (P.fizzTo - P.fizzFrom), 1.2) * (0.3 + 0.7 * rnd())), P.fizzGrain, 'bandpass', P.fizzHz * pv, P.fizzQ, rnd));
+    end = Math.max(end, grains(a, out, ht, ft, ft.map((x) => P.fizzGain * nk * Math.pow(1 - (x - P.fizzFrom) / (P.fizzTo - P.fizzFrom), P.fizzFade) * (0.3 + 0.7 * rnd())), P.fizzGrain, 'bandpass', P.fizzHz * pv, P.fizzQ, rnd));
   }
   if (ch) {
     end = Math.max(end, burst(a, out, t + X.steamAt, 'bandpass', X.steamF0 * pv, X.steamF1 * pv, X.steamQ, X.steamAttack, X.steamLen, X.steamGain * nk, rnd));

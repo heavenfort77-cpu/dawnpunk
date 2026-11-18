@@ -14,7 +14,7 @@ const SRC = path.join(__dirname, '..', 'src', 'impactsfx.js');
 // loudest 50 ms window of each layer alone (dBFS, 0 m, indoors, room included); a layer's gain is scaled to meet it
 const TARGET = {
   hit: { strikeGain: -26, weightGain: -31, slapGain: -30, splashGain: -33, sprayGain: -35, rattleGain: -35 },
-  head: { crackGain: -31, glassGain: -33, fizzGain: -34 },
+  head: { crackGain: -28, glassGain: -30, fizzGain: -29 },
   charged: { steamGain: -31, sizzleGain: -37 },
   destroyed: { strikeGain: -24, rumbleGain: -28, crunchGain: -31, settleGain: -36, staticGain: -34, sparkGain: -35 },
   shot: { jetGain: -28, pushGain: -31, dropGain: -35, valveGain: -31 },
