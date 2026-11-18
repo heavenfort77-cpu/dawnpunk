@@ -7,10 +7,13 @@
 // Game time: window.__dtMax (the game's own hook for slow headless renderers) is 0.25, and the page counts game seconds (__gt) the way the game does.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
-const MODE = process.argv[2] === 'phone' ? 'phone' : 'desk', OUT = process.argv[3] || 'mt_' + MODE + '/';
-const DESK = MODE === 'desk';
+const MODE = process.argv[2] === 'phone' ? 'phone' : process.argv[2] === 'deskhi' ? 'deskhi' : 'desk', OUT = process.argv[3] || 'mt_' + MODE + '/';
+const DESK = MODE !== 'phone', HI = MODE === 'deskhi';
+// tier: the third argument overrides it (the desktop HIGH tier draws one frame in about 9 s on a 4-core runner with the software renderer, so the full desktop play runs on low
+// with desktop controls, and 'deskhi' visits the key moments on high through the game's hooks, for pictures and lines only)
+const TIER = process.argv[4] || (MODE === 'phone' ? 'low' : 'high');
 fs.mkdirSync(OUT, { recursive: true });
-const PAGE = path.resolve(__dirname, '../dist/index.html') + (DESK ? '?quality=high&film=1' : '?quality=low&film=1');
+const PAGE = path.resolve(__dirname, '../dist/index.html') + '?quality=' + TIER + '&film=1';
 const SENS = 0.0022, TOUCH_SENS = 0.006;
 const T0 = Date.now();
 const wall = () => ((Date.now() - T0) / 1000).toFixed(1);
@@ -221,7 +224,23 @@ class Phase extends Error { constructor(p) { super('phase ' + p); this.phase = p
     await note('night after the drill: ' + fires + ' shots, ' + eats + ' meals, ' + saves + ' health top-ups (shortcut)');
   }
 
-  try {
+  const waitFrames = async (n, cap = 900) => { const f0 = await ev(() => window.__frames), w0 = Date.now(); while ((await ev(() => window.__frames)) - f0 < n && Date.now() - w0 < cap * 1000) await p.waitForTimeout(500); };
+  if (HI) { try {
+    await p.goto('file://' + PAGE, { timeout: 600000 });
+    await p.waitForFunction(() => { const e = document.getElementById('enter'); return e && e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden' && !e.disabled; }, null, { timeout: 900000 });
+    await stage('start'); await waitFrames(2); await shot('hi_start_screen'); await clickEl('#enter', 'the begin button'); await waitFrames(3);
+    if ((await state()) === 'intro') { await stage('film'); await waitFrames(6); await shot('hi_film'); await shortcut('high tier: skipped the film (its lines were read in full on the low-tier desktop play)'); await p.keyboard.press('KeyX'); }
+    await waitFor(() => window.__game.state === 'base', 900); await stage('base day 1: waking'); await waitFrames(6); await shot('hi_base_wake');
+    if (await visible('#jobCard')) await clickEl('#jobCard button', 'Got it'); await waitFrames(2); await p.mouse.click(VW / 2, VH / 2); await act('clicked the game'); await waitFrames(3); await shot('hi_base_after_card');
+    await press('KeyE', 'talk to Marla'); await waitFrames(3); await stage('base day 1: Marla dialog'); await shot('hi_marla_dialog_day1');
+    if (await visible('#ssetup')) { await clickEl('#ssetup', 'Set up the run'); await waitFrames(2); await shot('hi_marla_setup_day1'); }
+    await clickEl('#go', 'Ride out'); await waitFor(() => window.__game.state === 'play', 900); await stage('street by day'); await waitFrames(6); await shot('hi_street_start');
+    await shortcut('high tier: entered the nearest house with the game hook'); await ev(() => { const g = window.__game, r = g.run, h = r.houses.slice().sort((a, b) => Math.hypot(a.doorX, a.doorZ) - Math.hypot(b.doorX, b.doorZ))[0]; g.enterHouse(h.i); }); await stage('house 1 by day'); await waitFrames(6); await shot('hi_house_inside');
+    await press('KeyQ', 'Solar'); await waitFrames(3); await shot('hi_house_solar');
+    await shortcut('high tier: started the night with the game hook'); await ev(() => window.__game.nightfall()); await stage('night 1 drill'); await waitFrames(4); await waitFor(() => { const d = window.__game.drillInfo(); return d && d.step === 'shoot'; }, 120); await waitFrames(3); await shot('hi_drill_shoot');
+    await p.keyboard.down('KeyH'); await waitFrames(2); await shot('hi_drill_hold_H'); await p.keyboard.up('KeyH');
+  } catch (e) { console.log('DRIVER ERROR ' + (e && e.stack || e)); try { await shot('driver_error'); } catch (e2) { /* none */ } } }
+  else try {
     // ================= LOAD and START =================
     await p.goto('file://' + PAGE, { timeout: 300000 });
     await p.waitForFunction(() => { const e = document.getElementById('enter'); return e && e.getBoundingClientRect().width > 0 && getComputedStyle(e).visibility !== 'hidden' && !e.disabled; }, null, { timeout: 400000 });
