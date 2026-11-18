@@ -7,6 +7,8 @@ SRC=${SRC:-/home/claude/solard-g}
 DST=${DST:-/home/claude/dawnpunk}
 MSG=${1:-"Sync from working tree $(date -u +%Y-%m-%dT%H:%MZ)"}
 cd "$DST"
+# one sync at a time (tools/ci_run.sh holds the same lock around sync + dispatch and sets CI_LOCK_HELD)
+if [ -z "${CI_LOCK_HELD:-}" ]; then exec 9>"$DST/.git/ci_run.lock"; flock -w 900 9 || { echo "could not get the CI lock"; exit 1; }; fi
 
 # commit identity: the owner's GitHub noreply address only (public repo)
 git config user.name vendatta77
