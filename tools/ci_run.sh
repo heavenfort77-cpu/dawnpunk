@@ -52,15 +52,16 @@ done
 gh api "repos/$REPO/actions/runs/$RID/jobs?per_page=100" --jq '[.jobs[] | select(.started_at and .completed_at) | ((.completed_at | fromdate) - (.started_at | fromdate))] | "jobs: \(length), job minutes (rounded up each): \(map((. / 60) | ceil) | add)"'
 gh api "repos/$REPO/actions/runs/$RID" --jq '"wall time: \((((.updated_at | fromdate) - (.run_started_at | fromdate)) / 60) | floor) min, conclusion: \(.conclusion)"'
 
-TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
-AID=$(gh api "repos/$REPO/actions/runs/$RID/artifacts?per_page=100" --jq '.artifacts[] | select(.name == "summary") | .id' | head -1)
-if [ -n "$AID" ] && gh api "repos/$REPO/actions/artifacts/$AID/zip" > "$TMP/s.zip" 2>/dev/null && unzip -q -o "$TMP/s.zip" -d "$TMP" 2>/dev/null; then
-  echo; cat "$TMP/summary.txt"
-  grep -q '^ALL .* CHECKS CLEAN' "$TMP/summary.txt"
-else
-  echo "no summary artifact; the summary job's log:"
-  JID=$(gh api "repos/$REPO/actions/runs/$RID/jobs?per_page=100" --jq '.jobs[] | select(.name == "summary") | .id')
-  [ -n "$JID" ] && gh api "repos/$REPO/actions/jobs/$JID/logs" | sed -n '/Summary table/,/upload-artifact/p' | cut -c30-
+# the table is cut out of the summary job's log (artifact zips are served from blob storage, which the dev machine's proxy refuses)
+JID=$(gh api "repos/$REPO/actions/runs/$RID/jobs?per_page=100" --jq '.jobs[] | select(.name == "summary") | .id')
+TABLE=
+[ -n "$JID" ] && TABLE=$(gh api "repos/$REPO/actions/jobs/$JID/logs" 2>/dev/null | sed -E 's/^[0-9T:.-]+Z //' | sed -n '/^=== SUMMARY ===/,/^=== END SUMMARY ===/p' | sed '1d;$d')
+if [ -z "$TABLE" ]; then
+  echo "no summary table in the summary job's log; per-check lines from each check job:"
+  for J in $(gh api "repos/$REPO/actions/runs/$RID/jobs?per_page=100" --jq '.jobs[] | select(.name | test("^(logic|desktop|phone) ")) | .id'); do
+    gh api "repos/$REPO/actions/jobs/$J/logs" 2>/dev/null | sed -E 's/^[0-9T:.-]+Z //' | grep -E '^== [^:]+: [0-9]+ PASS|^\s*FAIL' | cut -c1-300
+  done
   exit 1
 fi
+echo; echo "$TABLE"
+echo "$TABLE" | grep -q '^ALL .* CHECKS CLEAN'

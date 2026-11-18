@@ -117,15 +117,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v4
+      # every step runs even when the run was cancelled (a cancelled run still gets its table)
+      - if: always()
+        uses: actions/checkout@v5
+      - if: always()
+        uses: actions/download-artifact@v4
         with:
           pattern: log-*
           path: ci-logs
           merge-multiple: true
       - name: Summary table
+        if: always()
         run: node ci/ci.mjs summary '${{ needs.build.outputs.names }}'
-      - uses: actions/upload-artifact@v4
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: summary
           path: ci-logs/summary.txt

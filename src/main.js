@@ -1082,9 +1082,9 @@ function supperLine() { const o = run || sim; if (!o || o.supperTold || drill) r
 // drawn parts decide head shots on both. CONFIG.cannon.live.
 setShotTier(QUALITY);
 // one drawn machine as its parts: each visible solid mesh's own box, with the inverse of its world matrix (the sim tests the shot in each part's own frame), and whether it is a head part.
-// Head parts: the meshes under the builder's head node; when that node holds most of the machine (the Warden's turning torso), the parts in its top live.headTop m
+// Head parts: the meshes under the builder's head nodes (each Ticks unit has its own screen); when they hold most of the machine (the Warden's turning torso), the parts in its top live.headTop m
 const LVM = new THREE.Matrix4();
-function drawnShape(m) { const L = CONFIG.cannon.live, parts = []; let hv = 0, av = 0, top = -1e9; const headSet = new Set(); if (m.userData.head) m.userData.head.traverse((q) => headSet.add(q));
+function drawnShape(m) { const L = CONFIG.cannon.live, parts = []; let hv = 0, av = 0, top = -1e9; const headSet = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => headSet.add(q));
   m.updateMatrixWorld(true); m.traverse((q) => { if (!q.isMesh || q.userData.blob) return; let v = q; while (v) { if (!v.visible) return; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; if (mt && (mt.blending === THREE.AdditiveBlending || (mt.transparent && (mt.opacity < L.minOpacity || q.geometry.type === 'PlaneGeometry')))) return;
     const gm = q.geometry; if (!gm || !gm.attributes || !gm.attributes.position) return; if (!gm.boundingBox) gm.computeBoundingBox(); const b = gm.boundingBox, e = q.matrixWorld.elements;
     const cy = e[1] * (b.min.x + b.max.x) / 2 + e[5] * (b.min.y + b.max.y) / 2 + e[9] * (b.min.z + b.max.z) / 2 + e[13] - m.position.y, ty = Math.max(...[b.min.y, b.max.y].map((y) => e[5] * y + e[13])) - m.position.y;

@@ -492,7 +492,7 @@ export function gloomMachine(kind, opts) {
       if (!done.has(o.material)) { const m = o.material.clone(); m.color.copy(sh); if (hiTier) m.color.multiplyScalar(CONFIG.quality.high.gloom.paintLift); if (m.map && k !== 'dWbody') { m.map = ptex('worn'); m.shininess = 8; } m.userData.shared = false; done.set(o.material, m); } o.material = done.get(o.material); });
   }
   wearAndTear(b, P, face);
-  g.userData.kind = kind; g.userData.head = P.head; g.userData.dormant = dormant; if (!dormant) { g.userData.lamp = new THREE.Vector3(0, (P.lamp || K.lamp)[0], (P.lamp || K.lamp)[1]); g.userData.lampColor = K.screen; }
+  g.userData.kind = kind; g.userData.head = P.head; g.userData.heads = P.heads || [P.head]; g.userData.dormant = dormant; if (!dormant) { g.userData.lamp = new THREE.Vector3(0, (P.lamp || K.lamp)[0], (P.lamp || K.lamp)[1]); g.userData.lampColor = K.screen; }
   let next = ph % gap, until = -1, line = null;
   if (dormant) { face.color.setScalar(0.03); P.night(0, 0.5, 0); face.color.setScalar(0.03); b.rotation.x = -D.lean * (P.low ? 0 : 1); b.rotation.z = (seed - 0.5) * 0.2 * (P.low ? 0 : 1); if (!P.low) P.head.rotation.x = -D.headDrop; for (const a of P.arms) { a.rotation.set(0.12, 0, 0); if (a.userData.fore) a.userData.fore.rotation.set(-0.15, 0, 0); } }
   // the builder's own pose at time t, mv metres walked since the last pose

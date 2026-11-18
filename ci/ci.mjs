@@ -82,7 +82,8 @@ if (cmd === 'plan') {
     if (r.tail && !r.failing.length) for (const l of r.tail) txt.push('  | ' + l.slice(0, 300));
   }
   const s = txt.join('\n');
-  console.log(s); fs.mkdirSync(LOGS, { recursive: true }); fs.writeFileSync(path.join(LOGS, 'summary.txt'), s + '\n');
+  // the markers let tools/ci_run.sh cut the table out of the job log (artifact downloads are blocked from the dev machine)
+  console.log('=== SUMMARY ===\n' + s + '\n=== END SUMMARY ==='); fs.mkdirSync(LOGS, { recursive: true }); fs.writeFileSync(path.join(LOGS, 'summary.txt'), s + '\n');
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '```\n' + s + '\n```\n');
 } else {
   console.error('usage: node ci/ci.mjs plan <group> | run <name> | summary [names json]'); process.exit(1);

@@ -60,7 +60,7 @@ const KINDS = ['walker', 'lurcher', 'ticks', 'hauler', 'stilt', 'lantern', 'ward
       const A = pts(m, m), wb = box(A.W), LV = (typeof G.cfg === 'function' ? G.cfg() : G.cfg).cannon.live;
       // the drawn parts (each visible solid mesh's world box) and which are head parts, by the game's rule (src/main.js drawnShape): under the head node, or, when that node holds most
       // of the machine (the Warden's turning torso), the parts in its top headTop m. Aims: 'centre' = the middle of the largest body part, 'head' = the middle of the largest head part
-      const hs = new Set(); if (m.userData.head) m.userData.head.traverse((q) => hs.add(q)); const PT = []; let hv = 0, av = 0;
+      const hs = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => hs.add(q)); const PT = []; let hv = 0, av = 0;
       m.traverse((q) => { if (!q.isMesh) return; const W1 = pts(q, m, true).W; if (!W1.length) return; const bq = box(W1), v = (bq[1] - bq[0]) * (bq[3] - bq[2]) * (bq[5] - bq[4]); PT.push({ bq, v, head: hs.has(q) }); av += v; if (hs.has(q)) hv += v; });
       if (hv > LV.headShare * av) for (const q of PT) q.head = (q.bq[2] + q.bq[3]) / 2 >= wb[3] - LV.headTop;
       const big = (L2) => L2.filter((q) => q.bq[3] > 0.05).sort((x, y) => y.v - x.v)[0], bp = big(PT.filter((q) => !q.head)), hp = big(PT.filter((q) => q.head));
