@@ -1,0 +1,7 @@
+$ mkdir -p mt/desk && node tools/marlateach.cjs desk mt/desk/ low > mt/desk/run.txt 2>&1; tail -5 mt/desk/run.txt   (limit 100 min)
+513.3 | 1187.8 | keys card (exploring) | dkeys | Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause
+517.1 | 1193.3 | keys card (exploring) | mlook | Click to look with the mouse · Esc frees it
+518.3 | 1195.2 | keys card (exploring) | ACT | pressed Escape (pause)
+frames, wall s, game s: [2166,1201.1164,522.3333]
+NO PAGE ERRORS
+exit code 0
