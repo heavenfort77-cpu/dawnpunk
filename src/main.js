@@ -580,7 +580,8 @@ function introFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts; I.t += dt; const t = I.t;
   let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
   const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
-  if (t >= P[4]) { finishIntro(); return; }
+  // the film's last frame still moves the base's people (from the bed, where the wake's camera is), so they do not stand still for one frame as you take over
+  if (t >= P[4]) { if (part === 3) bview.update(dt, -0.6, -9.3, 1.6); finishIntro(); return; }
   if (part >= 2 && I.part === 'town') introToBase();
   // the wake waits (eyes shut) for the people's models, at most CONFIG.opening.wake.waitModels s; stand-ins left are hidden (opStands)
   if (part === 3 && t - P[3] < 0.5 && opStands(I) > 0 && (I.waitT = (I.waitT || 0) + dt) < C.wake.waitModels) { I.t = P[3]; }
