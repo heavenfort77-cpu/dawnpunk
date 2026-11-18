@@ -15,6 +15,7 @@ import { MARLA_FACE } from './portrait.js';
 import * as H2 from './hud2.js';
 import * as B from './base.js';
 import { createHands } from './hands.js';
+import { createPlayerShadow } from './playershadow.js';
 import { buildWorld } from './world.js';
 import * as PR from './props.js';
 import * as GK from './gloomkit.js';
@@ -49,6 +50,8 @@ const cam = new THREE.PerspectiveCamera(75, 1, 0.03, 90);
 // the Gloom heads lock on to this camera (uncanny motion, CONFIG.gloomMotion)
 GK.motionEye.cam = cam;
 const hemi = new THREE.HemisphereLight(0xb4c4ff, 0x403830, 1.6); scene.add(hemi);
+// the player's own shadow (src/playershadow.js; CONFIG.playerShadow): a real body shadow on desktop, a soft blob on phones
+const pshadow = createPlayerShadow(renderer, scene, CONFIG, QUALITY);
 
 const M = (c, o = {}) => new THREE.MeshLambertMaterial({ color: c, ...o });
 const BM = (c, o = {}) => new THREE.MeshBasicMaterial({ color: c, ...o });
@@ -1188,7 +1191,7 @@ function breakCue(ev) {
 
 // ---- loop
 let fx = null; const FXOFF = (() => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } })();
-function draw() { if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (fx && fx.render) fx.render(); else renderer.render(scene, cam); }
+function draw() { pshadow.tick(cam, state === 'base' || state === 'play'); if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (fx && fx.render) fx.render(); else renderer.render(scene, cam); }
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); if (fx && fx.setSize) fx.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 let last = performance.now(), acc = 0, hurtT = 0;

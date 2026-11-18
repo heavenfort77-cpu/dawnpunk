@@ -42,6 +42,7 @@
     { "name": "openingcheck", "script": "tools/openingcheck.cjs", "args": ["high", "{out}/open_", "{dist}/index_single.html", "1280x720"], "tier": "desktop", "quality": "high", "timeout": 100 },
     { "name": "gloomhitcheck_desktop", "script": "tools/gloomhitcheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
     { "name": "qualitycheck", "script": "tools/qualitycheck.cjs", "args": [], "tier": "desktop", "quality": "both", "timeout": 35 },
+    { "name": "playershadowshot", "script": "tools/playershadowshot.cjs", "args": ["high", "{out}/ps_", "b64"], "tier": "desktop", "quality": "high", "timeout": 40, "note": "Stage 1 player-shadow SAMPLE (?pshadow=1): three desktop pictures printed into the job log as base64 (PSIMG lines), frame time with and without" },
     { "name": "marlasoak", "script": "tools/marlasoak.cjs", "args": [], "tier": "desktop", "quality": "high", "timeout": 25, "pass": "NO ERRORS\\s*$", "fail": "(?<!NO )ERRORS\\b" }
   ]
 }

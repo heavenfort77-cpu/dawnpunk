@@ -547,6 +547,90 @@ export const CONFIG = {
   // first day: the first solar collector must go up inside the first house before you can leave it or start the night; the day clock waits meanwhile (save.solarDone)
   firstSolar: { block: 'Set up your first solar collector first: face a window or door and tap Solar (key Q).', marla: 'Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.' },
   hands: { fov: 60, bob: 0.008, throwTime: 0.75, throwShow: 0.26, throwRelease: 0.62, throwFly: 0.3, landGrow: 0.15, tokenAt: [0.02, 0.07, -0.06], throwKeys: [[0, 0, 0, 0, 0, 0, 0], [0.22, -0.05, -0.17, 0.13, 0.55, 0.1, 0.3], [0.44, 0.03, 0.04, 0.04, 0.2, 0.0, 0.0], [0.64, 0.10, 0.07, -0.13, -0.5, -0.2, -0.3], [0.8, 0.12, 0.03, -0.11, -0.62, -0.25, -0.25], [1, 0, 0, 0, 0, 0, 0]], grabTime: 0.35, recoilTime: 0.14, crease: 0.9, left: { pos: [-0.21, -0.215, -0.52], rot: [0.80, -0.38, 0.42] }, right: { pos: [0.16, -0.20, -0.44], rot: [0.14, 0.10, 0.0] }, gunScale: 0.85, skin: 0xd9a88a, sleeve: 0x8a8468, leather: 0x5a4632, brass: 0xb08a3c, glass: 0x9fd8ff, glow: 0xffc24a }, // first-person hands (real meshes from src/handsdata.js): left open hand with the solar bracer (throws devices, picks up crates), right hand on the water cannon; pos/rot place each hand in front of the eye; the ring glows with the battery
+  // PLAYER SHADOW (STAGE 1 SAMPLE, owner Nov 18 13:21; src/playershadow.js): desktop (high) gets a real body shadow from the sun, phones (low) a soft blob under the feet.
+  playerShadow: {
+    // sampleOnly: while true it is drawn only on a page opened with ?pshadow=1 (the sample and its check); ?pshadow=0 always turns it off. Set false once the owner approves.
+    sampleOnly: true,
+    high: {
+      // body: an invisible body casts a real sun shadow into its own small shadow map round the player, redrawn every frame (the big sun maps stay static)
+      body: true,
+      // blob: also lay the soft blob under the feet
+      blob: false,
+      // map: size of the body's shadow map (pixels, square)
+      map: 256,
+      // box: half size of the shadow box round the body, across the sun's rays (m); it must hold the whole body with the cannon
+      box: 1.25,
+      // back: how far up the sun's rays from the body's middle the shadow box starts (m)
+      back: 3,
+      // reach: how far past the body (down the rays) the shadow can still land (m): long low-sun shadows, walls, the yard
+      reach: 14,
+      // darkness: share of the sunlight the body takes away (1 = as dark as a house's shadow)
+      darkness: 1,
+      // soft: blur of the shadow's edge (m)
+      soft: 0.025,
+      // bias: [depth bias, normal bias] of the body's shadow map, against stripes and gaps at the feet
+      bias: [-0.0005, 0.02],
+    },
+    low: {
+      // body: no real body shadow on phones
+      body: false,
+      // blob: the soft dark ellipse under the feet, by day and by night
+      blob: true,
+    },
+    blob: {
+      // size: [across, front to back] of the ellipse (m)
+      size: [0.62, 0.5],
+      // dark: opacity at its middle (0 = none, 1 = black)
+      dark: 0.42,
+      // soft: share of the radius that fades out to the edge
+      soft: 0.75,
+      // lift: height above the floor (m), against flicker with the ground
+      lift: 0.015,
+    },
+    body: {
+      // hip / shoulder / headY: heights of the hip joint, the shoulder joint and the middle of the head (m); the eye is at 1.6 m (the camera), the crown at about 1.75 m
+      hip: 0.94,
+      shoulder: 1.42,
+      headY: 1.63,
+      // thigh / shin / upper / fore: lengths of the leg and arm bones (m)
+      thigh: 0.43,
+      shin: 0.42,
+      upper: 0.29,
+      fore: 0.26,
+      // centre: height of the shadow box's middle above the feet (m)
+      centre: 0.9,
+    },
+    motion: {
+      // eyeFwd: how far the eyes sit in front of the body's middle (m): the body stands this far behind the camera
+      eyeFwd: 0.08,
+      // ease: how fast the body's speed follows the real speed (per second); higher = snappier start and stop
+      ease: 7,
+      // turn: how fast the body turns after the view (per second)
+      turn: 14,
+      // full: walking speed at which the stride reaches its full walk size (m/s); above it the stride grows toward a run
+      full: 1.6,
+      // cadence: steps per second = [a, b]: a + b times the speed in m/s
+      cadence: [1.3, 0.4],
+      // legSwing: thigh swing each way [walking, running] (rad)
+      legSwing: [0.42, 0.72],
+      // knee: knee bend at mid-swing [walking, running] (rad)
+      knee: [0.7, 1.3],
+      // bob: how far the body dips between steps (m)
+      bob: 0.03,
+      // lean: forward lean when running (rad)
+      lean: 0.12,
+      // sway: idle sway of the chest when standing (rad)
+      sway: 0.02,
+      // twist: most the hips turn toward the direction of travel when you walk sideways or backward (rad)
+      twist: 0.7,
+      // armRest: left arm at rest [shoulder forward, elbow bend] (rad); it swings against the left leg when walking
+      armRest: [0.1, 0.35],
+      // gunArm: right arm holding the cannon [shoulder forward, elbow bend, inward] (rad)
+      gunArm: [0.45, 1.0, -0.15],
+      // aimFollow: share of the view's up and down tilt that the cannon arm follows
+      aimFollow: 0.6,
+    },
+  },
   // lucky cat looks, one per cat id (1, 2, 3...): body and head wraps painted in klad (art/cats/paint_<name>.sh), packed by tools/maketex.py; cat id k uses entry (k - 1) mod the list; the cat found in a house during a run uses entry (house index) mod the list
   catStyles: [
     { name: 'calico', body: 'catcalico_b', head: 'catcalico_h', glaze: 0xf6f1e6, earL: 0xd9822b, earR: 0x2b2420 },
