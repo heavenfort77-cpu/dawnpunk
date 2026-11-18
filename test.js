@@ -636,6 +636,11 @@ check('eating heals and costs carried food', (() => { const e = createSim({ cfg:
   check('fresh: the shoot, place and charge steps mark the machine; switch and eat do not', D.steps.filter((q) => q.mark).map((q) => q.id).join(',') === 'shoot,place,charge');
   check('fresh: the drill machine starts a few metres out, picked within about 25 degrees of the view', D.spawnOut > 2 && D.spawnOut < 9 && D.viewDeg >= 15 && D.viewDeg <= 30 && D.mark.px >= 40);
   check('fresh: the waking prompt says click and E on desktop', /Click to start/.test(F.wakeBoth) && /E to talk/.test(F.wakeBoth) && F.wakePrio > CONFIG.ui.centre.msg && F.wakePrio < CONFIG.ui.centre.card);
+  // teaching review fix 5 (Nov 18): Marla's talk prompt always hides the base walk line, so the waking prompt after the click teaches moving and looking, and the key strip and Keys card list W A S D
+  { const dk = (/<div id="dkeys">([\s\S]*?)<\/div>/.exec(tpl) || ['', ''])[1]; check('teach: the waking prompt after the click says W A S D to move and mouse to look, the desktop key strip and Keys card list W A S D', /W A S D to move/.test(F.wakeTalk) && /mouse to look/.test(F.wakeTalk) && /E to talk/.test(F.wakeTalk) && /W A S D/.test(F.wakeClick) && F.wakeTalk.length <= 60 && /W A S D<\/span> move/.test(dk) && F.keysDesk.some((q) => q[0] === 'W A S D')); }
+  // teaching review fix 7 (Nov 18): H only shows the keys while held (main.js keydown/keyup add and remove body.hkeys), so every desktop place says "hold H" and none says H hides hints
+  { const dk = (/<div id="dkeys">([\s\S]*?)<\/div>/.exec(tpl) || ['', ''])[1], Bm = await import('./src/base.js'), hk = F.keysDesk.find((q) => /H$/.test(q[0])), hl = Bm.MARLA_LINES.hintsH;
+    check('teach: H means one thing (hold for the keys) in the strip, the chip, the Keys card and Marla\'s reminders', /<span class="k">hold H<\/span> keys/.test(dk) && !/hide hints/.test(tpl) && /'<span class="k">hold H<\/span> keys'/.test(src) && hk && hk[0] === 'Hold H' && /^keys/.test(hk[1]) && hl.every((t) => /Hold H/.test(t) && !/Press H|H hides/.test(t)) && /classList\.add\('hkeys'\)/.test(src) && /classList\.remove\('hkeys'\)/.test(src)); }
   check('fresh: the ride-out line is one short line', F.rideLine.length <= 64 && /^Ride out: /.test(F.rideLine));
   check('fresh: the Keys card: desktop keys only on desktop, touch controls only on a phone', F.keysDesk.length >= 8 && F.keysPhone.length >= 8 && F.keysDesk.some((q) => /click/i.test(q[0])) && !F.keysPhone.some((q) => /click|mouse|\bEsc\b|W A S D/i.test(q.join(' '))));
   { const sc = /<div class="ov" id="scout"[\s\S]*?\n<\/div>/.exec(tpl); check('fresh: Marla\'s dialog no longer carries the controls text; the pickers sit in their own block with a "Set up the run" toggle', sc && !/Desktop: W A S D|left thumb moves/.test(sc[0]) && /id="scoutSetup"/.test(sc[0]) && /id="ssetup"/.test(sc[0]) && /id="scoutRide"/.test(sc[0])); }
@@ -654,7 +659,9 @@ check('eating heals and costs carried food', (() => { const e = createSim({ cfg:
   const miss = VL.filter((q) => !holes(q.s).every((p) => src.includes(p))).map((q) => q.id);
   check('voice: every voiced line\'s text (as written in the source) is still in the game', miss.length === 0, miss.join(','));
   const D = ['ahead', 'behind', 'on your right', 'on your left', 'upstairs', 'downstairs'], run = [];
-  for (const k of ['supper', 'lowAte', 'low', 'hurt', 'streak', 'hintsH']) run.push(...B.MARLA_LINES[k]);
+  // hintsH left out (teaching review fix 7, Nov 18): its words changed to "Hold H", so its old clips were dropped from the table; the new lines play no clip
+  for (const k of ['supper', 'lowAte', 'low', 'hurt', 'streak']) run.push(...B.MARLA_LINES[k]);
+  check('voice: the hold-H reminders (hintsH) play no clip and hint_h_1/2 are out of the voice table', B.MARLA_LINES.hintsH.every((t) => !MV.lineFor(t)) && !VL.some((q) => /^hint_h_/.test(q.id)));
   for (const k of ['inbound', 'collector']) for (const t of B.MARLA_LINES[k]) for (const d of D) run.push(t.replace('{d}', d));
   for (const t of B.MARLA_LINES.stair) for (const u of ['up', 'down']) run.push(t.replace('{u}', u));
   for (const t of B.MARLA_LINES.upper) for (const f of [2, 3]) for (const d of D) run.push(t.replace('{f}', f).replace('{d}', d));

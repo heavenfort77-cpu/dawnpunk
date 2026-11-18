@@ -15,8 +15,6 @@ export const VOICE_LINES = [
   { id: "streak_3", t: "You hit back. That is the idea. Allegedly.", u: "voice/streak_3.mp3", s: "You hit back. That is the idea. Allegedly." },
   { id: "streak_4", t: "Keep bleeding and I am renting your room.", u: "voice/streak_4.mp3", s: "Keep bleeding and I am renting your room." },
   { id: "streak_5", t: "Really committing to being a doorstop, huh?", u: "voice/streak_5.mp3", s: "Really committing to being a doorstop, huh?" },
-  { id: "hint_h_1", t: "Screen too busy, Potts? Press H. Same mess.", u: "voice/hint_h_1.mp3", s: "Screen too busy, Potts? Press H. Same mess." },
-  { id: "hint_h_2", t: "Too many labels? H hides them. Aim, though.", u: "voice/hint_h_2.mp3", s: "Too many labels? H hides them. Aim, though." },
   { id: "inbound_1_ahead", t: "Gloom ahead. Look awake, Potts.", u: "voice/inbound_1_ahead.mp3", s: "Gloom {d}. Look awake, Potts." },
   { id: "inbound_1_behind", t: "Gloom behind. Look awake, Potts.", u: "voice/inbound_1_behind.mp3", s: "Gloom {d}. Look awake, Potts." },
   { id: "inbound_1_right", t: "Gloom on your right. Look awake, Potts.", u: "voice/inbound_1_right.mp3", s: "Gloom {d}. Look awake, Potts." },

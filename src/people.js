@@ -29,6 +29,8 @@ function spring(s, target, hz, damp, dt) { if (dt <= 0) return s.x; const w = 2 
 const _H = new THREE.Vector3(), _K = new THREE.Vector3(), _F = new THREE.Vector3(), _u = new THREE.Vector3(), _w = new THREE.Vector3(), _n = new THREE.Vector3(), _qa = new THREE.Quaternion(), _qb = new THREE.Quaternion(), _qf = new THREE.Quaternion();
 function turnWorld(b, q) { b.parent.getWorldQuaternion(_qa); _qb.copy(_qa).invert().multiply(q).multiply(_qa); b.quaternion.premultiply(_qb); b.updateWorldMatrix(false, true); }
 const REACH_SOFT = 0.99;
+// scratch for the holder's world position (the pelvis on a deck)
+const _sp = new THREE.Vector3();
 // hinge: the knee's bend axis in the thigh's own frame (measured on the model); kn: { s } the side the knee bends to (kept while the leg is straight, when it cannot be seen)
 function legReach(th, ca, ft, T, hinge, kn) {
   ft.getWorldQuaternion(_qf); th.getWorldPosition(_H); ca.getWorldPosition(_K); ft.getWorldPosition(_F);
@@ -109,7 +111,7 @@ export function createPerson(cfg, key) {
   // returns { speed (m/s, along the body's facing), yaw (the body's facing), moved } so a caller that does not pass move can move the holder
   // The motion runs in fixed slices of CONFIG.people.motion.slice s (a frame of 1/30 or 1/60 s is a whole number of slices), so 30 and 60 frames a second give the same motion.
   const M = P.motion, lock = [0, 1].map(() => ({ on: false, w: 0, rel: 9, T: new THREE.Vector3(), last: new THREE.Vector3(), q0: 0, sw: false }));
-  st.acc = 0; st.feetV = 0; st.plant = [true, true]; st.hipX = 0; st.drop = 0; st.off = [0, 0]; st.swingQ = [-1, -1]; st.cr = { x: 0, v: 0 }; st.halt = false; st.wasWalk = false; st.stepU = -1; st.heel = [0, 0]; st.A = 0; st.v = 0;
+  st.acc = 0; st.feetV = 0; st.plant = [true, true]; st.hipX = 0; st.drop = 0; st.off = [0, 0]; st.swingQ = [-1, -1]; st.cr = { x: 0, v: 0 }; st.hyf = null; st.halt = false; st.wasWalk = false; st.stepU = -1; st.heel = [0, 0]; st.A = 0; st.v = 0;
   // a pivot step turns the body about the foot that stays down (not about the body's middle, which dragged that foot round), then the body settles back over
   // the middle in M.recenter s while it steps or walks; footAt = each foot's spot in the body's own frame (x, z), measured on the model once it loads
   const hinge = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(1, 0, 0)], knee = [{ s: 1 }, { s: 1 }];
@@ -183,6 +185,9 @@ export function createPerson(cfg, key) {
     const hipX = sway + wsh * I.hip + stepShift, hipRoll = sw * G.roll * gw + wsh * I.roll, legComp = -hipX / legLen - hipRoll;
     // walking, the knees stay a little bent (the pelvis M.walkCrouch m lower at full stride), so a held foot is always within the leg's reach
     drop += Math.abs(wsh) * I.knee * 0.06 * legLen + lift * 0.01 + follow(st.cr, M.walkCrouch * Math.min(gw, sstep(wantV / (0.35 * G.speed))), M.crouchTime, dt); // (eased: dropping into the walk all at once snapped the knees; it starts to rise as soon as the walk is told to stop, so the legs are still before the arms settle)
+    // on a deck (o.groundAt) the pelvis follows, over about M.slopeTime s, the lower of the ground half a stride ahead and behind (so the lower foot stays in reach and a ramp's kinks do not jolt the hips)
+    if (o.groundAt && root.parent) { root.parent.getWorldPosition(_sp); const hs = 0.5 * G.step, sx = Math.sin(st.feet) * hs, sz = Math.cos(st.feet) * hs, g0 = o.groundAt(_sp.x, _sp.z), ref = Math.min(g0, o.groundAt(_sp.x + sx, _sp.z + sz), o.groundAt(_sp.x - sx, _sp.z - sz));
+      if (!st.hyf) st.hyf = { x: ref, v: 0 }; drop += Math.max(0, g0 - follow(st.hyf, ref, M.slopeTime, dt)); } else st.hyf = null;
     add('pelvis', 0, hipOff + G.twist * Math.sin(2 * Math.PI * st.phase) * gw, hipRoll);
     // legs: stride, narrow (woman) or wide (child) track, the free knee bent at rest, a pivot step lifts one foot
     for (const [s, Lg, sg] of [['l', L, 1], ['r', R, -1]]) {
@@ -227,6 +232,8 @@ export function createPerson(cfg, key) {
   // walking, a lifted foot is carried over the ground in world space: from where it left the ground to where it will land (where the stance leg will be when it lands,
   // M.swingLift m up at mid-swing at full stride), on swingW's path, so it never outruns a walking foot and lands at rest
   const L0 = [new THREE.Vector3(), new THREE.Vector3()], rw = new THREE.Vector3(), hip = new THREE.Vector3(), kn0 = new THREE.Vector3();
+  // the height a foot stands at, at (x, z): the caller's ground there (o.groundAt, e.g. a footbridge deck) or the body's own floor, plus the ankle's standing height
+  const groundAt = (x, z, i) => { const gf = st.lastIn && st.lastIn.groundAt; return (gf ? gf(x, z) : rw.y) + footY[i]; };
   function footLock(dt) {
     if (!scn) return; scn.updateWorldMatrix(true, true); root.getWorldPosition(rw); const re = root.matrixWorld.elements, hd = Math.atan2(re[8], re[10]), ch = Math.cos(hd), sh = Math.sin(hd);
     for (let i = 0; i < 2; i++) { const [a, b, c] = LEGS[i], th = bones[a], ca = bones[b], ft = bones[c], lk = lock[i]; if (!th || !ca || !ft) continue;
@@ -239,7 +246,7 @@ export function createPerson(cfg, key) {
         if (!lk.sw) { L0[i].copy(lk.w > 0 ? lk.last : fk); lk.sw = true; lk.q0 = Math.min(q, 0.9);  } lk.on = false; lk.w = 1;
         const qq = clamp((q - lk.q0) / (1 - lk.q0), 0, 1), fw = st.v * (1 - q) * (1 - G.stance) * G.cycle * st.rate, fx = footAt[i][0], fz = footAt[i][1] + M.landAhead * st.v * G.stance * G.cycle * st.rate + fw, k = swingW(qq);
         const lx = rw.x + fx * ch + fz * sh, lz = rw.z - fx * sh + fz * ch;
-        tg.set(L0[i].x + (lx - L0[i].x) * k, L0[i].y + (rw.y + footY[i] - L0[i].y) * k + M.swingLift * Math.max(st.A / 0.45, M.liftMin) * Math.sin(Math.PI * qq), L0[i].z + (lz - L0[i].z) * k);
+        tg.set(L0[i].x + (lx - L0[i].x) * k, L0[i].y + (groundAt(lx, lz, i) - L0[i].y) * k + M.swingLift * Math.max(st.A / 0.45, M.liftMin) * Math.sin(Math.PI * qq), L0[i].z + (lz - L0[i].z) * k);
         if (Math.hypot(tg.x - fk.x, tg.z - fk.z) > 1) { lk.sw = false; lk.w = 0; continue; }
         lk.T.copy(tg); lk.last.copy(tg); legReach(th, ca, ft, tg, hinge[i], knee[i]); continue;
       }
@@ -252,7 +259,7 @@ export function createPerson(cfg, key) {
       if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = st.stepU >= 0 && !planted ? Math.min(lk.w, 1 - sstep((st.stepU - 0.05) / 0.85)) : 1 - sstep(lk.rel / (st.walk ? M.lockRelease : M.reseat)); }
       if (lk.w <= 0) { tg.copy(fk); if (st.stepU >= 0 && lk.dy0 != null) tg.y = fk.y + lk.dy0 * (1 - sstep(st.stepU)); lk.last.copy(tg); legReach(th, ca, ft, tg, hinge[i], knee[i]); continue; }
       // a foot put down above the ground (a walk that stopped mid-step) settles onto it
-      { const g = rw.y + footY[i] + 0.02; if (lk.on && lk.T.y > g) lk.T.y = g + (lk.T.y - g) * Math.exp(-dt * 12); } // (only a foot clearly above its standing height under the body, so a footbridge deck lifts it)
+      { const g = groundAt(lk.T.x, lk.T.z, i) + 0.02; if (lk.on && lk.T.y > g) lk.T.y = g + (lk.T.y - g) * Math.exp(-dt * 12); } // (only a foot clearly above its standing height under the body, so a footbridge deck lifts it)
       // a foot far from where the leg puts it, or one the leg can no longer reach (walking off from a standing foot), is let go (eased, as a lift); one a jump away (a teleport) at once
       const gap = Math.hypot(lk.T.x - fk.x, lk.T.z - fk.z); if (gap > 1) { lk.on = false; lk.w = 0; lk.last.copy(fk); legReach(th, ca, ft, fk, hinge[i], knee[i]); continue; }
       // held where it was put down; walking, the heel rises with the leg over the end of the stance (heel off)
@@ -274,7 +281,7 @@ export function createPerson(cfg, key) {
     if (!st.init) { st.init = true; st.feet = root.rotation.y; st.head.x = st.chest.x = st.hips.x = st.feet; }
     // a long gap (the scene was left) is not played through: at most M.maxSlices slices, and the feet are let go
     // the holder moved by more than a step since last frame (a new spot, a rebuilt base): the feet are let go and the body set back over its middle
-    { const hp = root.parent && root.parent.position; if (hp && st.hp && Math.hypot(hp.x - st.hp[0], hp.z - st.hp[1]) > 0.5) { for (const lk of lock) { lk.on = false; lk.w = 0; lk.sw = false; lk.slip = false; lk.skip = false; } st.off[0] = st.off[1] = 0; st.speed.x = 0; st.speed.v = 0; st.halt = true; st.step = null; st.wasWalk = false; } } // (and the walk starts again from standing)
+    { const hp = root.parent && root.parent.position; if (hp && st.hp && Math.hypot(hp.x - st.hp[0], hp.z - st.hp[1]) > 0.5) { for (const lk of lock) { lk.on = false; lk.w = 0; lk.sw = false; lk.slip = false; lk.skip = false; } st.off[0] = st.off[1] = 0; st.speed.x = 0; st.speed.v = 0; st.halt = true; st.step = null; st.wasWalk = false; st.hyf = null; } } // (and the walk starts again from standing)
     const h = M.slice; st.acc += dt; let n = Math.floor(st.acc / h + 1e-6); st.acc -= n * h; if (n > M.maxSlices) { n = M.maxSlices; st.acc = 0; lock[0].w = lock[1].w = 0; lock[0].on = lock[1].on = false; }
     // the caller's aim and gaze are known once per frame: the slices in between take them on a straight line from last frame's, as a faster frame rate would have given them
     let v = st.speed.x; const pf = st.pFace, pg = st.pGaze, si = st.si || (st.si = { gaze: null, ga: [0, 0, 0] });

@@ -160,13 +160,14 @@ export const CONFIG = {
     // haltV / haltTime: a walk slowing to a stop below haltV m/s with both feet down stops there (the gait does not shuffle on) and loses the rest of its speed in about haltTime s
     // cornerDist: a patrol slows over its last cornerDist m before a waypoint, as much as the coming corner needs (cornerCos: no slowing for a bend gentler than this cos, about 45 deg); wpReach: m from a waypoint at which the next one is taken
     // reseat / reseatLift: standing, a foot let go of its spot moves to where the leg puts it over reseat s, lifted reseatLift m on the way
-    // deckRise: on a ramp a patrol slows so its body climbs or sinks at most this many m/s
-    // deckEase: a walker without a model stepping onto or off a footbridge deck (src/baselife.js) rises or sinks to it at this rate (1/s); deckHz: a recruit's body follows the deck on a spring this fast
+    // slopeTime: on a footbridge deck the pelvis follows the lower of the ground half a stride ahead and behind over about this many s (smooths the ramps' kinks)
+    // deckRise: on a ramp a patrol slows so its body climbs or sinks at most this many m/s; deckLook: it looks this many m ahead for a ramp (its speed takes a moment to come down)
+    // deckEase: a walker without a model stepping onto or off a footbridge deck (src/baselife.js) rises or sinks to it at this rate (1/s)
     // stepThigh: a pivot step lifts its foot mostly by bending the knee (turn.stepLift x 2) and brings the thigh forward only this share of turn.stepLift (a knee thrown forward snapped)
     // decideEvery: a pivot step may start only every this many slices (1 = any slice; 4 = only every 1/30 s of game time; 4 measured worse at 30 vs 60 fps in the browser)
     // stepTurn: Marla (src/marla.js) steps round once the way she should face is more than this many rad from where she faces (the base people use turn.stepStart)
     // stepLead: a pivot step's foot lifts for this share of the step before the body turns, and sets down for the same share after; recenter: after pivoting on one foot the body settles back over its middle in about this many s (while stepping or walking)
-    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.03, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckHz: 0.6, deckRise: 0.25, reseat: 0.35, reseatLift: 0.06, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
+    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.08, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckRise: 0.25, deckLook: 1.2, slopeTime: 0.12, reseat: 0.35, reseatLift: 0.06, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
@@ -181,7 +182,7 @@ export const CONFIG = {
   // The Gloom's look (src/gloomkit.js has each machine's own numbers in GLOOMKIT). machines: false brings back the hooded Gloom. 
   // dormant: how many stand switched off in the settlement by day.
   // marlaTalk (first night only): streakHits hits within streakWindow seconds make Marla say a sarcastic 'streak' line, at most once per streakCd seconds;
-  // on desktop with hints on she reminds that H hides them, up to hintTimes times, the first hintDelay seconds into the first night (then every hintDelay)
+  // on desktop with hints on she reminds that holding H shows the keys, up to hintTimes times, the first hintDelay seconds into the first night (then every hintDelay)
   // rotate: the rotate screen shows on touch devices when the visible height is more than ratio times the width; pollMs: how often that is rechecked (ms)
   rotate: { ratio: 1.05, pollMs: 500 },
   marlaTalk: { streakHits: 3, streakWindow: 8, streakCd: 20, hintDelay: 25, hintTimes: 2 },
@@ -1004,8 +1005,8 @@ export const CONFIG = {
   fresh: {
     // master switch for the waking prompt (desktop text, phone USE pulse) until the mouse has been taken and Marla talked to once
     wake: true,
-    // the waking prompt on desktop: both steps still to do, only the click left, only the talk left
-    wakeBoth: 'Click to start · E to talk', wakeClick: 'Click to start', wakeTalk: 'E to talk to Marla',
+    // the waking prompt on desktop: both steps still to do, only the click left, only the talk left (teaching review fix 5: the last two also teach moving and looking, since Marla's prompt hides the base walk line)
+    wakeBoth: 'Click to start · E to talk', wakeClick: 'Click to start · W A S D to move · mouse to look', wakeTalk: 'W A S D to move · mouse to look · E to talk to Marla',
     // its priority in the centre queue (msg is 3: the dawn line waits behind it; the job card, 5, stays above it)
     wakePrio: 3.5,
     // Marla's first talk (day 1): the one line that says what "Ride out" does
@@ -1017,8 +1018,8 @@ export const CONFIG = {
     // its priority in the centre queue
     nBasePrio: 3,
     // the Keys card (pause menu "Keys", or hold H): [key, what it does]; desktop lists only desktop keys, phones only the touch controls
-    keysDesk: [['W A S D', 'walk'], ['Mouse', 'look (click the game first; Esc frees the mouse)'], ['Left click', 'fire; hold it to charge, let go for a charged shot'], ['Right click', 'place: the solar collector by day, the picked device at night'],
-      ['1 to 5 / wheel', 'pick a device'], ['Q', 'solar collector (by day)'], ['F', 'eat (heals)'], ['E', 'use, talk, leave a house at its door'], ['Hold N', 'start the night (in a house)'], ['Tab', 'quests (in the base)'], ['M', 'music on or off'], ['Hold H', 'this card and the key strip'], ['Esc / P', 'pause; Esc also closes a panel']],
+    keysDesk: [['W A S D', 'move'],['Mouse', 'look (click the game first; Esc frees the mouse)'], ['Left click', 'fire; hold it to charge, let go for a charged shot'], ['Right click', 'place: the solar collector by day, the picked device at night'],
+      ['1 to 5 / wheel', 'pick a device'], ['Q', 'solar collector (by day)'], ['F', 'eat (heals)'], ['E', 'use, talk, leave a house at its door'], ['Hold N', 'start the night (in a house)'], ['Tab', 'quests (in the base)'], ['M', 'music on or off'], ['Hold H', 'keys: this card and the key strip, while held'], ['Esc / P', 'pause; Esc also closes a panel']],
     keysPhone: [['Left thumb', 'walk'], ['Right thumb', 'look; a quick tap fires (uses things in the base)'], ['FIRE', 'shoot; hold it till the ring glows gold, then let go'], ['Device button', 'one tap places it'], ['Switch tab', 'opens all devices; tap one to pick it'],
       ['SOLAR', 'solar collector (by day)'], ['EAT', 'eat (heals)'], ['LEAVE', 'leave a house at its door'], ['HOLD', 'start the night (in a house)'], ['Quest box', 'tap to see every quest'], ['||', 'pause']],
     // the big map from the pause menu (base only): its size as a share of the shorter screen side, the metres from you to its rim, its glyph size (px) at most, and its key line

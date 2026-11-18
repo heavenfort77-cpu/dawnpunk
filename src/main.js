@@ -873,7 +873,7 @@ function marlaSay(kind, vars) {
 }
 function marlaAlert(ev) { const po = panOf(ev); marlaSay(ev.k, { d: dirWord(po), f: ev.floor + 1, u: ev.to > ev.from ? 'up' : 'down' }); }
 function marlaHurt() { marlaSay('hurt', { ate: sim.eaten || 0, low: sim.player.hp <= CONFIG.player.hp * 0.35 }); }
-// first night only (owner Nov 16): a sarcastic line when the player keeps getting hit, and on desktop one reminder that H hides the hints. CONFIG.marlaTalk
+// first night only (owner Nov 16): a sarcastic line when the player keeps getting hit, and on desktop one reminder that holding H shows the keys. CONFIG.marlaTalk
 const firstNight = () => !!(sim && sim.phase === 'night' && save && !(save.nights || 0)); const hitTimes = []; let hintsToldN = 0, nightClock = 0;
 function marlaStreak() { const M = CONFIG.marlaTalk, now = performance.now() / 1000; hitTimes.push(now); while (hitTimes.length && now - hitTimes[0] > M.streakWindow) hitTimes.shift(); if (firstNight() && hitTimes.length >= M.streakHits) { hitTimes.length = 0; marlaSay('streak', {}); } }
 function marlaNightTips(dt) { const M = CONFIG.marlaTalk; if (drill) return; if (!firstNight()) { nightClock = 0; return; } nightClock += dt; if (FINE && !document.body.classList.contains('nohints') && hintsToldN < M.hintTimes && nightClock >= M.hintDelay * (hintsToldN + 1) && marlaT <= 0.01) { const L = B.MARLA_LINES.hintsH; marlaHint(L[hintsToldN % L.length]); hintsToldN++; } }
@@ -971,7 +971,7 @@ function setPause(v) { if (v && state !== 'play' && state !== 'base') return; pa
 $('bPause').addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); setPause(true); });
 $('resume').addEventListener('click', () => setPause(false)); $('bMusic').addEventListener('click', toggleMusic); $('bVoice').addEventListener('click', () => { MV.setOn(!MV.on); showVoice(); }); $('bMus').addEventListener('click', (e) => { e.stopPropagation(); toggleMusic(); $('bMus').blur(); });
 // music on or off from the pause menu, the note button always on screen, or M (players said the music got in the way and could not find the switch)
-// hints on or off (owner Nov 16: "let player have a choice to close the crowded portion"): H, or the pause menu; hides the key legend, the mouse hint, the key badges and the second line of the dormant tag; remembered
+// hints on or off (owner Nov 16: "let player have a choice to close the crowded portion"): the pause menu's Hints button (H no longer toggles them: holding H shows the keys); hides the key legend, the mouse hint, the key badges and the second line of the dormant tag; remembered
 function toggleHints() { if (document.body.classList.contains('keysoff')) { document.body.classList.remove('keysoff'); try { storage && storage.setItem('solardg.keysAuto', 'shown'); } catch (e) { /* not saved */ } return; } setHints(!document.body.classList.contains('nohints')); }
 // panel fix (Nov 17): the desktop key strip hides by itself once CONFIG.ui.keysAfterNights nights are done, unless the player brought it back with H before
 let keysAutoSeen = false; function keysAuto() { document.body.classList.toggle('n2', !!save && (save.nights || 0) >= CONFIG.ui.keysAfterNights); if (keysAutoSeen || !FINE || !save || (save.nights || 0) < CONFIG.ui.keysAfterNights) return; keysAutoSeen = true; let st = null; try { st = storage && storage.getItem('solardg.keysAuto'); } catch (e) { /* none */ } if (st !== 'shown') document.body.classList.add('keysoff'); }
@@ -1086,9 +1086,9 @@ function escClose() { if ($('keys').style.display === 'flex') { closeKeys(); ret
 // ---- DEVICE BAR (owner Nov 17 18:28, CONFIG.devBar): only the picked device shows; a switch opens the full bar for openSecs, holding H too; on a phone the switch tab opens it and a tap picks one
 let barOpenT = 0; function barOpen() { barOpenT = CONFIG.devBar.openSecs; }
 function tickBar(dt) { barOpenT = Math.max(0, barOpenT - dt); $('hud').classList.toggle('devc', !(barOpenT > 0 || document.body.classList.contains('hkeys') || !!(drill && drill.held))); }
-// context chips from night 2 on (desktop): H keys always, F eat when hurt at night, Q solar by day in a house while the Sun is not full, E leave at the door
+// context chips from night 2 on (desktop): hold H keys always, F eat when hurt at night, Q solar by day in a house while the Sun is not full, E leave at the door
 function tickChips() { if (!FINE) return; const P = sim && sim.player, ch = []; if (P && sim.phase === 'night' && P.hp < CONFIG.player.hp * CONFIG.chips.eatBelow && sim.food > 0) ch.push(['F', 'eat · ' + sim.food + ' to bring home']); if (P && sim.phase === 'day' && P.energy < CONFIG.player.energyCap) ch.push(['Q', 'solar']); if ($('bLeave').style.display === 'flex') ch.push(['E', 'leave']);
-  const h = '<span class="k">H</span> keys' + ch.map((q) => ' <span class="k">' + q[0] + '</span> ' + q[1]).join(''), el = $('hchip'); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
+  const h = '<span class="k">hold H</span> keys' + ch.map((q) => ' <span class="k">' + q[0] + '</span> ' + q[1]).join(''), el = $('hchip'); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
 // ---- BASE MINIMAP (owner Nov 17 19:43, CONFIG.miniMap): a round top-down map in the quest corner, the player in the middle facing up, Marla as a bright dot (an arrow on the rim when she is
 // farther than the radius), faint landmark letters, a north tick; a 2D canvas redrawn at CONFIG.miniMap.hz; shown in the base by day outside rooms and panels (holding H shows it in a room too)
 let mapT = 0, mapInfo = null;

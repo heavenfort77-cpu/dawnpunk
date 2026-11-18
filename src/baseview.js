@@ -344,10 +344,10 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     if (d < M.wpReach) { o.i = (o.i + 1) % o.wp.length; tgt = o.wp[o.i]; dx = tgt[0] - o.n.position.x; dz = tgt[1] - o.n.position.z; d = Math.hypot(dx, dz); }
     const nx = o.wp[(o.i + 1) % o.wp.length], ex = nx[0] - tgt[0], ez = nx[1] - tgt[1], el = Math.hypot(ex, ez) || 1, c = d > 1e-6 ? (dx * ex + dz * ez) / (d * el) : 1;
     const keep = Math.max(0.12, Math.min(1, (c - Wk.stopCos) / (M.cornerCos - Wk.stopCos))), near = Math.max(0, Math.min(1, 1 - (d - M.wpReach) / M.cornerDist));
-    // a footbridge deck: the body rises or sinks to it on a critically damped spring (M.deckHz), each slice, so it never jumps or bobs
-    if (life) { const w = 2 * Math.PI * M.deckHz, h = M.slice; o.vy = (o.vy || 0) + (w * w * (life.deckY(o.n.position.x, o.n.position.z) - o.n.position.y) - 2 * w * (o.vy || 0)) * h; o.n.position.y += o.vy * h; }
-    let rise = 1; if (life && d > 1e-6) { const y0 = life.deckY(o.n.position.x, o.n.position.z), y1 = life.deckY(o.n.position.x + dx / d * 0.3, o.n.position.z + dz / d * 0.3), sl = Math.abs(y1 - y0) / 0.3; if (sl > 1e-4) rise = Math.max(0.35, Math.min(1, M.deckRise / (1.2 * sl))); }
-    return { face: Math.atan2(dx, dz), go: true, move: true, carry: o.crate.visible, slow: Math.min(1 - (1 - keep) * near, rise) }; }
+    // a footbridge deck: the body stands at its height, each slice (the walk slows on its ramps below, from M.deckLook m before them, so it never climbs faster than M.deckRise)
+    if (life) o.n.position.y = life.deckY(o.n.position.x, o.n.position.z);
+    let rise = 1; if (life && d > 1e-6) for (let k = 0; k < M.deckLook / 0.3; k++) { const at = (j) => life.deckY(o.n.position.x + dx / d * 0.3 * j, o.n.position.z + dz / d * 0.3 * j), sl = Math.abs(at(k + 1) - at(k)) / 0.3; if (sl > 1e-4) rise = Math.min(rise, Math.max(0.35, M.deckRise / (1.2 * sl))); }
+    return { face: Math.atan2(dx, dz), go: true, move: true, carry: o.crate.visible, slow: Math.min(1 - (1 - keep) * near, rise), groundAt: o.gAt || (o.gAt = (x, z) => (life ? life.deckY(x, z) : 0)) }; }
   // posAt (optional): a function of the share of this frame done (0..1] giving the player's [x, z] at that moment, for callers that know the path between frames
   // (without it the slices take the spot on a line from last frame's)
   function update(dt, px, pz, camY, posAt) {

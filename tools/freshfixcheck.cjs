@@ -34,8 +34,9 @@ const path = require('path');
     add('waking (after the opening): "' + w[1] + '" shows in the centre, Marla ' + w[2] + (card ? '' : ' (the job card had closed by itself)'), w[0] === 'Click to start · E to talk' && w[1] === w[0]);
     add('the mouse-look hint is not shown under the waking prompt', !(await shown(p, 'mlook')));
     await p.mouse.click(640, 420); await wait(p, 1200);
-    const c1 = await p.evaluate(() => [window.__game.mouseHeld, window.__game.uiNow(), getComputedStyle(document.getElementById('scout')).display, window.__game.wakeText()]);
-    add('the first click only takes the mouse (held ' + c1[0] + ', panel ' + c1[1] + ', dialog ' + c1[2] + '); the prompt then reads "' + c1[3] + '"', c1[0] === true && c1[1] === null && c1[2] === 'none' && c1[3] === 'E to talk to Marla');
+    // teaching review fix 5 (Nov 18): after the click the centre prompt also teaches moving and looking (CONFIG.fresh.wakeTalk), shown in the centre line
+    const c1 = await p.evaluate(() => [window.__game.mouseHeld, window.__game.uiNow(), getComputedStyle(document.getElementById('scout')).display, window.__game.wakeText(), document.getElementById('csay').textContent]);
+    add('the first click only takes the mouse (held ' + c1[0] + ', panel ' + c1[1] + ', dialog ' + c1[2] + '); the prompt then reads "' + c1[3] + '" (centre: "' + c1[4] + '")', c1[0] === true && c1[1] === null && c1[2] === 'none' && c1[3] === 'W A S D to move · mouse to look · E to talk to Marla' && c1[4] === c1[3]);
     await press(p, 'KeyE'); await wait(p, 1200);
     const d1 = await p.evaluate(() => { const sc = document.getElementById('scout'), v = (id) => { const e = document.getElementById(id), c = getComputedStyle(e); return c.display !== 'none' && c.visibility !== 'hidden' && e.getBoundingClientRect().width > 0; };
       return { first: sc.classList.contains('first'), shown: getComputedStyle(sc).display, line: document.getElementById('scoutLine').textContent, ride: document.getElementById('scoutRide').textContent, setup: v('scoutSetup'), ring: v('selRing'), go: v('go') && document.getElementById('go').textContent, back: v('sback') && document.getElementById('sback').textContent, toggle: v('ssetup') && document.getElementById('ssetup').textContent, controls: /W A S D|left thumb/.test(sc.textContent), h: Math.round(sc.scrollHeight) }; });

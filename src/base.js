@@ -247,9 +247,9 @@ export const MARLA_LINES = {
   stair: ['One on the stairs, coming {u}! Shoot!', 'Stairs, Potts! It is climbing {u}!', 'Stair-crawler heading {u}. Yours!'],
   collector: ['Collectors {d}, Potts. Mind them.', 'They are at the solar, {d}.', 'Collectors, {d}. Today, Potts.'],
   hurt: ['That one was free. Duck, Potts.', 'Use the panels. That is their job.', 'Stop getting hit. It distracts me.', 'I am not carrying you home twice.'],
-  // streak: the player keeps taking hits on the first night (owner Nov 16: sarcastic tone); hintsH: the H key reminder, first night, desktop only
+  // streak: the player keeps taking hits on the first night (owner Nov 16: sarcastic tone); hintsH: the hold-H keys reminder, first night, desktop only (teaching review fix 7: H only shows the keys while held; these lines have no voice clip)
   streak: ['Three hits. Are you collecting them, Potts?', 'Bold plan: stand in front of it. Genius.', 'You hit back. That is the idea. Allegedly.', 'Keep bleeding and I am renting your room.', 'Really committing to being a doorstop, huh?'],
-  hintsH: ['Screen too busy, Potts? Press H. Same mess.', 'Too many labels? H hides them. Aim, though.'],
+  hintsH: ['Forgot a key, Potts? Hold H to read them.', 'Lost the keys? Hold H. Aim, though.'],
   low: ['Eat something, Potts. That is an order.', 'Fall back. I am not hauling you home.', 'Ashley... eat. Do not make me say it twice.']
 };
 
