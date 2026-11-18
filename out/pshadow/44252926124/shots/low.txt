@@ -1,0 +1,8 @@
+PASS player shadow is on for tier low: {"on":true,"tier":"low","body":false,"blob":true,"active":true,"speed":0,"amp":0,"phase":0,"twist":0,"sun":[0,1,0],"passes":0,"passMs":0,"map":0}
+INFO sun direction 0,1,0 (elevation 90.0 deg); shadows fall toward 0.000,0.000
+INFO clear spot {"x":10,"z":1,"d":4.515867542417505}
+INFO wrote shots/ps_blob_low.jpg
+PASS blob shown in the street {"on":true,"tier":"low","body":false,"blob":true,"active":true,"speed":0,"amp":0,"phase":0,"twist":0,"sun":[0,1,0],"passes":0,"passMs":0,"map":0}
+PASS with ?pshadow=0 nothing is built
+INFO FRAMECOST low: with 216.6 ms, without 183.4 ms (median of 20 frames, software renderer, 844x390)
+PASS no page errors

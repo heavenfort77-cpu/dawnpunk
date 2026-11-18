@@ -1,0 +1,6 @@
+INFO timing high pshadow=1: median 6133.1 ms, mean 6135.9 ms
+INFO timing high pshadow=0: median 5633.2 ms, mean 5645.6 ms
+INFO timing high pshadow=1: median 6116.4 ms, mean 6106.7 ms
+INFO timing high pshadow=0: median 5649.7 ms, mean 5644.2 ms
+INFO FRAMECOST high interleaved: with 6124.8 ms (6133, 6116), without 5641.4 ms (5633, 5650), difference 8.6%
+PASS no page errors
