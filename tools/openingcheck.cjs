@@ -70,11 +70,11 @@ const path = require('path');
   if (SK.includes('newgame')) {
     p = await open(); await p.evaluate(() => { document.getElementById('reset').click(); document.getElementById('reset').click(); }); await p.waitForTimeout(tier === 'high' ? 8000 : 3000);
     const ng = await p.evaluate(() => window.__game.state); ok('New game plays the opening first', ng === 'intro', ng);
-    await p.keyboard.press('KeyX'); await p.waitForTimeout(tier === 'high' ? 8000 : 3500);
+    await p.keyboard.press('KeyX'); await p.waitForFunction(() => window.__game.state === 'base' && !!document.getElementById('jobCard'), null, { timeout: 600000, polling: 100 }).catch(() => {});
     const ns = await p.evaluate(() => { const g = window.__game; return { state: g.state, hint: g.B.scoutPos(g.save).hint, card: !!document.getElementById('jobCard'), day: g.save.day }; });
     ok('a key skips it into the base with Marla at your door, and the job card shows', ns.state === 'base' && ns.hint === 'at your door' && ns.card && ns.day === 1, JSON.stringify(ns));
-    await p.keyboard.press('Escape'); await p.waitForTimeout(800); const seen = await p.evaluate(() => window.__game.save.jobCard === true && !document.getElementById('jobCard'));
-    await p.reload(); await p.waitForFunction(() => window.__game && window.__game.startIntro, null, { timeout: 900000 }); await p.evaluate(() => document.getElementById('enter').click()); await p.waitForTimeout(tier === 'high' ? 8000 : 3000);
+    await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('jobCard'), null, { timeout: 120000 }).catch(() => {}); const seen = await p.evaluate(() => window.__game.save.jobCard === true && !document.getElementById('jobCard'));
+    await p.reload(); await p.waitForFunction(() => window.__game && window.__game.startIntro, null, { timeout: 900000 }); await p.evaluate(() => document.getElementById('enter').click()); await p.waitForFunction(() => window.__game.state === 'base', null, { timeout: 600000 }).catch(() => {}); await p.waitForTimeout(tier === 'high' ? 8000 : 3000);
     const cont = await p.evaluate(() => ({ state: window.__game.state, card: !!document.getElementById('jobCard') }));
     ok('a continued save goes straight into the base: no film, no card again', seen && cont.state === 'base' && !cont.card, JSON.stringify(cont));
     await p.close();
