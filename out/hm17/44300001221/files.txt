@@ -1,0 +1,3 @@
+ci_dump/rec_gatherer_film_60.f32 241920
+ci_dump/rec_hunter_film_60.f32 241920
+ci_dump/rec_researcher_film_60.f32 241920
