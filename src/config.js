@@ -817,7 +817,8 @@ export const CONFIG = {
     // the opening it comes through is picked within this many degrees of where you look (the nearest such one); if none is, the one closest to your view
     viewDeg: 25,
     // the pulsing marker: ring size (px), its colour, how far from the screen edge the edge arrow sits (px), and the height on the machine it rings (m above its feet)
-    mark: { px: 58, color: '#ffd76a', edge: 34, y: 1.2 },
+    // clear: on phones, the gap (px) kept between the ring and a touch button it would cover (it is lifted above the button; owner Nov 18)
+    mark: { px: 58, color: '#ffd76a', edge: 34, y: 1.2, clear: 6 },
     // the plain second line under Marla's drill order: font size (px) on desktop and on a phone
     subPx: [13, 13],
     // said when the last step is done, and when the drill is skipped

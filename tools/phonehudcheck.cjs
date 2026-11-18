@@ -5,7 +5,7 @@
 //   the night-1 drill (the gold ring on the machine and Marla's second line).
 // In each: the box of every visible HUD element; FAIL when two overlap by more than 1 px both ways, or one runs off the screen.
 // The crosshair and the drill ring may meet (the ring sits on the machine you aim at). Also: Marla's name sits on its own line (not run into her words),
-// the count line is at most 2 lines at night and 3 by day, the goal line in the base at most 2 lines.
+// the count line is at most 2 lines at night and 3 by day, the base line (with the goal) at most 2 lines (the quest box's line count is printed as INFO: a long first quest may wrap).
 // DESK=1: instead, prints the desktop boxes (1280x720, mouse) of the same scenes as JSON lines, to compare two builds (desktop must not change).
 // With out_dir: a picture per scene at 731x304 (<out_dir>/hud_<scene>.png).
 const { chromium } = require('playwright');
@@ -29,7 +29,7 @@ const LONG = 'Hold FIRE until the ring turns gold, then let go: a charged shot t
       const q = e.getBoundingClientRect(); if (q.width < 1 || q.height < 1) continue; r.push([id, Math.round(q.left), Math.round(q.top), Math.round(q.right), Math.round(q.bottom)]); }
     const lines = (id) => { const e = document.getElementById(id); if (!e || getComputedStyle(e).display === 'none') return 0; const cs = getComputedStyle(e), lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.2, h = e.getBoundingClientRect().height - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom); return Math.round(h / lh); };
     const mb = getComputedStyle(document.getElementById('marla'), '::before');
-    return { W, H, r, countL: lines('count'), bqL: lines('bq'), bstatL: lines('bstat'), nameBlock: mb.display === 'block', marlaTxt: document.getElementById('marla').textContent }; }, ids);
+    return { W, H, r, countL: lines('count'), bqL: lines('bq'), bqN: (document.getElementById('bq').textContent.match(/\n/g) || []).length + 1, bqT: document.getElementById('bq').textContent.replace(/\n/g, ' / ') + ' [' + Math.round(document.getElementById('bq').getBoundingClientRect().width) + ' px wide, ' + getComputedStyle(document.getElementById('bq')).maxWidth + ']', bstatL: lines('bstat'), nameBlock: mb.display === 'block', marlaTxt: document.getElementById('marla').textContent }; }, ids);
   // the HUD's containers on desktop hold other elements (vit holds the bars, clk the clock and count, slots the buttons): a box inside its own container does not count
   const nest = { vit: ['hpb', 'enb'], clk: ['time', 'clkbar', 'count'], slots: ['b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'bEat'] };
   const okPair = (a, c) => (a === 'cross' && c === 'dmark') || (a === 'dmark' && c === 'cross') || (nest[a] && nest[a].includes(c)) || (nest[c] && nest[c].includes(a));
@@ -44,7 +44,7 @@ const LONG = 'Hold FIRE until the ring turns gold, then let go: a charged shot t
       add(where + ': everything on screen' + (off.length ? ' -- off: ' + off.join(',') : ''), !off.length);
       if (opts.marla && m.marlaTxt) add(where + ': Marla\'s name on its own line above her words', m.nameBlock);
       if (opts.countMax) add(where + ': count line ' + m.countL + ' line(s), at most ' + opts.countMax, m.countL <= opts.countMax);
-      if (opts.goal) add(where + ': goal line ' + m.bqL + ' line(s), base line ' + m.bstatL + ', at most 2 each', m.bqL <= 2 && m.bstatL <= 2);
+      if (opts.goal) { add(where + ': the base line (with the goal) ' + m.bstatL + ' line(s), at most 2', m.bstatL <= 2); out.push('INFO ' + where + ': quest box ' + m.bqL + ' line(s) for its ' + m.bqN + ' own lines' + (m.bqL > m.bqN ? ' (a long first quest wraps, kept right of the crosshair): ' + m.bqT : '')); }
       if (opts.need) for (const id of opts.need) add(where + ': ' + id + ' shows', m.r.some((q) => q[0] === id));
       if (OUT && w === SIZES[0][0]) { fs.mkdirSync(OUT, { recursive: true }); await p.screenshot({ path: path.join(OUT, 'hud_' + scene + '.png'), timeout: 120000 }); }
     }

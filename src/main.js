@@ -1004,10 +1004,15 @@ function drillSub(q, chipEl, chip) { const el = $('dsub'), mm = $('marla'), t = 
   const mr = mm.getBoundingClientRect(), cr = FINE && chip ? chipEl.getBoundingClientRect() : null, top = cr && cr.height ? cr.bottom : mr.bottom; el.style.top = Math.round(top + 6) + 'px'; el.style.right = Math.round(innerWidth - mr.right) + 'px'; }
 // a pulsing ring on the drill machine while the step needs it (steps[].mark), or an arrow at the screen edge pointing to it when it is out of view
 const dmV = new THREE.Vector3();
+// phones (owner Nov 18): when the machine walks close its ring would sit on the touch buttons; it is lifted to just above the ones it would cover (same column, still over the machine)
+const RING_BTNS = ['bFire', 'bEat', 'bSwitch', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'bDusk'];
+function ringClear(sx, sy) { if (FINE) return sy; const h = CONFIG.drill.mark.px / 2 + CONFIG.drill.mark.clear; let y = sy;
+  for (let n = 0; n < 3; n++) { let moved = false; for (const id of RING_BTNS) { const el = $(id); if (!el || getComputedStyle(el).display === 'none') continue; const r = el.getBoundingClientRect(); if (!r.width || sx + h < r.left || sx - h > r.right || y + h < r.top || y - h > r.bottom) continue; y = r.top - h; moved = true; } if (!moved) break; }
+  return Math.max(h, y); }
 function drillMark(q) { const mk = $('dmark'), ar = $('darrow'), M = CONFIG.drill.mark; let ring = false, arrow = false;
   if (q && q.mark && sim && state === 'play' && !paused && !ui) { const P = sim.player; let g = null, gd = 1e9; for (const x of sim.gloom) { if (!x.drillKind) continue; const d = Math.hypot(x.x - P.x, x.z - P.z); if (d < gd) { gd = d; g = x; } } const m = g && gMesh.get(g.id);
     if (m) { cam.updateMatrixWorld(); dmV.copy(m.position); dmV.y += M.y; dmV.project(cam); const W = innerWidth, H = innerHeight, e = M.edge, sx = ((dmV.x + 1) / 2) * W, sy = ((1 - dmV.y) / 2) * H, front = dmV.z < 1;
-      if (front && sx > e && sx < W - e && sy > e && sy < H - e) { ring = true; mk.style.left = Math.round(sx) + 'px'; mk.style.top = Math.round(sy) + 'px'; }
+      if (front && sx > e && sx < W - e && sy > e && sy < H - e) { ring = true; mk.style.left = Math.round(sx) + 'px'; mk.style.top = Math.round(ringClear(sx, sy)) + 'px'; }
       else { let ux, uy; if (front) { ux = sx - W / 2; uy = sy - H / 2; } else { const dx = g.x - P.x, dz = g.z - P.z, f = -dx * Math.sin(P.yaw) - dz * Math.cos(P.yaw), r = dx * Math.cos(P.yaw) - dz * Math.sin(P.yaw), a = Math.atan2(r, f); ux = Math.sin(a); uy = -Math.cos(a); }
         const l = Math.hypot(ux, uy) || 1; ux /= l; uy /= l; const k = Math.min((W / 2 - e) / Math.max(1e-6, Math.abs(ux)), (H / 2 - e) / Math.max(1e-6, Math.abs(uy))); arrow = true;
         ar.style.left = Math.round(W / 2 + ux * k) + 'px'; ar.style.top = Math.round(H / 2 + uy * k) + 'px'; ar.style.transform = 'rotate(' + Math.atan2(ux, -uy).toFixed(3) + 'rad)'; } } }

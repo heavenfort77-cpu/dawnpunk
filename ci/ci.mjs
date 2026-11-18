@@ -1,5 +1,5 @@
 // CI helper for .github/workflows/checks.yml, driven by ci/checks.json.
-// node ci/ci.mjs plan <all|logic|desktop|phone>   prints GitHub step outputs: checks (matrix entries), logic (true/false), names
+// node ci/ci.mjs plan <all|logic|desktop|phone> [only]   (only: comma list of check names, overrides the group) prints GitHub step outputs: checks (matrix entries), logic (true/false), names
 // node ci/ci.mjs run <name>                        runs one check with its args and timeout; log in ci-logs/<name>.log, result in ci-logs/<name>.json
 // node ci/ci.mjs summary [names json]              prints one table of every result in ci-logs (and writes ci-logs/summary.txt)
 import fs from 'fs';
@@ -15,7 +15,10 @@ const [cmd, arg] = process.argv.slice(2);
 if (cmd === 'plan') {
   const g = arg || 'all';
   if (!['all', 'logic', 'desktop', 'phone'].includes(g)) { console.error('unknown group ' + g); process.exit(1); }
-  const pick = LIST.filter((c) => g === 'all' || c.tier === g);
+  const only = (process.argv[4] || '').split(',').map((x) => x.trim()).filter(Boolean);
+  const bad = only.filter((n) => !LIST.some((c) => c.name === n));
+  if (bad.length) { console.error('no check named ' + bad.join(', ') + ' in ci/checks.json'); process.exit(1); }
+  const pick = only.length ? LIST.filter((c) => only.includes(c.name)) : LIST.filter((c) => g === 'all' || c.tier === g);
   // job timeout = the check's own limit plus setup time (artifact, npm, browser install)
   const matrix = pick.filter((c) => c.job !== 'logic').map((c) => ({ name: c.name, tier: c.tier, minutes: c.timeout + 20 }));
   console.log('checks=' + JSON.stringify(matrix));

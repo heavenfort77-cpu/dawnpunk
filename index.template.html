@@ -263,6 +263,30 @@ body.hkeys:not(.keyscard) #keys{display:flex!important;background:none;-webkit-b
 @keyframes dapulse{0%,100%{opacity:1}50%{opacity:.55}}
 @media (pointer:coarse){body.drill #hud:not(.town):not(.base) #bSwitch.dshow{display:flex;bottom:max(32px,env(safe-area-inset-bottom));width:44px;height:var(--dev-h,70px);font-size:22px;border-radius:12px}}
 #spl{--lw:min(22vmin,120px);--gh:calc(var(--lw) + 18px + 178px)}#spl.ph-load #slogo,#spl.ph-ready #slogo{top:calc(50% - var(--gh) / 2)}#sload{bottom:auto;top:calc(50% - var(--gh) / 2 + var(--lw) + 18px);min-height:178px}
+/* PHONE FIT (owner Nov 18: on his phone inside the claude.ai page the game area was 731 x 304 px and the night HUD ran together; itch embeds can be short too).
+   Touch screens up to 500 px tall only (desktop and tablets unchanged). Top left: the two bars, slimmer; beside them SKIP (drill) or LEAVE. Top right: clock, its bar, the count line.
+   Marla's card sits on the left under the bars with her name on its own line; the drill's second line sits under it, left-aligned, away from the screen middle where the gold ring is.
+   In the base the base line moves under the pause row (2 lines at most) and her card goes under it, left of the crosshair. By day the Solar button sits left of HOLD. Check: tools/phonehudcheck.cjs */
+@media (pointer:coarse) and (max-height:500px){
+.bar{width:clamp(120px,24vw,200px);height:18px}
+.bar::after{top:1px;line-height:14px}
+#hpb{top:calc(6px + env(safe-area-inset-top))}
+#enb{top:calc(28px + env(safe-area-inset-top))}
+#time{top:calc(4px + env(safe-area-inset-top));font-size:15px;padding:1px 7px}
+#clkbar{top:calc(28px + env(safe-area-inset-top));width:110px}
+#count{top:calc(36px + env(safe-area-inset-top));font-size:14px;line-height:1.25;max-width:calc(50vw - 92px);padding:1px 7px}
+#coins{top:auto;bottom:max(8px,env(safe-area-inset-bottom))}
+#hud #marla,#hud #marla.face{left:calc(12px + env(safe-area-inset-left));top:calc(52px + env(safe-area-inset-top));transform:none;max-width:calc(50vw + 20px);text-align:left;font-size:14px;line-height:1.3;padding:3px 10px 4px}
+#hud #marla.face{display:block;padding-left:50px;min-height:48px;background-position:3px 4px;background-size:42px 42px}
+#hud #marla::before{content:"MARLA";display:block;font-size:12px;line-height:14px;letter-spacing:1px}
+#hud.base #bstat{top:calc(54px + env(safe-area-inset-top));max-width:calc(100vw - 150px)}
+#hud.base #bq{max-width:calc(50vw - 24px)}
+#hud.base #marla,#hud.base #marla.face{top:calc(106px + env(safe-area-inset-top));max-width:calc(50vw - 24px)}
+#dsub{left:calc(12px + env(safe-area-inset-left))!important;right:auto!important;max-width:calc(50vw + 20px)}
+#bSkip,#bLeave{left:calc(22px + clamp(120px,24vw,200px) + env(safe-area-inset-left));top:calc(6px + env(safe-area-inset-top));height:44px}
+#hud.day:not(.town) #b0{right:max(266px,calc(env(safe-area-inset-right) + 250px));bottom:max(112px,calc(env(safe-area-inset-bottom) + 80px))}
+}
+/*PHONEFIT-END*/
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="rot"><div>Turn your phone sideways to play.<br><small>Still showing after you turn it? Turn off rotation lock, try the game page's fullscreen button, or just tap Play like this.</small><br><button id="rotFs">Full screen, sideways</button> <button id="rotAny">Play like this</button></div></div><button id="bMus" title="Music on or off (M)" aria-label="Music on or off">&#9835;</button>

@@ -10,10 +10,10 @@ on:
         type: choice
         options: [all, logic, desktop, phone]
         default: all
-
-concurrency:
-  group: checks
-  cancel-in-progress: false
+      only:
+        description: "Optional: run only these checks (comma list of names from ci/checks.json, e.g. watercheck,mousecheck); overrides group"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -38,7 +38,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: node build.mjs
       - id: plan
-        run: node ci/ci.mjs plan "${{ inputs.group || 'all' }}" | tee -a "$GITHUB_OUTPUT"
+        run: node ci/ci.mjs plan "${{ inputs.group || 'all' }}" "${{ inputs.only }}" | tee -a "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
           name: dist

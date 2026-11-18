@@ -20,7 +20,8 @@ const { chromium } = require('playwright'); const QL = process.argv[2] || 'low',
     const pk = bv.peek(); out.a0 = pk.life && pk.life.wheel; out.cost = pk.life && pk.life.cost; out.plots = pk.life && pk.life.plots.map((q) => q.stage); return out; });
   R.bridges.forEach((q, i) => { check('footbridge ' + (i + 1) + ': you walk across it both ways', q.there < 0.15 && q.back < 0.15, q.there + ' / ' + q.back + ' m short'); check('footbridge ' + (i + 1) + ': 3.2 m up and down the stream from it you cannot cross', q.beside > 1.0 && q.beside2 > 1.0, q.beside + ' / ' + q.beside2 + ' m short'); });
   check('the stream stops you everywhere else (' + R.tried + ' crossings tried)', R.tried >= 10 && R.crossed === 0, R.crossed + ' got across');
-  await p.waitForTimeout(2500); const a1 = await p.evaluate(() => window.__game.bview.peek().life.wheel);
+  // CI Nov 18: the wheel turns by game time, and a slow software-rendered frame rate (GitHub runner) gives less game time per wall second; wait longer (was 2.5 s)
+  await p.waitForTimeout(8000); const a1 = await p.evaluate(() => window.__game.bview.peek().life.wheel);
   check('the waterwheel turns', R.a0 !== null && Math.abs(a1 - R.a0) > 0.2, 'angle ' + (+R.a0).toFixed(2) + ' -> ' + (+a1).toFixed(2) + ' rad');
   check('houses, plots and set pieces built (' + (R.cost ? R.cost.tris + ' triangles in ' + R.cost.meshes + ' meshes' : 'none') + ')', !!R.cost && R.cost.meshes > 5 && R.plots.length === 6 && R.plots.every((s) => s === 'empty'), JSON.stringify(R.plots));
   // round 2: your view rides over a footbridge (rises up the ramp, over the arch, back down) with the game's own frames running; the water sound is heard by the stream, and 0 off the base
