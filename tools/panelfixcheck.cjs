@@ -57,7 +57,7 @@ const { chromium } = require('playwright');
   const pauseMenu = async (p, where, T, min) => { await p.click('#bPause'); await p.waitForTimeout(600);
     const shown = await p.evaluate(() => document.getElementById('pause').style.display === 'flex'); add(where + ' pause menu opens from the pause button', shown);
     if (T) await tapCheck(p, where + ' pause menu', ['#pause > button'], T); await fontMin(p, where + ' pause menu text', ['#pause > button', '#pSaveNote'], min);
-    const off = await p.evaluate(() => [...document.querySelectorAll('#pause > button, #pSaveNote')].filter((e) => getComputedStyle(e).display !== 'none').filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.top < 0 || r.right > innerWidth + 0.5 || r.bottom > innerHeight + 0.5; }).map((e) => e.id));
+    const off = await p.evaluate(() => [...document.querySelectorAll('#pause > button, #pSaveNote')].filter((e) => getComputedStyle(e).display !== 'none').filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.top < 0 || r.right > innerWidth + 0.5 || r.bottom > innerHeight + 0.5; }).map((e) => { const r = e.getBoundingClientRect(); return e.id + ' at ' + Math.round(r.top) + '-' + Math.round(r.bottom) + ' of ' + innerHeight; }));
     add(where + ' pause menu: every button and the save note on screen' + (off.length ? ' (off: ' + off.join(', ') + ')' : ''), !off.length);
     await p.click('#resume').catch(() => {}); await p.evaluate(() => { document.getElementById('pause').style.display = 'none'; }); await p.waitForTimeout(400); };
   const TXT = ['#time', '#count', '#bprompt', '#msg', '#marla', '#aim', '#bstat', '#bq', '#mlook', '#dkeys', '#hchip', '#clk', '#vit .l2'];

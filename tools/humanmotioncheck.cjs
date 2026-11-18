@@ -64,9 +64,10 @@ function initClock() {
 function pageSetup(o) {
   const g = window.__game, BONES = o.BONES, HM = window.__HM = { traces: {}, labels: [], frames: [], hand: [], events: [], notes: [] };
   const Q = g.marla.root.quaternion.constructor, q0 = new Q();
+  HM.offAll = () => { for (const tr of Object.values(HM.traces)) tr.off = true; };
   HM.lab = (s) => { let i = HM.labels.indexOf(s); if (i < 0) { HM.labels.push(s); i = HM.labels.length - 1; } return i; };
   HM.track = (key, root, info) => { let tr = HM.traces[key]; if (tr) { tr.root = root; return tr; } const bones = {}; root.traverse((x) => { if (x.isBone && !bones[x.name]) bones[x.name] = x; });
-    tr = HM.traces[key] = { key, info: info || {}, root, list: BONES.map((n) => bones[n] || null), eyes: Object.keys(bones).filter((n) => /eye/i.test(n)), d: [], n: 0 }; tr.info.missing = BONES.filter((n) => !bones[n]); tr.info.eyes = tr.eyes; return tr; };
+    tr = HM.traces[key] = { key, off: false, info: info || {}, root, list: BONES.map((n) => bones[n] || null), eyes: Object.keys(bones).filter((n) => /eye/i.test(n)), d: [], n: 0 }; tr.info.missing = BONES.filter((n) => !bones[n]); tr.info.eyes = tr.eyes; return tr; };
   HM.sample = (t, ph, aux) => { for (const tr of Object.values(HM.traces)) { const r = tr.root; if (!r.parent || tr.off) continue; r.updateWorldMatrix(true, true); const e = r.matrixWorld.elements, d = tr.d, h = tr.list[5];
     const hq = h ? h.getWorldQuaternion(q0) : null; d.push(t, ph, e[12], e[13], e[14], Math.atan2(e[8], e[10]), hq ? hq.x : NaN, hq ? hq.y : NaN, hq ? hq.z : NaN, hq ? hq.w : NaN, aux ? aux(tr) : 0, 0);
     for (const b of tr.list) { if (b) { const m = b.matrixWorld.elements; d.push(m[12], m[13], m[14]); } else d.push(NaN, NaN, NaN); } tr.n++; } };
@@ -130,7 +131,7 @@ function baseRun(o) {
       if (sh.side) { const a = w[2] + Math.PI / 2; HM.baseShot(tr.info.who + ' walking', [w[0] + Math.sin(a) * 3.4, 1.05, w[1] + Math.cos(a) * 3.4], [w[0], 0.85, w[1]]); }
       else { const s = sh.fixed, a = s.f + (s.inside ? 0.35 : 0.75), r = s.inside ? 2.4 : 3.6; HM.baseShot(tr.info.who + (s.inside ? ' at work / talk' : ' turning to you'), [s.c[0] + Math.sin(a) * r, 1.25, s.c[1] + Math.cos(a) * r], [s.c[0], 0.95, s.c[1]]); } }
   }
-  g.setBase(P[0], P[1]);
+  g.setBase(P[0], P[1]); HM.offAll();
   out.subjects = subj.map((s) => ({ id: s.id, inside: s.inside, c: s.c, f: s.f })); out.total = total; out.segs = seg.map((s) => [s[1], s[0]]); return out;
 }
 
@@ -146,7 +147,7 @@ function fixedSeg(o) {
 // ---- street: Marla by day
 function streetPrep(o) {
   const g = window.__game, HM = window.__HM, G = g.cfg().marla.guide, M = g.marla.root, c = [M.position.x, M.position.z], f = M.rotation.y, SP = 4, R0 = 2.5, at = (a, r) => [c[0] + Math.sin(a) * r, c[1] + Math.cos(a) * r];
-  HM.track('marla_street', M, { kind: 'woman', who: 'Marla (street)' });
+  HM.offAll(); HM.track('marla_street', M, { kind: 'woman', who: 'Marla (street)' });
   const seg = [[0.6, 'street:far', () => at(f, 10)], [(10 - R0) / SP, 'street:approach', (u) => at(f, 10 - SP * u)], [3.5, 'street:talk', () => at(f, R0)], [1.5 * Math.PI * R0 / SP, 'street:circle', (u) => at(f + SP / R0 * u, R0), () => { if (g.kitOpen) g.closeKit(); }],
     [2, 'street:hold', () => at(f + 1.5 * Math.PI, R0)], [Math.PI * R0 / SP, 'street:circleBack', (u) => at(f + 1.5 * Math.PI - SP / R0 * u, R0)], [1.5, 'street:hold2', () => at(f + 0.5 * Math.PI, R0)],
     [(12 - R0) / SP, 'street:leave', (u) => at(f + 0.5 * Math.PI, R0 + SP * u)], [3, 'street:far2', () => at(f + 0.5 * Math.PI, 12)]];
@@ -158,14 +159,15 @@ function streetPrep(o) {
 }
 // ---- night: the hands
 function nightPrep(o) {
-  const g = window.__game, HM = window.__HM, s = g.sim, FINE = !matchMedia('(pointer: coarse)').matches, kinds = (g.cfg().loadout && g.cfg().loadout.first) || [];
+  window.__HM.offAll(); const g = window.__game, HM = window.__HM, s = g.sim, FINE = !matchMedia('(pointer: coarse)').matches, kinds = (g.cfg().loadout && g.cfg().loadout.first) || [];
   const key = (code, down) => window.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { code, key: code, bubbles: true }));
+  const placeOk = (k) => { if (!k) return false; const before = g.hands.state().tThrow; g.doPlace(k); return g.hands.state().tThrow < before; };
   const fireOk = () => { const before = g.hands.state().tFire; g.doFire(); return g.hands.state().tFire < before; };
   // [time, label, action]; walking on/off at four different points of the bob
   const ev = [[1.0, 'walk start', () => key('KeyW', true)], [2.1, 'walk stop', () => key('KeyW', false)], [3.3, 'walk start', () => key('KeyW', true)], [4.6, 'walk stop', () => key('KeyW', false)],
     [5.5, 'walk start', () => key('KeyS', true)], [6.4, 'walk stop', () => key('KeyS', false)], [7.4, 'walk start', () => key('KeyS', true)], [8.15, 'walk stop', () => key('KeyS', false)],
     [9.5, 'fire', fireOk], [9.9, 'fire', fireOk], [10.3, 'fire', fireOk], [10.4, 'fire (too soon, the game should refuse)', fireOk],
-    [11.5, 'place', () => kinds[0] && g.doPlace(kinds[0])], [11.85, 'place again mid-throw', () => kinds[1] && g.doPlace(kinds[1])],
+    [11.5, 'place', () => placeOk(kinds[0])], [11.85, 'place again mid-throw', () => placeOk(kinds[1] || kinds[0])],
     [13.5, 'pick up (hands.grab, as a crate or cat pick-up)', () => g.hands.grab()], [13.65, 'pick up again mid pick-up', () => g.hands.grab()],
     [14.8, 'eat', () => { key(FINE ? 'KeyF' : 'KeyE', true); key(FINE ? 'KeyF' : 'KeyE', false); }], [15.6, FINE ? 'switch device (key 2)' : 'device button 2 (phones: places it)', () => { key('Digit2', true); key('Digit2', false); }],
     [17.0, 'walk start', () => key('KeyW', true)], [17.5, 'fire while walking', fireOk], [18.4, 'walk stop', () => key('KeyW', false)]];
@@ -177,7 +179,7 @@ function nightPrep(o) {
 }
 // ---- film: from 44 s to the end
 function filmPrep(o) {
-  const g = window.__game, HM = window.__HM, C = g.cfg().opening, P = C.parts, t0 = o.from, fade = document.getElementById('cineFade');
+  window.__HM.offAll(); const g = window.__game, HM = window.__HM, C = g.cfg().opening, P = C.parts, t0 = o.from, fade = document.getElementById('cineFade');
   let lastPk = null; const trackAll = () => { const pk = g.bview.peek && g.bview.peek(); if (!pk || !pk.chars) return; lastPk = pk;
     if (pk.scoutG && g.marla.root.parent === pk.scoutG) HM.track('marla_film', g.marla.root, { kind: 'woman', who: 'Marla (film)' });
     for (const id of ['bram', 'pip', 'oko']) { const ch = pk.chars[id]; if (ch && ch.ready && ch.root.parent) HM.track(id + '_film', ch.root, { kind: ch.kind, who: id[0].toUpperCase() + id.slice(1) + ' (film)' }); }
@@ -199,7 +201,7 @@ async function pass(b, dt, frames) {
   await p.evaluate(pageSetup, { BONES, HS, frames: !!frames });
   await p.evaluate(() => window.__game.enterBase());
   lg('base entered; waiting for the people');
-  await p.waitForFunction(() => { const g = window.__game, pk = g.bview.peek && g.bview.peek(); return pk && g.marla.ready && g.marla.root.parent === pk.scoutG && ['bram', 'oko', 'pip'].every((k) => pk.chars[k] && pk.chars[k].ready && pk.chars[k].root.parent) && pk.npcs.filter((o) => o.ch && o.ch.ready && o.ch.root.parent === o.n).length === pk.npcs.length; }, null, { timeout: 900000, polling: 1000 });
+  await p.waitForFunction(() => { const g = window.__game, pk = g.bview.peek && g.bview.peek(); return pk && g.marla.ready && g.marla.root.parent === pk.scoutG && ['bram', 'oko', 'pip'].every((k) => pk.chars[k] && pk.chars[k].ready && pk.chars[k].root.parent) && pk.npcs.every((o) => !o.ch || (o.ch.ready && o.ch.root.parent === o.n)); }, null, { timeout: 900000, polling: 1000 });
   R.models = await p.evaluate(() => { const pk = window.__game.bview.peek(), out = {}; for (const [k, c] of Object.entries(pk.chars)) out[k] = { kind: c.kind, scan: c.scan }; return out; });
   if (ONLY.includes('base')) { await p.evaluate(() => { window.__hold = true; }); R.base = await p.evaluate(baseRun, { dt, frames: !!frames }); await p.evaluate(() => { window.__hold = false; }); lg('base done (' + Math.round(R.base.total) + ' s of game time)'); }
   if (ONLY.includes('street') || ONLY.includes('night')) {
@@ -244,8 +246,8 @@ function analyzePerson(tr, dt, labels) {
     if (isNaN(at(0, 12 + b * 3))) continue;
     for (let i = 1; i < n; i++) { if (!ok(i)) continue; const p1 = bp(i, b), p0 = bp(i - 1, b), d = hyp3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]), v = d / dt, lim = LIM.popBase + LIM.popK * vb[i];
       if (v > lim) popN++; if (v / lim > pop.ratio) pop = { ratio: v / lim, bone: BONES[b], v, lim, cm: d * 100, t: T(i), at: lab(i) };
-      if (i + 1 < n && ok(i + 1)) { const p2 = bp(i + 1, b), d2 = hyp3(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]), dm = hyp3(p0[0] - (i > 1 && ok(i - 1) ? bp(i - 2, b)[0] : p0[0]), 0, 0);
-        const prev = i > 1 && ok(i - 1) ? (() => { const q = bp(i - 2, b); return hyp3(p0[0] - q[0], p0[1] - q[1], p0[2] - q[2]); })() : d; void dm;
+      if (i + 1 < n && ok(i + 1)) { const p2 = bp(i + 1, b), d2 = hyp3(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]);
+        const prev = i > 1 && ok(i - 1) ? (() => { const q = bp(i - 2, b); return hyp3(p0[0] - q[0], p0[1] - q[1], p0[2] - q[2]); })() : d;
         const ex = d - Math.max(prev, d2), walk = vb[i] > LIM.walkV, sl = (walk ? LIM.snapWalk : LIM.snapStand) * dt * dt;
         if (ex > sl) snapN++; if (ex / sl > snap.ratio) snap = { ratio: ex / sl, bone: BONES[b], cm: ex * 100, limCm: sl * 100, t: T(i), at: lab(i) };
         const a = hyp3(p2[0] - 2 * p1[0] + p0[0], p2[1] - 2 * p1[1] + p0[1], p2[2] - 2 * p1[2] + p0[2]) / (dt * dt); if (a > acc.a) acc = { a, bone: BONES[b], t: T(i), at: lab(i), walking: vb[i] > LIM.walkV }; } }
