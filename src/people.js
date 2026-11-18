@@ -18,6 +18,8 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const sstep = (u) => { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); };
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const sat = (v, m) => m * Math.tanh(v / m);
+// a pivot step's turn: constant angular acceleration for the first half, the same deceleration for the second (the least peak acceleration for a turn of a given size and time)
+const bang = (k) => { k = clamp(k, 0, 1); return k < 0.5 ? 2 * k * k : 1 - 2 * (1 - k) * (1 - k); }, bangV = (k) => (k <= 0 || k >= 1 ? 0 : k < 0.5 ? 4 * k : 4 * (1 - k));
 // a critically damped follower (frame-rate independent); s = { x, v }; maxV caps its speed (units per second)
 function follow(s, target, time, dt, maxV) { if (dt <= 0) return s.x; const om = 2 / Math.max(1e-3, time), x = om * dt, e = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x), lim = maxV ? maxV * time : Infinity, ch = clamp(s.x - target, -lim, lim), to = s.x - ch, tmp = (s.v + om * ch) * dt;
   s.v = (s.v - om * tmp) * e; let o = to + (ch + tmp) * e; if ((target - s.x > 0) === (o > target)) { o = target; s.v = 0; } s.x = o; return o; }
@@ -139,9 +141,9 @@ export function createPerson(cfg, key) {
     const ac = M.turnAcc * dt;
     if (st.step) { /* finished below */ } else if (gw > 0.2) { const goalV = clamp((st.hips.x - st.feet) * P.walk.follow, -P.walk.corner, P.walk.corner); st.feetV += clamp(goalV - st.feetV, -ac, ac); st.feet += st.feetV * dt; }
     else if (Math.abs(st.feetV) > 1e-3) { st.feetV -= clamp(st.feetV, -ac, ac); st.feet += st.feetV * dt; }
-    else { st.feetV = 0; const e = st.hips.x - st.feet, goal = delayed(2 * T.lead) - st.feet; if (Math.abs(e) > T.stepStart || (Math.abs(e) > T.minStep && Math.abs(st.hips.v) < 0.3)) { const len = G.step * (1 + G.vary * (rnd() * 2 - 1)), tl = len * (1 - 2 * M.stepLead), cap = Math.min(T.maxStep, M.stepAcc * tl * tl / 6); let amt = clamp(e + st.hips.v * G.step * T.predict, -cap, cap); if (Math.abs(amt) > Math.abs(goal) && Math.sign(goal) === Math.sign(amt)) amt = goal; st.stepSide = amt > 0 ? 1 : -1; if (st.lastSide === st.stepSide) st.stepSide = -st.stepSide; st.lastSide = st.stepSide; st.step = { from: st.feet, by: amt, t: 0, len }; } }
+    else { st.feetV = 0; const e = st.hips.x - st.feet, goal = delayed(2 * T.lead) - st.feet; if (Math.abs(e) > T.stepStart || (Math.abs(e) > T.minStep && Math.abs(st.hips.v) < 0.3)) { const len = G.step * (1 + G.vary * (rnd() * 2 - 1)), tl = len * (1 - 2 * M.stepLead), cap = Math.min(T.maxStep, M.stepAcc * tl * tl / 4, M.stepRate * tl / 2); let amt = clamp(e + st.hips.v * G.step * T.predict, -cap, cap); if (Math.abs(amt) > Math.abs(goal) && Math.sign(goal) === Math.sign(amt)) amt = goal; st.stepSide = amt > 0 ? 1 : -1; if (st.lastSide === st.stepSide) st.stepSide = -st.stepSide; st.lastSide = st.stepSide; st.step = { from: st.feet, by: amt, t: 0, len }; } }
     // a pivot step: the foot lifts first and turns only while it is off the ground (the middle 1 - 2 x M.stepLead of the step), then sets down
-    if (st.step) { const s = st.step, ld = M.stepLead, was = st.feet; s.t += dt; const u = clamp(s.t / s.len, 0, 1), k = clamp((u - ld) / (1 - 2 * ld), 0, 1); st.feet = s.from + s.by * sstep(k); st.feetV = s.by * 6 * k * (1 - k) / (s.len * (1 - 2 * ld));
+    if (st.step) { const s = st.step, ld = M.stepLead, was = st.feet; s.t += dt; const u = clamp(s.t / s.len, 0, 1), k = clamp((u - ld) / (1 - 2 * ld), 0, 1); st.feet = s.from + s.by * bang(k); st.feetV = s.by * bangV(k) / (s.len * (1 - 2 * ld));
       pivot(was, st.feet, st.stepSide === 1 ? 1 : 0); lift = Math.sin(Math.PI * u); liftSide = st.stepSide; st.stepU = u; if (u >= 1) { st.step = null; st.feetV = 0; } } else st.stepU = -1;
     if (st.step || v > M.plantV) { const kk = Math.exp(-dt / M.recenter); st.off[0] *= kk; st.off[1] *= kk; }
     if (!st.step && gw <= 0.2 && Math.abs(st.hips.x - st.feet) < T.minStep * 0.5) st.lastSide = 0;
@@ -290,10 +292,10 @@ export function createStepper(cfg, root, bones, kind) {
     if (yaw === null || Math.abs(root.rotation.y - yaw) > 1e-6) { yaw = root.rotation.y; step = null; off[0] = off[1] = 0; for (const lk of lock) { lk.on = false; lk.w = 0; } acc = 0; }
     acc += Math.max(0, dt); let n = Math.floor(acc / M.slice + 1e-6); acc -= n * M.slice; if (n > M.maxSlices) { n = M.maxSlices; acc = 0; }
     for (let i = 0; i < n; i++) { const h = M.slice;
-      if (!step && want != null) { const e = wrap(want - yaw); if (Math.abs(e) > M.stepTurn) { const len = G.step, tl = len * (1 - 2 * M.stepLead), cap = Math.min(T.maxStep, M.stepAcc * tl * tl / 6), amt = clamp(e, -cap, cap);
+      if (!step && want != null) { const e = wrap(want - yaw); if (Math.abs(e) > M.stepTurn) { const len = G.step, tl = len * (1 - 2 * M.stepLead), cap = Math.min(T.maxStep, M.stepAcc * tl * tl / 4, (M.marlaRate || M.stepRate) * tl / 2), amt = clamp(e, -cap, cap);
         let side = amt > 0 ? 1 : -1; if (lastSide === side) side = -side; lastSide = side; step = { from: yaw, by: amt, t: 0, len, side }; } else if (Math.abs(e) < T.minStep * 0.5) lastSide = 0; }
       lift = 0; liftSide = 0;
-      if (step) { const s = step, ld = M.stepLead, was = yaw; s.t += h; const u = clamp(s.t / s.len, 0, 1), k = clamp((u - ld) / (1 - 2 * ld), 0, 1); yaw = s.from + s.by * sstep(k);
+      if (step) { const s = step, ld = M.stepLead, was = yaw; s.t += h; const u = clamp(s.t / s.len, 0, 1), k = clamp((u - ld) / (1 - 2 * ld), 0, 1); yaw = s.from + s.by * bang(k);
         const f = footAt[s.side === 1 ? 1 : 0], p0 = rot(was, f[0], f[1]), p1 = rot(yaw, f[0], f[1]); off[0] += p0[0] - p1[0]; off[1] += p0[1] - p1[1];
         const kk = Math.exp(-h / M.recenter); off[0] *= kk; off[1] *= kk; lift = Math.sin(Math.PI * u); liftSide = s.side; stepU = u; if (u >= 1) step = null; } else stepU = -1; }
     root.rotation.y = yaw; const q = rot(-yaw, off[0], off[1]); scn.position.set(scn0.x + q[0], scn0.y, scn0.z + q[1]);
