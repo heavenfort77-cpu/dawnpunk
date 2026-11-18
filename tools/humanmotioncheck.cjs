@@ -35,7 +35,7 @@ const LIM = {
   snapStand: 20, snapWalk: 50, walkV: 0.3, // m/s2; ground speed (m/s) above which a person counts as walking
   plantCm: 3, plantDy: 0.015, skate: 0.15, stride: 0.15, slideDeg: 0.1, hipJump: 0.5,
   yawRate: 450, yawAcc: 5700, headRate: 400, headAcc: 10000,
-  fpsCm: 5, fpsDeg: 5,
+  fpsCm: 5, fpsDeg: 5, blackCut: 0.98,     // film: screen at least this black = a hidden cut
   handIdle: 0.25, handAct: 2.5, handIdleDeg: 30, handActDeg: 720, handSnapMm: 2, handFpsMm: 1,
 };
 const BONES = ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'head', 'clavicle_l', 'clavicle_r', 'upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r', 'hand_l', 'hand_r', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r', 'foot_l', 'foot_r'];
@@ -259,13 +259,16 @@ async function pass(b, dt, frames) {
 // ---------------- analysis ----------------
 const D = 180 / Math.PI;
 const hyp3 = (a, b, c) => Math.sqrt(a * a + b * b + c * c);
-function analyzePerson(tr, dt, labels) {
+function analyzePerson(tr, dt, labels, film) {
   const F = tr.f, n = tr.n, at = (i, k) => F[i * S + k], T = (i) => at(i, 0), lab = (i) => labels[at(i, 1)] || '?';
-  const ok = (i) => i > 0 && Math.abs(T(i) - T(i - 1) - dt) < dt * 0.5;
+  // the film: a sample on a fully black screen (the cut between its parts) is not seen, so it does not count; hidden = how many were left out
+  const black = (i) => film && (at(i, 10) >= LIM.blackCut || at(i - 1, 10) >= LIM.blackCut);
+  const ok = (i) => i > 0 && Math.abs(T(i) - T(i - 1) - dt) < dt * 0.5 && !black(i);
   const bp = (i, b) => [at(i, 12 + b * 3), at(i, 13 + b * 3), at(i, 14 + b * 3)];
   const gs = ((tr.info.gait && tr.info.gait.speed) || 1.1) * (tr.info.carry ? 0.85 : 1), cyc = (tr.info.gait && tr.info.gait.cycle) || 1;
   const vb = new Float64Array(n); for (let i = 1; i < n; i++) vb[i] = ok(i) ? Math.hypot(at(i, 2) - at(i - 1, 2), at(i, 4) - at(i - 1, 4)) / dt : 0;
-  const r = { n, seconds: n * dt };
+  let hidden = 0; for (let i = 1; i < n; i++) if (black(i)) hidden++;
+  const r = { n, seconds: n * dt, hidden };
   // pops (speed) and snaps (one-sample excess over both neighbours), and the largest acceleration
   let pop = { ratio: 0 }, snap = { ratio: 0 }, acc = { a: 0 }, popN = 0, snapN = 0;
   for (let b = 0; b < BONES.length; b++) {
@@ -352,9 +355,9 @@ function analyzeHands(h, dt, labels, events, cfgH) {
     out.perEvent.push({ t: e.t, what: e.what, ok: e.ok, mmPerSample: mv, mmBefore: before, snapMm: sn }); }
   return out;
 }
-function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); for (let i = 0; i < a.n; i++) idx.set(Math.round(a.f[i * HS] * 600), i); let w = { mm: 0 };
-  for (let j = 0; j < b.n; j++) { const t = b.f[j * HS], i = idx.get(Math.round(t * 600)); if (i === undefined) continue; for (const o of [2, 9]) { const d = hyp3(a.f[i * HS + o] - b.f[j * HS + o], a.f[i * HS + o + 1] - b.f[j * HS + o + 1], a.f[i * HS + o + 2] - b.f[j * HS + o + 2]) * 1000; if (d > w.mm) w = { mm: d, t, hand: o === 2 ? 'left' : 'right' }; } }
-  return w; }
+function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); for (let i = 0; i < a.n; i++) idx.set(Math.round(a.f[i * HS] * 600), i); let w = { mm: 0, t: 0, hand: '-' }, m = 0;
+  for (let j = 0; j < b.n; j++) { const t = b.f[j * HS], i = idx.get(Math.round(t * 600)); if (i === undefined) continue; m++; for (const o of [2, 9]) { const d = hyp3(a.f[i * HS + o] - b.f[j * HS + o], a.f[i * HS + o + 1] - b.f[j * HS + o + 1], a.f[i * HS + o + 2] - b.f[j * HS + o + 2]) * 1000; if (d > w.mm) w = { mm: d, t, hand: o === 2 ? 'left' : 'right' }; } }
+  w.matched = m; return w; }
 
 // ---------------- run ----------------
 (async () => {
@@ -373,10 +376,10 @@ function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); 
   if (RA.night) info('night: phase ' + RA.nightPhase + ', fine pointer ' + RA.night.FINE + ', devices ' + JSON.stringify(RA.night.kinds) + ', events ' + RA.night.events.map((e) => e.what + (e.ok ? '' : ' (refused)')).join('; '));
   if (RA.film) info('film: sampled ' + f1(RA.film.run.t) + ' s from 44 s (parts ' + JSON.stringify(RA.film.parts) + ')');
   for (const [key, tr] of Object.entries(RA.traces)) {
-    const r = analyzePerson(tr, RA.dt, RA.labels), rb = RB && RB.traces[key] ? analyzePerson(RB.traces[key], RB.dt, RB.labels) : null, cmp = RB ? compareFps(tr, RB.traces[key], RA.labels) : null, nm = tr.info.who || key;
+    const film = key.endsWith('_film'), r = analyzePerson(tr, RA.dt, RA.labels, film), rb = RB && RB.traces[key] ? analyzePerson(RB.traces[key], RB.dt, RB.labels, film) : null, cmp = RB ? compareFps(tr, RB.traces[key], RA.labels) : null, nm = tr.info.who || key;
     summary.people[key] = { who: nm, info: tr.info, r60: r, r30: rb, fps: cmp };
     if (tr.info.missing && tr.info.missing.length) info(nm + ': bones missing ' + tr.info.missing.join(','));
-    info(nm + ': ' + f1(r.seconds) + ' s sampled, eyes ' + (tr.info.eyes && tr.info.eyes.length ? 'as bones ' + tr.info.eyes.join(',') : 'ride the head (no eye bones)'));
+    info(nm + ': ' + f1(r.seconds) + ' s sampled' + (r.hidden ? ' (' + r.hidden + ' samples on a black screen left out)' : '') + ', eyes ' + (tr.info.eyes && tr.info.eyes.length ? 'as bones ' + tr.info.eyes.join(',') : 'ride the head (no eye bones)'));
     ok(r.pop.ratio <= 1, nm + ' pops (bone speed): worst ' + r.pop.bone + ' ' + f2(r.pop.v) + ' m/s (' + f1(r.pop.cm) + ' cm in one sample, limit ' + f2(r.pop.lim) + ' m/s)' + W(r.pop) + ', ' + r.pop.count + ' samples over');
     ok(r.snap.ratio <= 1, nm + ' snaps (one-sample jump over both neighbours): worst ' + r.snap.bone + ' ' + f2(r.snap.cm) + ' cm (limit ' + f2(r.snap.limCm) + ' cm)' + W(r.snap) + ', ' + r.snap.count + ' over');
     info(nm + ' largest bone acceleration ' + f0(r.acc.a) + ' m/s2 (' + r.acc.bone + (r.acc.walking ? ', walking' : ', standing') + ')' + W(r.acc));
@@ -400,7 +403,7 @@ function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); 
     info('hands largest acceleration ' + f0(h.stop.a) + ' m/s2 (' + h.stop.hand + W(h.stop) + ')');
     for (const e of h.perEvent) ok(e.snapMm <= LIM.handSnapMm, 'hands at "' + e.what + '"' + (e.ok ? '' : ' (game refused it)') + ' t ' + f2(e.t) + ' s: largest move ' + f2(e.mmPerSample) + ' mm/sample (before ' + f2(e.mmBefore) + '), one-sample jump ' + f2(e.snapMm) + ' mm');
     if (hb) ok(hb.snap.mm <= LIM.handSnapMm * 4 && hb.idle.v <= LIM.handIdle, 'hands at 30 fps: worst jump ' + f2(hb.snap.mm) + ' mm (limit ' + LIM.handSnapMm * 4 + ' mm at 30 fps)' + W(hb.snap) + ', fastest with no action ' + f2(hb.idle.v) + ' m/s');
-    if (hc) ok(hc.mm <= LIM.handFpsMm, 'hands same path at 30 and 60 fps: worst ' + f2(hc.mm) + ' mm (' + hc.hand + ' at ' + f2(hc.t) + ' s)');
+    if (hc) ok(hc.mm <= LIM.handFpsMm, 'hands same path at 30 and 60 fps: worst ' + f2(hc.mm) + ' mm (' + hc.hand + ' at ' + f2(hc.t) + ' s), ' + hc.matched + ' samples compared');
   }
   ok(!RA.errs.length && !(RB && RB.errs.length), 'no page errors ' + RA.errs.concat(RB ? RB.errs : []).join(' | ').slice(0, 300));
   for (const l of lines) console.log(l);
