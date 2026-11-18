@@ -344,6 +344,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     if (d < M.wpReach) { o.i = (o.i + 1) % o.wp.length; tgt = o.wp[o.i]; dx = tgt[0] - o.n.position.x; dz = tgt[1] - o.n.position.z; d = Math.hypot(dx, dz); }
     const nx = o.wp[(o.i + 1) % o.wp.length], ex = nx[0] - tgt[0], ez = nx[1] - tgt[1], el = Math.hypot(ex, ez) || 1, c = d > 1e-6 ? (dx * ex + dz * ez) / (d * el) : 1;
     const keep = Math.max(0.12, Math.min(1, (c - Wk.stopCos) / (M.cornerCos - Wk.stopCos))), near = Math.max(0, Math.min(1, 1 - (d - M.wpReach) / M.cornerDist));
+    if (life) o.n.position.y += (life.deckY(o.n.position.x, o.n.position.z) - o.n.position.y) * (1 - Math.exp(-M.slice * M.deckEase)); // (a footbridge deck, eased, each slice)
     return { face: Math.atan2(dx, dz), go: true, move: true, carry: o.crate.visible, slow: 1 - (1 - keep) * near }; }
   function update(dt, px, pz, camY) {
     sizeLabels(px, pz);
@@ -380,7 +381,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     }
     // on a footbridge (src/baselife.js) a walker stands on its deck
     // (eased over about 1 / CONFIG.people.motion.deckEase s, so stepping onto a deck is not a jump)
-    if (life) { const k = 1 - Math.exp(-dt * cfg.people.motion.deckEase); for (const o of npcs) { const y = life.deckY(o.n.position.x, o.n.position.z); o.n.position.y += (y - o.n.position.y) * k; } }
+    if (life) { const k = 1 - Math.exp(-dt * cfg.people.motion.deckEase); for (const o of npcs) { if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) continue; const y = life.deckY(o.n.position.x, o.n.position.z); o.n.position.y += (y - o.n.position.y) * k; } }
     for (const o of hiddenCats) if (o.cg.visible) o.cg.userData.arm.rotation.z = Math.sin(t * 4 + o.c.id) * 0.6;
     for (const h of homeCats) if (h.cg) h.cg.userData.arm.rotation.z = Math.sin(t * 3) * 0.6;
     const cam = new THREE.Vector3(px, camY, pz);

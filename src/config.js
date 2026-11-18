@@ -137,7 +137,7 @@ export const CONFIG = {
       woman: { cycle: 1.0, speed: 1.15, stance: 0.6, knee: 0.8, kneeStance: 0.1, arm: 0.32, elbow: 0.3, elbowSwing: 0.12, armOut: 0.04, track: 0.035, sway: 0.028, roll: 0.06, twist: 0.06, drop: 0.5, lean: 0.02, step: 0.48, vary: 0.04 },
       child: { cycle: 0.65, speed: 0.95, stance: 0.58, knee: 0.9, kneeStance: 0.12, arm: 0.1, elbow: 0.35, elbowSwing: 0.05, armOut: 0.22, track: -0.07, sway: 0.035, roll: 0.06, twist: 0.05, drop: 0.6, lean: -0.03, step: 0.36, vary: 0.05, waddle: 0.07, headBob: 0.04, headHz: 2.6, headDamp: 0.25 },
     },
-    turn: { lead: 0.15, follow: [0.16, 0.2, 0.26], stepStart: 0.4, predict: 0.8, minStep: 0.14, maxStep: 1.15, twist: 0.6, chestTwist: 0.45, headMax: 1.1, stepLift: 0.37, stepSway: 0.02, near: 6, far: 7, back: 2.5, maxSpeed: [5.5, 5.5, 4.5] },
+    turn: { lead: 0.15, follow: [0.16, 0.2, 0.26], stepStart: 0.4, predict: 0.8, minStep: 0.14, maxStep: 1.15, twist: 0.6, chestTwist: 0.45, headMax: 1.1, stepLift: 0.34, stepSway: 0.02, near: 6, far: 7, back: 2.5, maxSpeed: [5.5, 5.5, 4.5] },
     idle: { shift: [3.5, 6.5], move: 1.4, slow: 7.5, slowShare: 0.35, hip: 0.025, roll: 0.03, knee: 0.14, breath: 4.2, chest: 0.012, look: 0.07 },
     settle: { armHz: 1.7, armDamp: 0.45, foreHz: 2.0, foreDamp: 0.3, handHz: 2.6, handDamp: 0.3, inertia: 0.35, headHz: 2.0, headDamp: 0.5, leanHz: 1.3, leanDamp: 0.55 },
     walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.85 },
@@ -160,9 +160,10 @@ export const CONFIG = {
     // cornerDist: a patrol slows over its last cornerDist m before a waypoint, as much as the coming corner needs (cornerCos: no slowing for a bend gentler than this cos, about 45 deg); wpReach: m from a waypoint at which the next one is taken
     // deckEase: a walker stepping onto or off a footbridge deck (src/baselife.js) rises or sinks to it at this rate (1/s), not in one frame
     // stepThigh: a pivot step lifts its foot mostly by bending the knee (turn.stepLift x 2) and brings the thigh forward only this share of turn.stepLift (a knee thrown forward snapped)
+    // decideEvery: a pivot step may start only every this many slices (4 = every 1/30 s of game time, the same instants at 30 and 60 fps, where the inputs are not in between frames)
     // stepTurn: Marla (src/marla.js) steps round once the way she should face is more than this many rad from where she faces (the base people use turn.stepStart)
     // stepLead: a pivot step's foot lifts for this share of the step before the body turns, and sets down for the same share after; recenter: after pivoting on one foot the body settles back over its middle in about this many s (while stepping or walking)
-    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.1, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.03, stepTurn: 0.35, stepThigh: 1, deckEase: 10, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
+    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.1, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.03, stepTurn: 0.35, decideEvery: 4, stepThigh: 1, deckEase: 10, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
