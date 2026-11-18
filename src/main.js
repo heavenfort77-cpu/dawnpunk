@@ -29,7 +29,7 @@ import { MODELS } from './modeldata.js';
 // lore pieces (owner Nov 17 16:25): notes in the street houses, old notices on the board, the field guide's "Before:" lines
 import * as LORE from './lore.js';
 // THE BECKONER, the final-night boss on ring 5 (owner Nov 17): its picture, warnings and falling pieces (rules in src/boss.js)
-import { bossTick, bossGuide, bossEndLine, gloomScrap, scrapTick, deviceHop, hopsClear } from './bosshi.js';
+import { bossTick, bossGuide, bossEndLine, gloomScrap, scrapTick, deviceHop, hopsClear, bossPreload } from './bosshi.js';
 import { createWaterSound } from './basesound.js';
 import { createMarlaVoice } from './marlavoice.js';
 
@@ -617,6 +617,7 @@ $('watch').textContent = 'Watch the opening';
 function startRun() {
   fromBase = true; bview.dispose(); dropWorld(); $('scout').style.display = 'none'; ui = null;
   run = RUN.createRun(B.makeCfg(CONFIG, save), +$('selRing').value, (() => { try { const q = new URLSearchParams(location.search).get('seed'); if (q) return +q; } catch (e) { /* no address */ } return (Math.random() * 1e9) | 0; })(), { gloomMult: B.gloomMult(CONFIG, save), extraEnergy: B.nightEnergyBonus(CONFIG, save) });
+  if (CONFIG.boss && CONFIG.boss.on && run.ring === CONFIG.boss.ring) bossPreload(); // desktop: the boss model loads while you walk the street (src/bosshi.js)
   $('msg').textContent = ''; flashT = 0;
   sim = null; runT = 0; hintQ.length = 0; hintN = 0; state = 'play'; paused = false; hurtT = 0; $('pause').style.display = 'none';
   $('menu').style.display = 'none'; $('end').style.display = 'none'; $('hud').style.display = 'block'; $('bFire').textContent = 'FIRE';

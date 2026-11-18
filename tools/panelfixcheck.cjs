@@ -93,6 +93,10 @@ const { chromium } = require('playwright');
     await p.evaluate(() => { document.getElementById('selRing').value = '0'; window.__game.startRun(0); window.__game.enterHouse(0); }); await p.waitForTimeout(2000); await p.evaluate(() => window.__game.endDay()); await p.waitForTimeout(1500);
     await tapCheck(p, 'phone 390x844 night', ['#bMus', '#bPause', '#b1', '#b2', '#b3', '#bEat', '#bFire'], T);
     await ctx.close(); }
+  // ---- PHONE 731x304 (the owner's phone in the claude.ai page, Nov 18): the start button and the pause menu fit
+  { const { ctx, p } = await open({ width: 731, height: 304 }, true); const T = await p.evaluate(() => (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).ui.tap);
+    await startScreen(p, 'phone 731x304', T, 14); await p.evaluate(() => document.getElementById('enter').click()); await p.waitForTimeout(2500); await pauseMenu(p, 'phone 731x304', T, 14);
+    await ctx.close(); }
   // ---- DESKTOP 1280x720 (mouse)
   { const { ctx, p } = await open({ width: 1280, height: 720 }, false); const MD = await p.evaluate(() => (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).ui.minPx[0]);
     await startScreen(p, 'desktop', 0, MD);

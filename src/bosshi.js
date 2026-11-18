@@ -247,6 +247,9 @@ function loadModel() {
   const fail = (e) => { bossState.model = 'failed'; console.warn('boss model not loaded', e); };
   fetch(MODEL).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (g) => { tpl = g.scene; bossState.model = 'ready'; }, fail)).catch(fail);
 }
+// desktop: start loading the Blender model when a run on the boss ring starts (main.js startRun), so it is ready before the boss rises 1 s into the night
+// (a night begun straight from the street, or with Dusk at once, left too little time and the code-built stand-in stayed all night)
+export function bossPreload() { if (DESK && VW.glb) loadModel(); }
 function buildGlb() {
   const sc = tpl.clone(true), nodes = {}, mats = [], glows = {};
   sc.traverse((o) => { if (o.name && PIV[o.name] !== undefined && !nodes[o.name]) nodes[o.name] = o; });

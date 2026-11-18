@@ -14,6 +14,8 @@ const tier = process.argv[2] || 'low', dir = process.argv[3] || null, W = +(proc
   await p.waitForTimeout(1500);
   const house = +(process.env.HOUSE || 0);
   await p.evaluate((hi) => { const g = window.__game, r = g.run, h = r.houses.slice().sort((a, b) => a.n - b.n)[hi === 9 ? 0 : 0]; const hh = hi === 9 ? h : r.houses[hi]; g.setTown(hh.doorX, hh.doorZ - hh.row * 0.4); }, house);
+  // desktop: the model starts loading when the boss ring's run starts (src/bosshi.js bossPreload); a player walks the street first, so the check waits for it here, before the night
+  if (tier === 'high') { for (let k = 0; k < 120; k++) { if (await p.evaluate(() => window.__boss.model === 'ready' || window.__boss.model === 'failed')) break; await p.waitForTimeout(1000); } }
   await p.waitForTimeout(600); await p.evaluate(() => window.__game.nightfall()); await p.waitForTimeout(800);
   // the player: plenty of health, stands where it can see the boss (inside, at an opening that faces it), looks at a point
   const look = async (what, back) => p.evaluate(([what, back]) => { const g = window.__game, s = g.sim, B = s.boss, C = window.CONFIG.boss; s.player.hp = 1e6;
