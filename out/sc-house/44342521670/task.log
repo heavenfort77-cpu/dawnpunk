@@ -1,0 +1,37 @@
+$ mkdir -p shots && SCALE=0.5 node tools/itchshot.cjs house shots   (limit 90 min)
+INFO page up 6 s
+INFO base loaded 16 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 61 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":2,"cat":2,"houses":[{"i":0,"n":18,"L":2,"door":["42.7","-5.6"],"row":-1},{"i":1,"n":16,"L":2,"door":["-4.7","-6.0"],"row":-1},{"i":2,"n":14,"L":2,"door":["-44.0","6.5"],"row":1},{"i":3,"n":13,"L":2,"door":["51.9","6.7"],"row":1},{"i":4,"n":12,"L":2,"door":["-51.2","-6.9"],"row":-1},{"i":5,"n":11,"L":2,"door":["3.1","7.1"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO house 5
+INFO night: first Gloom {"t":4.399999999999992,"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0,"type":"window","floor":0},"H":7.275,"n":11}
+INFO placed ok,ok,ok,ok
+INFO moment 0: Gloom at the panel {"ok":true,"t":10.049999999999999} [["walker","approach",7,-9.2,-5.3],["walker","approach",7,-9.5,-5.3],["ticks","approach",7,-8.9,-5.2],["lantern","approach",2,13,1.6],["walker","approach",4,6.3,-12.5],["lurcher","approach",1,1.9,14.1]]
+INFO wrote shots/house_00.png (279 s) cam -4.28,1.60,-6.10 yaw 1.930 | HUD marla="Shadows behind. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 10m" hs=""
+CATVIEW house_00: none
+INFO wrote shots/house_01.png (333 s) cam -4.28,1.60,-4.30 yaw 1.212 | HUD marla="Shadows behind. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 10m" hs=""
+CATVIEW house_01: none
+INFO wrote shots/house_02.png (396 s) cam -3.48,1.60,-6.40 yaw 1.947 | HUD marla="Shadows behind. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 10m" hs=""
+CATVIEW house_02: none
+INFO wrote shots/house_03.png (449 s) cam -3.48,1.60,-4.00 yaw 1.195 | HUD marla="Shadows behind. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 10m" hs=""
+CATVIEW house_03: none
+INFO wrote shots/house_04.png (508 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="Shadows behind. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 10m" hs=""
+CATVIEW house_04: none
+INFO wrote shots/house_05.png (568 s) cam -3.88,1.60,-5.20 yaw 1.571 | HUD marla="Shadows behind. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 10m" hs=""
+CATVIEW house_05: none
+INFO moment 1: Gloom at the panel {"ok":false,"t":53.64999999999904} [["lantern","approach",2,13,1.6],["stilt","inside",6,2.3,-4.8],["lantern","approach",8,2.4,-13],["stilt","inside",8,2,-6.4],["walker","inside",1,0.2,3]]
+INFO wrote shots/house_10.png (660 s) cam -4.28,4.80,-6.10 yaw 1.930 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 7h 40m" hs=""
+CATVIEW house_10: none
+INFO wrote shots/house_11.png (698 s) cam -4.28,4.80,-4.30 yaw 1.212 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 7h 40m" hs=""
+CATVIEW house_11: none
+INFO wrote shots/house_12.png (753 s) cam -3.48,4.80,-6.40 yaw 1.947 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 7h 40m" hs=""
+CATVIEW house_12: none
+INFO wrote shots/house_13.png (800 s) cam -3.48,4.80,-4.00 yaw 1.195 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 7h 40m" hs=""
+CATVIEW house_13: none
+INFO wrote shots/house_14.png (856 s) cam -2.68,4.80,-5.20 yaw 1.571 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 7h 40m" hs=""
+CATVIEW house_14: none
+INFO wrote shots/house_15.png (913 s) cam -3.88,4.67,-5.20 yaw 1.571 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 7h 40m" hs=""
+CATVIEW house_15: none
+NO PAGE ERRORS
+done 923 s
+exit code 0
