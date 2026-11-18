@@ -1,0 +1,47 @@
+$ sudo apt-get update -qq >/dev/null && sudo apt-get install -y -qq ffmpeg python3-numpy python3-scipy >/dev/null && mkdir -p impact_out && node tools/impactsfx_render.cjs impact_out --tune && /usr/bin/python3 tools/impactsfx_measure.py impact_out && ffmpeg -v error -y -i impact_out/sample.wav -c:a libmp3lame -b:a 192k impact_out/sample_impact_sfx.mp3   (limit 25 min)
+
+Running kernel seems to be up-to-date.
+
+Restarting services...
+
+Service restarts being deferred:
+ systemctl restart hosted-compute-agent.service
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+layers {"target":{"hit":{"strikeGain":-26,"weightGain":-31,"slapGain":-30,"splashGain":-33,"sprayGain":-35,"rattleGain":-35},"head":{"crackGain":-28,"glassGain":-30,"fizzGain":-29},"charged":{"steamGain":-31,"sizzleGain":-37},"destroyed":{"strikeGain":-24,"rumbleGain":-28,"crunchGain":-31,"settleGain":-36,"staticGain":-34,"sparkGain":-35},"shot":{"jetGain":-28,"pushGain":-31,"dropGain":-35,"valveGain":-31}},"before":{"hit.ALL":-22.9604407889463,"hit.strikeGain":-24.799589049426014,"hit.weightGain":-34.905184378859936,"hit.slapGain":-29.663931942174873,"hit.splashGain":-33.042878185578694,"hit.sprayGain":-35.34482006588663,"hit.rattleGain":-31.937123451195585,"head.ALL":-22.54302235974814,"head.crackGain":-31.568988081178475,"head.glassGain":-32.95095957017975,"head.fizzGain":-32.489319827416125,"charged.ALL":-21.491046926781493,"charged.steamGain":-30.779557790638666,"charged.sizzleGain":-36.25130210754697,"destroyed.ALL":-23.473169514679896,"destroyed.strikeGain":-25.118432309826062,"destroyed.rumbleGain":-27.148031769743962,"destroyed.crunchGain":-30.23491596163603,"destroyed.settleGain":-36.00997717597415,"destroyed.staticGain":-34.269036218696236,"destroyed.sparkGain":-35.05695364018003,"shot.ALL":-24.08210098578805,"shot.jetGain":-27.8100025966896,"shot.pushGain":-31.47949784143171,"shot.dropGain":-34.12564455855874,"shot.valveGain":-30.889576391246607},"gains":{"hit.strikeGain":[2.19,1.91],"hit.weightGain":[2.88,4.51],"hit.slapGain":[3.72,3.58],"hit.splashGain":[0.339,0.341],"hit.sprayGain":[3.43,3.57],"hit.rattleGain":[29.3,20.6],"head.crackGain":[3.22,4.86],"head.glassGain":[17,23.9],"head.fizzGain":[2.28,3.41],"charged.steamGain":[0.381,0.371],"charged.sizzleGain":[1.19,1.09],"destroyed.strikeGain":[2.01,2.29],"destroyed.rumbleGain":[1.99,1.8],"destroyed.crunchGain":[3.68,3.37],"destroyed.settleGain":[19.2,19.2],"destroyed.staticGain":[0.834,0.86],"destroyed.sparkGain":[2.89,2.91],"shot.jetGain":[0.833,0.815],"shot.pushGain":[2.76,2.92],"shot.dropGain":[3.03,2.74],"shot.valveGain":[28.4,28]},"after":{"hit.ALL":-21.860597193725436,"hit.strikeGain":-26.538238596271754,"hit.weightGain":-25.25442269388837,"hit.slapGain":-30.556985082221143,"hit.splashGain":-32.862320949321244,"hit.sprayGain":-33.48763098026196,"hit.rattleGain":-37.282415511078185,"head.ALL":-21.332093532790875,"head.crackGain":-28.21515513394873,"head.glassGain":-30.756601330148857,"head.fizzGain":-28.759031901221746,"charged.ALL":-20.468032794395018,"charged.steamGain":-31.05296897028818,"charged.sizzleGain":-36.62536733075149,"destroyed.ALL":-22.754668935094475,"destroyed.strikeGain":-24.086368477921656,"destroyed.rumbleGain":-28.51807159201421,"destroyed.crunchGain":-31.103205078931456,"destroyed.settleGain":-37.90090902268238,"destroyed.staticGain":-34.19493083294066,"destroyed.sparkGain":-33.18849087591128,"shot.ALL":-24.414477663664428,"shot.jetGain":-27.955819502387282,"shot.pushGain":-29.848776301589652,"shot.dropGain":-34.7530778582417,"shot.valveGain":-30.777977404864146}}
+rendered 25.72 s; sample peak 0.572 ; solo 19
+sound                       peak     rms   max50  vband50   ring  low%  mid%   hi% centHz  hp250  >2k%
+charged1                    -8.4   -29.7   -21.6    -28.1   0.49    39    22    39   3607  -24.5    46
+charged2                    -6.8   -26.7   -17.5    -25.3   0.42    62    18    20   1934  -22.1    24
+destroyed1                  -6.6   -32.6   -23.5    -29.1   1.08    55    25    21   1933  -27.2    26
+destroyed2                  -5.5   -33.6   -23.3    -30.1   1.23    63    17    21   2066  -27.5    24
+head1                       -4.5   -26.8   -19.5    -25.4   0.32    29    27    44   3811  -21.2    56
+head2                       -5.9   -29.4   -22.4    -27.6   0.33    14    32    54   4444  -23.2    66
+head3                       -5.2   -28.3   -21.5    -27.3   0.31    29    28    43   3579  -23.2    57
+hit1                        -8.0   -28.7   -22.1    -26.5   0.23    41    38    22   2227  -24.5    34
+hit2                        -7.2   -29.5   -23.3    -27.7   0.23    35    40    25   2506  -25.2    33
+hit3                        -6.3   -27.3   -20.8    -26.3   0.20    55    28    17   1722  -23.6    21
+hit_outdoors                -6.0   -27.2   -21.2    -28.4   0.21    60    19    22   1900  -24.9    26
+hit_phone                   -7.7   -29.8   -23.4    -29.3   0.23    60    28    12   1402  -27.2    21
+hit_seq6m                   -5.7   -26.1   -19.6    -26.3   0.19    64    24    12   1185  -23.0    15
+ref_sfxBreak_machine0m      -4.2   -21.2   -14.4    -20.0   0.28    65    35     0    433  -19.7     2
+ref_sfxHit                 -21.5   -32.1   -30.5    -36.3   0.06    75    23     2    517  -34.3     4
+ref_sfxShot                -20.3   -35.0   -31.1    -31.2   0.09     3    97     0    535  -31.2     0
+shot1                      -11.0   -30.8   -24.7    -28.8   0.19     2    41    57   4979  -24.8    62
+shot2                      -10.6   -31.4   -25.2    -29.5   0.18     7    39    54   4383  -25.5    60
+shot3                      -10.3   -31.7   -26.2    -31.3   0.18     6    30    63   5040  -26.4    69
+marla x0.9                  peak     rms   med50   max50  vbmed50  vband50
+day_another_awake           -1.9   -17.5   -20.3   -10.8    -25.1    -11.7
+day_leave_it                -2.3   -17.3   -21.3   -12.0    -24.5    -12.8
+drill_eat_again             -2.4   -19.0   -22.4   -14.6    -31.7    -15.1
+hint_h_2                    -1.6   -17.8   -19.2   -12.4    -24.1    -13.2
+inbound_2_behind            -2.1   -17.3   -26.0    -7.5    -30.9     -7.7
+low_2                       -2.2   -18.1   -18.8   -13.3    -25.8    -14.0
+music x0.35 ivy_on_the_glass         peak -9.1  50ms p50 -24.3 p95 -20.2 max -18.3 | vband p50 -28.9 p95 -24.0 | hp250 p50 -28.0 p95 -23.4 | >2k 4% low<300 67%
+music x0.35 the_green_perimeter      peak -9.1  50ms p50 -24.3 p95 -20.3 max -18.3 | vband p50 -30.8 p95 -25.6 | hp250 p50 -30.1 p95 -24.7 | >2k 3% low<300 78%
+music x0.35 where_the_roots_breathe  peak -9.1  50ms p50 -24.7 p95 -19.7 max -17.2 | vband p50 -27.5 p95 -21.4 | hp250 p50 -26.9 p95 -21.2 | >2k 4% low<300 42%
+exit code 0
