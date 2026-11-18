@@ -279,7 +279,7 @@ export function createPerson(cfg, key) {
     st.pFace = o.face == null ? null : o.face; if (o.gaze) { st.pGaze = st.pGaze || [0, 0, 0]; for (let k = 0; k < 3; k++) st.pGaze[k] = o.gaze[k]; } else st.pGaze = null;
     // (desktop scan faces bid with the last slice's gaze)
     { const li = st.lastIn || o; if (keyBid) keyBid(li.gaze ? Math.hypot(li.gaze[0], li.gaze[2]) : 1e3); }
-    return { speed: v, yaw: st.feet, moved: !!o.move };
+    return { speed: v, yaw: st.feet, moved: !!(o.move || (o.plan && st.lastIn && st.lastIn.move)) };
   }
   // the gait numbers and live turn state, for tools/animcheck.cjs
   const probe = () => ({ kind, cycle: G.cycle, speed: G.speed, now: st.speed.x, phase: st.phase, step: !!st.step, yaw: { head: st.head.x, chest: st.chest.x, hips: st.hips.x, feet: st.feet }, legLen, plant: st.plant.slice(), lockW: [lock[0].w, lock[1].w], lockOn: [lock[0].on, lock[1].on], off: st.off.slice(), swingQ: st.swingQ.slice(), kneeS: [knee[0].s, knee[1].s], heel: st.heel.slice(), stepU: st.stepU, halt: st.halt });

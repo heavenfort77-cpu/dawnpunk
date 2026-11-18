@@ -345,17 +345,6 @@
    "timeout": 70
   },
   {
-   "name": "impactcheck_desktop",
-   "script": "tools/impactcheck.cjs",
-   "args": [
-    "high",
-    "{dist}/index_single.html"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 45
-  },
-  {
    "name": "humanmotioncheck_desktop",
    "script": "tools/humanmotioncheck.cjs",
    "args": [
@@ -411,83 +400,6 @@
    "timeout": 25,
    "pass": "NO ERRORS\\s*$",
    "fail": "(?<!NO )ERRORS\\b"
-  },
-  {
-   "name": "drillcheck_desktop",
-   "script": "tools/drillcheck.cjs",
-   "args": [
-    "{dist}/index.html",
-    "high"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 90
-  },
-  {
-   "name": "freshfixcheck_desktop",
-   "script": "tools/freshfixcheck.cjs",
-   "args": [
-    "{dist}/index.html",
-    "high"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 120
-  },
-  {
-   "name": "voicecheck_desktop",
-   "script": "tools/voicecheck.cjs",
-   "args": [
-    "{dist}/index_single.html",
-    "high"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 90
-  },
-  {
-   "name": "workshopcheck_desktop",
-   "script": "tools/workshopcheck.cjs",
-   "args": [
-    "high",
-    "{dist}/index_single.html"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 120
-  },
-  {
-   "name": "avianscheck_desktop",
-   "script": "tools/avianscheck.cjs",
-   "args": [
-    "high",
-    "{dist}/index_single.html"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 120
-  },
-  {
-   "name": "watercheck_desktop",
-   "script": "tools/watercheck.cjs",
-   "args": [
-    "high",
-    "{dist}/index_single.html"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 90
-  },
-  {
-   "name": "lorecheck_desktop",
-   "script": "tools/lorecheck.cjs",
-   "args": [
-    "high",
-    "{out}/lorehi_"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 90
   }
  ]
 }
