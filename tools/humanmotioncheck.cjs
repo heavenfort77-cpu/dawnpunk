@@ -247,7 +247,7 @@ async function pass(b, dt, frames) {
     R.film = await p.evaluate(filmPrep, { dt, frames: !!frames, from: 44 }); R.film.run = await p.evaluate(fixedSeg, { dt, dur: 15 }); lg('film done (' + R.film.run.t.toFixed(1) + ' s, ' + Math.round(R.film.run.msPerFrame) + ' ms per frame)');
   }
   R.labels = await p.evaluate(() => window.__HM.labels);
-  R.cfgH = await p.evaluate(() => { const c = window.__game.cfg().hands; return { throwTime: c.throwTime, grabTime: c.grabTime, recoilTime: c.recoilTime }; });
+  R.cfgH = await p.evaluate(() => { const g = window.__game, c = (typeof g.cfg === 'function' ? g.cfg() : g.cfg).hands; return { throwTime: c.throwTime, grabTime: c.grabTime, recoilTime: c.recoilTime }; });
   R.notes.push(...(await p.evaluate(() => window.__HM.notes)), ...(R.base ? R.base.notes : []));
   R.afterErr = await p.evaluate(() => window.__afterErr || null);
   const keys = await p.evaluate(() => Object.keys(window.__HM.traces));
@@ -278,7 +278,8 @@ function analyzePerson(tr, dt, labels, film) {
       if (v > lim) popN++; if (v / lim > pop.ratio) pop = { ratio: v / lim, bone: BONES[b], v, lim, cm: d * 100, t: T(i), at: lab(i), aux: at(i, 10) };
       if (i + 1 < n && ok(i + 1)) { const p2 = bp(i + 1, b), d2 = hyp3(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]);
         const prev = i > 1 && ok(i - 1) ? (() => { const q = bp(i - 2, b); return hyp3(p0[0] - q[0], p0[1] - q[1], p0[2] - q[2]); })() : d;
-        const ex = d - Math.max(prev, d2), walk = vb[i] > LIM.walkV, sl = (walk ? LIM.snapWalk : LIM.snapStand) * dt * dt;
+        // the limit is a * dt^2 at 60 fps; at a lower frame rate a smooth curve's one-sample excess grows with dt^3 (a jump does not), so it scales by dt^3 there (the 60 fps line and the 30-vs-60 line catch jumps)
+        const ex = d - Math.max(prev, d2), walk = vb[i] > LIM.walkV, sl = (walk ? LIM.snapWalk : LIM.snapStand) * dt * dt * Math.max(1, dt * 60);
         if (ex > sl) snapN++; if (ex / sl > snap.ratio) snap = { ratio: ex / sl, bone: BONES[b], cm: ex * 100, limCm: sl * 100, t: T(i), at: lab(i), aux: at(i, 10) };
         const a = hyp3(p2[0] - 2 * p1[0] + p0[0], p2[1] - 2 * p1[1] + p0[1], p2[2] - 2 * p1[2] + p0[2]) / (dt * dt); if (a > acc.a) acc = { a, bone: BONES[b], t: T(i), at: lab(i), walking: vb[i] > LIM.walkV }; } }
   }
