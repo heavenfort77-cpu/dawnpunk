@@ -1,0 +1,111 @@
+1.5 STAGE start
+3.1 SNAP start_screen {"count":"","time":"","game":{"state":"menu","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":[]}
+7.4 ACT tapped #enter (the begin button)
+9.3 STAGE film
+29.2 SNAP film_1 {"count":"","time":"","game":{"state":"intro","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":120},"buttons":[]}
+115.1 SNAP film_2 {"cineCap":"MARLA: Up, Potts. Sun is wasting.","count":"","time":"","game":{"state":"intro","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":[]}
+125.1 NOTE watched the opening film for 56.8 game s
+127.0 STAGE base day 1: waking
+135.9 SNAP base_wake {"bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","jobCard":"Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE[pulse]"]}
+139.1 NOTE the job card closed by itself before 8 real seconds of reading
+150.5 SNAP base_after_card {"bprompt":"USE: talk to Marla, the Scout","bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE[pulse]"]}
+153.0 NOTE waking at -0.6,-9.3; Marla stands 2.5 m away; prompt: "USE: talk to Marla, the Scout"
+153.7 STAGE base day 1: talk to Marla
+157.0 NOTE prompt at Marla: "USE: talk to Marla, the Scout"
+162.7 ACT tapped USE (Marla)
+172.2 STAGE base day 1: Marla dialog
+181.2 SNAP marla_dialog_day1 {"bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","scout":"Marla, the Scout / \"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||","bFire:USE"]}
+205.5 ACT tapped #go (Ride out)
+207.0 STAGE street by day
+213.6 SNAP street_start {"bprompt":"Walk in the door: 11 food, 5 essentials inside · 12 openings to guard · 2 floors","count":"Houses 0/6 | Food 2 | Essentials 0 | Sun 11 | Walk speed 100%","time":"Daylight left 11h 30m","game":{"state":"play","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":114},"buttons":["bPause:||","bDusk:HOLD: start night"]}
+220.9 ACT a sleeping machine stands 16 m away (stilt): walking toward it to see what the game says
+250.0 SHORTCUT could not reach a sleeping machine in 8 game s; teleported
+262.4 SNAP street_sleeper {"marla":"Something waves in a house with 8 openings.","count":"Houses 0/6 | Food 2 | Essentials 0 | Sun 19 | Walk speed 100%","time":"Daylight left 7h 50m","game":{"state":"play","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":77},"buttons":["bPause:||","bDusk:HOLD: start night"]}
+263.3 STAGE street by day: to house 1
+263.6 ACT walking to the nearest unvisited door (house 1, 9 m)
+294.0 STAGE house 1 by day
+300.9 SNAP house1_inside {"marla":"Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.","count":"Crates left 6 | Food 2 | Essentials 0 | Sun 23 | Walk speed 100% | Floor 1 of 2","time":"Daylight left 6h 00m","game":{"state":"play","hp":100,"sun":23,"food":2,"machines":0,"drill":null,"dayLeft":60},"buttons":["bPause:||","bLeave:LEAVE","bDusk:HOLD: start night","b0:free 0/3[pulse]","b1:at night 0/2[sel]","bSwitch:⇄","bEat:EAT 2 home","bFire:FIRE"]}
+307.9 ACT house 1: going to the nearest door to place a collector
+325.0 SHORTCUT could not reach the nearest door in 8 game s; teleported
+331.4 ACT tapped SOLAR (#b0)
+334.8 NOTE house 1: collectors 0 -> 1; lines: ["msg: undefined placed: undefined","marla: Walk into the capsules to take them. Green food, blue essentials."]
+337.9 SNAP house_1_solar {"marla":"Walk into the capsules to take them. Green food, blue essentials.","count":"Crates left 6 | Food 2 | Essentials 0 | Sun 28 | Walk speed 100% | Floor 1 of 2","time":"Daylight left 5h 30m","game":{"state":"play","hp":100,"sun":28,"food":2,"machines":0,"drill":null,"dayLeft":55},"buttons":["bPause:||","bLeave:LEAVE","bDusk:HOLD: start night","b0:free 1/3","b1:at night 0/2[sel]","bSwitch:⇄","bEat:EAT 2 home","bFire:FIRE"]}
+338.7 ACT house 1: 3 capsules on this floor, 3 on another floor (the stairs were not used)
+372.0 SHORTCUT could not reach a capsule in 8 game s; teleported
+411.2 SHORTCUT could not reach a capsule in 8 game s; teleported
+417.8 SNAP house1_after_capsules {"count":"Crates left 3 | Food 7 | Essentials 3 | Sun 44 | Walk speed 93% | Floor 1 of 2","time":"Daylight left 1h 10m","game":{"state":"play","hp":100,"sun":44,"food":7,"machines":0,"drill":null,"dayLeft":11},"buttons":["bPause:||","bDusk:HOLD: start night","b0:free 1/3","b1:at night 0/2[sel]","bSwitch:⇄","bEat:EAT 7 home","bFire:FIRE"]}
+419.2 STAGE house 1: waiting for dusk
+420.3 NOTE staying here for the night; day clock {"left":10,"sun":43.9}
+DRIVER ERROR page.evaluate: TypeError: window.__game.cfg is not a function
+    at eval (eval at evaluate (:311:30), <anonymous>:1:110)
+    at UtilityScript.evaluate (<anonymous>:313:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ev (/home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:49:27)
+    at dayPart (/home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:178:56)
+    at async /home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:246:11
+428.3 SNAP driver_error {"count":"Crates left 3 | Food 7 | Essentials 3 | Sun 45 | Walk speed 93% | Floor 1 of 2","time":"Daylight left 40m","game":{"state":"play","hp":100,"sun":45,"food":7,"machines":0,"drill":null,"dayLeft":6},"buttons":["bPause:||","bDusk:HOLD: start night","b0:free 1/3","b1:at night 0/2[sel]","bSwitch:⇄","bEat:EAT 7 home","bFire:FIRE"]}
+
+TRANSCRIPT (game s | wall s | stage | source | text)
+3 | 7 | start | ACT | tapped #enter (the begin button)
+4.3 | 8.9 | start | cineCap | The night the grid failed, the machines came looking for power.
+4.3 | 8.9 | start | QUIET | 3.4 s with no guiding line on screen (from 0.9)
+23.8 | 39.9 | film | cineCap | They found us.
+23.8 | 39.9 | film | QUIET | 13.2 s with no guiding line on screen (from 10.5)
+35.5 | 67.2 | film | cineCap | We left the grid to them, and grew our own light.
+35.5 | 67.2 | film | QUIET | 5.3 s with no guiding line on screen (from 30.3)
+42.5 | 87 | film | cineCap | By day they sleep. We let them.
+50.3 | 102.7 | film | cineCap | Every panel-tender gets a guide. You got Marla.
+54.3 | 108 | film | cineCap | MARLA: Up, Potts. Sun is wasting.
+60.5 | 121.5 | film | jobCard | Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it
+60.8 | 122.9 | film | bstat | Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food
+61.5 | 124.8 | film | NOTE | watched the opening film for 56.8 game s
+66.8 | 138.1 | base day 1: waking | bprompt | USE: talk to Marla, the Scout
+67 | 138.8 | base day 1: waking | NOTE | the job card closed by itself before 8 real seconds of reading
+72.5 | 152.7 | base day 1: waking | NOTE | waking at -0.6,-9.3; Marla stands 2.5 m away; prompt: "USE: talk to Marla, the Scout"
+74 | 156.7 | base day 1: talk to Marla | NOTE | prompt at Marla: "USE: talk to Marla, the Scout"
+75.5 | 160.5 | base day 1: talk to Marla | scout | Marla, the Scout / "You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts." / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run
+76.3 | 162.4 | base day 1: talk to Marla | ACT | tapped USE (Marla)
+91.3 | 203.8 | base day 1: Marla dialog | bprompt | Walk in the door: 11 food, 5 essentials inside · 12 openings to guard · 2 floors
+92 | 205.2 | base day 1: Marla dialog | marla | Six houses, Potts. Walk into a door to loot it.
+92 | 205.2 | base day 1: Marla dialog | ACT | tapped #go (Ride out)
+96.5 | 212.2 | street by day | bprompt | Walk in the door: 11 food, 5 essentials inside · 12 openings to guard · 2 floors
+97.5 | 213.6 | street by day | marla | Green bar over a door: loot inside. Red: empty.
+102 | 219.8 | street by day | bprompt | Walk in the door: 11 food, 5 essentials inside · 12 openings to guard · 2 floors
+102.5 | 220.5 | street by day | ACT | a sleeping machine stands 16 m away (stilt): walking toward it to see what the game says
+107 | 226.8 | street by day | aim | Stilt (asleep until dark): long reach. Held at a shield, it hits you if you stand close behind it.
+113 | 235.4 | street by day | bprompt | Walk in the door: 11 food, 5 essentials inside · 12 openings to guard · 2 floors
+116.3 | 240.1 | street by day | marla | That bar is your Sun. Your hand drinks it in.
+121 | 246 | street by day | aim | Lurcher (asleep until dark): fast and light. It reaches you first; slow it or block it.
+121.5 | 246.6 | street by day | bprompt | Walk to a house door
+123 | 248.5 | street by day | aim | Stilt (asleep until dark): long reach. Held at a shield, it hits you if you stand close behind it.
+123.8 | 249.6 | street by day | SHORTCUT | could not reach a sleeping machine in 8 game s; teleported
+124.5 | 250.5 | street by day | marla | Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight.
+129.3 | 256.2 | street by day | aim | Stilt (asleep until dark): long reach. Held at a shield, it hits you if you stand close behind it.
+131.3 | 258.7 | street by day | marla | Something waves in a house with 8 openings.
+135 | 263.3 | street by day: to house 1 | ACT | walking to the nearest unvisited door (house 1, 9 m)
+136 | 264.5 | street by day: to house 1 | marla | At dusk you defend the house you are in.
+140.8 | 271.5 | street by day: to house 1 | bprompt | Walk in the door: 11 food, 5 essentials inside · 12 openings to guard · 2 floors
+151.3 | 291.7 | street by day: to house 1 | marla | Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.
+151.3 | 291.7 | street by day: to house 1 | HP | health 100 (day; 0 machines inside or near, nearest none)
+161.5 | 307.6 | house 1 by day | ACT | house 1: going to the nearest door to place a collector
+168 | 319.8 | house 1 by day | marla | Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.
+170.5 | 324.7 | house 1 by day | SHORTCUT | could not reach the nearest door in 8 game s; teleported
+174.5 | 331 | house 1 by day | ACT | tapped SOLAR (#b0)
+175 | 331.8 | house 1 by day | msg | undefined placed: undefined
+175.5 | 332.5 | house 1 by day | marla | Walk into the capsules to take them. Green food, blue essentials.
+176.8 | 334.5 | house 1 by day | NOTE | house 1: collectors 0 -> 1; lines: ["msg: undefined placed: undefined","marla: Walk into the capsules to take them. Green food, blue essentials."]
+179.3 | 338.3 | house 1 by day | ACT | house 1: 3 capsules on this floor, 3 on another floor (the stairs were not used)
+180.5 | 340.2 | house 1 by day | marla | LEAVE at the door for the next house.
+185.5 | 349.4 | house 1 by day | marla | SOLAR by a door or window, in the house you will sleep in.
+190 | 358.2 | house 1 by day | marla | Loot is heavy: the more you carry, the slower you walk (Walk speed, top right).
+195.3 | 367.4 | house 1 by day | marla | HOLD DUSK to start the night early. Or wait for the bell.
+198 | 371.6 | house 1 by day | marla | Stairs: the Gloom use them too. The ladder: only you can climb it.
+198 | 371.6 | house 1 by day | SHORTCUT | could not reach a capsule in 8 game s; teleported
+202.8 | 378.8 | house 1 by day | marla | Hold START NIGHT only when your Sun is full, Potts.
+210.8 | 395.1 | house 1 by day | msg | +2 food
+210.8 | 395.1 | house 1 by day | QUIET | 3.5 s with no guiding line on screen (from 207.3)
+213.5 | 400.7 | house 1 by day | marla | The bell, Potts! 2 hours of light left. Pick your house!
+218.8 | 410.8 | house 1 by day | SHORTCUT | could not reach a capsule in 8 game s; teleported
+223.5 | 419.9 | house 1: waiting for dusk | NOTE | staying here for the night; day clock {"left":10,"sun":43.9}
+frames, wall s, game s: [1026,428.9114,228.0498]
+NO PAGE ERRORS

@@ -1,0 +1,14 @@
+mt/phone/01_start_screen.jpg 10807
+mt/phone/02_film_1.jpg 16237
+mt/phone/03_film_2.jpg 29553
+mt/phone/04_base_wake.jpg 36089
+mt/phone/05_base_after_card.jpg 35815
+mt/phone/06_marla_dialog_day1.jpg 18024
+mt/phone/07_street_start.jpg 41438
+mt/phone/08_street_sleeper.jpg 36564
+mt/phone/09_house1_inside.jpg 41401
+mt/phone/10_house_1_solar.jpg 38182
+mt/phone/11_house1_after_capsules.jpg 35739
+mt/phone/12_driver_error.jpg 34593
+mt/phone/log.json 15805
+mt/phone/run.txt 12973

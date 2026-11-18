@@ -1,0 +1,7 @@
+$ mkdir -p mt/phone && node tools/marlateach.cjs phone mt/phone/ > mt/phone/run.txt 2>&1; tail -5 mt/phone/run.txt   (limit 60 min)
+213.5 | 400.7 | house 1 by day | marla | The bell, Potts! 2 hours of light left. Pick your house!
+218.8 | 410.8 | house 1 by day | SHORTCUT | could not reach a capsule in 8 game s; teleported
+223.5 | 419.9 | house 1: waiting for dusk | NOTE | staying here for the night; day clock {"left":10,"sun":43.9}
+frames, wall s, game s: [1026,428.9114,228.0498]
+NO PAGE ERRORS
+exit code 0
