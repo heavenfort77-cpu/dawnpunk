@@ -1,0 +1,10 @@
+shots/base_0.png 322839
+shots/base_1.png 321613
+shots/base_2.png 327857
+shots/base_3.png 296262
+shots/base_4.png 327670
+shots/base_5.png 320726
+shots/base_6.png 302312
+shots/base_7.png 348298
+shots/base_8.png 339399
+shots/base_9.png 372599

@@ -1,0 +1,26 @@
+$ mkdir -p shots && SCALE=0.5 node tools/itchshot.cjs base shots   (limit 90 min)
+INFO page up 10 s
+INFO base loaded 28 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO wrote shots/base_0.png (174 s) cam 10.59,1.60,-7.15 yaw -0.071 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_0: none
+INFO wrote shots/base_1.png (240 s) cam 11.20,1.60,-6.93 yaw 0.142 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_1: none
+INFO wrote shots/base_2.png (301 s) cam 8.73,1.60,-8.12 yaw -0.367 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_2: none
+INFO wrote shots/base_3.png (368 s) cam 14.73,1.60,-9.37 yaw 0.437 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_3: none
+INFO wrote shots/base_4.png (429 s) cam 7.61,1.60,-9.22 yaw -0.629 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_4: none
+INFO wrote shots/base_5.png (496 s) cam 11.86,1.60,-6.67 yaw 0.219 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_5: none
+INFO wrote shots/base_6.png (570 s) cam 16.00,1.61,-9.00 yaw 0.785 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_6: base hideout 2 at 24.5 m
+INFO wrote shots/base_7.png (632 s) cam 10.60,1.62,-11.25 yaw -0.427 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_7: none
+INFO wrote shots/base_8.png (694 s) cam 7.00,1.62,-8.00 yaw -0.512 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_8: none
+INFO wrote shots/base_9.png (760 s) cam 6.47,1.62,-6.52 yaw -0.507 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+CATVIEW base_9: none
+NO PAGE ERRORS
+done 763 s
+exit code 0
