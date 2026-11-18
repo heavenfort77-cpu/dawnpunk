@@ -1,0 +1,6 @@
+shots/base_0.png 2299209
+shots/base_0_clean.png 2305170
+shots/base_1.png 2386643
+shots/base_1_clean.png 2362377
+shots/base_2.png 1721586
+shots/base_3.png 2397762
