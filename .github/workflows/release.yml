@@ -1,0 +1,106 @@
+# Build the game on a GitHub runner and attach the itch zip and the single-file build to a GitHub release, so the owner can download them
+# on his phone. Started by hand only (Actions tab, or tools/ci_release.sh --go), never on push. This session's proxy refuses the releases
+# API, so the release is made here with the workflow's own GITHUB_TOKEN.
+name: release
+run-name: "release ${{ inputs.tag }} (${{ inputs.kind }})"
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, e.g. v0.9-test or v1.0-jam"
+        type: string
+        required: true
+      kind:
+        description: "prerelease (public, marked pre-release), release (public, latest), draft (only repo members see it), delete (only tags with 'rehearsal' in the name)"
+        type: choice
+        options: [prerelease, release, draft, delete]
+        default: prerelease
+      ref:
+        description: "Commit or branch to build (default main); the tag points at this commit"
+        type: string
+        default: main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+      KIND: ${{ inputs.kind }}
+    steps:
+      - name: Check inputs
+        run: |
+          [[ "$TAG" =~ ^v[0-9A-Za-z._-]{1,40}$ ]] || { echo "bad tag: $TAG"; exit 1; }
+          if [ "$KIND" = delete ]; then
+            case "$TAG" in *rehearsal*) ;; *) echo "delete is only for rehearsal tags"; exit 1;; esac
+          fi
+      - name: Delete a rehearsal release
+        if: inputs.kind == 'delete'
+        run: |
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag && echo "deleted release and tag $TAG"
+      - uses: actions/checkout@v5
+        if: inputs.kind != 'delete'
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-node@v5
+        if: inputs.kind != 'delete'
+        with:
+          node-version: 22
+          cache: npm
+      - if: inputs.kind != 'delete'
+        run: npm ci --no-audit --no-fund
+      - if: inputs.kind != 'delete'
+        run: node build.mjs
+      - name: Check the zip and print the hashes
+        if: inputs.kind != 'delete'
+        run: |
+          set -euo pipefail
+          unzip -Z1 dist/solardg-itch.zip | grep -qx index.html || { echo "ABORT: index.html is not at the zip root"; exit 1; }
+          echo "zip: $(unzip -Z1 dist/solardg-itch.zip | wc -l) entries, index.html at the root"
+          SHA=$(git rev-parse HEAD)
+          mkdir -p rel
+          cp dist/solardg-itch.zip "rel/dawnpunk-itch-$TAG.zip"
+          cp dist/index_single.html "rel/dawnpunk-single-$TAG.html"
+          {
+            echo "Dawnpunk $TAG, built on a GitHub runner from commit $SHA."
+            echo
+            echo "- dawnpunk-itch-$TAG.zip: upload this to itch.io as an HTML game (index.html is at the zip root)."
+            echo "- dawnpunk-single-$TAG.html: the whole game in one file, for playing offline."
+            echo
+            echo "sha256 (same as the checks workflow's build job for this commit):"
+            echo '```'
+            ( cd dist && sha256sum index.html index_single.html solardg-itch.zip )
+            echo '```'
+            echo
+            echo "Sizes: zip $(stat -c %s dist/solardg-itch.zip) bytes, single file $(stat -c %s dist/index_single.html) bytes, index.html $(stat -c %s dist/index.html) bytes."
+          } > rel/notes.md
+          cat rel/notes.md
+          echo "sha=$SHA" >> "$GITHUB_ENV"
+      - name: Create or replace the release
+        if: inputs.kind != 'delete'
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release $TAG exists: replacing it (and its tag) with this build"
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+            sleep 3
+          fi
+          FLAGS=()
+          case "$KIND" in
+            prerelease) FLAGS+=(--prerelease --latest=false);;
+            draft) FLAGS+=(--draft);;
+            release) FLAGS+=(--latest);;
+          esac
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$sha" --title "Dawnpunk $TAG" --notes-file rel/notes.md "${FLAGS[@]}" \
+            "rel/dawnpunk-itch-$TAG.zip" "rel/dawnpunk-single-$TAG.html"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,isDraft,isPrerelease,assets \
+            --jq '"url " + .url + " | draft " + (.isDraft|tostring) + " | prerelease " + (.isPrerelease|tostring)', '.assets[] | "asset " + .name + " " + (.size|tostring) + " " + .url'
