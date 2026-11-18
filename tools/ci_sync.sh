@@ -36,7 +36,7 @@ for f in build.mjs index.template.html package.json package-lock.json test.js do
 
 # 5. CI and repo files (sources kept in the working tree under ci/ and .github/)
 mkdir -p ci .github/workflows licenses
-cp "$SRC/ci/checks.json" "$SRC/ci/ci.mjs" ci/
+cp "$SRC/ci/checks.json" "$SRC/ci/ci.mjs" "$SRC/ci/gpu_preload.cjs" ci/
 cp "$SRC"/.github/workflows/*.yml .github/workflows/
 cp "$SRC/ci/repo/gitignore" .gitignore
 cp "$SRC/ci/repo/README.md" "$SRC/ci/repo/LICENSE" "$SRC/ci/repo/ASSETS-LICENSE.md" .
