@@ -115,23 +115,31 @@ const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s 
   }
 
   if (SHOT === 'house') {
-    // night inside a house: two lances guard the opening the first Gloom comes for, a panel shields the next opening along the wall, the turbine stands behind; the Gloom climbs in
-    // while the lances shoot; the cannon in your hands
+    // night inside a house: the opening (a door or a wide gap) where a Gloom comes early is guarded by two lances a few steps inside, a panel shields the next opening along
+    // the wall, the turbine stands behind; the picture is taken as the Gloom crosses the yard outside and the lances open up; the cannon in your hands
     const p = await open(); await midSave(p, { day: 7, nights: 5, food: 19, ess: 11, ringOpen: 3, scout: 2, cats: [0, 2, 3] }); const r = await startRun(p, 2);
-    const hi = +(process.env.HOUSE || pickHouse(r, 4)); info('house ' + hi); const f = await nightIn(p, hi, 62); const b = f.b, nx = b.nx, nz = b.nz, tx = -nz, tz = nx;
-    const b2 = await p.evaluate(([bp, nx, nz]) => { const s = window.__game.sim, B = s.breaches[bp]; let best = null; for (const q of s.breaches) { if (q.i === bp || q.floor !== 0 || Math.abs(q.nx * nx + q.nz * nz) < 0.9) continue; const d = Math.hypot(q.x - B.x, q.z - B.z); if (d > 1.5 && (!best || d < best.d)) best = { x: q.x, z: q.z, d, type: q.type, i: q.i }; } return best; }, [f.bp, nx, nz]); info('second opening ' + JSON.stringify(b2));
-    const res = []; res.push(await place(p, 'turbine', b.x + nx * 4.4 - tx * 2.4, b.z + nz * 4.4 - tz * 2.4, -nx, -nz));
+    const hi = +(process.env.HOUSE || pickHouse(r, 4)); info('house ' + hi);
+    await p.evaluate(([i, e]) => { const g = window.__game; g.enterHouse(i); g.sim.player.energy = e; }, [hi, 62]); await waitGame(p, 1.5, 0.3);
+    await p.evaluate(() => window.__game.nightfall()); await waitGame(p, 0.5, 0.1);
+    const pick = await p.evaluate((want) => { const s = window.__game.sim, B = s.breaches, out = [];
+      for (const b of B) { if (b.floor !== 0) continue; const ts = s.spawns.filter((q) => q.bp === b.i && q.t > s.t + 4).map((q) => +q.t.toFixed(1)); out.push({ i: b.i, type: b.type, x: b.x, z: b.z, nx: b.nx, nz: b.nz, ts: ts.slice(0, 4) }); }
+      const pref = (b) => (b.type === 'door' ? 0 : b.type === 'gap' ? 1 : 2) * 40 + (b.ts.length ? b.ts[0] : 999);
+      const ok = out.filter((b) => b.ts.length && (!want || want.includes(b.type))).sort((u, v) => pref(u) - pref(v)); return { all: out.map((b) => [b.i, b.type, b.ts.join('/')]), pick: ok[0] || null, H: s.H };
+    }, process.env.BTYPES ? process.env.BTYPES.split(',') : null);
+    info('openings ' + JSON.stringify(pick.all) + ' pick ' + JSON.stringify(pick.pick)); const b = pick.pick, nx = b.nx, nz = b.nz, tx = -nz, tz = nx;
+    const b2 = await p.evaluate(([bp, nx, nz]) => { const s = window.__game.sim, B = s.breaches[bp]; let best = null; for (const q of s.breaches) { if (q.i === bp || q.floor !== 0 || Math.abs(q.nx * nx + q.nz * nz) < 0.9) continue; const d = Math.hypot(q.x - B.x, q.z - B.z); if (d > 1.5 && d < 7 && (!best || d < best.d)) best = { x: q.x, z: q.z, d, type: q.type, i: q.i }; } return best; }, [b.i, nx, nz]); info('second opening ' + JSON.stringify(b2));
+    const res = []; res.push(await place(p, 'turbine', b.x + nx * 5.2 - tx * 2.4, b.z + nz * 5.2 - tz * 2.4, -nx, -nz));
     if (b2) res.push(await place(p, 'panel', b2.x, b2.z, -nx, -nz));
-    res.push(await place(p, 'lance', b.x + nx * 2.0 + tx * 1.4, b.z + nz * 2.0 + tz * 1.4, -nx, -nz));
-    res.push(await place(p, 'lance', b.x + nx * 2.0 - tx * 1.4, b.z + nz * 2.0 - tz * 1.4, -nx, -nz)); info('placed ' + res.join(','));
-    await stand(p, b.x + nx * 4.2, b.z + nz * 4.2, b.x, 1.5, b.z); await waitGame(p, 3, 0.3);
-    const W = (process.env.WHEN || 'cross,in').split(',');
-    for (let m = 0; m < W.length; m++) {
-      const test = W[m] === 'cross' ? (s, a) => s.gloom.some((g) => g.bp === a && (g.phase === 'cross' || g.phase === 'block')) : W[m] === 'in' ? (s, a) => s.gloom.some((g) => g.bp === a && g.phase === 'inside' && Math.hypot(g.x - s.breaches[a].x, g.z - s.breaches[a].z) < 1.6) : (s, a) => s.gloom.some((g) => g.bp === a && Math.hypot(g.x - s.breaches[a].x, g.z - s.breaches[a].z) < 3.5);
-      const st = await step(p, test, 40, f.bp, 70); info('moment ' + W[m] + ' ' + JSON.stringify(st) + ' ' + JSON.stringify(await p.evaluate(() => window.__game.sim.gloom.map((g) => [g.kind, g.phase, g.bp, +g.x.toFixed(1), +g.z.toFixed(1)]))));
-      await stand(p, b.x + nx * 4.2, b.z + nz * 4.2, b.x, 1.5, b.z); await p.evaluate(() => { window.__game.sim.player.hp = 74; }); await waitGame(p, 0.35, 0.1); await wheel(p, 1); await frames(p, 1); await freeze(p);
-      const C = [[3.2, -0.9], [3.2, 0.9], [4.2, -1.5], [4.2, 1.5], [5.2, 0.6]];
-      for (let k = 0; k < C.length; k++) { const [d, l] = C[k]; await stand(p, b.x + nx * d + tx * l, b.z + nz * d + tz * l, b.x - tx * l * 0.3, 1.5, b.z - tz * l * 0.3); await frames(p, 2); await shot(p, 'house_' + m + k, CLEAN.includes('house_' + m + k)); }
+    res.push(await place(p, 'lance', b.x + nx * 3.2 + tx * 1.5, b.z + nz * 3.2 + tz * 1.5, -nx, -nz));
+    res.push(await place(p, 'lance', b.x + nx * 3.2 - tx * 1.5, b.z + nz * 3.2 - tz * 1.5, -nx, -nz)); info('placed ' + res.join(','));
+    await stand(p, b.x + nx * 5.4, b.z + nz * 5.4, b.x, 1.4, b.z); await waitGame(p, 3, 0.3);
+    const OUTD = (process.env.OUTD || '5,2.5').split(',').map(Number);
+    for (let m = 0; m < OUTD.length; m++) {
+      const st = await step(p, (s, a) => s.gloom.some((g) => g.bp === a[0] && g.floor === 0 && Math.hypot(g.x - s.breaches[a[0]].x, g.z - s.breaches[a[0]].z) < a[1]), 60, [b.i, OUTD[m]], 70);
+      info('moment ' + OUTD[m] + ' m ' + JSON.stringify(st) + ' ' + JSON.stringify(await p.evaluate(() => window.__game.sim.gloom.map((g) => [g.kind, g.phase, g.bp, +g.x.toFixed(1), +g.z.toFixed(1)]))));
+      await stand(p, b.x + nx * 5.4, b.z + nz * 5.4, b.x, 1.4, b.z); await p.evaluate(() => { window.__game.sim.player.hp = 74; }); await waitGame(p, 0.35, 0.1); await wheel(p, 1); await frames(p, 1); await freeze(p);
+      const C = [[5.4, 0, 0], [4.6, -1.0, 0.3], [4.6, 1.0, 0.3], [6.2, 0.6, 0.2]];
+      for (let k = 0; k < C.length; k++) { const [d, l, f] = C[k]; await stand(p, b.x + nx * d + tx * l, b.z + nz * d + tz * l, b.x - tx * l * f, 1.4, b.z - tz * l * f); await frames(p, 2); await shot(p, 'house_' + m + k, CLEAN.includes('house_' + m + k)); }
       await p.evaluate(() => { window.__dtMax = 0.1; });
     }
   }
