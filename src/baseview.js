@@ -212,7 +212,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 6), mat(0xe0b890)); head.position.y = 1.65; stand.add(head); n.add(stand);
       // every recruit is their own person: one of the nine recruit models (gen1..gen9) by the order they joined; a soft blob is their shadow as they walk
       const key = 'gen' + cfg.base.recruitOrder[(p.id - 1) % Math.min(cfg.base.recruitModels, cfg.base.recruitOrder.length)], ch = makeChar ? (chars[key] || (chars[key] = makeChar(key))) : null;
-      if (ch) ch.whenReady(() => { if (tok !== buildN) return; n.remove(stand); n.rotation.set(0, 0, 0); ch.root.position.set(0, 0, 0); ch.root.traverse((o) => { o.castShadow = false; }); n.add(ch.root); });
+      // a person kept from the last build starts over (restart): the same motion as on a fresh page, whatever it did before
+      if (ch) ch.whenReady(() => { if (tok !== buildN) return; n.remove(stand); n.rotation.set(0, 0, 0); ch.root.position.set(0, 0, 0); if (ch.restart) ch.restart(); ch.root.traverse((o) => { o.castShadow = false; }); n.add(ch.root); });
       { const bl = new THREE.Mesh(new THREE.CircleGeometry(0.42, 14), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })); bl.rotation.x = -Math.PI / 2; bl.position.y = 0.035; bl.userData.blob = true; n.add(bl); }
       const lab = label(p.name + ' (' + p.role + ')', '#fff', 2.6); lab.position.y = 2.4; lab.userData.kind = 'npc'; n.add(lab);
       const crate = bx(0.4, 0.3, 0.4, 0xb08a4a, 0, 1.05, 0.4, n); crate.visible = p.role === 'researcher';

@@ -64,6 +64,8 @@ export function createPerson(cfg, key) {
   const bones = {}, rest = {}, pm = {}, pmi = {}, pelvisRest = new THREE.Vector3(), pelvisM = new THREE.Matrix3();
   // a different random stream per person, so two people never shift their weight or breathe in step
   let rs = (++seedN * 2654435761 + key.length * 97) >>> 0; const rnd = () => { rs = (rs * 1664525 + 1013904223) >>> 0; return rs / 4294967296; };
+  // the stream's start, for restart()
+  const rs0 = rs;
   const scan = SCANON(P) && P.scan && P.scan[key];
   // desktop light and materials for people keeping their approved face (CONFIG.peopleHi, high tier only): their desktop copy with baked soft shading, Marla-style skin, a cornea, the shared key
   // ?peoplehi=0 / ?peoplehi=1 in the address overrides CONFIG.peopleHi.on for one visit (before / after pictures)
@@ -93,10 +95,11 @@ export function createPerson(cfg, key) {
   if (file && (file.startsWith('data:') || location.protocol !== 'file:')) fetch(file).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, true)).catch(() => packed()); else packed();
 
   // ---- motion state
-  const st = { time: 0, speed: { x: 0, v: 0 }, phase: rnd(), rate: 1, half: 0, head: { x: 0, v: 0 }, chest: { x: 0, v: 0 }, hips: { x: 0, v: 0 }, feet: 0, step: null, stepSide: 1, hist: [],
+  // the motion state as a person is made (restart() sets it again)
+  const start = () => ({ time: 0, speed: { x: 0, v: 0 }, phase: rnd(), rate: 1, half: 0, head: { x: 0, v: 0 }, chest: { x: 0, v: 0 }, hips: { x: 0, v: 0 }, feet: 0, step: null, stepSide: 1, hist: [],
     pitch: { x: 0, v: 0 }, lean: { x: 0, v: 0 }, arm: [{ x: 0, v: 0 }, { x: 0, v: 0 }], fore: [{ x: 0, v: 0 }, { x: 0, v: 0 }], hand: [{ x: 0, v: 0 }, { x: 0, v: 0 }], nod: { x: 0, v: 0 },
-    shift: { a: rnd() * 6.28, len: 0, x: 0, from: 0, to: rnd() < 0.5 ? -1 : 1, t: 0 }, breath: rnd() * 6.28, drift: [rnd() * 100, rnd() * 100], carry: { x: 0, v: 0 }, init: false };
-  st.shift.len = I.shift[0] + rnd() * (I.shift[1] - I.shift[0]);
+    shift: { a: rnd() * 6.28, len: 0, x: 0, from: 0, to: rnd() < 0.5 ? -1 : 1, t: 0 }, breath: rnd() * 6.28, drift: [rnd() * 100, rnd() * 100], carry: { x: 0, v: 0 }, init: false });
+  const st = start(); st.shift.len = I.shift[0] + rnd() * (I.shift[1] - I.shift[0]);
   const delayed = (d) => { const tt = st.time - d, h = st.hist; for (let i = h.length - 1; i >= 0; i--) if (h[i][0] <= tt) return h[i][1]; return h.length ? h[0][1] : st.head.x; };
   const pose = {}; for (const k of BONES) pose[k] = [0, 0, 0];
   const add = (k, x, y, z) => { const p = pose[k]; p[0] += x; p[1] += y; p[2] += z; };
@@ -111,7 +114,8 @@ export function createPerson(cfg, key) {
   // returns { speed (m/s, along the body's facing), yaw (the body's facing), moved } so a caller that does not pass move can move the holder
   // The motion runs in fixed slices of CONFIG.people.motion.slice s (a frame of 1/30 or 1/60 s is a whole number of slices), so 30 and 60 frames a second give the same motion.
   const M = P.motion, lock = [0, 1].map(() => ({ on: false, w: 0, rel: 9, T: new THREE.Vector3(), last: new THREE.Vector3(), q0: 0, sw: false }));
-  st.acc = 0; st.feetV = 0; st.plant = [true, true]; st.hipX = 0; st.drop = 0; st.off = [0, 0]; st.swingQ = [-1, -1]; st.cr = { x: 0, v: 0 }; st.hyf = null; st.halt = false; st.wasWalk = false; st.stepU = -1; st.heel = [0, 0]; st.A = 0; st.v = 0;
+  const base = () => { st.acc = 0; st.feetV = 0; st.plant = [true, true]; st.hipX = 0; st.drop = 0; st.off = [0, 0]; st.swingQ = [-1, -1]; st.cr = { x: 0, v: 0 }; st.hyf = null; st.halt = false; st.wasWalk = false; st.stepU = -1; st.heel = [0, 0]; st.A = 0; st.v = 0; };
+  base();
   // a pivot step turns the body about the foot that stays down (not about the body's middle, which dragged that foot round), then the body settles back over
   // the middle in M.recenter s while it steps or walks; footAt = each foot's spot in the body's own frame (x, z), measured on the model once it loads
   const hinge = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(1, 0, 0)], knee = [{ s: 1 }, { s: 1 }];
@@ -298,7 +302,11 @@ export function createPerson(cfg, key) {
   }
   // the gait numbers and live turn state, for tools/animcheck.cjs
   const probe = () => ({ kind, cycle: G.cycle, speed: G.speed, now: st.speed.x, phase: st.phase, step: !!st.step, yaw: { head: st.head.x, chest: st.chest.x, hips: st.hips.x, feet: st.feet }, legLen, plant: st.plant.slice(), lockW: [lock[0].w, lock[1].w], lockOn: [lock[0].on, lock[1].on], off: st.off.slice(), swingQ: st.swingQ.slice(), kneeS: [knee[0].s, knee[1].s], heel: st.heel.slice(), stepU: st.stepU, halt: st.halt });
-  return { root, kind, get ready() { return ready; }, whenReady(f) { if (ready) f(); else wait.push(f); }, drive, probe, get scan() { return !!scan; } };
+  // restart(): the person starts over as if just made (its random stream from the start, standing, feet let go, facing the holder's way), for a rebuilt base,
+  // so what it does next does not depend on what it did before (the same at 30 and 60 frames a second)
+  const restart = () => { rs = rs0; for (const k of Object.keys(st)) delete st[k]; Object.assign(st, start()); st.shift.len = I.shift[0] + rnd() * (I.shift[1] - I.shift[0]); base();
+    for (const lk of lock) { lk.on = false; lk.w = 0; lk.rel = 9; lk.sw = false; lk.slip = false; lk.skip = false; } root.rotation.y = 0; };
+  return { root, kind, restart, get ready() { return ready; }, whenReady(f) { if (ready) f(); else wait.push(f); }, drive, probe, get scan() { return !!scan; } };
 }
 
 // Pivot steps for a person whose facing someone else's code decides (Marla, src/marla.js): her body turns in steps, one foot lifts and turns while the other stays down
