@@ -1,0 +1,2 @@
+shots/low.txt 686
+shots/ps_blob_low.jpg 23740
