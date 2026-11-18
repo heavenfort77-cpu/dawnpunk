@@ -67,7 +67,7 @@ export const IMPACT_SFX = {
     // wet slap: length (s)
     slapLen: 0.035,
     // wet slap: loudness
-    slapGain: 0.7,
+    slapGain: 3.86,
     // splash: highpass noise cutoff at the start (Hz)
     splashF0: 3200,
     // splash: cutoff at the end (Hz)
@@ -77,7 +77,7 @@ export const IMPACT_SFX = {
     // splash: length (s)
     splashLen: 0.15,
     // splash: loudness
-    splashGain: 0.32,
+    splashGain: 0.342,
     // spray: number of droplet grains
     spray: 18,
     // spray: time span of the droplets (s)
@@ -89,13 +89,13 @@ export const IMPACT_SFX = {
     // spray: bandpass Q
     sprayQ: 1.2,
     // spray: loudness of the first droplet (later ones are quieter)
-    sprayGain: 0.5,
+    sprayGain: 3.68,
     // thud: length of the knock on the metal (s; shorter = brighter strike)
     strikeLen: 0.0022,
     // thud: lowpass on the strike (Hz; lower = softer, duller strike)
     strikeLp: 2200,
     // thud: loudness of the strike into the resonances
-    strikeGain: 9,
+    strikeGain: 2.09,
     // thud: resonances of the dented panel (Hz)
     modes: [118, 187, 263, 349, 446, 571, 760],
     // thud: Q of each resonance (higher = rings longer; these are heavily damped)
@@ -109,7 +109,7 @@ export const IMPACT_SFX = {
     // weight: length (s)
     weightLen: 0.07,
     // weight: loudness
-    weightGain: 0.55,
+    weightGain: 2.72,
     // rattle: number of loose-panel knocks
     rattle: 4,
     // rattle: first knock (s)
@@ -121,7 +121,7 @@ export const IMPACT_SFX = {
     // rattle: Q of those resonances
     rattleQ: [16, 18, 20],
     // rattle: loudness of the first knock
-    rattleGain: 1.4,
+    rattleGain: 16,
   },
 
   // HEAD SHOT: the body hit plus a brittle screen crack and electrical static
@@ -139,13 +139,13 @@ export const IMPACT_SFX = {
     // crack: highpass on the ticks (Hz)
     crackHp: 2600,
     // crack: loudness of the first tick
-    crackGain: 0.65,
+    crackGain: 2.76,
     // crack: tiny glass resonances (Hz)
     glassModes: [2950, 4370, 5830, 7690],
     // crack: Q of the glass resonances
     glassQ: [28, 30, 32, 34],
     // crack: loudness of the glass resonances (struck by the same ticks)
-    glassGain: 1,
+    glassGain: 14.8,
     // static: number of crackle bursts
     fizz: 34,
     // static: first burst (s)
@@ -159,7 +159,7 @@ export const IMPACT_SFX = {
     // static: bandpass Q
     fizzQ: 0.6,
     // static: loudness of the loudest burst
-    fizzGain: 0.3,
+    fizzGain: 1.94,
   },
 
   // CHARGED SHOT HIT: the body hit made heavier (these scale it) plus steam hissing on hot metal
@@ -185,7 +185,7 @@ export const IMPACT_SFX = {
     // steam: length (s)
     steamLen: 0.55,
     // steam: loudness
-    steamGain: 0.26,
+    steamGain: 0.37,
     // sizzle: number of small crackles in the steam
     sizzle: 26,
     // sizzle: length of a crackle (s)
@@ -193,7 +193,7 @@ export const IMPACT_SFX = {
     // sizzle: highpass (Hz)
     sizzleHp: 3200,
     // sizzle: loudness of the loudest crackle
-    sizzleGain: 0.22,
+    sizzleGain: 1.01,
   },
 
   // GLOOM DESTROYED (machines only; devices and panels keep sfxBreak): the body slumps and settles, the screen's static dies, a few sparks
@@ -213,7 +213,7 @@ export const IMPACT_SFX = {
     // collapse: loudness of each resonance
     modeGain: [1, 0.85, 0.75, 0.6, 0.45, 0.35, 0.25],
     // collapse: strike loudness into the resonances
-    strikeGain: 10,
+    strikeGain: 2.56,
     // collapse: length of a strike (s)
     strikeLen: 0.0026,
     // rumble: lowpass noise cutoff at the start (Hz)
@@ -223,7 +223,7 @@ export const IMPACT_SFX = {
     // rumble: length (s)
     rumbleLen: 0.4,
     // rumble: loudness
-    rumbleGain: 0.6,
+    rumbleGain: 2.07,
     // crunch: grains of torn sheet metal in the first moment
     crunch: 7,
     // crunch: time span (s)
@@ -235,7 +235,7 @@ export const IMPACT_SFX = {
     // crunch: bandpass Q
     crunchQ: 0.7,
     // crunch: loudness of the first grain
-    crunchGain: 0.5,
+    crunchGain: 3.09,
     // settling: number of small knocks as it comes to rest
     settle: 7,
     // settling: first knock (s)
@@ -247,7 +247,7 @@ export const IMPACT_SFX = {
     // settling: Q of those resonances
     settleQ: [14, 16, 18],
     // settling: loudness of the first knock
-    settleGain: 1.1,
+    settleGain: 17.3,
     // static: first burst (s)
     staticFrom: 0.03,
     // static: last burst (s)
@@ -265,7 +265,7 @@ export const IMPACT_SFX = {
     // static: bandpass Q
     staticQ: 0.45,
     // static: loudness of the first burst (it fades out)
-    staticGain: 0.16,
+    staticGain: 0.777,
     // sparks: number of crackles
     sparks: 6,
     // sparks: first (s)
@@ -277,7 +277,7 @@ export const IMPACT_SFX = {
     // sparks: highpass (Hz)
     sparkHp: 4500,
     // sparks: loudness of the loudest crackle
-    sparkGain: 0.45,
+    sparkGain: 2.37,
   },
 
   // THE CANNON SHOT (the player's own, not panned): a pressurised water jet released through a brass valve
@@ -297,7 +297,7 @@ export const IMPACT_SFX = {
     // jet: length (s)
     jetLen: 0.2,
     // jet: loudness
-    jetGain: 0.55,
+    jetGain: 0.806,
     // air push: lowpass noise cutoff at the start (Hz)
     pushF0: 900,
     // air push: cutoff at the end (Hz)
@@ -305,7 +305,7 @@ export const IMPACT_SFX = {
     // air push: length (s)
     pushLen: 0.05,
     // air push: loudness
-    pushGain: 0.5,
+    pushGain: 2.99,
     // wet edge: number of droplet grains as the jet leaves the nozzle
     drops: 14,
     // wet edge: time span of the droplets (s)
@@ -315,7 +315,7 @@ export const IMPACT_SFX = {
     // wet edge: bandpass centres of the two droplet layers (Hz)
     dropHz: [2500, 5200],
     // wet edge: loudness of the first droplet
-    dropGain: 0.35,
+    dropGain: 2.63,
     // valve clack: brass resonances (Hz)
     valveModes: [1180, 2470, 3720, 5310],
     // valve clack: Q of those resonances
@@ -323,7 +323,7 @@ export const IMPACT_SFX = {
     // valve clack: loudness of each resonance
     valveGains: [1, 0.7, 0.5, 0.3],
     // valve clack: strike loudness
-    valveGain: 1.6,
+    valveGain: 27.2,
     // valve clack: lowpass on the strike (Hz)
     valveLp: 7000,
     // valve clack: the valve reseats this long after firing (s)
