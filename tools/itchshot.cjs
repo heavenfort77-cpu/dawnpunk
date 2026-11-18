@@ -91,7 +91,7 @@ const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s 
   if (SHOT === 'base') {
     // the base by day: Marla under the big tree (her spot 1), the waterwheel and the gardens; the save's three hidden cats sit at hideouts 0, 2, 3 (none in these views)
     const p = await open(); await midSave(p, { day: 6, nights: 4, food: 23, ess: 9, ringOpen: 3, scout: 1, cats: [0, 2, 3] }); await waitGame(p, 9, 1);
-    const views = [[10.5, -8, 11, -15], [11.5, -8.5, 10.5, -15.5], [9, -8.5, 11.5, -15], [13.5, -8, 10, -15.5], [8, -9.5, 12, -15], [12, -7, 10, -16], [16, -9, 9, -16], [9.5, -10, 12, -15.5], [7, -8, 11.5, -16], [6.5, -6.5, 11.5, -15.5]];
+    const views = process.env.VIEWS ? JSON.parse(process.env.VIEWS) : [[10.5, -8, 11, -15], [11.5, -8.5, 10.5, -15.5], [9, -8.5, 11.5, -15], [13.5, -8, 10, -15.5], [8, -9.5, 12, -15], [12, -7, 10, -16], [16, -9, 9, -16], [9.5, -10, 12, -15.5], [7, -8, 11.5, -16], [6.5, -6.5, 11.5, -15.5]];
     await freeze(p);
     for (let k = 0; k < views.length; k++) { const [x, z, tx, tz] = views[k]; await p.evaluate(([x, z, tx, tz]) => { const g = window.__game; g.setBase(x, z); g.setYaw(Math.atan2(-(tx - x), -(tz - z))); g.setPitch(0.0); }, [x, z, tx, tz]); await frames(p, 2); await shot(p, 'base_' + k, CLEAN.includes('base_' + k)); }
   }
@@ -109,6 +109,7 @@ const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s 
     const ds = await p.evaluate(() => (window.__game.run.dormant || []).map((d, i) => ({ i, kind: d.kind, x: d.x, z: d.z, awake: d.awake })).filter((d) => !(d.awake > 0)));
     info('sleepers ' + JSON.stringify(ds));
     const views = []; for (const d of ds) { const sx = d.x > 0 ? -1 : 1, sz = d.z > 0 ? 1 : -1; views.push([d.x + sx * 5.5, -sz * 0.8, d.x, d.z, 0.3 * sx], [d.x + sx * 8, sz * 1.5, d.x, d.z, -0.25 * sx]); }
+    if (process.env.VIEWS) views.splice(0, views.length, ...JSON.parse(process.env.VIEWS));
     await freeze(p);
     for (let k = 0; k < views.length; k++) { const [x, z, tx, tz, off] = views[k]; await p.evaluate(([x, z, tx, tz, off]) => { const g = window.__game; g.setTown(x, z); g.setYaw(Math.atan2(-(tx - x), -(tz - z)) + off); g.setPitch(-0.03); }, [x, z, tx, tz, off]); await frames(p, 2); await shot(p, 'street_' + k, false); }
   }
