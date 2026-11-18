@@ -1,0 +1,30 @@
+$ mkdir -p shots && SCALE=0.5 node tools/itchshot.cjs house shots   (limit 90 min)
+INFO page up 6 s
+INFO base loaded 20 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 54 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":2,"cat":2,"houses":[{"i":0,"n":18,"L":2,"door":["42.7","-5.6"],"row":-1},{"i":1,"n":16,"L":2,"door":["-4.7","-6.0"],"row":-1},{"i":2,"n":14,"L":2,"door":["-44.0","6.5"],"row":1},{"i":3,"n":13,"L":2,"door":["51.9","6.7"],"row":1},{"i":4,"n":12,"L":2,"door":["-51.2","-6.9"],"row":-1},{"i":5,"n":11,"L":2,"door":["3.1","7.1"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO house 5
+INFO openings [[0,"door","69.8/135.1"],[1,"window","8.6/42.7/73.6/100.1"],[2,"gap","6/38/102.6/136"],[4,"window","6.7/36.4/99/103.8"],[5,"door","11/39.3/40.3/68.4"],[7,"window","5.4/37.9/68.9/73.6"],[9,"window","104.3/104.7/131.2"]] pick {"i":5,"type":"door","x":1.9607142857142836,"z":-7.275,"nx":0,"nz":1,"ts":[11,39.3,40.3,68.4]}
+INFO second opening {"x":5.9750000000000005,"z":-7.275,"d":4.014285714285717,"type":"window","i":4}
+INFO placed ok,ok,ok,ok
+INFO moment 5 m {"ok":true,"t":14.850000000000085} [["lantern","approach",2,13,1.6],["walker","block",4,6,-8.7],["lurcher","cross",1,2.2,6.5],["stilt","approach",5,2.4,-11.8]]
+INFO wrote shots/house_00.png (213 s) cam 1.96,1.60,-1.88 yaw 0.000 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_00: none
+INFO wrote shots/house_01.png (254 s) cam 2.96,1.60,-2.68 yaw 0.275 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_01: none
+INFO wrote shots/house_02.png (292 s) cam 0.96,1.60,-2.68 yaw -0.275 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_02: none
+INFO wrote shots/house_03.png (330 s) cam 1.36,1.60,-1.08 yaw -0.116 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_03: none
+INFO moment 2.5 m {"ok":true,"t":16.950000000000095} [["lantern","approach",2,13,1.6],["lurcher","inside",1,2,3],["stilt","approach",5,2,-9.2]]
+INFO wrote shots/house_10.png (395 s) cam 1.96,1.60,-1.88 yaw 0.000 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_10: none
+INFO wrote shots/house_11.png (433 s) cam 2.96,1.60,-2.68 yaw 0.275 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_11: none
+INFO wrote shots/house_12.png (470 s) cam 0.96,1.60,-2.68 yaw -0.275 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_12: none
+INFO wrote shots/house_13.png (507 s) cam 1.36,1.60,-1.08 yaw -0.116 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_13: none
+NO PAGE ERRORS
+done 512 s
+exit code 0

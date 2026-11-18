@@ -1,0 +1,8 @@
+shots/house_00.png 239499
+shots/house_01.png 249261
+shots/house_02.png 243690
+shots/house_03.png 242249
+shots/house_10.png 244325
+shots/house_11.png 249617
+shots/house_12.png 244213
+shots/house_13.png 238659
