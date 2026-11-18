@@ -1,0 +1,14 @@
+hm/dump/rec_gatherer_30.f32 696384
+hm/dump/rec_gatherer_60.f32 1392480
+hm/dump/rec_gatherer_film_30.f32 120960
+hm/dump/rec_gatherer_film_60.f32 241920
+hm/dump/rec_hunter_30.f32 696384
+hm/dump/rec_hunter_60.f32 1392480
+hm/dump/rec_hunter_film_30.f32 120960
+hm/dump/rec_hunter_film_60.f32 241920
+hm/dump/rec_researcher_30.f32 696384
+hm/dump/rec_researcher_60.f32 1392480
+hm/dump/rec_researcher_film_30.f32 120960
+hm/dump/rec_researcher_film_60.f32 241920
+hm/dump/labels60.json 498
+hm/dump/rec_researcher_film_30.f32 120960
