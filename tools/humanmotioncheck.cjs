@@ -176,10 +176,10 @@ function nightPrep(o) {
   const fireOk = () => { const before = g.hands.state().tFire; g.doFire(); return g.hands.state().tFire < before; };
   // [time, label, action]; walking on/off at four different points of the bob
   const ev = [[1.0, 'walk start', () => key('KeyW', true)], [2.1, 'walk stop', () => key('KeyW', false)], [3.3, 'walk start', () => key('KeyW', true)], [4.6, 'walk stop', () => key('KeyW', false)],
-    [5.5, 'walk start', () => key('KeyS', true)], [6.4, 'walk stop', () => key('KeyS', false)], [7.4, 'walk start', () => key('KeyS', true)], [8.15, 'walk stop', () => key('KeyS', false)],
+    [5.5, 'walk start', () => key('KeyS', true)], [6.4, 'walk stop', () => key('KeyS', false)], [7.4, 'walk start', () => key('KeyS', true)], [8.2, 'walk stop', () => key('KeyS', false)],
     [9.5, 'fire', fireOk], [9.9, 'fire', fireOk], [10.3, 'fire', fireOk], [10.4, 'fire (too soon, the game should refuse)', fireOk],
-    [11.5, 'place', () => placeOk(kinds[0])], [11.85, 'place again mid-throw', () => placeOk(kinds[1] || kinds[0])],
-    [13.5, 'pick up (hands.grab, as a crate or cat pick-up)', () => g.hands.grab()], [13.65, 'pick up again mid pick-up', () => g.hands.grab()],
+    [11.5, 'place', () => placeOk(kinds[0])], [11.9, 'place again mid-throw', () => placeOk(kinds[1] || kinds[0])],
+    [13.5, 'pick up (hands.grab, as a crate or cat pick-up)', () => g.hands.grab()], [13.7, 'pick up again mid pick-up', () => g.hands.grab()],
     [14.8, 'eat', () => { key(FINE ? 'KeyF' : 'KeyE', true); key(FINE ? 'KeyF' : 'KeyE', false); }], [15.6, FINE ? 'switch device (key 2)' : 'device button 2 (phones: places it)', () => { key('Digit2', true); key('Digit2', false); }],
     [17.0, 'walk start', () => key('KeyW', true)], [17.5, 'fire while walking', fireOk], [18.4, 'walk stop', () => key('KeyW', false)]];
   const lab = (t) => { let l = 'night:idle'; for (const e of ev) if (t >= e[0]) l = 'night:after ' + e[1]; return HM.lab(l); };
@@ -216,7 +216,9 @@ async function pass(b, dt, frames) {
   await p.evaluate(() => window.__game.enterBase());
   lg('base entered; waiting for the people');
   await p.waitForFunction(() => { const g = window.__game, pk = g.bview.peek && g.bview.peek(); return pk && g.marla.ready && g.marla.root.parent === pk.scoutG && ['bram', 'oko', 'pip'].every((k) => pk.chars[k] && pk.chars[k].ready && pk.chars[k].root.parent) && pk.npcs.every((o) => !o.ch || (o.ch.ready && o.ch.root.parent === o.n)); }, null, { timeout: 900000, polling: 1000 });
-  R.models = await p.evaluate(() => { const pk = window.__game.bview.peek(), out = {}; for (const [k, c] of Object.entries(pk.chars)) out[k] = { kind: c.kind, scan: c.scan }; return out; });
+  // which model each person drew: desktop = physically based materials (src/peoplehi.js, src/marlahi.js), phones = the light Phong/Lambert copies
+  R.models = await p.evaluate(() => { const g = window.__game, pk = g.bview.peek(), out = {}, look = (root) => { const m = {}; root.traverse((o) => { if (o.isSkinnedMesh) for (const x of [].concat(o.material)) m[x.type] = (m[x.type] || 0) + 1; }); return m.MeshPhysicalMaterial ? 'desktop (PBR)' : 'light (' + Object.keys(m).join('/') + ')'; };
+    out.marla = look(g.marla.root); for (const [k, c] of Object.entries(pk.chars)) out[k] = c.kind + (c.scan ? ', scan face' : '') + ', ' + look(c.root); return out; });
   if (ONLY.includes('base')) { await p.evaluate(() => { window.__hold = true; }); R.base = await p.evaluate(baseRun, { dt, frames: !!frames }); await p.evaluate(() => { window.__hold = false; }); lg('base done (' + Math.round(R.base.total) + ' s of game time)'); }
   if (ONLY.includes('street') || ONLY.includes('night')) {
     await p.evaluate(() => { const g = window.__game; g.save.nights = 3; document.getElementById('selRing').value = '0'; g.startRun(); });
