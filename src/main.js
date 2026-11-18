@@ -28,13 +28,14 @@ import { createFx } from './fx.js';
 import { createPerfStep } from './perfstep.js';
 import { lodTick } from './lod.js';
 import { createNightCull } from './nightcull.js';
+import { mergeStatic, HIT_LAYER } from './mergestatic.js';
 import { gloomPreload, glbHooks, glbCopy } from './gloomglb.js';
 import { openBook, loadBookFonts, closeBook } from './book.js';
 import { MODELS } from './modeldata.js';
 // lore pieces (owner Nov 17 16:25): notes in the street houses, old notices on the board, the field guide's "Before:" lines
 import * as LORE from './lore.js';
 // THE BECKONER, the final-night boss on ring 5 (owner Nov 17): its picture, warnings and falling pieces (rules in src/boss.js)
-import { bossTick, bossGuide, bossEndLine, gloomScrap, scrapTick, deviceHop, hopsClear, bossPreload, bossHooks } from './bosshi.js';
+import { bossTick, bossGuide, bossEndLine, gloomScrap, scrapTick, deviceHop, hopsClear, bossPreload, bossHooks, physicsPreload } from './bosshi.js';
 import { createWaterSound } from './basesound.js';
 import { createMarlaVoice } from './marlavoice.js';
 import { createImpactSfx } from './impactsfx.js';
@@ -140,6 +141,8 @@ let sim = null, state = 'menu', roomGroup = null, catG = null, catArm = null, ca
 const landAt = new Map(); // device id -> time its thrown pod lands: the device is drawn from then, growing in over CONFIG.hands.landGrow s
 // the night card's warm-up copies (sceneCard, warmNight below)
 const warmG = new THREE.Group(); warmG.name = 'warm';
+// phone-tier machines waiting for their still pieces to be merged (src/mergestatic.js)
+const mergeQ = [];
 let gMesh = new Map(), dMesh = new Map(), bpGroup = new THREE.Group(), bpParts = [], bpFlash = [];
 scene.add(bpGroup);
 
@@ -1152,8 +1155,10 @@ setShotTier(QUALITY);
 // Returns { t: distance along the aim measured flat (m, as the sim measures), head: that triangle belongs to a head part } or null for a miss. Head parts: the meshes under the
 // builder's head nodes (each Ticks unit has its own screen); when they hold most of the machine (the Warden's turning torso), whatever is hit in its top live.headTop m
 const LVR = new THREE.Raycaster(), LVO = new THREE.Vector3(), LVD = new THREE.Vector3(), LVB = new THREE.Box3();
+// the phone-tier machines' merged pieces stay as invisible hit shapes on HIT_LAYER (src/mergestatic.js): the aimed shot still sees them, and skips the merged draw mesh
+LVR.layers.enable(HIT_LAYER);
 function drawnHit(m, P) { const L = CONFIG.cannon.live, headSet = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => headSet.add(q));
-  const solid = (q) => { if (!q.isMesh || q.isSprite || q.userData.blob) return false; let v = q; while (v) { if (!v.visible) return false; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; return !(mt && (mt.blending === THREE.AdditiveBlending || (mt.transparent && (mt.opacity < L.minOpacity || q.geometry.type === 'PlaneGeometry')))); };
+  const solid = (q) => { if (!q.isMesh || q.isSprite || q.userData.blob || q.userData.mergedDraw) return false; let v = q; while (v) { if (!v.visible) return false; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; return !(mt && (mt.blending === THREE.AdditiveBlending || (mt.transparent && (mt.opacity < L.minOpacity || q.geometry.type === 'PlaneGeometry')))); };
   m.updateMatrixWorld(true); let hv = 0, av = 0, top = -1e9;
   m.traverse((q) => { if (!solid(q)) return; const gm = q.geometry; if (!gm.boundingBox) gm.computeBoundingBox(); LVB.copy(gm.boundingBox).applyMatrix4(q.matrixWorld); const v = (LVB.max.x - LVB.min.x) * (LVB.max.y - LVB.min.y) * (LVB.max.z - LVB.min.z); av += v; if (headSet.has(q)) hv += v; if (LVB.max.y > top) top = LVB.max.y; });
   const torso = hv > L.headShare * av, cp = Math.cos(P.pitch || 0);
@@ -1284,6 +1289,9 @@ function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); dr
 function warmNight() { dropWarm(); if (!run) return; const K = CONFIG.gloom.kinds, ring = run.ring || 0;
   for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); m.position.set(0, -50, 0); warmG.add(m); }
   for (const k of new Set(slotKinds())) { const m = deviceMesh(k); m.position.set(0, -50, 0); warmG.add(m); }
+  // the shot, its splash, a kill's smoke and a broken device's splinters (their shaders), and the scrap pieces' physics file (desktop)
+  for (const c of [0x7fd8ff, 0x9fd8ff, 0x9fffa0, 0xd0a0ff, 0xffe08a]) { warmG.add(PR.jet(new THREE.Vector3(0, -50, 0), new THREE.Vector3(1, -50, 0), c)); warmG.add(PR.droplet(c)); }
+  warmG.add(PR.smoke()); warmG.add(PR.splinter('panel')); warmG.add(PR.splinter('lance')); physicsPreload();
   warmG.visible = true; scene.add(warmG); }
 const nap = (ms) => new Promise((r) => setTimeout(r, ms));
 async function sceneCard(kind) {
@@ -1394,13 +1402,15 @@ function frame(now) {
     if (p.climb) camY = (p.floor + (p.climb.to - p.floor) * (1 - p.climb.t / CONFIG.ladderTime)) * FH + 1.6; else camY += (p.floor * FH + 1.6 - camY) * Math.min(1, dt * 8);
     cam.position.set(p.x, camY, p.z); cam.rotation.set(pitch, yaw, 0, 'YXZ');
     for (const g of sim.gloom) {
-      let m = gMesh.get(g.id); if (!m) { m = gloomMesh(g); shadeUnder(m, CONFIG.depth.gloom * (gloomKind(g) === 'warden' ? 1.8 : gloomKind(g) === 'hauler' ? 1.4 : gloomKind(g) === 'ticks' ? 0.8 : 1)); scene.add(m); gMesh.set(g.id, m); }
+      let m = gMesh.get(g.id); if (!m) { m = gloomMesh(g); if (QUALITY === 'low' && m.userData.anim) mergeQ.push([m, g.x, g.z]); shadeUnder(m, CONFIG.depth.gloom * (gloomKind(g) === 'warden' ? 1.8 : gloomKind(g) === 'hauler' ? 1.4 : gloomKind(g) === 'ticks' ? 0.8 : 1)); scene.add(m); gMesh.set(g.id, m); }
       // the height it is drawn at comes from the sim (src/sim.js gloomY), so the aimed shot aims where the model stands
       const gy = sim.gloomY(g);
       // LAG FIX Nov 19 (owner 07:10): at night in a house a machine outside that no opening shows is neither drawn nor animated (src/nightcull.js sees; CONFIG.lag.nightCull.gloomR)
       m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; m.visible = nightCull.sees(g.x, gy + CONFIG.lag.nightCull.gloomY, g.z, CONFIG.lag.nightCull.gloomR, sim, cam); if (!m.visible) continue;
       if (m.userData.anim) m.userData.anim(performance.now() / 1000, g); else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
     }
+    // phone tier: a new machine's still pieces are merged a few machines a frame (CONFIG.lag.mergeGloom.perFrame); the probe poses use times before 0 (no caption line starts)
+    for (let k = 0; k < CONFIG.lag.mergeGloom.perFrame && mergeQ.length; k++) { const [mm, mx, mz] = mergeQ.shift(); if (!mm.parent) continue; mergeStatic(mm, (i) => mm.userData.anim(-(1 + i * 0.73), { x: mx + i * 0.11, z: mz + i * 0.07 })); }
     tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000); nightCull.tick(world, sim, cam, dormG);
     bossTick(dt, sim, { scene, cam, audio }); scrapTick(dt, { scene }); // the final-night boss (src/bosshi.js): after the camera is set, before the frame is drawn
     if (run && sim.L > 1 && !run.toldStairs && save && (save.nights || 0) < 2 && [...sim.stairs.map((q) => [q.bx, q.bz]), ...sim.stairs.map((q) => [q.tx, q.tz]), ...sim.ladders.map((q) => [q.x, q.z])].some((q) => Math.hypot(q[0] - sim.player.x, q[1] - sim.player.z) < 3)) { run.toldStairs = true; marlaHint('Stairs: the Gloom use them too. The ladder: only you can climb it.'); }

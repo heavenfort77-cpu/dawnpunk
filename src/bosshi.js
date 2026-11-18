@@ -273,6 +273,8 @@ function buildGlb() {
 }
 
 // ---------------------------------------------------------------- PHYSICS loader (desktop only; a script tag, so phones never fetch it)
+// LAG FIX Nov 19 (owner 07:10): the night card fetches the physics file before the fight, so the first scrap does not wait on it (desktop only, as before)
+export function physicsPreload() { loadPhysics(); }
 function loadPhysics() {
   if (bossState.physics !== 'none' || !DESK || !PH.on) return; bossState.physics = 'loading';
   try { const s = document.createElement('script'); s.src = PHYS; s.onload = () => { bossState.physics = window.__bossPhysics ? 'ready' : 'failed'; }; s.onerror = () => { bossState.physics = 'failed'; }; document.head.appendChild(s); } catch (e) { bossState.physics = 'failed'; }

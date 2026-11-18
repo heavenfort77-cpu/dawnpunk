@@ -160,9 +160,11 @@ const BREAKDOWN = (spot) => {
       // the bot: the game's own shot, charged shot and device placing (main.js doFire / doPlace), the aim set as the mouse would; HP and Sun topped up so the fight goes on
       await p.evaluate(({ n, boss }) => { const g = window.__game, s = g.sim, P = s.player, bps = s.breaches.map((b, i) => i).filter((i) => s.breaches[i].floor === 0);
         const kinds = (g.save && g.save.loadout) || ['turbine', 'lance', 'panel', 'mine']; const st = window.__cb = { on: true, quick: 0, charged: 0, placed: 0, placeOk: 0, kills0: s.killed, maxAlive: 0, sumAlive: 0, sumInside: 0, frames: 0, lines: 0, boss: !!s.boss };
-        P.x = 0; P.z = 0; P.floor = 0; P.climb = null; let last = performance.now(), tq = 0, tc = 0, tp = 0, tb = 0, slot = 0, line = '';
+        P.x = 0; P.z = 0; P.floor = 0; P.climb = null; let last = performance.now(), tq = 0, tc = 0, tp = 0, tb = 0, slot = 0, line = '', topAt = 0;
         const loop = (now) => { if (!st.on || s.done) return; const dt = Math.min(0.1, (now - last) / 1000); last = now; tq += dt; tc += dt; tp += dt; tb += dt;
-          P.hp = Math.max(P.hp, 60); P.energy = Math.max(P.energy, 80); if (s.gloom.length < n) s.addGloom(n - s.gloom.length, { at: s.t, gap: 0.35, bps });
+          P.hp = Math.max(P.hp, 60); P.energy = Math.max(P.energy, 80);
+          // top-up: at most once a second and at most 3 at a time (addGloom schedules them over the next second; asking every frame overshot to 75 alive)
+          if (s.t >= topAt && s.gloom.length < n) { topAt = s.t + 1; s.addGloom(Math.min(3, n - s.gloom.length), { at: s.t, gap: 0.3, bps }); }
           let t = null, bd = 1e9, inside = 0; for (const q of s.gloom) { if (q.phase === 'inside') inside++; if (q.floor !== P.floor) continue; const d = Math.hypot(q.x - P.x, q.z - P.z) - (q.phase === 'inside' ? 8 : 0); if (d < bd) { bd = d; t = q; } }
           st.frames++; st.sumAlive += s.gloom.length; st.sumInside += inside; st.maxAlive = Math.max(st.maxAlive, s.gloom.length);
           let tx, ty, tz; if (boss && s.boss && s.boss.at && (tb % 6) > 3.5) { const pt = s.boss.at([0, 4.5, 0]); tx = pt.x; ty = 4.5; tz = pt.z; } else if (t) { tx = t.x; ty = s.gloomY(t) + 0.9; tz = t.z; }
@@ -174,15 +176,15 @@ const BREAKDOWN = (spot) => {
           requestAnimationFrame(loop); };
         requestAnimationFrame(loop); }, { n: C.n, boss: !!C.boss });
       // timing: every frame from the first one after the card (the settle counts toward the worst frame), the steady window for fps / p95 / calls / triangles
-      const f = await p.evaluate(([settle, secs]) => new Promise((res) => { const ts = [], cs = [], tr = []; let t0 = 0, last = 0, worstAll = 0, c0 = null; const step = (now) => { if (!t0) t0 = now; if (last) worstAll = Math.max(worstAll, now - last); last = now;
-          if (now - t0 < settle * 1000) { requestAnimationFrame(step); return; } const pc = window.__pc; if (c0) { cs.push(pc.calls - c0.calls); tr.push(pc.tris - c0.tris); } c0 = { calls: pc.calls, tris: pc.tris }; ts.push(now);
+      const f = await p.evaluate(([settle, secs]) => new Promise((res) => { const ts = [], cs = [], tr = [], sc = [], st = []; let t0 = 0, last = 0, worstAll = 0, c0 = null; const step = (now) => { if (!t0) t0 = now; if (last) worstAll = Math.max(worstAll, now - last); last = now;
+          if (now - t0 < settle * 1000) { requestAnimationFrame(step); return; } const pc = window.__pc; if (c0) { cs.push(pc.calls - c0.calls); tr.push(pc.tris - c0.tris); sc.push(pc.sCalls - c0.sCalls); st.push(pc.sTris - c0.sTris); } c0 = { calls: pc.calls, tris: pc.tris, sCalls: pc.sCalls, sTris: pc.sTris }; ts.push(now);
           if (now - t0 < (settle + secs) * 1000) { requestAnimationFrame(step); return; }
           const d = ts.slice(1).map((t, i) => t - ts[i]).sort((a, b) => a - b), avg = d.reduce((a, b) => a + b, 0) / Math.max(1, d.length), mean = (a) => a.reduce((x, y) => x + y, 0) / Math.max(1, a.length);
-          res({ n: d.length, fps: 1000 / avg, avg, p95: d[Math.floor(d.length * 0.95)] || 0, worst: d[d.length - 1] || 0, worstAll, calls: Math.round(mean(cs)), callsMax: Math.max(0, ...cs), tris: Math.round(mean(tr)), trisMax: Math.max(0, ...tr) }); }; requestAnimationFrame(step); }), [SETTLE, CSECS]);
+          res({ n: d.length, fps: 1000 / avg, avg, p95: d[Math.floor(d.length * 0.95)] || 0, worst: d[d.length - 1] || 0, worstAll, calls: Math.round(mean(cs)), callsMax: Math.max(0, ...cs), tris: Math.round(mean(tr)), trisMax: Math.max(0, ...tr), sCalls: Math.round(mean(sc)), sTris: Math.round(mean(st)), offFrames: cs.filter((c, i) => c - sc[i] > 100).length, frames: cs.length }); }; requestAnimationFrame(step); }), [SETTLE, CSECS]);
       const cb = await p.evaluate(() => { const c = window.__cb, s = window.__game.sim; c.on = false; return { quick: c.quick, charged: c.charged, placed: c.placed, placeOk: c.placeOk, kills: s.killed - c.kills0, maxAlive: c.maxAlive, avgAlive: +(c.sumAlive / Math.max(1, c.frames)).toFixed(1), avgInside: +(c.sumInside / Math.max(1, c.frames)).toFixed(1), lines: c.lines, devices: s.devices.length, boss: !!s.boss && !!s.boss.act, done: s.done, gpu: window.__game.gpu() }; });
       const row = { tier, spot, calls: f.calls, tris: f.tris, callsMax: f.callsMax, trisMax: f.trisMax, fps: +f.fps.toFixed(1), avgMs: +f.avg.toFixed(1), p95: +f.p95.toFixed(1), worst: +f.worst.toFixed(1), worstAll: Math.round(f.worstAll), mb: MB(sumB()), combat: cb }; rows.push(row);
       console.log('FPS ' + tier + ' ' + spot + ': ' + row.fps + ' fps, avg ' + row.avgMs + ' ms, p95 ' + row.p95 + ' ms, worst ' + row.worst + ' ms (' + f.n + ' frames), worst from the card on ' + row.worstAll + ' ms');
-      console.log('PERF ' + tier + ' ' + spot + ': calls ' + row.calls + ' (max ' + row.callsMax + '), triangles ' + (row.tris / 1e6).toFixed(2) + ' M (max ' + (row.trisMax / 1e6).toFixed(2) + ' M), downloaded ' + row.mb + ' MB');
+      console.log('PERF ' + tier + ' ' + spot + ': calls ' + row.calls + ' (screen ' + f.sCalls + ', max ' + row.callsMax + '), triangles ' + (row.tris / 1e6).toFixed(2) + ' M (screen ' + (f.sTris / 1e6).toFixed(2) + ' M, max ' + (row.trisMax / 1e6).toFixed(2) + ' M), frames with over 100 off-screen draws (shadow maps) ' + f.offFrames + ' of ' + f.frames + ', downloaded ' + row.mb + ' MB');
       console.log('INFO combat ' + tier + ' ' + spot + ': ' + JSON.stringify(cb));
       if (process.env.BREAK) console.log(await p.evaluate(BREAKDOWN, spot));
       if (process.env.PROFILE) { const cdp = await p.context().newCDPSession(p); await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 250 }); await p.evaluate(() => { window.__cb.on = true; });

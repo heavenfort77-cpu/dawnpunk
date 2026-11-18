@@ -8,8 +8,11 @@
 import * as THREE from 'three';
 import { MeshoptSimplifier } from 'meshoptimizer/simplifier';
 import { CONFIG } from './config.js';
+import { TIER } from './quality.js';
 
 const LG = () => CONFIG.lag;
+// a kind's settings: on the medium tier (the default) CONFIG.lag.lod.medium lays its own near / ratio / error over them (owner 07:10: night combat fps first)
+const kindOf = (kind) => { const L = LG().lod, k = L.kinds[kind]; return k && TIER === 'medium' && L.medium && L.medium[kind] ? { ...k, ...L.medium[kind] } : k; };
 // low detail geometry per full geometry (geometry objects are never put in userData: clone() copies userData through JSON)
 const LOW = new WeakMap();
 // registered meshes: mesh -> { full, low, near2, temp, gone }
@@ -37,12 +40,12 @@ function simplify(g, ratio, err) {
 }
 // the mesh may use its low copy past `near` metres; temp: a copy that comes and goes (Gloom), dropped from the list once it has left the scene
 export function lodRegister(o, kind, temp) {
-  const L = LG().lod, k = L.kinds[kind]; if (!L.on || !k || !o.isMesh) return; const full = REG.has(o) ? REG.get(o).full : o.geometry, low = LOW.get(full); if (!low) return;
+  const L = LG().lod, k = kindOf(kind); if (!L.on || !k || !o.isMesh) return; const full = REG.has(o) ? REG.get(o).full : o.geometry, low = LOW.get(full); if (!low) return;
   REG.set(o, { full, low, near2: k.near * k.near, temp: !!temp, gone: 0 }); lodState.meshes = REG.size;
 }
 // build the low copies for every big enough mesh under root (a loaded model or template), then register the meshes (keep = long-lived ones; temp ones are registered by lodCopy)
 export async function lodPrepare(root, kind, register) {
-  const L = LG().lod, k = L.kinds[kind]; if (!L.on || !k || !root) return;
+  const L = LG().lod, k = kindOf(kind); if (!L.on || !k || !root) return;
   try { await MeshoptSimplifier.ready; } catch (e) { lodState.failed++; return; }
   const list = []; root.traverse((o) => { if (!o.isMesh || !o.geometry || !o.geometry.index) return; const m = Array.isArray(o.material) ? o.material[0] : o.material; if (m && (m.alphaTest > 0 || m.transparent)) return; if (tris(o.geometry) >= L.minTris) list.push(o); });
   for (const o of list) { try { simplify(o.geometry, k.ratio, k.error); } catch (e) { lodState.failed++; } if (register) lodRegister(o, kind, false); await new Promise((r) => setTimeout(r, 0)); }
