@@ -89,7 +89,11 @@ function pageSetup(o) {
   HM.setHidden = (on) => { if (HM.hidOn === on) return; HM.hidOn = on; for (const c of HM.hid) c.visible = !on; };
   HM.shot = (label) => { if (!o.frames) return; try { HM.frames.push({ label, url: HM.cvs().toDataURL('image/jpeg', 0.82) }); } catch (e) { HM.notes.push('frame ' + label + ': ' + e); } };
   // base: render from a camera placed by the test (the game loop is held), labels hidden for the picture
-  HM.baseShot = (label, from, at) => { if (!o.frames) return; const cam = g.cam, hid = []; g.bview.group.traverse((x) => { if (x.isSprite && x.visible) { x.visible = false; hid.push(x); } });
+  // pictures in the base show only the people and the ground (houses, trees and posts stood between the camera and the person); world boxes of the meshes decide what is ground
+  const lowTop = (x) => { const gm = x.geometry; if (!gm || !gm.attributes || !gm.attributes.position) return false; if (!gm.boundingBox) gm.computeBoundingBox(); const b = gm.boundingBox, e = x.matrixWorld.elements; let top = -1e9;
+    for (const px of [b.min.x, b.max.x]) for (const py of [b.min.y, b.max.y]) for (const pz of [b.min.z, b.max.z]) top = Math.max(top, e[1] * px + e[5] * py + e[9] * pz + e[13]); return top < 0.25; };
+  HM.baseShot = (label, from, at) => { if (!o.frames) return; const cam = g.cam, hid = [], people = new Set(); for (const tr of Object.values(HM.traces)) tr.root.traverse((x) => people.add(x));
+    const scn = g.bview.group.parent || g.bview.group; scn.updateMatrixWorld(true); scn.traverse((x) => { if (!x.visible || people.has(x)) return; if (x.isSprite || ((x.isMesh || x.isPoints || x.isLine) && !lowTop(x))) { x.visible = false; hid.push(x); } });
     cam.position.set(from[0], from[1], from[2]); cam.lookAt(at[0], at[1], at[2]); cam.updateMatrixWorld(); g.drawCalls(); HM.shot(label); for (const x of hid) x.visible = true; };
   return true;
 }
@@ -110,9 +114,13 @@ function baseRun(o) {
   seg.push([4, 'start (player far)', () => [40, 40]]);
   for (const s of subj) {
     const c = s.c, f = s.f, k = s.id + ':';
-    if (s.inside) { const sd = [Math.cos(f), -Math.sin(f)], side = (r, l) => [c[0] + Math.sin(f) * r + sd[0] * l, c[1] + Math.cos(f) * r + sd[1] * l];
-      seg.push([(4.5 - 1.6) / SP, k + 'approach', (u) => side(4.5 - SP * u, 0)], [3, k + 'talk', () => side(1.6, 0)], [0.9 / SP, k + 'sidestep', (u) => side(1.6, SP * u)], [1.5, k + 'hold', () => side(1.6, 0.9)],
-        [1.8 / SP, k + 'sidestep2', (u) => side(1.6, 0.9 - SP * u)], [1.5, k + 'hold2', () => side(1.6, -0.9)], [(12 - 1.6) / SP, k + 'leave', (u) => side(1.6 + SP * u, -0.9 + 0.9 * Math.min(1, u * 2))], [6, k + 'far', () => side(12, 0)]);
+    if (s.inside && pk.rooms && pk.rooms.WS) {
+      // inside the workshop (room frame of src/rooms.js: she stands at CONFIG.workshop.oko.at, the door at local +z): in through the door to 2.15 m in front of her, 1 m to each side, out again
+      const I = pk.rooms.WS, at0 = (typeof g.cfg === 'function' ? g.cfg() : g.cfg).workshop.oko.at, W = (lx, lz) => [I.x + lx * Math.cos(I.ry) + lz * Math.sin(I.ry), I.z - lx * Math.sin(I.ry) + lz * Math.cos(I.ry)], zf = at0[1] + 2.15;
+      s.cam = W(0.7, zf + 0.35); s.look = W(at0[0], at0[1]);
+      seg.push([(3.5 - zf) / SP, k + 'approach', (u) => W(0, 3.5 - SP * u)], [3, k + 'talk', () => W(0, zf)], [1 / SP, k + 'sidestep', (u) => W(SP * u, zf)], [1.5, k + 'hold', () => W(1, zf)],
+        [2 / SP, k + 'sidestep2', (u) => W(1 - SP * u, zf)], [1.5, k + 'hold2', () => W(-1, zf)], [1 / SP, k + 'centre', (u) => W(-1 + SP * u, zf)], [(3.5 - zf) / SP, k + 'leave', (u) => W(0, zf + SP * u)],
+        [6.5 / SP, k + 'out', (u) => W(0, 3.5 + SP * u)], [6, k + 'far', () => W(0, 10)]);
     } else {
       const w = SP / R0;
       seg.push([(10 - R0) / SP, k + 'approach', (u) => at(c, f, 10 - SP * u)], [3, k + 'talk', () => at(c, f, R0), s.marla ? () => g.marla.talk(true) : null],
@@ -136,8 +144,9 @@ function baseRun(o) {
     const [sg, u] = segAt(t); if (sg !== cur) { cur = sg; if (sg[3]) sg[3](); } P = sg[2](u);
     g.bview.update(dt, P[0], P[1], 1.6); t = i * dt; HM.sample(t, HM.lab(sg[1]), nearAux);
     while (si < shots.length && shots[si].t <= t + 1e-9) { const sh = shots[si++], tr = HM.traces[sh.key]; if (!tr || !tr.root.parent) continue; const w = wpos(tr.root);
-      if (sh.side) { const a = w[2] + Math.PI / 2; HM.baseShot(tr.info.who + ' walking', [w[0] + Math.sin(a) * 3.4, 1.05, w[1] + Math.cos(a) * 3.4], [w[0], 0.85, w[1]]); }
-      else { const s = sh.fixed, a = s.f + (s.inside ? 0.35 : 0.75), r = s.inside ? 2.4 : 3.6; HM.baseShot(tr.info.who + (s.inside ? ' at work / talk' : ' turning to you'), [s.c[0] + Math.sin(a) * r, 1.25, s.c[1] + Math.cos(a) * r], [s.c[0], 0.95, s.c[1]]); } }
+      if (sh.side) { const a = w[2] + Math.PI / 2; HM.baseShot(tr.info.who + ' walking', [w[0] + Math.sin(a) * 2.5, 1.0, w[1] + Math.cos(a) * 2.5], [w[0], 0.8, w[1]]); }
+      else if (sh.fixed.cam) { const s = sh.fixed; HM.baseShot(tr.info.who + ' at the bench, turning to you', [s.cam[0], 1.35, s.cam[1]], [s.look[0], 0.95, s.look[1]]); }
+      else { const s = sh.fixed, a = s.f + 0.75, r = 2.7; HM.baseShot(tr.info.who + ' turning to you', [s.c[0] + Math.sin(a) * r, 1.15, s.c[1] + Math.cos(a) * r], [s.c[0], 0.85, s.c[1]]); } }
   }
   g.setBase(P[0], P[1]); HM.offAll();
   out.subjects = subj.map((s) => ({ id: s.id, inside: s.inside, c: s.c, f: s.f })); out.total = total; out.segs = seg.map((s) => [s[1], s[0]]); return out;
@@ -196,7 +205,7 @@ function filmPrep(o) {
     if (pk.scoutG && g.marla.root.parent === pk.scoutG) HM.track('marla_film', g.marla.root, { kind: 'woman', who: 'Marla (film)' });
     for (const id of ['bram', 'pip', 'oko']) { const ch = pk.chars[id]; if (ch && ch.ready && ch.root.parent) HM.track(id + '_film', ch.root, { kind: ch.kind, who: id[0].toUpperCase() + id.slice(1) + ' (film)', gait: ch.probe && ch.probe() }); }
     for (const r of pk.npcs || []) if (r.ch && r.ch.ready && r.ch.root.parent === r.n) HM.track('rec_' + r.p.role + '_film', r.ch.root, { kind: r.ch.kind, who: r.p.name + ' (' + r.p.role + ', film)', role: r.p.role, carry: !!(r.crate && r.crate.visible), gait: r.ch.probe && r.ch.probe() }); };
-  const shots = o.frames ? [P[3] + 2.5, P[3] + 4.5, P[3] + 6.5, P[3] + 8.5] : []; let si = 0, lab = 0;
+  const shots = o.frames ? [P[3] + 5.5, P[3] + 7, P[3] + 8.5, P[3] + 10] : []; let si = 0, lab = 0;
   let nKeep = 0; const keepNow = () => Object.values(HM.traces).filter((x) => x.key.endsWith('_film') && x.root.parent).map((x) => x.root);
   window.__seg = { lateHide: true, scene: () => g.bview.group.parent || HM.scene(), keep: () => { const k = keepNow(); nKeep = k.length; return k; }, rehide: () => keepNow().length !== nKeep, caps: shots.map((x) => x - t0),
     input: () => { trackAll(); }, stop: () => g.state !== 'intro',

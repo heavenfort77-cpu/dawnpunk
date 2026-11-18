@@ -28,7 +28,8 @@ def cut(im, h):
     return im.resize((int(im.size[0] * h / im.size[1]), h), Image.LANCZOS)
 
 def key(label):
-    return re.sub(r'\s*\((film|street)\)', r' \1', label)
+    # the four hand pictures (idle, walking, firing, placing) share one row
+    return 'Player hands: idle, walking bob, firing, placing' if label.startswith('hands') else label
 
 def main():
     a = sys.argv[1:]; out = a[0]
@@ -38,13 +39,13 @@ def main():
     rows = []
     for _, fr in tiers:
         for lab, _ in fr:
-            if lab not in rows: rows.append(lab)
+            if key(lab) not in rows: rows.append(key(lab))
     H, PER, LW, PAD = 200, 4, 190, 6
     cells = {}
     for ti, (_, fr) in enumerate(tiers):
         for lab, im in fr:
-            cells.setdefault((ti, lab), [])
-            if len(cells[(ti, lab)]) < PER: cells[(ti, lab)].append(cut(im, H))
+            k = key(lab); cells.setdefault((ti, k), [])
+            if len(cells[(ti, k)]) < PER: cells[(ti, k)].append(cut(im, H))
     cw = max([c.size[0] for v in cells.values() for c in v] + [160])
     W = LW + len(tiers) * (PER * (cw + PAD) + 14)
     sheet = Image.new('RGB', (W, 34 + len(rows) * (H + PAD) + 8), (24, 26, 30))
