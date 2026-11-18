@@ -249,7 +249,7 @@ export function createPerson(cfg, key) {
       if (planted && !lk.on && !lk.slip) { if (lk.w > 0) lk.T.copy(lk.last); else lk.T.copy(fk); lk.on = true; lk.w = 1; lk.dy0 = null; }
       else if (!planted && lk.on) { lk.on = false; lk.rel = 0; lk.dy0 = lk.T.y - fk.y; }
       // a pivot step lets its foot go only once it is off the ground (eased over 0.05 to 0.95 of the step, while it is up), so it does not drag along the floor first
-      if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = st.stepU >= 0 && !planted ? Math.min(lk.w, 1 - sstep((st.stepU - 0.05) / 0.85)) : 1 - sstep(lk.rel / M.lockRelease); }
+      if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = st.stepU >= 0 && !planted ? Math.min(lk.w, 1 - sstep((st.stepU - 0.05) / 0.85)) : 1 - sstep(lk.rel / (st.walk ? M.lockRelease : M.reseat)); }
       if (lk.w <= 0) { tg.copy(fk); if (st.stepU >= 0 && lk.dy0 != null) tg.y = fk.y + lk.dy0 * (1 - sstep(st.stepU)); lk.last.copy(tg); legReach(th, ca, ft, tg, hinge[i], knee[i]); continue; }
       // a foot put down above the ground (a walk that stopped mid-step) settles onto it
       { const g = rw.y + footY[i] + 0.02; if (lk.on && lk.T.y > g) lk.T.y = g + (lk.T.y - g) * Math.exp(-dt * 12); } // (only a foot clearly above its standing height under the body, so a footbridge deck lifts it)
@@ -257,7 +257,9 @@ export function createPerson(cfg, key) {
       const gap = Math.hypot(lk.T.x - fk.x, lk.T.z - fk.z); if (gap > 1) { lk.on = false; lk.w = 0; lk.last.copy(fk); legReach(th, ca, ft, fk, hinge[i], knee[i]); continue; }
       // held where it was put down; walking, the heel rises with the leg over the end of the stance (heel off)
       // a foot being let go rises with the leg first (the leg's own lift, from the height it was held at, easing to the leg's height by the step's end), then moves over: lifted before it leaves its spot
-      tg.lerpVectors(fk, lk.T, lk.w); if (!lk.on) tg.y = st.stepU >= 0 && lk.dy0 != null ? fk.y + lk.dy0 * (1 - sstep(st.stepU)) : Math.max(tg.y, fk.y); tg.y += M.heelRise * (st.A / 0.45) * st.heel[i];
+      tg.lerpVectors(fk, lk.T, lk.w); if (!lk.on) tg.y = st.stepU >= 0 && lk.dy0 != null ? fk.y + lk.dy0 * (1 - sstep(st.stepU)) : Math.max(tg.y, fk.y);
+      // standing, a foot let go of its spot (pulled too far by the body) is set down again with a small lift, not slid over
+      if (!lk.on && !st.walk && st.stepU < 0) tg.y += M.reseatLift * Math.sin(Math.PI * Math.min(1, lk.rel / M.reseat)); tg.y += M.heelRise * (st.A / 0.45) * st.heel[i];
       th.getWorldPosition(hip); const far = hip.distanceTo(tg) > M.reachMax * (hip.distanceTo(ca.getWorldPosition(kn0)) + kn0.distanceTo(fk));
       if (lk.on && ((!st.walk && gap > M.lockSlip) || far)) { lk.on = false; lk.rel = 0; lk.slip = true; }
       lk.last.copy(tg); legReach(th, ca, ft, tg, hinge[i], knee[i]);
