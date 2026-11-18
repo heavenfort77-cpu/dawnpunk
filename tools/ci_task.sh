@@ -32,8 +32,12 @@ else
   exec 9>"$DST/.git/ci_run.lock"
   flock -w 900 9 || { echo "could not get the CI lock in 15 minutes"; exit 1; }
   [ -n "$SYNC" ] && CI_LOCK_HELD=1 bash "$DIR/ci_sync.sh" "Sync for task $NAME $(date -u +%Y-%m-%dT%H:%MZ)" >/dev/null
-  BEFORE=$(gh api "repos/$REPO/actions/workflows/task.yml/runs?per_page=30" --jq '[.workflow_runs[].id] | map(tostring) | join(",")')
-  gh api "repos/$REPO/actions/workflows/task.yml/dispatches" -f ref=main -f "inputs[name]=$NAME" -f "inputs[cmd]=$CMD" -f "inputs[out]=$OUT" -f "inputs[timeout]=$TMIN"
+  BEFORE=$(gh api "repos/$REPO/actions/workflows/task.yml/runs?per_page=30" --jq '[.workflow_runs[].id] | map(tostring) | join(",")' 2>/dev/null || true)
+  # right after a push GitHub can take a few seconds to see a changed workflow file: retry the dispatch
+  for t in 1 2 3 4 5 6; do
+    gh api "repos/$REPO/actions/workflows/task.yml/dispatches" -f ref=main -f "inputs[name]=$NAME" -f "inputs[cmd]=$CMD" -f "inputs[out]=$OUT" -f "inputs[timeout]=$TMIN" && break
+    [ "$t" = 6 ] && { echo "dispatch failed"; exit 1; }; sleep 10
+  done
   RID=
   for _ in $(seq 1 30); do
     sleep 5
