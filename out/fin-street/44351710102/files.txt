@@ -1,0 +1,3 @@
+shots/street_0.png 2274254
+shots/street_1.png 2275107
+shots/street_2.png 2284357
