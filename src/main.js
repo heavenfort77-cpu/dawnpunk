@@ -133,14 +133,16 @@ function buildTrim() { const T = CONFIG.trim, foot = new THREE.MeshLambertMateri
       const seg = (a, b2) => { if (b2 - a < 0.15) return; const o = new THREE.Mesh(new THREE.BoxGeometry(nx ? T.footOut * 2 : b2 - a, T.footH, nx ? b2 - a : T.footOut * 2), foot); o.position.set(nx ? nx * R : (a + b2) / 2, T.footH / 2, nz ? nz * R : (a + b2) / 2); o.castShadow = true; o.receiveShadow = true; hg.add(o); };
       for (const u of cuts) { seg(a0, u - CONFIG.openingHalf - 0.05); a0 = u + CONFIG.openingHalf + 0.05; } seg(a0, R + T.footOut);
       for (const s of [-1, 1]) { const o = new THREE.Mesh(wallGeo, em); o.scale.set(T.cornerW * (s > 0 ? -1 : 1), top, 1); const u = s * (R - T.cornerW / 2); o.position.set(nx ? nx * (R + 0.012) : u, top / 2, nz ? nz * (R + 0.012) : u); o.rotation.y = nx > 0 ? Math.PI / 2 : nx < 0 ? -Math.PI / 2 : nz > 0 ? 0 : Math.PI; if (nx) o.scale.x *= nx > 0 ? -1 : 1; if (nz < 0) o.scale.x *= -1; hg.add(o); } } } }
-function needWorld() { if (!world) { if (DESO.place && !run.desoPlaced) { placeSample(run, CONFIG); run.desoPlaced = true; } world = buildWorld(CONFIG, run); scene.add(world.g); applyRelief(world.g); buildGrounding(); buildTrim(); shadowT = 1.5; } renderer.shadowMap.needsUpdate = true; return world; } // the sun's shadows are static: drawn again only when the world is moved or its textures arrive
+// owner's rule (Nov 19): small props cast no shadow (CONFIG.lag.smallCaster: a piece whose bounding sphere is smaller than this radius, m)
+function noSmallCasters(root) { const R = CONFIG.lag.smallCaster, v = new THREE.Vector3(); root.updateMatrixWorld(true); root.traverse((o) => { if (!o.isMesh || !o.castShadow || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry) return; const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); if (g.boundingSphere && g.boundingSphere.radius * o.getWorldScale(v).x < R) o.castShadow = false; }); }
+function needWorld() { if (!world) { if (DESO.place && !run.desoPlaced) { placeSample(run, CONFIG); run.desoPlaced = true; } world = buildWorld(CONFIG, run); noSmallCasters(world.g); scene.add(world.g); applyRelief(world.g); buildGrounding(); buildTrim(); shadowT = 1.5; } renderer.shadowMap.needsUpdate = true; return world; } // the sun's shadows are static: drawn again only when the world is moved or its textures arrive
 let sim = null, state = 'menu', roomGroup = null, catG = null, catArm = null, camY = 1.6;
 const landAt = new Map(); // device id -> time its thrown pod lands: the device is drawn from then, growing in over CONFIG.hands.landGrow s
 let gMesh = new Map(), dMesh = new Map(), bpGroup = new THREE.Group(), bpParts = [], bpFlash = [];
 scene.add(bpGroup);
 
 // remove an object and free its GPU memory (geometries, materials, label textures); nothing here is shared between objects
-function drop(o) { if (!o) return; scene.remove(o); o.traverse((q) => { if (q.geometry && !(QUALITY === 'high' && q.geometry.userData.shared)) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { if (m.userData.shared) continue; if (m.map && !m.map.userData.shared) m.map.dispose(); m.dispose(); } }); } // shared prop materials and textures (props.js) stay loaded
+function drop(o) { if (!o) return; scene.remove(o); o.traverse((q) => { if (q.geometry && !(QUALITY === 'high' && q.geometry.userData.shared)) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { if (m.userData.shared) continue; for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && t.userData.shared)) t.dispose(); } m.dispose(); } }); } // shared prop materials and textures (props.js) stay loaded
 // ---- light and depth inside a house: klad-painted contact shadows under things and pools of light on the floor at every opening
 const depthTex = (k) => { const t = texLoad(k); t.colorSpace = THREE.SRGBColorSpace; t.userData.shared = true; return t; };
 let shadeMat = null, poolMat = null;
@@ -759,7 +761,7 @@ function enterBase(intro) { perfRest();
   if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   sky.mesh.visible = false; scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95);
   $('marla').textContent = ''; $('hs').textContent = ''; marlaT = 0; hsT = 0; $('bLeave').style.display = 'none'; $('time').style.color = '';
-  (bview.build(save), applyRelief(bview.group), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); bp = { x: 3, z: 7 }; yaw = 0; pitch = 0; camY = 1.6;
+  (bview.build(save), applyRelief(bview.group), noSmallCasters(bview.group), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); bp = { x: 3, z: 7 }; yaw = 0; pitch = 0; camY = 1.6;
   $('menu').style.display = 'none'; $('end').style.display = 'none'; $('scout').style.display = 'none'; $('qb').style.display = 'none';
   $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE';
   flash(intro || ('Dawn, day ' + save.day + '. Find Marla the Scout to go out on a collection run (last seen ' + B.scoutPos(save).hint + ').' + (save.day === 1 ? ' They say a lucky cat hides somewhere in the base.' : '')), 2);

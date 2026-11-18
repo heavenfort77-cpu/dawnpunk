@@ -83,6 +83,13 @@ export function detailDevice(root) {
       for (const ge of [detailDevice.edge, detailDevice.rib]) { const f = new THREE.Mesh(ge, cop); f.userData.hiDetail = 1; f.userData.keepGeo = 1; o.add(f); } }
     else if (kind === 'TubeGeometry' && P.path && P.radius > 0.006) { for (const t of [0, 1]) { const p = P.path.getPoint(t), d = P.path.getTangent(t), c = new THREE.Mesh(new THREE.CylinderGeometry(P.radius * 1.6, P.radius * 1.6, P.radius * 3, 10), cop); c.position.copy(p); c.quaternion.setFromUnitVectors(YAX, d); c.userData.hiDetail = 1; o.add(c); } } }
   root.traverse((q) => { if (q.isMesh && q.userData.hiDetail) { q.castShadow = true; q.receiveShadow = true; } });
+  // LAG FIX Nov 19: the detail pieces (bands, rivets, ribs, lips, end caps) of one part that share a material become ONE mesh on that part, so they still move with it
+  // (each rivet and band was its own draw call; the look is unchanged)
+  const byPart = new Map(); root.traverse((q) => { if (!q.isMesh || !q.userData.hiDetail || !q.parent || q.children.length || Array.isArray(q.material)) return; const k = q.parent.uuid + '|' + q.material.uuid; (byPart.get(k) || byPart.set(k, []).get(k)).push(q); });
+  for (const L of byPart.values()) { if (L.length < 2) continue; const geos = [];
+    for (const q of L) { q.updateMatrix(); const g = q.geometry.index ? q.geometry.toNonIndexed() : q.geometry.clone(); for (const a of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(a)) g.deleteAttribute(a); if (!g.attributes.uv || !g.attributes.normal) { g.dispose(); geos.length = 0; break; } g.applyMatrix4(q.matrix); geos.push(g); }
+    if (geos.length < 2) continue; const mg = mergeGeometries(geos, false); for (const g of geos) g.dispose(); if (!mg) continue;
+    const one = new THREE.Mesh(mg, L[0].material); one.userData.hiDetail = 1; one.castShadow = true; one.receiveShadow = true; const par = L[0].parent; for (const q of L) { par.remove(q); if (!q.userData.keepGeo) q.geometry.dispose(); } par.add(one); }
   return root;
 }
 

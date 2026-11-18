@@ -1,8 +1,10 @@
-# Lag fix (Nov 19): REAL frame rates on a real GPU. Runs tools/perfcheck.cjs with GPU=1 on a macOS runner (Apple GPU through the VM; Linux runners are software only)
-# at the four spots (hub, street, night house with Gloom, boss night). Started by tools/gpu_task.sh (or by hand). The perfcheck script always comes from main, so a
-# baseline commit is measured the same way. The log prints RENDERER, PERF (draw calls, triangles), FPS (steady frame rate after a settle) and PASS/FAIL lines.
+# Lag fix (Nov 19): REAL frame rates on a real GPU. tools/perfcheck.cjs with GPU=1 on macOS runners (Apple GPU through the VM; Linux runners are software only),
+# as a MATRIX: one job per commit x tier x spot, all in parallel (a round takes one job's time). The perfcheck script always comes from main, so older commits
+# (a baseline, or each commit of a regression hunt) are measured the same way. Started by tools/gpu_task.sh (or by hand).
+# Each job's log prints RENDERER, PERF (draw calls, triangles), FPS (steady frame rate after a settle), BREAK (top 20 by draws and triangles; brk=1),
+# PROFILE (top 15 functions by self time over 5 s, night house and boss; prof=1, unminified build) and PASS/FAIL lines.
 name: perfgpu
-run-name: "perfgpu ${{ inputs.tiers }} ${{ inputs.spots }} @ ${{ inputs.ref }} ${{ inputs.tag }}"
+run-name: "perfgpu ${{ inputs.refs }} | ${{ inputs.tiers }} | ${{ inputs.spots }} ${{ inputs.tag }}"
 
 on:
   workflow_dispatch:
@@ -11,8 +13,8 @@ on:
         description: "Runner image"
         type: string
         default: macos-15
-      ref:
-        description: "Commit or branch to build"
+      refs:
+        description: "Commits or branches to build, comma list (one job per commit x tier x spot)"
         type: string
         default: main
       tiers:
@@ -32,7 +34,11 @@ on:
         type: string
         default: "6"
       brk:
-        description: "1 = also print what the draws and triangles are made of (perfcheck BREAK)"
+        description: "1 = also print what the draws and triangles are made of"
+        type: string
+        default: ""
+      prof:
+        description: "1 = CPU profile (night house, boss) on an unminified build"
         type: string
         default: ""
       tag:
@@ -44,13 +50,38 @@ permissions:
   contents: read
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      refs: ${{ steps.m.outputs.refs }}
+      tiers: ${{ steps.m.outputs.tiers }}
+      spots: ${{ steps.m.outputs.spots }}
+    steps:
+      - id: m
+        shell: bash
+        env:
+          REFS: ${{ inputs.refs }}
+          TIERS: ${{ inputs.tiers }}
+          SPOTS: ${{ inputs.spots }}
+        run: |
+          j() { python3 -c 'import json,sys; print(json.dumps([x.strip() for x in sys.argv[1].split(",") if x.strip()]))' "$1"; }
+          echo "refs=$(j "$REFS")" >> "$GITHUB_OUTPUT"; echo "tiers=$(j "$TIERS")" >> "$GITHUB_OUTPUT"; echo "spots=$(j "$SPOTS")" >> "$GITHUB_OUTPUT"
   probe:
+    needs: plan
     runs-on: ${{ inputs.os }}
-    timeout-minutes: 60
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        ref: ${{ fromJSON(needs.plan.outputs.refs) }}
+        tier: ${{ fromJSON(needs.plan.outputs.tiers) }}
+        spot: ${{ fromJSON(needs.plan.outputs.spots) }}
+    name: "${{ matrix.ref }} ${{ matrix.tier }} ${{ matrix.spot }}"
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ matrix.ref }}
       - name: Use main's perfcheck script
         shell: bash
         run: |
@@ -60,14 +91,20 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --no-audit --no-fund
-      - run: node build.mjs
+      - name: Build
+        shell: bash
+        run: if [ -n "${{ inputs.prof }}" ]; then MINIFY=0 node build.mjs; else node build.mjs; fi
       - run: npm install --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install chromium
       - name: Measure
         shell: bash
         env:
           GPU: "1"
-          SPOTS: ${{ inputs.spots }}
+          SPOTS: ${{ matrix.spot }}
           SECS: ${{ inputs.secs }}
           SETTLE: ${{ inputs.settle }}
           BREAK: ${{ inputs.brk }}
-        run: node tools/perfcheck.cjs "${{ inputs.tiers }}" 2>&1 | grep -E "RENDERER|PERF|FPS|PASS|FAIL|BREAK|^  |INFO (dist|.*downloaded|.*page errors|Gloom present|boss view)" || true
+          PROFILE: ${{ inputs.prof }}
+          NOEXTRA: ${{ matrix.spot != 'hub' && '1' || '' }}
+        run: |
+          echo "JOB ref=${{ matrix.ref }} tier=${{ matrix.tier }} spot=${{ matrix.spot }}"
+          node tools/perfcheck.cjs "${{ matrix.tier }}" 2>&1 | grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^BREAK|^PROFILE|^  |^ BY|INFO (dist|.*downloaded|.*page errors|Gloom present|boss view)" || true

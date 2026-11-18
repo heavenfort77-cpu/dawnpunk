@@ -4,7 +4,8 @@ import { execFileSync } from 'child_process';
 // guard: a // comment typed into the middle of a one-line statement silently removes the code after it; refuse to build if any live source file has one
 { const live = fs.readdirSync('src').filter(f => f.endsWith('.js') && !/_batch\d+|_before_|_sample|_plain|_backup/.test(f)).map(f => 'src/' + f);
   try { execFileSync('python3', ['tools/commentcheck.py', ...live], { stdio: 'pipe' }); } catch (e) { console.error(String(e.stdout)); process.exit(1); } }
-const r = await build({ entryPoints: ['src/main.js'], bundle: true, minify: true, format: 'iife', write: false, target: 'es2019' });
+// MINIFY=0 (the GPU runner's CPU profile, .github/workflows/perfgpu.yml): an unminified build, so the profile names the game's own functions
+const r = await build({ entryPoints: ['src/main.js'], bundle: true, minify: process.env.MINIFY !== '0', format: 'iife', write: false, target: 'es2019' });
 const js = r.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const html = fs.readFileSync('index.template.html', 'utf8').replace('/*SCRIPT*/', () => js);
 fs.mkdirSync('dist', { recursive: true });

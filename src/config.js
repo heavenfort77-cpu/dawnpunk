@@ -517,7 +517,7 @@ export const CONFIG = {
     // grade and the physically based surfaces stay); lights: machine screen lights at night; scenery: fewer grass blades and leaves, grass drawn to a shorter distance, fewer far trees
     // and sunflowers (high keeps the full counts)
     medium: { pixelRatio: 1.25, aniso: 4, reliefAniso: 4, lights: 2, fx: { ao: 0 },
-      scenery: { grass: { blades: 10, bladesFar: 4, near: 12, far: 36, density: 3.0 }, foliage: { cover: 0.8 }, base: { sunflowers: 500, farTrees: 300, outTrees: 24 }, street: { farTrees: 300, near: 14, far: 40, shrubs: 50 } } },
+      scenery: { grass: { blades: 10, bladesFar: 4, near: 12, far: 36, density: 3.0 }, foliage: { cover: 0.8 }, base: { sunflowers: 500, farTrees: 300, outTrees: 24 }, street: { farTrees: 300, near: 14, far: 40, shrubs: 50, cell: 12 } } },
     low: { pixelRatio: 1.5, smooth: true, shadowMap: 2048, baseShadowMap: 2048, shadowSoft: 1, aniso: 4, reliefAniso: 1, hiTex: false, lights: 3, grassMore: 0, leafMore: 0, skyDetail: 4, round: 1, roundMax: 64, machineTris: 9000, fx: null, pbr: null, gloom: null, car: null, house: null, street: null, base: null, density: null, scenery: null } }, // gloom: null = phones keep their own machine builders (no tested low setting of the master builder yet)
   // DESOLATE SAMPLE (2026-11-15; not approved, off by default): the old world left alone for years, on ONE house, ONE car, the Walker and the stretch of street in front of them.
   // ?look=desolate turns it on (restyle + place); ?desolate=place only moves the sample car and a sleeping Walker into the same spots in today's look (for the before pictures). src/desolate.js, gloomkit.js walkerDesolate.
@@ -1137,7 +1137,7 @@ export const CONFIG = {
     // While it shows the game is held still (no game time passes) and the heavy work is done: the night's Gloom and boss models are waited for (at most maxWait s), their maps
     // uploaded, every shader of the scene built, and the sun shadow map drawn once. on: the switch; min: shortest time each card shows (s); titles: the card's line per change
     // mergeCell: the street's static pieces are merged per material and per square cell of this size (m) on the desktop builds (src/world.js), so out-of-view cells are culled
-    mergeCell: 24,
+    mergeCell: 16,
     // mergeSplitVerts: only a material with at least this many vertices in the whole street is split by cell; smaller ones stay one mesh
     mergeSplitVerts: 30000,
     // farPad: the camera's far plane follows the fog: fog end plus this (m), never past the camera's own 90 m. Beyond the fog's end everything is pure fog colour, so
@@ -1151,6 +1151,8 @@ export const CONFIG = {
     // (gutters, sills, the yard just outside); roof = metres above the top floor; pad = metres added round each opening; doorway = standing this close to an opening's
     // plane (m), everything beyond it counts as seen
     nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35 },
+    // smallCaster: a static piece smaller than this (bounding sphere radius, m) casts no sun shadow (owner's rule: small props castShadow off; their shadows were a few pixels)
+    smallCaster: 0.12,
     // dtMax: longest game step one frame may take (s; was 0.1): after a long frame the game slows for a moment instead of jumping (all tiers; the checks set their own)
     dtMax: 0.05,
     card: { on: true, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' } },
