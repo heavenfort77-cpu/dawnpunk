@@ -1,0 +1,10 @@
+mt/desk/01_start_screen.jpg 15728
+mt/desk/02_film.jpg 46482
+mt/desk/03_base_wake_jobcard.jpg 84825
+mt/desk/04_base_after_card.jpg 84818
+mt/desk/05_base_at_marla.jpg 100628
+mt/desk/06_marla_dialog_day1.jpg 22590
+mt/desk/07_street_start.jpg 108090
+mt/desk/08_street_sleeper.jpg 106186
+mt/desk/log.json 142
+mt/desk/run.txt 4428

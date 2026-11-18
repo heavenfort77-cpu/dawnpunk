@@ -1,0 +1,39 @@
+17.7 STAGE start
+27.6 SNAP start_screen {"count":"","time":"","bars":" | ","buttons":[]}
+50.2 ACT clicked #enter (the begin button)
+71.2 STAGE film
+635.4 SNAP film {"count":"","time":"","bars":" | ","buttons":[]}
+2030.1 NOTE watched the opening film for 57.5 game s
+2055.2 STAGE base day 1: waking
+2181.5 SNAP base_wake_jobcard {"csay":"Click to start · E to talk","bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","count":"","time":"","bars":" | ","buttons":["bPause:||"]}
+2274.1 NOTE the job card was gone before the player finished reading (it closes by itself after 15 real seconds)
+2400.2 SNAP base_after_card {"csay":"Click to start · E to talk","bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","count":"","time":"","bars":" | ","buttons":["bPause:||"]}
+2425.3 ACT clicked the game (Click to start)
+2493.2 NOTE waking at -0.6,-9.3; Marla stands 2.5 m away
+2501.6 STAGE base day 1: to Marla
+2690.8 SNAP base_at_marla {"csay":"E to talk to Marla","quest":"Quests: read the board by the Workshop / +1 more (Tab)","bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","count":"","time":"","bars":" | ","buttons":["bPause:||"]}
+2711.9 ACT pressed KeyE (talk to Marla)
+2782.0 NOTE E/USE did not open Marla's dialog at the first try; last lines: ["jobCard: Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it (Enter)","csay: Click to start · E to talk","csay: E to talk to Marla"]
+2885.3 ACT pressed KeyE (talk to Marla, again)
+2950.1 STAGE base day 1: Marla dialog
+3014.0 SNAP marla_dialog_day1 {"bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","scout":"Marla, the Scout / \"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run","count":"","time":"","bars":" | ","buttons":["bPause:||"]}
+3125.3 ACT clicked #go (Ride out)
+3151.1 STAGE street day
+3291.6 SNAP street_start {"marla":"Six houses, Potts. Walk into a door to loot it.","dkeys":"Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause","count":"Houses 0/6 · Food 2 · Essentials 0 · Walk speed 100%","time":"DAYLIGHT LEFT / 11h 30m","bars":"HEALTH | SUN 11","buttons":["bPause:||","bDusk:HOLD: start night"]}
+3447.2 ACT walking toward the nearest sleeping machine (lurcher, 15 m) to see what the game says
+4331.3 SHORTCUT could not reach a sleeping machine in 25 game s; teleported
+4508.1 SNAP street_sleeper {"mlook":"Click to look with the mouse · Esc frees it","dkeys":"Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause","count":"Houses 0/6 · Food 2 · Essentials 0 · Walk speed 100%","time":"DAYLIGHT LEFT / 7h 50m","bars":"HEALTH | SUN 18","buttons":["bPause:||","bDusk:HOLD: start night"]}
+4516.1 ACT walking to the nearest door (house 4)
+6176.8 SHORTCUT could not reach house 4 (outside its door) in 50 game s; teleported
+DRIVER ERROR page.evaluate: Target page, context or browser has been closed
+    at ev (/home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:48:27)
+    at act (/home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:51:50)
+    at shortcut (/home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:52:27)
+    at walkTo (/home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:107:51)
+    at async goInto (/home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:159:49)
+    at async /home/runner/work/dawnpunk/dawnpunk/tools/marlateach.cjs:167:5
+shot fail Error: page.screenshot: Target page, context or browser has been closed
+
+TRANSCRIPT (game s | wall s | stage | source | text)
+frames, wall s, game s: null
+NO PAGE ERRORS
