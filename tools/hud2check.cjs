@@ -35,6 +35,7 @@ async function titlePart(p, label, sizes) {
   for (const [w, h] of sizes) { await p.setViewportSize({ width: w, height: h }); await p.waitForTimeout(400); await over(p, TITLE_IDS, label + ' title ' + w + 'x' + h); }
 }
 async function buttons(p, b) {
+  // CI Nov 18: window.__game.cfg is now the CONFIG object itself, not a function (read either way below)
   // CI Nov 18: in the current game New game (#reset) and Watch the opening (#watch) sit in the pause menu, and the title's Look / Graphics buttons (#lookT, #gfxT) are hidden
   // (the Graphics switch is the pause menu's #bGfx, tested by tools/qualitycheck.cjs). So the two buttons are tried from the pause menu in the base; the old title test is in hud2check_before_ci.cjs.
   console.log('INFO title Look / Graphics buttons: hidden in the current game (display:none), not tested here');
@@ -53,7 +54,7 @@ async function buttons(p, b) {
     await p.addInitScript(() => { window.__dtMax = 0.6; window.__fakeLock = false; }); await gotoGame(p);
     ok(await p.evaluate(() => matchMedia('(pointer: fine)').matches), 'desktop page has a fine pointer');
     await titlePart(p, 'desktop', [[1280, 720], [1920, 1080], [1280, 720]]); await buttons(p, b);
-    const C = await p.evaluate(() => { const c = window.__game.cfg(); return { d: c.dormant, clock: c.clock }; });
+    const C = await p.evaluate(() => { const g = window.__game, c = typeof g.cfg === 'function' ? g.cfg() : g.cfg; return { d: c.dormant, clock: c.clock }; });
     await p.evaluate(() => { const g = window.__game; g.enterBase(); document.getElementById('selRing').value = '0'; g.startRun(0); }); await wait(p, 2500);
     let tx = await clockText(p); ok(DAY.test(tx), 'desktop street by day: clock in hours "' + tx + '"');
     // aim at a sleeping machine from 5 m
