@@ -55,11 +55,11 @@ gh api "repos/$REPO/actions/runs/$RID" --jq '"wall time: \((((.updated_at | from
 # the table is cut out of the summary job's log (artifact zips are served from blob storage, which the dev machine's proxy refuses)
 JID=$(gh api "repos/$REPO/actions/runs/$RID/jobs?per_page=100" --jq '.jobs[] | select(.name == "summary") | .id')
 TABLE=
-[ -n "$JID" ] && TABLE=$(gh api "repos/$REPO/actions/jobs/$JID/logs" 2>/dev/null | sed -E 's/^[0-9T:.-]+Z //' | sed -n '/^=== SUMMARY ===/,/^=== END SUMMARY ===/p' | sed '1d;$d')
+[ -n "$JID" ] && TABLE=$(gh api "repos/$REPO/actions/jobs/$JID/logs" 2>/dev/null | sed -E 's/^[0-9T:.-]+Z //' | sed -n '/^=== SUMMARY ===/,/^=== END SUMMARY ===/p' | sed '1d;$d' || true)
 if [ -z "$TABLE" ]; then
   echo "no summary table in the summary job's log; per-check lines from each check job:"
-  for J in $(gh api "repos/$REPO/actions/runs/$RID/jobs?per_page=100" --jq '.jobs[] | select(.name | test("^(logic|desktop|phone) ")) | .id'); do
-    gh api "repos/$REPO/actions/jobs/$J/logs" 2>/dev/null | sed -E 's/^[0-9T:.-]+Z //' | grep -E '^== [^:]+: [0-9]+ PASS|^\s*FAIL' | cut -c1-300
+  for J in $(gh api "repos/$REPO/actions/runs/$RID/jobs?per_page=100" --jq '.jobs[] | select(.name | test("^(logic|desktop|phone)( |$)")) | .id'); do
+    gh api "repos/$REPO/actions/jobs/$J/logs" 2>/dev/null | sed -E 's/^[0-9T:.-]+Z //' | grep -E '^== [^:]+: [0-9]+ PASS|^\s*FAIL' | cut -c1-300 || true
   done
   exit 1
 fi
