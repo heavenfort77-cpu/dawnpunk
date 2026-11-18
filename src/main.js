@@ -1078,24 +1078,24 @@ function sunPop(n) { const el = $('sunpop'), b = $('enb').getBoundingClientRect(
 // the first meal of a run: Marla reminds you it is the village's food (owner Nov 17 23:58); not during the night-1 drill, whose own lines run then
 function supperLine() { const o = run || sim; if (!o || o.supperTold || drill) return; o.supperTold = true; H2.say('marla', B.MARLA_LINES.supper[0], CONFIG.ui.centre.marla, CONFIG.village.supperSecs); }
 // AIM PER TIER (owner Nov 18 12:11: "desktop must be perfect; phone model allows more leeway on hit"): bots and tests use CONFIG.cannon.shapes.low. When you fire, the machines near the aim
-// line are measured as drawn this frame (their parts; arms and turning torsos move): on desktop the shot hits exactly those parts; on phones the lenient .low oval also hits, and the
-// drawn parts decide head shots on both. CONFIG.cannon.live.
+// line are ray-cast as drawn this frame (their triangles; arms and turning torsos move): on desktop the shot hits exactly what is drawn; on phones the lenient .low oval also hits, and the
+// drawn head decides head shots on both. CONFIG.cannon.live.
 setShotTier(QUALITY);
-// one drawn machine as its parts: each visible solid mesh's own box, with the inverse of its world matrix (the sim tests the shot in each part's own frame), and whether it is a head part.
-// Head parts: the meshes under the builder's head nodes (each Ticks unit has its own screen); when they hold most of the machine (the Warden's turning torso), the parts in its top live.headTop m
-const LVM = new THREE.Matrix4();
-function drawnShape(m) { const L = CONFIG.cannon.live, parts = []; let hv = 0, av = 0, top = -1e9; const headSet = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => headSet.add(q));
-  m.updateMatrixWorld(true); m.traverse((q) => { if (!q.isMesh || q.userData.blob) return; let v = q; while (v) { if (!v.visible) return; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; if (mt && (mt.blending === THREE.AdditiveBlending || (mt.transparent && (mt.opacity < L.minOpacity || q.geometry.type === 'PlaneGeometry')))) return;
-    const gm = q.geometry; if (!gm || !gm.attributes || !gm.attributes.position) return; if (!gm.boundingBox) gm.computeBoundingBox(); const b = gm.boundingBox, e = q.matrixWorld.elements;
-    const cy = e[1] * (b.min.x + b.max.x) / 2 + e[5] * (b.min.y + b.max.y) / 2 + e[9] * (b.min.z + b.max.z) / 2 + e[13] - m.position.y, ty = Math.max(...[b.min.y, b.max.y].map((y) => e[5] * y + e[13])) - m.position.y;
-    const vol = Math.abs((b.max.x - b.min.x) * (b.max.y - b.min.y) * (b.max.z - b.min.z) * LVM.copy(q.matrixWorld).determinant()); av += vol; if (headSet.has(q)) hv += vol; if (ty > top) top = ty;
-    LVM.copy(q.matrixWorld).invert(); parts.push({ inv: Array.from(LVM.elements), box: [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z], head: headSet.has(q), cy }); });
-  if (!parts.length) return null; const torso = hv > L.headShare * av;
-  for (const P of parts) if (torso) P.head = P.cy >= top - L.headTop;
-  return { parts, floor: m.position.y }; }
-// the drawn parts of the machines near the aim line, by Gloom id (both tiers: desktop hits on them alone, phones use them for head shots and as extra body; src/sim.js fireCannon)
+// one drawn machine, hit by the aimed shot along the sim's own aim (eye, player yaw and pitch): the first of its visible solid triangles the shot meets, above the floor it stands on.
+// Returns { t: distance along the aim measured flat (m, as the sim measures), head: that triangle belongs to a head part } or null for a miss. Head parts: the meshes under the
+// builder's head nodes (each Ticks unit has its own screen); when they hold most of the machine (the Warden's turning torso), whatever is hit in its top live.headTop m
+const LVR = new THREE.Raycaster(), LVO = new THREE.Vector3(), LVD = new THREE.Vector3(), LVB = new THREE.Box3();
+function drawnHit(m, P) { const L = CONFIG.cannon.live, headSet = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => headSet.add(q));
+  const solid = (q) => { if (!q.isMesh || q.isSprite || q.userData.blob) return false; let v = q; while (v) { if (!v.visible) return false; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; return !(mt && (mt.blending === THREE.AdditiveBlending || (mt.transparent && (mt.opacity < L.minOpacity || q.geometry.type === 'PlaneGeometry')))); };
+  m.updateMatrixWorld(true); let hv = 0, av = 0, top = -1e9;
+  m.traverse((q) => { if (!solid(q)) return; const gm = q.geometry; if (!gm.boundingBox) gm.computeBoundingBox(); LVB.copy(gm.boundingBox).applyMatrix4(q.matrixWorld); const v = (LVB.max.x - LVB.min.x) * (LVB.max.y - LVB.min.y) * (LVB.max.z - LVB.min.z); av += v; if (headSet.has(q)) hv += v; if (LVB.max.y > top) top = LVB.max.y; });
+  const torso = hv > L.headShare * av, cp = Math.cos(P.pitch || 0);
+  LVO.set(P.x, P.floor * FH + CONFIG.cannon.eye, P.z); LVD.set(-Math.sin(P.yaw) * cp, Math.sin(P.pitch || 0), -Math.cos(P.yaw) * cp); LVR.set(LVO, LVD); LVR.camera = cam; LVR.near = 0; LVR.far = CONFIG.cannon.range / Math.max(0.05, cp);
+  for (const h of LVR.intersectObject(m, true)) { if (!solid(h.object) || h.point.y < m.position.y - 0.01) continue; return { t: h.distance * cp, head: torso ? h.point.y >= top - L.headTop : headSet.has(h.object) }; }
+  return null; }
+// the aimed shot against the machines near the aim line as drawn, by Gloom id (both tiers: desktop hits on it alone, phones use it for head shots and as extra body; src/sim.js fireCannon)
 function liveShapes() { const L = CONFIG.cannon.live; if (!L.on || !sim) return null; const P = sim.player, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), out = {};
-  for (const g of sim.gloom) { const dx = g.x - P.x, dz = g.z - P.z, d = Math.hypot(dx, dz); if (d > CONFIG.cannon.range + 3 || (d > L.near && (dx * fx + dz * fz) / d < L.cos)) continue; const m = gMesh.get(g.id); if (m) { const S = drawnShape(m); if (S) out[g.id] = S; } } return out; }
+  for (const g of sim.gloom) { const dx = g.x - P.x, dz = g.z - P.z, d = Math.hypot(dx, dz); if (d > CONFIG.cannon.range + 3 || (d > L.near && (dx * fx + dz * fz) / d < L.cos)) continue; const m = gMesh.get(g.id); if (m) out[g.id] = { ray: drawnHit(m, P) }; } return out; }
 function doFire(charged) { if (!sim && run && state === 'play') { const i = aimedDormant(CONFIG.dormant.shotCos, CONFIG.dormant.shotReach); if (i >= 0) { hands.fire(); sfxShot(); wakeDormant(i, 'shot'); } return; } if (sim && sim.player.climb) { flash("can't shoot while climbing"); return; } if (charged) { if (sim && sim.fireCannon('ray', 1, true, liveShapes())) { hands.fire(); sfxShot(); drillDid('charge'); const p = sim.player; tracer(p.x, p.z, p.x - Math.sin(p.yaw) * 14, p.z - Math.cos(p.yaw) * 14, 1.3, p.floor, 0xffe08a); if (!save || !save.toldCharge) { if (save) { save.toldCharge = true; persist(); } marlaHint('Charged shot: it goes through every one in the line. It drinks three shots of Sun.'); } } else if (sim && sim.phase === 'night') flash('not enough Sun for a charged shot (' + CONFIG.cannon.cost * CONFIG.cannon.charge.cost + ' Sun)', true); return; } if (sim && sim.fireCannon('ray', 1, false, liveShapes())) { hands.fire(); sfxShot(); drillDid('shoot'); const p = sim.player; tracer(p.x, p.z, p.x - Math.sin(p.yaw) * 14, p.z - Math.cos(p.yaw) * 14, 1.3, p.floor, 0x7fd8ff); } }
 // the devices you carry tonight: your loadout on a run, the first three in test mode
 const slotKinds = () => (fromBase && save ? B.loadout(CONFIG, save) : CONFIG.loadout.first);
