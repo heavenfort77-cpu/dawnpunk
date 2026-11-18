@@ -35,13 +35,13 @@ async function titlePart(p, label, sizes) {
   for (const [w, h] of sizes) { await p.setViewportSize({ width: w, height: h }); await p.waitForTimeout(400); await over(p, TITLE_IDS, label + ' title ' + w + 'x' + h); }
 }
 async function buttons(p, b) {
-  await p.click('#reset'); ok(/Tap again/.test(await p.evaluate(() => document.getElementById('reset').textContent)), 'title: New game asks to tap again');
-  // Look and Graphics reload the page with the other setting: each is tried in its own throwaway browser context (its saved choice must not leak), and the reload is seen as it starts
-  for (const id of ['#lookT', '#gfxT']) { const c2 = await b.newContext({ viewport: { width: 1280, height: 720 } }), q = await c2.newPage(); q.setDefaultTimeout(240000); await q.addInitScript(() => { window.__dtMax = 0.6; }); await gotoGame(q);
-    let got = ''; q.on('request', (r) => { if (r.isNavigationRequest() && !got) got = r.url(); });
-    await q.click(id, { noWaitAfter: true, timeout: 120000 }); for (let k = 0; k < 120 && !got; k++) await new Promise((r) => setTimeout(r, 500)); const u = got; const kept = await q.evaluate(() => [localStorage.getItem('dawnpunk.look'), localStorage.getItem('dawnpunk.quality')]).catch(() => ['?', '?']);
-    ok(!!u && (id === '#lookT' ? !!kept[0] : /quality=/.test(u)), 'title: ' + id + ' switches (saves the choice and reloads: ' + u.split('/').pop().slice(0, 60) + ')'); await c2.close(); }
-  await p.click('#watch'); await wait(p, 1500); ok(await p.evaluate(() => getComputedStyle(document.getElementById('cine')).display !== 'none'), 'title: Watch the opening plays the opening');
+  // CI Nov 18: in the current game New game (#reset) and Watch the opening (#watch) sit in the pause menu, and the title's Look / Graphics buttons (#lookT, #gfxT) are hidden
+  // (the Graphics switch is the pause menu's #bGfx, tested by tools/qualitycheck.cjs). So the two buttons are tried from the pause menu in the base; the old title test is in hud2check_before_ci.cjs.
+  console.log('INFO title Look / Graphics buttons: hidden in the current game (display:none), not tested here');
+  await p.evaluate(() => window.__game.enterBase()); await wait(p, 1500);
+  await p.evaluate(() => document.getElementById('bPause').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }))); await wait(p, 800);
+  await p.click('#reset'); ok(/Tap again/.test(await p.evaluate(() => document.getElementById('reset').textContent)), 'pause menu: New game asks to tap again');
+  await p.click('#watch'); await wait(p, 1500); ok(await p.evaluate(() => getComputedStyle(document.getElementById('cine')).display !== 'none'), 'pause menu: Watch the opening plays the opening');
   await p.click('#cineSkip').catch(() => {}); await wait(p, 800); await gotoGame(p);
   await p.click('#enter'); await wait(p, 1500); ok(await p.evaluate(() => document.getElementById('menu').style.display === 'none' && document.getElementById('hud').style.display === 'block'), 'title: Enter the base enters the base');
 }

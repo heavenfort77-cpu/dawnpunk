@@ -10,7 +10,7 @@
     { "name": "test.js", "script": "test.js", "args": [], "tier": "logic", "quality": "node", "timeout": 60, "job": "logic" },
 
     { "name": "keycheck", "script": "tools/keycheck.cjs", "args": ["{out}/keys.png"], "tier": "logic", "quality": "auto", "timeout": 25 },
-    { "name": "mousecheck", "script": "tools/mousecheck.cjs", "args": ["high"], "tier": "logic", "quality": "high", "timeout": 25, "note": "its own default tier: on low the desktop mouse hint line fails (first CI run)" },
+    { "name": "mousecheck", "script": "tools/mousecheck.cjs", "args": ["low"], "tier": "logic", "quality": "low", "timeout": 25, "note": "the mouse-hint FAIL is the same on high (CI Nov 18), so it is a game result; low is 8x faster" },
     { "name": "solarcheck", "script": "tools/_low_solarcheck.cjs", "args": [], "tier": "logic", "quality": "low", "timeout": 20 },
     { "name": "hintscheck", "script": "tools/hintscheck.cjs", "args": [], "tier": "logic", "quality": "low", "timeout": 20 },
     { "name": "marlatalkcheck", "script": "tools/marlatalkcheck.cjs", "args": [], "tier": "logic", "quality": "low", "timeout": 20 },
