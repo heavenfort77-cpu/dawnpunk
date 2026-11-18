@@ -8,10 +8,10 @@ const path = require('path');
   const page = process.argv[2] || path.resolve(__dirname, '../dist/index_single.html'), tier = process.argv[3] === 'high' ? 'high' : 'low';
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] }); const out = [], errs = [];
   const add = (n, ok) => { out.push([n, !!ok]); console.log((ok ? 'PASS ' : 'FAIL ') + n); };
-  const open = async (opts) => { const ctx = await b.newContext(opts); const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e))); await p.addInitScript(() => { window.__dtMax = 0.5; window.__gt = 0; let l = 0, fs = 0; const f = (now) => { if (l) { const r = (now - l) / 1000; window.__gt += Math.min(window.__dtMax || 0.1, r); fs = fs ? fs * 0.7 + r * 0.3 : r; } l = now; requestAnimationFrame(f); }; requestAnimationFrame(f);
+  const open = async (opts, q = '') => { const ctx = await b.newContext(opts); const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e))); await p.addInitScript(() => { window.__dtMax = 0.5; window.__gt = 0; let l = 0, fs = 0; const f = (now) => { if (l) { const r = (now - l) / 1000; window.__gt += Math.min(window.__dtMax || 0.1, r); fs = fs ? fs * 0.7 + r * 0.3 : r; } l = now; requestAnimationFrame(f); }; requestAnimationFrame(f);
       // a clip plays at game speed: on a runner slower than __dtMax per frame, buffer sources (her clips) play slower by game dt / real frame time, so a clip lasts as many frames as it would at full speed (rate 1 on a normal machine)
       const st = AudioBufferSourceNode.prototype.start; AudioBufferSourceNode.prototype.start = function (...a) { if (fs) this.playbackRate.value = Math.max(0.02, Math.min(1, (window.__dtMax || 0.1) / fs)); return st.apply(this, a); }; });
-    await p.goto('file://' + page + '?quality=' + tier + '&seed=777', { timeout: 300000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 240000 });
+    await p.goto('file://' + page + '?quality=' + tier + '&seed=777' + q, { timeout: 300000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 240000 });
     await p.evaluate(() => localStorage.clear()); return { ctx, p }; };
   const mv = (p) => p.evaluate(() => window.__game.marlaVoice());
   // every wait is in GAME time (window.__gt adds up each frame's dt as the game's frame() does, capped by __dtMax), not wall time: the slow software-GL runner draws a frame every few seconds
@@ -25,7 +25,10 @@ const path = require('path');
     return { text: e.textContent, inView: r.width > 0 && r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight, nextToMusic: Math.abs(r.top - q.top) < 2 * q.height + 30, over }; });
   const HEAVY = 'Heavy pack, Potts. You are slowing down.', GREEN = 'Green bar over a door: loot inside. Red: empty.', BAR = 'That bar is your Sun. Your hand drinks it in.';
   // ---- DESKTOP
-  { const { ctx, p } = await open({ viewport: { width: 1280, height: 720 } });
+  // film=1: the base shows the one-time "Your job" card as for a real day-1 player (a ?quality address leaves it out otherwise)
+  { const { ctx, p } = await open({ viewport: { width: 1280, height: 720 } }, '&film=1');
+    const jc = await p.evaluate(() => { const g = window.__game, had = !!document.getElementById('jobCard'); g.enterBase(); const up = !!document.getElementById('jobCard'); document.getElementById('selRing').value = '0'; g.startRun(0); return { had, up, gone: !document.getElementById('jobCard'), seen: !!g.save.jobCard }; });
+    add('desktop ride-out on day 1: the base\'s "Your job" card closes when the run starts and is kept as seen (up in the base ' + jc.up + ', gone ' + jc.gone + ', seen ' + jc.seen + ')', !jc.had && jc.up && jc.gone && jc.seen);
     await p.evaluate(() => { const g = window.__game; g.enterBase(); g.save.nights = 1; }); await gwait(p, 1500);
     const b0 = await mv(p); await say(p, HEAVY); await gwait(p, 2500);
     const b1 = await mv(p); add('desktop base: no clip plays, not even for a run line\'s text or a base tip (count ' + b0.n + ' -> ' + b1.n + ', voice on ' + b1.on + ')', b1.n === b0.n && b1.on === true && !b1.playing);
@@ -47,7 +50,7 @@ const path = require('path');
     await say(p, GREEN); await gwait(p, 1500); const o3 = await mv(p); add('desktop: with Voice off no clip plays (count ' + of.n + ' -> ' + o3.n + ')', o3.n === of.n);
     await p.evaluate(() => document.getElementById('bVoice').click()); await say(p, BAR); const o4 = await waitMv(p, (v) => v.last === 'day_sun_bar' && v.n > o3.n, 4000);
     add('desktop: Voice on again plays the next line (' + o4.last + ', saved ' + (await p.evaluate(() => localStorage.getItem('solardg.voice'))) + ')', o4.last === 'day_sun_bar' && o4.n > o3.n && o4.on);
-    await night(p, 0); const d1 = await waitMv(p, (v) => /^drill_/.test(v.last), 30000); console.log('  dbg drill ' + JSON.stringify(await p.evaluate(() => [window.__gt, document.getElementById('marla').textContent, window.__game.drillInfo()])));
+    await night(p, 0); const d1 = await waitMv(p, (v) => /^drill_/.test(v.last), 30000);
     add('desktop night 1: the drill order plays the DESKTOP clip (' + d1.last + ': "' + d1.lastText + '")', d1.last === 'drill_shoot_desk' && d1.lastText === "One machine. Shoot it, Potts. Left click.");
     await p.evaluate(() => window.__game.enterBase()); await gwait(p, 1500); const e0 = await mv(p); await say(p, HEAVY); await gwait(p, 2500); const e1 = await mv(p);
     add('desktop: back in the base the clip is stopped and no line plays (count ' + e0.n + ' -> ' + e1.n + ', playing ' + e1.playing + ')', e1.n === e0.n && !e1.playing && !e0.playing);

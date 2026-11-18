@@ -627,6 +627,8 @@ function startRun() {
   $('msg').textContent = ''; flashT = 0;
   // a base line still on Marla's card (a base tip, said just before riding out) is cleared: it held back her first street line for the rest of its time, and base talk stays in the base
   $('marla').textContent = ''; marlaT = 0;
+  // the one-time "Your job" card belongs to the base: riding out closes it (kept as seen), else its priority hid Marla's first street line until it timed out
+  jobClose();
   sim = null; runT = 0; hintQ.length = 0; hintN = 0; state = 'play'; paused = false; hurtT = 0; $('pause').style.display = 'none';
   $('menu').style.display = 'none'; $('end').style.display = 'none'; $('hud').style.display = 'block'; $('bFire').textContent = 'FIRE';
   yaw = 0; pitch = 0; run.px = 0; run.pz = 0; skyK = 0; enterTown();
