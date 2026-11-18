@@ -36,7 +36,7 @@ function legReach(th, ca, ft, T, hinge, kn) {
   th.getWorldQuaternion(_qa); _n.copy(hinge).applyQuaternion(_qa).normalize(); _u.subVectors(_H, _K); _w.subVectors(_F, _K);
   const cr = _H.copy(_u).cross(_w), sn = _n.dot(cr), cur = Math.atan2(sn, _u.dot(_w)); if (Math.abs(sn) > 0.1 * a * b) kn.s = Math.sign(sn);
   const want = kn.s * Math.acos(clamp((a * a + b * b - d * d) / (2 * a * b), -1, 1)); _qb.setFromAxisAngle(_n, want - cur); turnWorld(ca, _qb.clone());
-  th.getWorldPosition(_H); ft.getWorldPosition(_F); if (globalThis.__legdbg) globalThis.__legdbg(ft.name, _H.toArray(), _F.toArray(), T.toArray(), d0, d, dm, cur, want);
+  th.getWorldPosition(_H); ft.getWorldPosition(_F);
   _u.subVectors(_F, _H).normalize(); _w.subVectors(T, _H).normalize(); turnWorld(th, new THREE.Quaternion().setFromUnitVectors(_u, _w));
   ft.parent.getWorldQuaternion(_qa); ft.quaternion.copy(_qa.invert().multiply(_qf)); ft.updateWorldMatrix(false, true);
 }
