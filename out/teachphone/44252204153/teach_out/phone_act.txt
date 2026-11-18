@@ -1,0 +1,111 @@
+0.0 === STAGE title
+0.0 shot teach_out/phone_01_title.jpg
+0.1 tap #enter
+3.3 === STAGE opening
+3.8 state after begin: intro true
+31.3 shot teach_out/phone_02_opening.jpg
+65.3 opening watched in 62 s real
+65.7 === STAGE base day 1: waking
+70.4 shot teach_out/phone_03_jobcard.jpg
+70.8 stand still 6 s (reading)
+77.6 tap #jobCard button
+83.8 shot teach_out/phone_04_wake.jpg
+84.2 stand still 4 s (reading)
+88.5 tap #bFire
+92.7 Marla dialog open after the first E/USE from where you wake: true
+93.1 === STAGE base day 1: Marla dialog
+93.1 stand still 4 s (reading)
+99.5 shot teach_out/phone_05_dialog.jpg
+100.3 tap #go
+104.3 === STAGE street day
+108.3 shot teach_out/phone_06_street.jpg
+108.5 stand still 8 s (reading)
+116.8 houses [{"i":0,"x":-51.975,"z":-6.450000000000001,"row":-1,"n":14,"L":2},{"i":1,"x":-3.2142857142857144,"z":-6.9,"row":-1,"n":12,"L":2},{"i":2,"x":3.0214285714285714,"z":7.3500000000000005,"row":1,"n":10,"L":2},{"i":3,"x":50.275,"z":7.575000000000001,"row":1,"n":9,"L":2},{"i":4,"x":43.8,"z":-6,"row":-1,"n":8,"L":1},{"i":5,"x":-44.59285714285714,"z":6.450000000000001,"row":1,"n":7,"L":1}] sleeping machines [[32.9,9.8],[24.5,5.6],[-33.6,-7.4],[19,-10.4]]
+117.0 === STAGE street: walking to house 1
+117.8 touch spots {"L":[151.92,234],"R":[590.8,124.8],"at":["zoneL"]}
+130.8 walked into play:house on the way to house 1 door (14 s)
+131.2 === STAGE house 1 by day
+134.6 shot teach_out/phone_07_house_inside.jpg
+134.9 stand still 10 s (reading)
+144.9 capsules on this floor: 0
+145.2 after capsules: food 2 en 18.143159999999906
+145.2 stand still 4 s (reading)
+150.5 shot teach_out/phone_08_after_capsules.jpg
+151.0 === STAGE house 1: trying LEAVE as told
+172.7 reached the door in 21 s
+173.6 LEAVE button: flex LEAVE badge:none
+173.8 tap #bLeave
+178.1 shot teach_out/phone_09_leave_blocked.jpg
+178.5 === STAGE house 1: solar collector
+209.1 walk to a door timed out
+209.1 SHORTCUT teleport near a door (time out)
+210.1 tap #b0
+213.1 after Solar: msg "undefined placed: undefined"
+213.3 first collector placed: true
+213.3 stand still 3 s (reading)
+217.5 shot teach_out/phone_10_solar_done.jpg
+218.4 reached the door in 0 s
+219.2 LEAVE button: flex LEAVE badge:none
+219.5 tap #bLeave
+223.0 === STAGE street after house 1
+223.0 stand still 6 s (reading)
+229.3 === STAGE street: walking to house 2
+241.1 walked into play:house on the way to house 2 door (12 s)
+241.5 === STAGE house 2 by day
+243.5 stand still 3 s (reading)
+246.7 capsules on this floor: 3
+287.2 walk to capsule timed out
+287.2 SHORTCUT teleport near capsule (time out)
+295.1 reached capsule in 7 s
+313.8 reached capsule in 18 s
+314.4 after capsules: food 5 en 51.70632000000136
+325.5 reached the door in 11 s
+326.4 LEAVE button: none LEAVE badge:none
+326.7 could not tap #bLeave (not on screen)
+328.6 SHORTCUT leaveHouse
+329.1 === STAGE street
+332.3 shot teach_out/phone_11_street_pack.jpg
+332.8 === STAGE street: back to the house with my collector
+353.3 walked into base on the way to house 1 door (21 s)
+364.3 SHORTCUT enterHouse
+364.9 === STAGE house 1: waiting for dusk
+367.5 === STAGE night 1: drill
+461.2 === STAGE night 1: after the drill
+465.5 shot teach_out/phone_12_drill_done.jpg
+466.5 === STAGE dawn
+710.1 shot teach_out/phone_13_end.jpg
+710.5 stand still 5 s (reading)
+715.8 could not tap #again (not on screen)
+716.1 === STAGE base day 2
+721.0 shot teach_out/phone_14_base_day2.jpg
+721.4 stand still 22 s (reading)
+745.4 shot teach_out/phone_15_base_day2_later.jpg
+746.1 stations {"ws":[9,7],"board":[10.95,3.3],"scout":[-1,13.5],"tip":0}
+746.4 === STAGE base day 2: workshop
+827.5 walk to workshop timed out
+827.5 SHORTCUT teleport near workshop (time out)
+828.7 tap #bFire
+834.8 shot teach_out/phone_16_workshop.jpg
+835.2 stand still 3 s (reading)
+838.7 tap #qclose
+842.0 === STAGE base day 2: quest board
+912.3 walk to quest board timed out
+912.3 SHORTCUT teleport near quest board (time out)
+913.6 tap #bFire
+919.6 shot teach_out/phone_17_board.jpg
+920.0 stand still 3 s (reading)
+923.5 tap #qclose
+927.0 === STAGE base day 2: Marla and the ring
+997.2 walk to Marla timed out
+997.2 SHORTCUT teleport near Marla (time out)
+998.3 tap #bFire
+1005.2 shot teach_out/phone_18_ring.jpg
+1005.9 day-2 dialog {"ring":["1 (10 km) · loot x1 · Gloom x1","2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first [disabled]","3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first [disabled]","4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first [disabled]","5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first [disabled]"],"shown":true,"text":"Marla, the Scout \"You look terrible, Potts. Good. It means you tried. Sit, drink, then pick a ring.\" Ride out: go loot the old street, then hold a house tonight. Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend the house you are in until dawn. Ring 1 (10 km) · loot x1 · Gloom x1 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first Devices: Turbine Lance Panel Mine Turbine Lance Panel Mine Turbine Lance Panel Mine Solar (by day, free): place it by a door or window; it fills your Sun. Turbine (12 Sun): makes Sun all night; place it first. At most 2 Sun makers. Lance (8 Sun): shoots the nearest Gloom it can see through an opening or inside. Pa"}
+1006.3 === STAGE keys card
+1006.6 tap #sback
+1009.5 tap #bPause
+1013.0 pause menu: PausedResumeEnd nightHints: onMusic: onVoice: onGraphics: low (phone)KeysJournalMapWatch the openingNew gameProgress saves by itself in the base and at dawn.
+1013.3 could not tap #pKeys (not on screen)
+1016.1 shot teach_out/phone_19_keys.jpg
+1016.9 keys card: KeysLeft thumbwalkRight thumblook; a quick tap fires (uses things in the base)FIREshoot; hold it till the ring glows gold, then let goDevice buttonone tap places itSwitch tabopens all devices; tap one to pick itSOLARsolar collector (by day)EATeat (heals)LEAVEleave a house at its doorHOLDstart the night (in a house)Quest boxtap to see every quest||pauseClose
+1017.2 page errors: 0 

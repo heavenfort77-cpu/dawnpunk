@@ -1,0 +1,1530 @@
+{
+ "log": [
+  [
+   "3.8",
+   "opening",
+   "cineCap",
+   "The night the grid failed, the machines came looking for power."
+  ],
+  [
+   "10.0",
+   "opening",
+   "cineCap",
+   ""
+  ],
+  [
+   "23.4",
+   "opening",
+   "cineCap",
+   "They found us."
+  ],
+  [
+   "30.2",
+   "opening",
+   "cineCap",
+   ""
+  ],
+  [
+   "38.7",
+   "opening",
+   "cineCap",
+   "We left the grid to them, and grew our own light."
+  ],
+  [
+   "45.3",
+   "opening",
+   "cineCap",
+   ""
+  ],
+  [
+   "46.1",
+   "opening",
+   "cineCap",
+   "By day they sleep. We let them."
+  ],
+  [
+   "51.7",
+   "opening",
+   "cineCap",
+   ""
+  ],
+  [
+   "53.4",
+   "opening",
+   "cineCap",
+   "Every panel-tender gets a guide. You got Marla."
+  ],
+  [
+   "57.7",
+   "opening",
+   "cineCap",
+   "MARLA: Up, Potts. Sun is wasting."
+  ],
+  [
+   "63.1",
+   "opening",
+   "cineCap",
+   ""
+  ],
+  [
+   "63.7",
+   "opening",
+   "jobCard",
+   "Your job: panel-tender Keep the panels and devices working. Bring food and essentials back from the old settlement. Hold a house against the Gloom until dawn. Work with your guide: Marla the Scout. Got it"
+  ],
+  [
+   "64.6",
+   "opening",
+   "bstat",
+   "Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food"
+  ],
+  [
+   "64.6",
+   "opening",
+   "pulse",
+   "bFire"
+  ],
+  [
+   "79.6",
+   "base day 1: waking",
+   "bprompt",
+   "USE: talk to Marla, the Scout"
+  ],
+  [
+   "79.6",
+   "base day 1: waking",
+   "jobCard",
+   ""
+  ],
+  [
+   "90.4",
+   "base day 1: waking",
+   "bprompt",
+   ""
+  ],
+  [
+   "90.4",
+   "base day 1: waking",
+   "scoutLine",
+   "\"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\""
+  ],
+  [
+   "90.4",
+   "base day 1: waking",
+   "scoutRide",
+   "Ride out: go loot the old street, then hold a house tonight."
+  ],
+  [
+   "103.5",
+   "base day 1: Marla dialog",
+   "bprompt",
+   "Stand by Marla to change your devices"
+  ],
+  [
+   "103.5",
+   "base day 1: Marla dialog",
+   "bstat",
+   ""
+  ],
+  [
+   "103.5",
+   "base day 1: Marla dialog",
+   "scoutLine",
+   ""
+  ],
+  [
+   "103.5",
+   "base day 1: Marla dialog",
+   "scoutRide",
+   ""
+  ],
+  [
+   "104.3",
+   "base day 1: Marla dialog",
+   "marla",
+   "Six houses, Potts. Walk into a door to loot it."
+  ],
+  [
+   "104.3",
+   "base day 1: Marla dialog",
+   "bprompt",
+   ""
+  ],
+  [
+   "108.5",
+   "street day",
+   "marla",
+   ""
+  ],
+  [
+   "108.5",
+   "street day",
+   "bprompt",
+   "Stand by Marla to change your devices"
+  ],
+  [
+   "108.9",
+   "street day",
+   "marla",
+   "Green bar over a door: loot inside. Red: empty."
+  ],
+  [
+   "108.9",
+   "street day",
+   "bprompt",
+   ""
+  ],
+  [
+   "113.9",
+   "street day",
+   "marla",
+   ""
+  ],
+  [
+   "113.9",
+   "street day",
+   "bprompt",
+   "Stand by Marla to change your devices"
+  ],
+  [
+   "123.6",
+   "street: walking to house 1",
+   "bprompt",
+   "Walk in the door: 8 food, 3 essentials inside · 12 openings to guard · 2 floors"
+  ],
+  [
+   "127.6",
+   "street: walking to house 1",
+   "bprompt",
+   ""
+  ],
+  [
+   "129.6",
+   "street: walking to house 1",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "129.6",
+   "street: walking to house 1",
+   "pulse",
+   "b0"
+  ],
+  [
+   "133.2",
+   "house 1 by day",
+   "marla",
+   ""
+  ],
+  [
+   "133.7",
+   "house 1 by day",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "137.4",
+   "house 1 by day",
+   "marla",
+   ""
+  ],
+  [
+   "137.9",
+   "house 1 by day",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "141.6",
+   "house 1 by day",
+   "marla",
+   ""
+  ],
+  [
+   "142.1",
+   "house 1 by day",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "154.1",
+   "house 1: trying LEAVE as told",
+   "marla",
+   ""
+  ],
+  [
+   "154.6",
+   "house 1: trying LEAVE as told",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "167.0",
+   "house 1: trying LEAVE as told",
+   "marla",
+   ""
+  ],
+  [
+   "167.5",
+   "house 1: trying LEAVE as told",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "170.9",
+   "house 1: trying LEAVE as told",
+   "marla",
+   ""
+  ],
+  [
+   "171.3",
+   "house 1: trying LEAVE as told",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "187.5",
+   "house 1: solar collector",
+   "marla",
+   ""
+  ],
+  [
+   "188.1",
+   "house 1: solar collector",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "191.7",
+   "house 1: solar collector",
+   "marla",
+   ""
+  ],
+  [
+   "192.1",
+   "house 1: solar collector",
+   "marla",
+   "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  ],
+  [
+   "212.2",
+   "house 1: solar collector",
+   "marla",
+   ""
+  ],
+  [
+   "212.2",
+   "house 1: solar collector",
+   "msg",
+   "undefined placed: undefined"
+  ],
+  [
+   "212.6",
+   "house 1: solar collector",
+   "marla",
+   "Walk into the capsules to take them. Green food, blue essentials."
+  ],
+  [
+   "212.6",
+   "house 1: solar collector",
+   "msg",
+   ""
+  ],
+  [
+   "217.5",
+   "house 1: solar collector",
+   "marla",
+   "LEAVE at the door for the next house."
+  ],
+  [
+   "222.2",
+   "house 1: solar collector",
+   "marla",
+   ""
+  ],
+  [
+   "222.2",
+   "house 1: solar collector",
+   "bprompt",
+   "Walk in the door: 9 food, 4 essentials inside · 10 openings to guard · 2 floors"
+  ],
+  [
+   "222.6",
+   "house 1: solar collector",
+   "marla",
+   "That bar is your Sun. Your hand drinks it in."
+  ],
+  [
+   "222.6",
+   "house 1: solar collector",
+   "bprompt",
+   ""
+  ],
+  [
+   "227.4",
+   "street after house 1",
+   "marla",
+   ""
+  ],
+  [
+   "227.4",
+   "street after house 1",
+   "bprompt",
+   "Walk in the door: 9 food, 4 essentials inside · 10 openings to guard · 2 floors"
+  ],
+  [
+   "227.8",
+   "street after house 1",
+   "marla",
+   "Something waves in a house with 8 openings."
+  ],
+  [
+   "227.8",
+   "street after house 1",
+   "bprompt",
+   ""
+  ],
+  [
+   "232.5",
+   "street: walking to house 2",
+   "marla",
+   ""
+  ],
+  [
+   "232.5",
+   "street: walking to house 2",
+   "bprompt",
+   "Walk in the door: 9 food, 4 essentials inside · 10 openings to guard · 2 floors"
+  ],
+  [
+   "233.1",
+   "street: walking to house 2",
+   "marla",
+   "At dusk you defend the house you are in."
+  ],
+  [
+   "233.1",
+   "street: walking to house 2",
+   "bprompt",
+   ""
+  ],
+  [
+   "238.3",
+   "street: walking to house 2",
+   "marla",
+   "Hold START NIGHT only when your Sun is full, Potts."
+  ],
+  [
+   "242.9",
+   "house 2 by day",
+   "marla",
+   ""
+  ],
+  [
+   "243.4",
+   "house 2 by day",
+   "marla",
+   "SOLAR by a door or window, in the house you will sleep in."
+  ],
+  [
+   "248.1",
+   "house 2 by day",
+   "marla",
+   ""
+  ],
+  [
+   "248.8",
+   "house 2 by day",
+   "marla",
+   "HOLD DUSK to start the night early. Or wait for the bell."
+  ],
+  [
+   "253.2",
+   "house 2 by day",
+   "marla",
+   "Loot is heavy: the more you carry, the slower you walk (Walk speed, top right)."
+  ],
+  [
+   "254.0",
+   "house 2 by day",
+   "marla",
+   "Stairs: the Gloom use them too. The ladder: only you can climb it."
+  ],
+  [
+   "259.1",
+   "house 2 by day",
+   "marla",
+   ""
+  ],
+  [
+   "259.6",
+   "house 2 by day",
+   "marla",
+   "More openings, more Gloom. Pick where you stand."
+  ],
+  [
+   "264.7",
+   "house 2 by day",
+   "marla",
+   ""
+  ],
+  [
+   "286.6",
+   "house 2 by day",
+   "marla",
+   "The bell, Potts! 2 hours of light left. Pick your house!"
+  ],
+  [
+   "291.6",
+   "house 2 by day",
+   "marla",
+   ""
+  ],
+  [
+   "295.1",
+   "house 2 by day",
+   "msg",
+   "+2 essentials"
+  ],
+  [
+   "297.1",
+   "house 2 by day",
+   "msg",
+   ""
+  ],
+  [
+   "307.1",
+   "house 2 by day",
+   "marla",
+   "Sun is down, Potts. Turbine first, then lances, then panels."
+  ],
+  [
+   "308.4",
+   "house 2 by day",
+   "marla",
+   "One machine. Tap FIRE, Potts."
+  ],
+  [
+   "308.4",
+   "house 2 by day",
+   "dsub",
+   "Aim at the ringed machine and tap FIRE."
+  ],
+  [
+   "308.4",
+   "house 2 by day",
+   "pulse",
+   "bFire"
+  ],
+  [
+   "309.4",
+   "house 2 by day",
+   "drillmark",
+   "ring "
+  ],
+  [
+   "323.3",
+   "house 2 by day",
+   "drillmark",
+   "arrow"
+  ],
+  [
+   "328.4",
+   "house 2 by day",
+   "marla",
+   "Shoot. It. Now."
+  ],
+  [
+   "335.2",
+   "street: back to the house with my collector",
+   "marla",
+   ""
+  ],
+  [
+   "335.2",
+   "street: back to the house with my collector",
+   "dsub",
+   ""
+  ],
+  [
+   "335.2",
+   "street: back to the house with my collector",
+   "end",
+   "The night took you. Marla: \"Up you get. The sun owes us a rematch.\" Minimum payout: 1 food Next recruit: 11/30 food. Back to the base"
+  ],
+  [
+   "339.8",
+   "street: back to the house with my collector",
+   "msg",
+   "Day 2. Home: +1 food, +0 essentials (run plus 0 food from gatherers, 0 essentials from hunters)."
+  ],
+  [
+   "339.8",
+   "street: back to the house with my collector",
+   "bq",
+   "Quests: read the board by the Workshop +4 more (tap)"
+  ],
+  [
+   "339.8",
+   "street: back to the house with my collector",
+   "bstat",
+   "Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food"
+  ],
+  [
+   "339.8",
+   "street: back to the house with my collector",
+   "end",
+   ""
+  ],
+  [
+   "341.2",
+   "street: back to the house with my collector",
+   "marla",
+   "Workshop's on your right. Oko upgrades devices. Bring scrap."
+  ],
+  [
+   "341.2",
+   "street: back to the house with my collector",
+   "msg",
+   ""
+  ],
+  [
+   "341.2",
+   "street: back to the house with my collector",
+   "bq",
+   ""
+  ],
+  [
+   "346.1",
+   "street: back to the house with my collector",
+   "marla",
+   ""
+  ],
+  [
+   "346.1",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m to your right +4 more (tap)"
+  ],
+  [
+   "347.5",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m ahead +4 more (tap)"
+  ],
+  [
+   "350.7",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m ahead +4 more (tap)"
+  ],
+  [
+   "351.4",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m ahead +4 more (tap)"
+  ],
+  [
+   "352.0",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 4 m to your right +4 more (tap)"
+  ],
+  [
+   "352.7",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) +4 more (tap)"
+  ],
+  [
+   "353.3",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 4 m to your right +4 more (tap)"
+  ],
+  [
+   "361.0",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m to your right +4 more (tap)"
+  ],
+  [
+   "361.7",
+   "street: back to the house with my collector",
+   "bprompt",
+   "USE: Garden (food, and welcoming new people)"
+  ],
+  [
+   "361.7",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you +4 more (tap)"
+  ],
+  [
+   "362.5",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m behind you +4 more (tap)"
+  ],
+  [
+   "363.3",
+   "street: back to the house with my collector",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you +4 more (tap)"
+  ],
+  [
+   "749.1",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 15 m behind you Journal desk at home: every device and machine · 11 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "753.7",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you +4 more (tap)"
+  ],
+  [
+   "758.4",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 15 m behind you Journal desk at home: every device and machine · 11 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "764.3",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 9 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 15 m behind you Journal desk at home: every device and machine · 11 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "764.9",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 9 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 16 m behind you Journal desk at home: every device and machine · 11 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "765.4",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 17 m behind you Journal desk at home: every device and machine · 10 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "765.8",
+   "base day 2: workshop",
+   "bprompt",
+   ""
+  ],
+  [
+   "765.8",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you +4 more (tap)"
+  ],
+  [
+   "768.0",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 18 m behind you Journal desk at home: every device and machine · 11 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "771.2",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you +4 more (tap)"
+  ],
+  [
+   "774.4",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 18 m behind you Journal desk at home: every device and machine · 11 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "779.9",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 18 m behind you Journal desk at home: every device and machine · 12 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "780.4",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 12 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 19 m behind you Journal desk at home: every device and machine · 13 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "780.8",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 14 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 21 m behind you Journal desk at home: every device and machine · 13 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "781.2",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 16 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 22 m behind you Journal desk at home: every device and machine · 14 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "781.8",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 24 m behind you Journal desk at home: every device and machine · 15 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "782.2",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you +4 more (tap)"
+  ],
+  [
+   "783.0",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 24 m behind you Journal desk at home: every device and machine · 15 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "786.1",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you +4 more (tap)"
+  ],
+  [
+   "789.0",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 24 m behind you Journal desk at home: every device and machine · 15 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "793.6",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 18 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 24 m behind you Journal desk at home: every device and machine · 15 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "794.0",
+   "base day 2: workshop",
+   "msg",
+   "You found a lucky cat! Carry it home and set it on the shelf to see what it does."
+  ],
+  [
+   "794.0",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 18 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 25 m behind you Journal desk at home: every device and machine · 15 m behind you Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "794.0",
+   "base day 2: workshop",
+   "bstat",
+   "Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food · Cats carried 1"
+  ],
+  [
+   "794.5",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 19 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 26 m behind you Journal desk at home: every device and machine · 15 m behind you Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "794.9",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 20 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 27 m behind you Journal desk at home: every device and machine · 15 m behind you Lucky cat: set it on the shelf in your home · 17 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "795.2",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 28 m behind you Journal desk at home: every device and machine · 16 m behind you Lucky cat: set it on the shelf in your home · 17 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "796.0",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you +5 more (tap)"
+  ],
+  [
+   "796.8",
+   "base day 2: workshop",
+   "msg",
+   ""
+  ],
+  [
+   "798.4",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 28 m behind you Journal desk at home: every device and machine · 16 m behind you Lucky cat: set it on the shelf in your home · 17 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "800.1",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you +5 more (tap)"
+  ],
+  [
+   "803.1",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 22 m behind you +5 more (tap)"
+  ],
+  [
+   "803.4",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 23 m behind you +5 more (tap)"
+  ],
+  [
+   "803.7",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you +5 more (tap)"
+  ],
+  [
+   "805.3",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 30 m behind you Journal desk at home: every device and machine · 18 m behind you Lucky cat: set it on the shelf in your home · 19 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "807.3",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you +5 more (tap)"
+  ],
+  [
+   "808.9",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 30 m behind you Journal desk at home: every device and machine · 18 m behind you Lucky cat: set it on the shelf in your home · 19 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "812.0",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 31 m behind you Journal desk at home: every device and machine · 18 m behind you Lucky cat: set it on the shelf in your home · 19 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "813.6",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 31 m behind you Journal desk at home: every device and machine · 17 m behind you Lucky cat: set it on the shelf in your home · 18 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "814.3",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 25 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 31 m behind you Journal desk at home: every device and machine · 17 m behind you Lucky cat: set it on the shelf in your home · 18 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "816.7",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 25 m behind you +5 more (tap)"
+  ],
+  [
+   "818.6",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 25 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 31 m behind you Journal desk at home: every device and machine · 17 m behind you Lucky cat: set it on the shelf in your home · 18 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "820.7",
+   "base day 2: workshop",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 25 m behind you +5 more (tap)"
+  ],
+  [
+   "828.4",
+   "base day 2: workshop",
+   "bprompt",
+   "USE: Talk to Oko (upgrades devices)"
+  ],
+  [
+   "828.4",
+   "base day 2: workshop",
+   "bq",
+   ""
+  ],
+  [
+   "830.3",
+   "base day 2: workshop",
+   "bprompt",
+   ""
+  ],
+  [
+   "830.3",
+   "base day 2: workshop",
+   "qb",
+   "Workshop Oko, tinkerer: \"You again! Good. The lance has been sulking.\" Check the board by the Workshop. Essentials: 0 | Researchers: 1 Pick a project. It costs essentials to start, then your researchers work on it each dawn. Sturdy panels (level 0/3): +25% panel strength per level Start: 8 essentials, 2 days Efficient turbines (level 0/3): +10% turbine Sun per level Start: 10 essentials, 2 days Sun cells (level 0/3): +5 start Sun per level Start: 8 essentials, 2 days Carry frame (level 0/2): +1 device slot per level Start: 16 essentials, 2 days Unlock: Twin Lance (level 0/1): two pellets per shot Start: 12 essentials, 2 days Unlock: Mist Coil (level 0/1): pellets chill and slow a Gloom Start: 12 essentials, 2 days Unlock: Tall Trellis (level 0/1): a tall, tough panel; nothing shoots over it Start: 10 essentials, 2 days Unlock: Biogas Flask (level 0/1): one-shot area burst where you aim S"
+  ],
+  [
+   "840.2",
+   "base day 2: workshop",
+   "bprompt",
+   "USE: Talk to Oko (upgrades devices)"
+  ],
+  [
+   "840.2",
+   "base day 2: workshop",
+   "qb",
+   ""
+  ],
+  [
+   "846.8",
+   "base day 2: quest board",
+   "bprompt",
+   "USE: quest board (jobs from your people)"
+  ],
+  [
+   "846.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) +5 more (tap)"
+  ],
+  [
+   "848.1",
+   "base day 2: quest board",
+   "bprompt",
+   ""
+  ],
+  [
+   "848.1",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you +5 more (tap)"
+  ],
+  [
+   "849.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 12 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "853.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you +5 more (tap)"
+  ],
+  [
+   "857.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 12 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "863.0",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 13 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "863.6",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 14 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "864.2",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 15 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "864.7",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 10 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 17 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "865.1",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 18 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "865.5",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you +5 more (tap)"
+  ],
+  [
+   "866.3",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 18 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "869.2",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you +5 more (tap)"
+  ],
+  [
+   "872.2",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 18 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "876.1",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 12 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 19 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "876.5",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 13 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 20 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "876.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 14 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 21 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "877.4",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 16 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 23 m behind you Journal desk at home: every device and machine · 15 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "878.6",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 16 m behind you +5 more (tap)"
+  ],
+  [
+   "881.5",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 16 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 23 m behind you Journal desk at home: every device and machine · 15 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "884.5",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 16 m behind you +5 more (tap)"
+  ],
+  [
+   "888.6",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you +5 more (tap)"
+  ],
+  [
+   "889.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 18 m behind you +5 more (tap)"
+  ],
+  [
+   "890.7",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 19 m behind you +5 more (tap)"
+  ],
+  [
+   "891.6",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 19 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 26 m behind you Journal desk at home: every device and machine · 15 m behind you Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "894.0",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 19 m behind you +5 more (tap)"
+  ],
+  [
+   "896.2",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 19 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 26 m behind you Journal desk at home: every device and machine · 15 m behind you Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "899.3",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 20 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 26 m behind you Journal desk at home: every device and machine · 15 m behind you Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "899.6",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 20 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 27 m behind you Journal desk at home: every device and machine · 15 m behind you Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "900.1",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 27 m behind you Journal desk at home: every device and machine · 16 m behind you Lucky cat: set it on the shelf in your home · 17 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "900.4",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 22 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 29 m behind you Journal desk at home: every device and machine · 17 m behind you Lucky cat: set it on the shelf in your home · 18 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "901.0",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 30 m behind you Journal desk at home: every device and machine · 18 m behind you Lucky cat: set it on the shelf in your home · 19 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "901.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you +5 more (tap)"
+  ],
+  [
+   "903.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 30 m behind you Journal desk at home: every device and machine · 18 m behind you Lucky cat: set it on the shelf in your home · 19 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "905.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you +5 more (tap)"
+  ],
+  [
+   "911.8",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 25 m behind you +5 more (tap)"
+  ],
+  [
+   "913.2",
+   "base day 2: quest board",
+   "bprompt",
+   "USE: quest board (jobs from your people)"
+  ],
+  [
+   "913.2",
+   "base day 2: quest board",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) +5 more (tap)"
+  ],
+  [
+   "915.2",
+   "base day 2: quest board",
+   "bprompt",
+   ""
+  ],
+  [
+   "915.2",
+   "base day 2: quest board",
+   "qb",
+   "Quest board Carry a crate of seedlings from Garden to Workshop (+2 food) Take Hunt down 6 Gloom on your next nights (0/6) (+4 food) Take Bring home 4 essentials from collection runs (0/4) (+3 essentials) Take Postings from your people: Bram: take a crate of seedlings from the board to Garden (+4 food) Take Oko: Bring home 4 essentials from collection runs (0/4) (+2 food, 3 essentials) Take Pip: Hunt down 7 Gloom on your next nights (0/7) (+6 food, 1 essentials) Take Rumour: golden paws wave by the wind tower, and in the garden. Hunters thin the Gloom and bring essentials; gatherers bring food each dawn. OLD NOTICES Lost: one Ticks unit, answers to 'Dusty'. Do NOT approach after dark. Swap: three jars of honey for a working solar cell. Ask at the hatchery. Reminder from the council of the green roofs: we don't wake the sleepers. Not for scrap. Not for a dare. Not for anything. Close"
+  ],
+  [
+   "925.1",
+   "base day 2: quest board",
+   "bprompt",
+   "USE: quest board (jobs from your people)"
+  ],
+  [
+   "925.1",
+   "base day 2: quest board",
+   "qb",
+   ""
+  ],
+  [
+   "929.6",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 9 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "934.0",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) +5 more (tap)"
+  ],
+  [
+   "938.4",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 9 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "944.8",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 10 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "945.4",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 12 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "946.0",
+   "base day 2: Marla and the ring",
+   "bprompt",
+   ""
+  ],
+  [
+   "946.0",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m behind you +5 more (tap)"
+  ],
+  [
+   "946.5",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you +5 more (tap)"
+  ],
+  [
+   "947.9",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 15 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "951.8",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you +5 more (tap)"
+  ],
+  [
+   "955.7",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 15 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "961.9",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 10 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 17 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "962.3",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 12 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 19 m behind you Journal desk at home: every device and machine · 13 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "962.8",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 13 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 20 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "963.2",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 13 m behind you +5 more (tap)"
+  ],
+  [
+   "963.9",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 13 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 20 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "966.9",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 13 m behind you +5 more (tap)"
+  ],
+  [
+   "969.5",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 13 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 20 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "972.9",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 14 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 21 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 16 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "973.2",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 15 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 22 m behind you Journal desk at home: every device and machine · 14 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "973.7",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 16 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 23 m behind you Journal desk at home: every device and machine · 15 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "974.1",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 24 m behind you Journal desk at home: every device and machine · 15 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "975.5",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you +5 more (tap)"
+  ],
+  [
+   "978.6",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 24 m behind you Journal desk at home: every device and machine · 15 m to your left Lucky cat: set it on the shelf in your home · 17 m to your left Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "981.5",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 17 m behind you +5 more (tap)"
+  ],
+  [
+   "985.7",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 18 m behind you +5 more (tap)"
+  ],
+  [
+   "986.9",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 19 m behind you +5 more (tap)"
+  ],
+  [
+   "987.2",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 20 m behind you +5 more (tap)"
+  ],
+  [
+   "987.6",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you +5 more (tap)"
+  ],
+  [
+   "988.6",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 28 m behind you Journal desk at home: every device and machine · 16 m behind you Lucky cat: set it on the shelf in your home · 18 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "990.4",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you +5 more (tap)"
+  ],
+  [
+   "992.4",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 21 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 28 m behind you Journal desk at home: every device and machine · 16 m behind you Lucky cat: set it on the shelf in your home · 18 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "994.9",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 22 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 28 m behind you Journal desk at home: every device and machine · 16 m behind you Lucky cat: set it on the shelf in your home · 18 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "995.2",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 22 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 29 m behind you Journal desk at home: every device and machine · 17 m behind you Lucky cat: set it on the shelf in your home · 18 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "995.6",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 23 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 30 m behind you Journal desk at home: every device and machine · 18 m behind you Lucky cat: set it on the shelf in your home · 19 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "996.1",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 30 m behind you Journal desk at home: every device and machine · 18 m behind you Lucky cat: set it on the shelf in your home · 19 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "996.8",
+   "base day 2: Marla and the ring",
+   "bq",
+   "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 24 m behind you Quests: read the board by the Workshop Hatchery: 6 eggs in the coop · 31 m behind you Journal desk at home: every device and machine · 18 m behind you Lucky cat: set it on the shelf in your home · 19 m behind you Rumour: a golden paw waves by the wind tower"
+  ],
+  [
+   "997.9",
+   "base day 2: Marla and the ring",
+   "bprompt",
+   "USE: talk to Marla, the Scout"
+  ],
+  [
+   "997.9",
+   "base day 2: Marla and the ring",
+   "bq",
+   ""
+  ],
+  [
+   "1000.3",
+   "base day 2: Marla and the ring",
+   "bprompt",
+   ""
+  ],
+  [
+   "1000.3",
+   "base day 2: Marla and the ring",
+   "scoutLine",
+   "\"You look terrible, Potts. Good. It means you tried. Sit, drink, then pick a ring.\""
+  ],
+  [
+   "1000.3",
+   "base day 2: Marla and the ring",
+   "scoutRide",
+   "Ride out: go loot the old street, then hold a house tonight."
+  ]
+ ],
+ "quiet": {
+  "cur": 0,
+  "max": 65.11190000000016,
+  "maxAt": "base day 2: quest board from 848.1 s",
+  "since": "946.0"
+ },
+ "gaps": [
+  [
+   "264.7",
+   "house 2 by day",
+   0
+  ],
+  [
+   "297.1",
+   "house 2 by day",
+   0
+  ],
+  [
+   "346.1",
+   "street: back to the house with my collector",
+   0
+  ],
+  [
+   "765.8",
+   "base day 2: workshop",
+   0
+  ],
+  [
+   "796.8",
+   "base day 2: workshop",
+   0
+  ],
+  [
+   "848.1",
+   "base day 2: quest board",
+   0
+  ],
+  [
+   "946.0",
+   "base day 2: Marla and the ring",
+   0
+  ]
+ ],
+ "errs": []
+}
