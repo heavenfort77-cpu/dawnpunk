@@ -159,12 +159,13 @@ export const CONFIG = {
     // reachMax: a held foot further from the hip than this share of the leg's length is let go like a lifted one (the knee never snaps from straight)
     // haltV / haltTime: a walk slowing to a stop below haltV m/s with both feet down stops there (the gait does not shuffle on) and loses the rest of its speed in about haltTime s
     // cornerDist: a patrol slows over its last cornerDist m before a waypoint, as much as the coming corner needs (cornerCos: no slowing for a bend gentler than this cos, about 45 deg); wpReach: m from a waypoint at which the next one is taken
+    // deckRise: on a ramp a patrol slows so its body climbs or sinks at most this many m/s
     // deckEase: a walker without a model stepping onto or off a footbridge deck (src/baselife.js) rises or sinks to it at this rate (1/s); deckHz: a recruit's body follows the deck on a spring this fast
     // stepThigh: a pivot step lifts its foot mostly by bending the knee (turn.stepLift x 2) and brings the thigh forward only this share of turn.stepLift (a knee thrown forward snapped)
     // decideEvery: a pivot step may start only every this many slices (1 = any slice; 4 = only every 1/30 s of game time; 4 measured worse at 30 vs 60 fps in the browser)
     // stepTurn: Marla (src/marla.js) steps round once the way she should face is more than this many rad from where she faces (the base people use turn.stepStart)
     // stepLead: a pivot step's foot lifts for this share of the step before the body turns, and sets down for the same share after; recenter: after pivoting on one foot the body settles back over its middle in about this many s (while stepping or walking)
-    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.03, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckHz: 0.6, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
+    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.03, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckHz: 0.6, deckRise: 0.25, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
@@ -871,8 +872,9 @@ export const CONFIG = {
   //   cold = cold frame and raised beds by the greenhouse, compost = compost bays, rack = solar herb drying rack, tower = water tower, wash = hand pump and washing trough (laundry lines between them and the houses).
   // lanes: trodden paths [[x, z], ...] to the houses and over the bridges (width m); lamps = lanterns along them (every m), planters = planter boxes along them (every m).
   // high / low: desktop / phone detail (leaves per window box, laundry pieces per line, flowers, round = roundness of curved parts).
-  // rounds: the hunters' rounds go over the east footbridge on the way from (15, -15) to (15, 15): [x, z] points just before and after its deck (m; the north bridge already sits on their z -15 line).
-  baseLife: { on: true, bound: 25, hedge: 26.2, rounds: [[16.4, -9.4], [14.7, -4.9]],
+  // rounds: the hunters' rounds go over the east footbridge on the way from (15, -15) to (15, 15): [x, z] points before and after its deck, past the ramps, on the deck's own line
+  // (m; turning on a ramp took the walker off the deck's side, where its height drops at once; the north bridge already sits on their z -15 line).
+  baseLife: { on: true, bound: 25, hedge: 26.2, rounds: [[16.82, -10.52], [14.28, -3.78]],
     houses: [
       { id: 'bram', sign: 'BRAM', at: [20.5, 1.0], w: 4.2, d: 3.4, h: 2.55, wall: 0xf0e4c8, accent: 0x3f8f6a, roof: 'garden', extra: 'porch', hobby: 'bram' },
       { id: 'pip', sign: 'PIP & FAMILY', at: [-21.0, 2.0], w: 4.4, d: 3.4, h: 2.6, wall: 0xf2dcc4, accent: 0xc8783a, roof: 'solar', extra: 'lookout', hobby: 'pip' },

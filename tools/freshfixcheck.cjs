@@ -121,7 +121,7 @@ const path = require('path');
   // ---- MARLA TEACHING FIXES (fresh-player review Nov 18): a scripted day 1 on desktop and phone: the collector order names the real control and repeats rarely, no "undefined" ever on screen,
   // the first collector keeps its own message, the night-start line matches the button, the bell is followed by one line
   for (const [lab, opts] of [['desktop', { viewport: { width: 1280, height: 720 } }], ['phone', { ...devices['Pixel 7 landscape'] }]]) await sect('teach ' + lab, async () => { const { ctx, p } = await open(opts);
-    const C = await p.evaluate(() => { const c = window.__game.cfg(); return { F: c.firstSolar, N: c.nightStart, bell: c.day.bell }; }), D = lab === 'desktop';
+    const C = await p.evaluate(() => { const c = typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg; return { F: c.firstSolar, N: c.nightStart, bell: c.day.bell }; }), D = lab === 'desktop';
     await p.evaluate(() => { localStorage.setItem('dawnpunk.drill', '{"skip":true}'); const g = window.__game; g.enterBase(); g.save.nights = 0; g.save.solarDone = false; document.getElementById('selRing').value = '0'; g.startRun(0);
       const S = window.__seen = { marla: [], undef: [], solarShows: 0 }; let last = ''; const f = () => { const m = document.getElementById('marla'), t = m.classList.contains('hq') ? '' : m.textContent; if (t && !S.marla.includes(t)) S.marla.push(t); if (t !== last && /Collector first/.test(t)) S.solarShows++; last = t;
         const b = document.body.innerText; if (/undefined/.test(b) && S.undef.length < 5) S.undef.push(b.split('\n').filter((l) => /undefined/.test(l))[0]); requestAnimationFrame(f); }; requestAnimationFrame(f); });
