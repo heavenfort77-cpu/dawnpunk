@@ -16,7 +16,8 @@ async function overlaps(p, ids) {
     const off = L.filter(([n, r]) => r.left < -1 || r.top < -1 || r.right > innerWidth + 1 || r.bottom > innerHeight + 1).map((q) => q[0] + ' off screen');
     return { n: L.length, bad: bad.concat(off) }; }, ids);
 }
-const TITLE_IDS = ['#tkick', '#tword', '#ttag', '#enter', '#watch', '#lookT', '#gfxT', '#reset', '#tdesc', '#thelp', '#bMus'];
+// CI Nov 18: the old title (#tkick/#tword/#ttag lore lines over the dormant machines picture, #tdesc, #thelp) became the start flow's loading page (V logo #slogo, bar, rotating lore line #slore, begin #enter)
+const TITLE_IDS = ['#slogo', '#sbar', '#slore', '#enter', '#watch', '#lookT', '#gfxT', '#reset', '#bMus'];
 const DESK_IDS = ['#vit', '#clk', '#hud #marla', '#slots', '#dkeys', '#bDusk', '#bLeave', '#bPause', '#bMus', '#aim', '#coins', '#bprompt'];
 const PHONE_IDS = ['#hpb', '#enb', '#time', '#count', '#hud #marla', '#b0', '#b1', '#b2', '#b3', '#b4', '#b5', '#bEat', '#bFire', '#bDusk', '#bLeave', '#bPause', '#bMus', '#aim', '#coins', '#bprompt'];
 async function over(p, ids, where) { const r = await overlaps(p, ids); ok(r.bad.length === 0 && r.n >= 3, 'nothing overlaps: ' + where + ' (' + r.n + ' boxes)' + (r.bad.length ? ': ' + r.bad.join(', ') : '')); }
@@ -26,9 +27,11 @@ const pics = (p) => p.evaluate(() => ['b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'bEat'
 async function gotoGame(p) { await p.goto(URL0, { timeout: 240000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 180000 }); }
 
 async function titlePart(p, label, sizes) {
-  const t = await p.evaluate(() => [document.getElementById('tkick').textContent, document.getElementById('tword').textContent, document.getElementById('ttag').textContent, !!document.querySelector('#tsky #tgimg'), (document.querySelector('#tsky #tgimg') || { getAttribute: () => '' }).getAttribute('href').slice(0, 15)]);
-  ok(/when the grid died, the machines came for us/i.test(t[0]) && t[1] === 'DAWNPUNK' && /They sleep by day to save power\. Do not wake them\. Hold the house until the sun comes back\./.test(t[2]), label + ': title shows the lore lines');
-  ok(t[3] && t[4] === 'data:image/png;', label + ': title shows the dormant machines picture');
+  // CI Nov 18: the same two title checks on the start flow: the DAWNPUNK wordmark, the tagline (CONFIG.splash.tag) and a lore line on the loading page; the title picture is now the V logo
+  await p.waitForFunction(() => (document.getElementById('slore').textContent || '').trim().length > 0, null, { timeout: 60000 }).catch(() => {});
+  const t = await p.evaluate(() => [(document.getElementById('sword') || { textContent: '' }).textContent.trim(), document.getElementById('stag').textContent, document.getElementById('slore').textContent.trim(), !!document.querySelector('#slogo svg'), window.CONFIG && window.CONFIG.splash ? window.CONFIG.splash.tag : '?']);
+  ok(t[0] === 'DAWNPUNK' && t[1] === t[4] && t[2].length > 10, label + ': title shows the lore lines (' + t[1] + ' | ' + t[2].slice(0, 60) + ')');
+  ok(t[3], label + ': title shows the title picture (the V logo)');
   for (const [w, h] of sizes) { await p.setViewportSize({ width: w, height: h }); await p.waitForTimeout(400); await over(p, TITLE_IDS, label + ' title ' + w + 'x' + h); }
 }
 async function buttons(p, b) {

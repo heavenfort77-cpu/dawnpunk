@@ -33,7 +33,7 @@
     { "name": "rotcheck", "script": "tools/rotcheck.cjs", "args": [], "tier": "phone", "quality": "auto", "timeout": 15 },
     { "name": "gloomhitcheck_phone", "script": "tools/gloomhitcheck.cjs", "args": ["low"], "tier": "phone", "quality": "low", "timeout": 35 },
 
-    { "name": "hudcheck_desktop", "script": "tools/_high_hudcheck.cjs", "args": ["{out}/hud"], "tier": "desktop", "quality": "high", "timeout": 35 },
+    { "name": "hudcheck_desktop", "script": "tools/_high_hudcheck.cjs", "args": [], "note": "no picture prefix: the optional high-tier screenshot timed out at 30 s on the runner (first CI run)", "tier": "desktop", "quality": "high", "timeout": 35 },
     { "name": "gloomcheck", "script": "tools/_high_gloomcheck.cjs", "args": [], "tier": "desktop", "quality": "high", "timeout": 35 },
     { "name": "gloomglbcheck", "script": "tools/gloomglbcheck.cjs", "args": ["walker,lurcher,hauler,stilt,lantern,ticks,warden"], "tier": "desktop", "quality": "high", "timeout": 100 },
     { "name": "gloommotioncheck", "script": "tools/gloommotioncheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },

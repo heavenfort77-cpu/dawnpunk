@@ -6,7 +6,8 @@ const { chromium } = require('playwright');
   await p.addInitScript(() => { window.__dtMax = 0.5; });
   p.on('pageerror', (e) => errs.push(String(e)));
   await p.goto('file://' + __dirname + '/../dist/index.html?quality=low'); await p.waitForFunction(() => window.__game && window.__game.enterBase);
-  await p.evaluate(() => { localStorage.clear(); }); await p.reload(); await p.waitForFunction(() => window.__game && window.__game.enterBase);
+  // the night-1 drill is skipped here (tools/drillcheck.cjs tests it): the game holds this reminder while the drill runs and starts its clock when the drill ends (main.js marlaNightTips)
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('dawnpunk.drill', '{"skip":true}'); }); await p.reload(); await p.waitForFunction(() => window.__game && window.__game.enterBase);
   await p.click('#enter').catch(() => {}); await p.waitForTimeout(800);
   await p.evaluate(() => window.__game.startRun(0)); await p.waitForTimeout(1200);
   const h = await p.evaluate(() => { const r = window.__game.run, hh = r.houses[0]; return [hh.doorX, hh.doorZ, hh.row]; }); await p.evaluate(([x, z, row]) => window.__game.setTown(x, z - row * 0.4), h); await p.waitForTimeout(900);

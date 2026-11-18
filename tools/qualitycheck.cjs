@@ -1,3 +1,4 @@
+// CI Nov 18: every wait in a test page may take up to 240 s (the 30 s default timed out loading the page on a GitHub runner, as it did here before).
 // Graphics tier checks (CONFIG.quality, src/quality.js). Usage: node tools/qualitycheck.cjs
 // 1 the tier follows the primary pointer: fine = high, coarse = low, and touch points alone do not make a laptop a phone; 2 ?quality= and the saved choice override it (address first);
 // 3 the pause-menu button switches and keeps the choice; 4 high really uses the 1024 px textures, full-size relief, the 4096 shadow maps, more screen lights and pixel ratio 2, low keeps the phone set;
@@ -8,7 +9,7 @@ const srv = http.createServer((q, r) => { const f = path.join(DIST, decodeURICom
 (async () => {
   await new Promise((ok) => srv.listen(0, '127.0.0.1', ok)); const URL0 = 'http://127.0.0.1:' + srv.address().port + '/index.html';
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const out = [], errs = [];
-  const open = async (opt, q, init) => { const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2, ...opt }); if (init) await ctx.addInitScript(init); const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
+  const open = async (opt, q, init) => { const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2, ...opt }); if (init) await ctx.addInitScript(init); ctx.setDefaultTimeout(240000); const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
     if (opt.block) await p.route('**/tex/**', (r) => r.abort()); await p.goto(URL0 + (q || '')); await p.waitForFunction(() => window.__game && window.__game.quality); return { ctx, p }; };
   const tierOf = (p) => p.evaluate(() => ({ ...window.__game.quality(), coarse: matchMedia('(pointer: coarse)').matches }));
   const street = async (p) => { await p.evaluate(() => { window.__game.enterBase(); }); await p.waitForTimeout(1500); const base = await p.evaluate(() => window.__game.quality());
