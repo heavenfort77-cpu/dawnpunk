@@ -214,7 +214,7 @@ export function createSim(opts = {}) {
       return { t, head: tube(o, dv, S[5], S[6], S[7] + q, S[8] + q, S[9] - q, S[10] + q) !== null }; };
     // the boss's open weak points (src/boss.js): the player's aimed shot ('ray'), or a bot aiming at one ('boss', hit = its hit chance)
     const bh = s.boss && (mode === 'ray' || mode === 'boss') ? (() => { const cp = Math.cos(p.pitch || 0), sp = Math.sin(p.pitch || 0); const r = s.boss.ray(p.x, c.eye + p.floor * cfg.floorH, p.z, fx * cp, sp, fz * cp, p.floor); return r ? { id: r.id, along: r.along * cp } : null; })() : null;
-    const bossHit = () => { s.boss.hit(bh.id, CH ? cfg.boss.weak.charged : 1); s.log.push({ e: 'shot', yaw: p.yaw, hit: true, boss: bh.id, charged: !!CH }); return true; };
+    const bossHit = () => { s.boss.hit(bh.id, CH ? cfg.boss.weak.charged : 1); s.log.push({ e: 'shot', yaw: p.yaw, hit: true, boss: bh.id, charged: !!CH, x: p.x + fx * bh.along, z: p.z + fz * bh.along, floor: p.floor }); return true; };
     if (mode === 'boss') { if (bh && s.rng() < hit) return bossHit(); s.log.push({ e: 'shot', yaw: p.yaw, hit: false }); return true; }
     // a panel between the shooter and the target covers the body: only a shot that clears the panel top (onto the head) gets through
     const panelCross = (tx, tz) => { // returns distance fraction list of panels crossing the segment p -> (tx,tz)
@@ -259,9 +259,10 @@ export function createSim(opts = {}) {
     if (CH && mode === 'auto' && target) { // a bot's charged shot: aimed at the nearest one, it also goes through whatever stands on that line
       const tl = Math.hypot(target.x - p.x, target.z - p.z) || 1, ax = (target.x - p.x) / tl, az = (target.z - p.z) / tl;
       for (const g of s.gloom) { if (!seen(g, p.floor)) continue; const dx = g.x - p.x, dz = g.z - p.z, d = Math.hypot(dx, dz); if (d > c.range || !openOK(p.x, p.z, g)) continue; if (dx * ax + dz * az < 0 || Math.abs(dx * az - dz * ax) >= c.rayWidth * CH.width) continue; const cov = panelCross(g.x, g.z).length > 0; if (s.rng() < (cov ? hit * c.coverHit : hit)) line.push([g, cov]); } }
-    if (CH) { if (bh) s.boss.hit(bh.id, cfg.boss.weak.charged); s.log.push({ e: 'shot', yaw: p.yaw, hit: line.length > 0 || !!bh, head: line.some((q) => q[1]), charged: true, n: line.length, boss: bh ? bh.id : undefined }); for (const [g, hd] of line) damageGloom(g, c.dmg * CH.dmg * (hd ? c.headMult : 1) * boostAt(p)); return true; }
+    // the 'shot' event carries where it landed (for the impact sounds, src/impactsfx.js): x, z, floor of the machine or boss weak point hit; a charged shot also lists hits: [{ x, z, floor, head }] per machine on its line
+    if (CH) { if (bh) s.boss.hit(bh.id, cfg.boss.weak.charged); s.log.push({ e: 'shot', yaw: p.yaw, hit: line.length > 0 || !!bh, head: line.some((q) => q[1]), charged: true, n: line.length, boss: bh ? bh.id : undefined, hits: line.map(([g, hd]) => ({ x: g.x, z: g.z, floor: g.floor, head: !!hd })), ...(bh ? { x: p.x + fx * bh.along, z: p.z + fz * bh.along, floor: p.floor } : {}) }); for (const [g, hd] of line) damageGloom(g, c.dmg * CH.dmg * (hd ? c.headMult : 1) * boostAt(p)); return true; }
     if (bh && (!target || bh.along < best)) return bossHit(); // the weak point is nearer on the line than any Gloom
-    s.log.push({ e: 'shot', yaw: p.yaw, hit: !!target, head: !!(target && head) });
+    s.log.push({ e: 'shot', yaw: p.yaw, hit: !!target, head: !!(target && head), ...(target ? { x: target.x, z: target.z, floor: target.floor } : {}) });
     if (target) {
       const chance = mode === 'ray' ? 1 : (covered ? hit * c.coverHit : hit);
       if (s.rng() < chance) damageGloom(target, c.dmg * (head ? c.headMult : 1) * boostAt(p));

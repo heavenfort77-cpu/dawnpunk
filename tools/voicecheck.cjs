@@ -23,7 +23,8 @@ const path = require('path');
     await p.evaluate(() => { const g = window.__game; g.enterBase(); g.save.nights = 1; }); await p.waitForTimeout(1500);
     const b0 = await mv(p); await say(p, HEAVY); await p.waitForTimeout(2500);
     const b1 = await mv(p); add('desktop base: no clip plays, not even for a run line\'s text or a base tip (count ' + b0.n + ' -> ' + b1.n + ', voice on ' + b1.on + ')', b1.n === b0.n && b1.on === true && !b1.playing);
-    await p.evaluate(() => { const g = window.__game; g.save.nights = 0; document.getElementById('selRing').value = '0'; g.startRun(0); }); const s1 = await waitMv(p, (v) => v.last === 'day_six_houses', 12000);
+    await p.evaluate(() => { const g = window.__game; g.save.nights = 0; document.getElementById('selRing').value = '0'; g.startRun(0); }); const T0 = await p.evaluate(() => performance.now()); const s1 = await waitMv(p, (v) => v.last === 'day_six_houses', 12000);
+    if (s1.last !== 'day_six_houses') { console.log('  dbg T0 ' + T0.toFixed(0) + ' ' + JSON.stringify(await p.evaluate(() => ({ dbg: window.__marlaVoice.dbg, st: window.__game.state, m: document.getElementById('marla').textContent, hq: document.getElementById('marla').className, cs: document.getElementById('csay').textContent, pz: window.__game.isPaused(), hid: document.hidden, now: performance.now() })))); }
     add('desktop street: "Six houses, Potts..." shows and its clip plays (last ' + s1.last + ', via ' + s1.via + ', count ' + s1.n + ')', s1.last === 'day_six_houses' && s1.via === 'ctx' && s1.n === b1.n + 1);
     const pl = await waitMv(p, (v) => v.playing && v.duck < 0.9, 3000); add('desktop: the music is ducked while she talks (music x' + pl.duck.toFixed(2) + ')', pl.playing && pl.duck < 0.9);
     const en = await waitMv(p, (v) => !v.playing && v.duck > 0.99, 12000); add('desktop: the duck lifts after the clip ends (music x' + en.duck.toFixed(2) + ')', !en.playing && en.duck > 0.99);

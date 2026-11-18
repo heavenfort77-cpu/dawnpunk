@@ -1,6 +1,7 @@
 // ALL tuning numbers live here. Edit by hand. Also exposed as window.CONFIG in the build.
 // Numbers marked (guess) are starting values to be tuned by the balance test.
 import { BOSS_CONFIG } from './bossconfig.js';
+import { IMPACT_SFX } from './impactsfx.js';
 export const CONFIG = {
   // THE BECKONER, the final-night boss on ring 5 (owner, Nov 17): every number is in src/bossconfig.js, each with its comment
   boss: BOSS_CONFIG,
@@ -159,7 +160,11 @@ export const CONFIG = {
   marlaTalk: { streakHits: 3, streakWindow: 8, streakCd: 20, hintDelay: 25, hintTimes: 2 },
   music: { on: true, volume: 0.35, pausedVolume: 0.2, fade: 2.5 }, // which track plays where is set in tools/makemusic.py (base, day, night)
   depth: { wallOut: 0.2, wallLen: 1.3, wallW: 4.6, car: [4.2, 6.6], baseHouse: [8.6, 7.6], basePost: 1.3, baseTree: 3.2, shade: 0.5, shadeNight: 0.34, furn: 2.7, device: 1.5, gloom: 1.9, crate: 1.25, pool: 0.55, poolNight: 0.26, poolSun: 0xffe2a8, poolMoon: 0x7f9cff, poolW: 2.3, poolL: 3.6, doorW: 2.0, doorL: 4.4 }, // light and depth inside houses: soft contact shadows (klad 'shade') under things, light pools (klad 'pool') on the floor at every opening; sizes in metres (shadow sizes are times the thing's radius)
-  sfx: { shot: { from: 620, to: 150, len: 0.11, vol: 0.1 } }, // the hand cannon's shot sound: pitch drop (Hz), length (s), loudness
+  // shot: the hand cannon's old shot sound (plays only when impact.on is false): pitch drop (Hz), length (s), loudness
+  sfx: { shot: { from: 620, to: 150, len: 0.11, vol: 0.1 },
+    // impact sounds (owner approved round 2, Nov 18): every value is IMPACT_SFX in src/impactsfx.js, each with its comment line there (docs/sample_impact_sfx.md has the measurements)
+    // on: the switch; false turns the impact sounds off and brings back the old shot sound
+    impact: { on: true, ...IMPACT_SFX } },
   // every abandoned car is in a different state. rust / dmg are [min, max] (0..1); wheels: 'all' = none missing, 'none' = all four gone, 'one' = one gone, 'some' = random
   carCond: [
     { name: 'parked and dusty', rust: [0.08, 0.2], dmg: [0, 0.12], wheels: 'all' },

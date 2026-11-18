@@ -33,6 +33,7 @@ import * as LORE from './lore.js';
 import { bossTick, bossGuide, bossEndLine, gloomScrap, scrapTick, deviceHop, hopsClear, bossPreload } from './bosshi.js';
 import { createWaterSound } from './basesound.js';
 import { createMarlaVoice } from './marlavoice.js';
+import { createImpactSfx } from './impactsfx.js';
 
 window.CONFIG = CONFIG; // tune in the console or edit src/config.js
 const $ = (id) => document.getElementById(id);
@@ -702,6 +703,21 @@ let save = null, carry = null, ui = null, bp = { x: 0, z: 4 }, curTarget = null,
 try { storage = window.localStorage; storage.getItem('x'); } catch (e) { storage = null; }
 // MARLA'S VOICE (owner Nov 18; src/marlavoice.js, CONFIG.voice.marla): her run lines spoken; frame() ticks it, musicTick() ducks the music while she talks
 const MV = createMarlaVoice(() => audio(), storage, H2.FINE2);
+// impact sounds (src/impactsfx.js, CONFIG.sfx.impact): the cannon shot, hits on machines and boss weak points, a machine destroyed. Phones (the HUD's pointer test) get the phone mix; the street gets the drier room
+const IMP = createImpactSfx(() => audio(), () => CONFIG.sfx.impact, () => !H2.FINE2, () => !sim);
+// test hook (window.__game.impactCount): calls per sound, and how many were scheduled on the AudioContext
+const impN = { shot: 0, hit: 0, head: 0, charged: 0, destroyed: 0, played: 0 };
+const impOn = () => !!(CONFIG.sfx.impact && CONFIG.sfx.impact.on);
+function impCall(kind, po, head) { impN[kind === 'hit' && head ? 'head' : kind]++; const t = kind === 'shot' ? IMP.shot() : kind === 'hit' ? IMP.hit(po, !!head) : IMP[kind](po); if (t > 0) impN.played++; }
+// the cannon's shot sound: the impact shot, or the old one when CONFIG.sfx.impact.on is false
+function shotSfx() { if (impOn()) impCall('shot'); else sfxShot(); }
+// the impact sounds for a list of sim events, each event once (doFire plays its own shot's events on the shot's frame, the frame loop the rest). A machine destroyed in the same list plays
+// its destroyed sound instead of its hit; a charged shot plays one queued hit per machine on its line; a boss weak point plays the body hit
+function impactEvents(list) { if (!sim) return; const pops = list.filter((e) => e.e === 'pop' && !e.imp), gone = (q) => pops.some((o) => o.x === q.x && o.z === q.z && o.floor === q.floor);
+  for (const ev of list) { if (ev.imp || (ev.e !== 'shot' && ev.e !== 'pop')) continue; ev.imp = true; if (!impOn()) continue;
+    if (ev.e === 'pop') { impCall('destroyed', panOf(ev)); continue; } if (!ev.hit) continue;
+    if (ev.boss !== undefined && ev.x !== undefined) impCall('hit', panOf(ev), false);
+    if (ev.charged) { for (const q of ev.hits || []) if (!gone(q)) impCall('charged', panOf(q)); } else if (ev.boss === undefined && ev.x !== undefined && !gone(ev)) impCall('hit', panOf(ev), ev.head); } }
 const persist = () => B.writeSave(save, storage);
 function enterBase(intro) {
   clearScene(); dropWorld(); sim = null; run = null; hintQ.length = 0; ui = null; state = 'base'; hemi.intensity = CONFIG.baseLight.power; hemi.color.setHex(CONFIG.baseLight.sky); hemi.groundColor.setHex(CONFIG.baseLight.ground);
@@ -1100,7 +1116,7 @@ function drawnHit(m, P) { const L = CONFIG.cannon.live, headSet = new Set(); for
 // the aimed shot against the machines near the aim line as drawn, by Gloom id (both tiers: desktop hits on it alone, phones use it for head shots and as extra body; src/sim.js fireCannon)
 function liveShapes() { const L = CONFIG.cannon.live; if (!L.on || !sim) return null; const P = sim.player, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), out = {};
   for (const g of sim.gloom) { const dx = g.x - P.x, dz = g.z - P.z, d = Math.hypot(dx, dz); if (d > CONFIG.cannon.range + 3 || (d > L.near && (dx * fx + dz * fz) / d < L.cos)) continue; const m = gMesh.get(g.id); if (m) out[g.id] = { ray: drawnHit(m, P) }; } return out; }
-function doFire(charged) { if (!sim && run && state === 'play') { const i = aimedDormant(CONFIG.dormant.shotCos, CONFIG.dormant.shotReach); if (i >= 0) { hands.fire(); sfxShot(); wakeDormant(i, 'shot'); } return; } if (sim && sim.player.climb) { flash("can't shoot while climbing"); return; } if (charged) { if (sim && sim.fireCannon('ray', 1, true, liveShapes())) { hands.fire(); sfxShot(); drillDid('charge'); const p = sim.player; tracer(p.x, p.z, p.x - Math.sin(p.yaw) * 14, p.z - Math.cos(p.yaw) * 14, 1.3, p.floor, 0xffe08a); if (!save || !save.toldCharge) { if (save) { save.toldCharge = true; persist(); } marlaHint('Charged shot: it goes through every one in the line. It drinks three shots of Sun.'); } } else if (sim && sim.phase === 'night') flash('not enough Sun for a charged shot (' + CONFIG.cannon.cost * CONFIG.cannon.charge.cost + ' Sun)', true); return; } if (sim && sim.fireCannon('ray', 1, false, liveShapes())) { hands.fire(); sfxShot(); drillDid('shoot'); const p = sim.player; tracer(p.x, p.z, p.x - Math.sin(p.yaw) * 14, p.z - Math.cos(p.yaw) * 14, 1.3, p.floor, 0x7fd8ff); } }
+function doFire(charged) { if (!sim && run && state === 'play') { const i = aimedDormant(CONFIG.dormant.shotCos, CONFIG.dormant.shotReach); if (i >= 0) { hands.fire(); shotSfx(); wakeDormant(i, 'shot'); } return; } if (sim && sim.player.climb) { flash("can't shoot while climbing"); return; } if (charged) { if (sim && sim.fireCannon('ray', 1, true, liveShapes())) { hands.fire(); shotSfx(); impactEvents(sim.log); drillDid('charge'); const p = sim.player; tracer(p.x, p.z, p.x - Math.sin(p.yaw) * 14, p.z - Math.cos(p.yaw) * 14, 1.3, p.floor, 0xffe08a); if (!save || !save.toldCharge) { if (save) { save.toldCharge = true; persist(); } marlaHint('Charged shot: it goes through every one in the line. It drinks three shots of Sun.'); } } else if (sim && sim.phase === 'night') flash('not enough Sun for a charged shot (' + CONFIG.cannon.cost * CONFIG.cannon.charge.cost + ' Sun)', true); return; } if (sim && sim.fireCannon('ray', 1, false, liveShapes())) { hands.fire(); shotSfx(); impactEvents(sim.log); drillDid('shoot'); const p = sim.player; tracer(p.x, p.z, p.x - Math.sin(p.yaw) * 14, p.z - Math.cos(p.yaw) * 14, 1.3, p.floor, 0x7fd8ff); } }
 // the devices you carry tonight: your loadout on a run, the first three in test mode
 const slotKinds = () => (fromBase && save ? B.loadout(CONFIG, save) : CONFIG.loadout.first);
 const doSlot = (i) => { const k = slotKinds()[i]; if (k) doPlace(k); };
@@ -1247,7 +1263,8 @@ function frame(now) {
     acc += dt; const step = CONFIG.night.dt;
     while (acc >= step) { sim.step(step); if (mustSolar()) sim.dayT += step; acc -= step; } drillTick(dt);
     if (mustSolar() && marlaT <= 0.01) { $('marla').textContent = CONFIG.firstSolar.marla; marlaT = 4; }
-    for (const ev of sim.log.splice(0)) { if (ev.e === 'boss' && ev.k === 'spill') sunPop(ev.sun);
+    const evs = sim.log.splice(0); impactEvents(evs);
+    for (const ev of evs) { if (ev.e === 'boss' && ev.k === 'spill') sunPop(ev.sun);
       if (ev.e === 'hurt') { hurtT = 0.25; marlaHurt(); marlaStreak(); }
       if (ev.e === 'shot' && ev.head) { $('hs').textContent = 'HEADSHOT x' + CONFIG.cannon.headMult; hsT = 0.9; }
       if (ev.e === 'lance') tracer(ev.x, ev.z, ev.tx, ev.tz, 0.7, ev.floor, ev.kind === 'mist' ? 0x9fd8ff : ev.kind === 'sling' ? 0xd0a0ff : ev.kind === 'twin' ? 0xffe08a : 0x9fffa0);
@@ -1355,6 +1372,7 @@ window.__game.wsTip = () => wsTipT;
 window.__game.baseEvening = (t) => bview.setEvening(t);
 window.__game.cfg = CONFIG;
 window.__game.waterGain = () => waterSnd.gain();
+window.__game.impactCount = () => ({ ...impN });
 window.__game.tipKind = () => tipKind;
 window.__game.catSet = (i, o) => bview.catSet(i, o);
 // graphics tier readout for tools/qualitycheck.cjs: what was picked and what the renderer and the textures really use

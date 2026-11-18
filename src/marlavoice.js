@@ -18,7 +18,7 @@ export function createMarlaVoice(audio, storage, desk) {
   try { const s = storage && storage.getItem(V().storeKey); if (s === 'off') on = false; else if (s === 'on') on = true; } catch (e) { /* default */ }
   // test hook: clips started (n), the last clip id and its text, how it played ('ctx' = the AudioContext, 'el' = an audio element), whether one is playing now
   const allowed = () => !!desk || !V().desktopOnly;
-  const hook = { n: 0, last: '', lastText: '', via: '', playing: false, get on() { return on; } };
+  const hook = { dbg: [], n: 0, last: '', lastText: '', via: '', playing: false, get on() { return on; } };
   if (typeof window !== 'undefined') window.__marlaVoice = hook;
   // decoded clips, newest last; at most V().cache kept
   const buf = new Map();
@@ -26,7 +26,7 @@ export function createMarlaVoice(audio, storage, desk) {
     const p = fetch(url).then((r) => { if (!r.ok) throw new Error('voice ' + r.status); return r.arrayBuffer(); }).then((ab) => new Promise((res, rej) => { const pr = a.decodeAudioData(ab, res, rej); if (pr && pr.then) pr.then(res, rej); }));
     p.catch(() => buf.delete(url)); buf.set(url, p); while (buf.size > V().cache) buf.delete(buf.keys().next().value); return p; }
   function stop() { token++; if (cur) { try { cur.stop(); } catch (e) { /* already ended */ } cur = null; } hook.playing = false; }
-  function started(q, via, node) { cur = node; hook.n++; hook.last = q.id; hook.lastText = shown; hook.via = via; hook.playing = true; }
+  function started(q, via, node) { if (hook.dbg.length < 60) hook.dbg.push(['start', +performance.now().toFixed(0), q.id]); cur = node; hook.n++; hook.last = q.id; hook.lastText = shown; hook.via = via; hook.playing = true; }
   function viaElement(q, my) { if (my !== token) return; try { const el = new Audio(q.u); el.volume = Math.min(1, V().vol); el.onended = () => { if (cur && cur.el === el) { cur = null; hook.playing = false; } };
     const node = { el, stop() { el.pause(); } }; started(q, 'el', node); const pr = el.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) { /* no audio here */ } }
   function play(q) { stop(); const my = token, a = audio(); if (!a) { viaElement(q, my); return; }
@@ -36,8 +36,8 @@ export function createMarlaVoice(audio, storage, desk) {
   // every frame: run = on a run in state 'play'; held = paused or the tab hidden; text = what Marla's card shows now ('' when hidden or empty), csay = the centre line
   function tick(dt, run, held, text, csay) {
     const t = text || (/^Marla: /.test(csay || '') ? csay : '');
-    if (!run || held || !on || !allowed()) { stop(); lastText = run ? t : ''; }
-    else if (t !== lastText) { lastText = t; const q = t && lineFor(t); if (q) { shown = t.replace(/^Marla: /, ''); play(q); } }
+    if (!run || held || !on || !allowed()) { if (t !== lastText && hook.dbg.length < 60) hook.dbg.push(['skip', +performance.now().toFixed(0), !!run, !!held, t.slice(0, 20)]); stop(); lastText = run ? t : ''; }
+    else if (t !== lastText) { if (hook.dbg.length < 60) hook.dbg.push(['new', +performance.now().toFixed(0), t.slice(0, 20)]); lastText = t; const q = t && lineFor(t); if (q) { shown = t.replace(/^Marla: /, ''); play(q); } }
     const want = cur ? 1 : 0, sp = dt / Math.max(0.01, want ? V().duckIn : V().duckOut); duckK += Math.max(-sp, Math.min(sp, want - duckK));
   }
   // the music's volume multiplier while she talks (1 = no duck)
