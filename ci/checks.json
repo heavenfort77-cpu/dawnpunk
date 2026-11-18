@@ -306,6 +306,17 @@
    "timeout": 25,
    "pass": "NO ERRORS\\s*$",
    "fail": "(?<!NO )ERRORS\\b"
+  },
+  {
+   "name": "perfcheck",
+   "script": "tools/perfcheck.cjs",
+   "args": [
+    "medium"
+   ],
+   "tier": "desktop",
+   "quality": "medium",
+   "timeout": 150,
+   "note": "lag fix Nov 19: draw calls and triangles per frame at the hub, street, night house and boss night on the default tier (medium) against the owner's budget (500 calls, 0.5 M triangles), MB before the hub, the ?perf=1 overlay, the forced step-down and GPU memory across runs. Real frame rates: tools/gpu_task.sh (macOS GPU runners)."
   }
  ]
 }
