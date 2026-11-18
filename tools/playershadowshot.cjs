@@ -4,7 +4,7 @@
 //         (to prove the shadow only darkens sunlit ground and never adds light), and the frame time of that view with the shadow (?pshadow=1) and without it (?pshadow=0).
 //   low:  view blob (standing, looking down at the soft blob), and the frame time with and without.
 //   b64: also print every picture as base64 JPEG lines (PSIMG <name> <part> <data>), so the pictures come back through a GitHub job log.
-//   timing (4th argument): no pictures; frame time of the still view with and without the shadow, page loads interleaved on, off, on, off.
+//   timing (4th argument): no pictures; frame time of the still view with and without the shadow, page loads interleaved on, off, on, off (5th argument rev: off, on, off, on).
 // Writes <out_prefix><view>_<tier>.jpg. Prints PASS / FAIL / INFO lines.
 const { chromium } = require('playwright'); const fs = require('fs'); const path = require('path');
 const arg = process.argv[2] || 'high', tier = arg === 'lowbody' ? 'low' : arg, MODE = arg === 'lowbody' ? 'body' : '1', OUT = process.argv[3] || '/tmp/ps_', B64 = process.argv[4] === 'b64';
@@ -40,7 +40,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m), info = (m) => con
 
   if (process.argv[4] === 'timing') {
     const res = { 1: [], 0: [] };
-    for (const on of [1, 0, 1, 0]) { const q = await open(on); await frames(q, 4); const I0 = await ps(q), sp0 = await clearSpot(q, 6), sun0 = I0 ? I0.sun : [0.3812, 0.5228, -0.7624], al = Math.atan2(sun0[0], sun0[2]);
+    for (const on of (process.argv[5] === 'rev' ? [0, 1, 0, 1] : [1, 0, 1, 0])) { const q = await open(on); await frames(q, 4); const I0 = await ps(q), sp0 = await clearSpot(q, 6), sun0 = I0 ? I0.sun : [0.3812, 0.5228, -0.7624], al = Math.atan2(sun0[0], sun0[2]);
       await place(q, sp0.x, sp0.z, al + 0.6, -0.55, 75); await frames(q, 8); const t = await frameMs(q, 12); res[on].push(t.median); info('timing ' + tier + ' pshadow=' + on + ': median ' + t.median.toFixed(1) + ' ms, mean ' + t.mean.toFixed(1) + ' ms'); await q.close(); }
     const m = (a) => a.reduce((x, y) => x + y, 0) / a.length;
     info('FRAMECOST ' + arg + ' interleaved: with ' + m(res[1]).toFixed(1) + ' ms (' + res[1].map((v) => v.toFixed(0)).join(', ') + '), without ' + m(res[0]).toFixed(1) + ' ms (' + res[0].map((v) => v.toFixed(0)).join(', ') + '), difference ' + (100 * (m(res[1]) / m(res[0]) - 1)).toFixed(1) + '%');
