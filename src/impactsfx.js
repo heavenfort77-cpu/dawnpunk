@@ -131,6 +131,8 @@ export const IMPACT_SFX = {
     rattleQ: [16, 18, 20],
     // rattle: loudness of the first knock
     rattleGain: 20.6,
+    // rattle: the knocks alternate between two loose panels; the second one's resonances are this share of the first's (no single ringing pitch)
+    rattleSpread: 1.14,
   },
 
   // HEAD SHOT: the body hit plus a brittle screen crack and electrical static
@@ -259,6 +261,8 @@ export const IMPACT_SFX = {
     settleQ: [14, 16, 18],
     // settling: loudness of the first knock
     settleGain: 19.2,
+    // settling: the knocks alternate between two small parts; the second one's resonances are this share of the first's
+    settleSpread: 0.86,
     // static: first burst (s)
     staticFrom: 0.03,
     // static: last burst (s)
@@ -383,6 +387,13 @@ function strike(a, d, t, len, lp, gain, freqs, qs, gains, k, rnd, grit) {
   f.type = 'lowpass'; f.frequency.value = lp; env(g, t, gain * (grit === undefined ? 0.3 : grit), 0.0008, len); s.connect(f); f.connect(g); g.connect(r);
   const ring = Math.max(...freqs.map((fr, i) => (qs[i] / (Math.PI * fr * k)) * 7)); return end + ring;
 }
+// small knocks (3 ms lowpassed noise grains) that alternate between two resonator banks, the second scaled by 'spread' (two loose parts); returns the end time
+function alternate(a, d, t, tms, gns, freqs, qs, gains, k, spread, lp, rnd) {
+  let end = t;
+  for (let j = 0; j < 2; j++) { const ix = tms.map((x, i) => i).filter((i) => i % 2 === j); if (!ix.length) continue;
+    const r = resonator(a, d, freqs, qs, gains, k * (j ? spread : 1)); end = Math.max(end, grains(a, r, t, ix.map((i) => tms[i]), ix.map((i) => gns[i]), 0.003, 'lowpass', lp, 0.7, rnd)); }
+  return end;
+}
 // sorted random times between from and to, bunched early by 'bunch' (1 = even)
 function times(n, from, to, bunch, rnd) { const out = []; for (let i = 0; i < n; i++) out.push(from + (to - from) * Math.pow(rnd(), bunch)); return out.sort((x, y) => x - y); }
 
@@ -434,8 +445,8 @@ export function impactPlay(a, dest, kind, t, opt) {
     let end = burst(a, out, t, 'lowpass', D.rumbleF0 * pv, D.rumbleF1 * pv, 0.7, 0.004, D.rumbleLen, D.rumbleGain, rnd);
     D.clankAt.forEach((at, i) => { const tt = t + (i ? at * (0.9 + 0.2 * rnd()) : 0); end = Math.max(end, strike(a, out, tt, D.strikeLen, D.clankLp[i], D.strikeGain * D.clankGain[i], D.modes, D.modeQ, D.modeGain, D.clankScale[i] * pv * (0.96 + 0.08 * rnd()), rnd)); });
     const ct = times(D.crunch, 0, D.crunchSpan, 1.3, rnd); end = Math.max(end, grains(a, out, t, ct, ct.map((x, i) => D.crunchGain * (1 - 0.6 * i / D.crunch) * (0.6 + 0.4 * rnd())), D.crunchGrain, 'bandpass', D.crunchHz * pv, D.crunchQ, rnd));
-    const sr = resonator(a, out, D.settleModes, D.settleQ, [1, 0.7, 0.5], pv), st = times(D.settle, D.settleFrom, D.settleTo, 1.6, rnd);
-    end = Math.max(end, grains(a, sr, t, st, st.map((x, i) => D.settleGain * (1 - 0.75 * i / D.settle) * (0.5 + 0.5 * rnd())), 0.003, 'lowpass', 3000, 0.7, rnd));
+    const st = times(D.settle, D.settleFrom, D.settleTo, 1.6, rnd), sg = st.map((x, i) => D.settleGain * (1 - 0.75 * i / D.settle) * (0.5 + 0.5 * rnd()));
+    end = Math.max(end, alternate(a, out, t, st, sg, D.settleModes, D.settleQ, [1, 0.7, 0.5], pv, D.settleSpread, 3000, rnd));
     const zt = times(cnt(D.staticBursts), D.staticFrom, D.staticTo, 1.5, rnd), span = D.staticTo - D.staticFrom;
     end = Math.max(end, grains(a, out, t, zt, zt.map((x) => D.staticGain * nk * Math.pow(1 - (x - D.staticFrom) / span, 1.5) * (0.5 + 0.5 * rnd())), zt.map((x) => D.staticGrain0 + (D.staticGrain1 - D.staticGrain0) * (x - D.staticFrom) / span), 'bandpass', [D.staticF0 * pv, D.staticF1 * pv], D.staticQ, rnd));
     const kt = times(cnt(D.sparks), D.sparkFrom, D.sparkTo, 1.2, rnd); end = Math.max(end, grains(a, out, t, kt, kt.map(() => D.sparkGain * nk * (0.3 + 0.7 * rnd())), D.sparkGrain, 'highpass', D.sparkHp, 0.7, rnd));
@@ -450,8 +461,8 @@ export function impactPlay(a, dest, kind, t, opt) {
   end = Math.max(end, grains(a, out, t, sp, sp.map((x, i) => H.sprayGain * gk * nk * (1 - 0.8 * i / n) * (0.3 + 0.7 * rnd())), H.sprayGrain, 'bandpass', H.sprayHz * pk, H.sprayQ, rnd));
   end = Math.max(end, strike(a, out, t + 0.001, H.strikeLen * lk, H.strikeLp * pk, H.strikeGain * gk, H.modes, H.modeQ, H.modeGain, pk, rnd));
   end = Math.max(end, burst(a, out, t, 'lowpass', H.weightF0 * pk, H.weightF1 * pk, 0.7, 0.002, H.weightLen * lk, H.weightGain * gk, rnd));
-  const rr = resonator(a, out, H.rattleModes, H.rattleQ, [1, 0.7, 0.45], pk * (0.95 + 0.1 * rnd())), rt = times(H.rattle, H.rattleFrom, H.rattleTo * lk, 1.2, rnd);
-  end = Math.max(end, grains(a, rr, t, rt, rt.map((x, i) => H.rattleGain * gk * (1 - 0.6 * i / H.rattle) * (0.5 + 0.5 * rnd())), 0.003, 'lowpass', 3500, 0.7, rnd));
+  const rk = pk * (0.95 + 0.1 * rnd()), rt = times(H.rattle, H.rattleFrom, H.rattleTo * lk, 1.2, rnd), rg = rt.map((x, i) => H.rattleGain * gk * (1 - 0.6 * i / H.rattle) * (0.5 + 0.5 * rnd()));
+  end = Math.max(end, alternate(a, out, t, rt, rg, H.rattleModes, H.rattleQ, [1, 0.7, 0.45], rk, H.rattleSpread, 3500, rnd));
   if (hd) {
     const ht = t + P.delay, gr = resonator(a, out, P.glassModes, P.glassQ, [1, 0.8, 0.6, 0.45], pv), ct = times(P.crackTicks, 0, P.crackSpan, 1.8, rnd), cg = ct.map((x, i) => (1 - 0.7 * i / P.crackTicks) * (0.5 + 0.5 * rnd()));
     end = Math.max(end, grains(a, out, ht, ct, cg.map((x) => x * P.crackGain), P.crackTick, 'highpass', P.crackHp, 0.7, rnd));
