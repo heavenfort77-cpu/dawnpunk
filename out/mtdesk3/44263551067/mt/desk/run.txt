@@ -1,0 +1,5 @@
+25.9 STAGE start
+38.6 SNAP start_screen {"count":"","time":"","game":{"state":"menu","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":[]}
+67.4 ACT clicked #enter (the begin button)
+94.8 STAGE film
+729.6 SNAP film_1 {"count":"","time":"","game":{"state":"intro","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":120},"buttons":[]}
