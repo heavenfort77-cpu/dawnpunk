@@ -23,6 +23,17 @@ function follow(s, target, time, dt, maxV) { if (dt <= 0) return s.x; const om =
   s.v = (s.v - om * tmp) * e; let o = to + (ch + tmp) * e; if ((target - s.x > 0) === (o > target)) { o = target; s.v = 0; } s.x = o; return o; }
 // a loose part: a damped spring stepped in slices of at most 1/240 s, so it settles the same at 20 or 60 frames a second; s = { x, v }
 function spring(s, target, hz, damp, dt) { if (dt <= 0) return s.x; const w = 2 * Math.PI * hz, n = Math.ceil(dt * 240), h = dt / n; for (let i = 0; i < n; i++) { s.v += (w * w * (target - s.x) - 2 * damp * w * s.v) * h; s.x += s.v * h; } return s.x; }
+// two-bone leg reach (world space): bends the knee so hip-to-foot is as long as hip-to-target, swings the thigh to point at it, and gives the foot back its own turn
+const _H = new THREE.Vector3(), _K = new THREE.Vector3(), _F = new THREE.Vector3(), _u = new THREE.Vector3(), _w = new THREE.Vector3(), _n = new THREE.Vector3(), _qa = new THREE.Quaternion(), _qb = new THREE.Quaternion(), _qf = new THREE.Quaternion();
+function turnWorld(b, q) { b.parent.getWorldQuaternion(_qa); _qb.copy(_qa).invert().multiply(q).multiply(_qa); b.quaternion.premultiply(_qb); b.updateWorldMatrix(false, true); }
+function legReach(th, ca, ft, T) {
+  ft.getWorldQuaternion(_qf); th.getWorldPosition(_H); ca.getWorldPosition(_K); ft.getWorldPosition(_F);
+  const a = _H.distanceTo(_K), b = _K.distanceTo(_F), d = clamp(_H.distanceTo(T), Math.abs(a - b) + 1e-3, a + b - 1e-3);
+  _u.subVectors(_H, _K); _w.subVectors(_F, _K); _n.crossVectors(_u, _w);
+  if (_n.lengthSq() > 1e-10) { _n.normalize(); const cur = _u.angleTo(_w), want = Math.acos(clamp((a * a + b * b - d * d) / (2 * a * b), -1, 1)); _qb.setFromAxisAngle(_n, want - cur); turnWorld(ca, _qb.clone()); ft.getWorldPosition(_F); }
+  _u.subVectors(_F, _H).normalize(); _w.subVectors(T, _H).normalize(); turnWorld(th, new THREE.Quaternion().setFromUnitVectors(_u, _w));
+  ft.parent.getWorldQuaternion(_qa); ft.quaternion.copy(_qa.invert().multiply(_qf)); ft.updateWorldMatrix(false, true);
+}
 const BONES = ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'head', 'clavicle_l', 'clavicle_r', 'upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r', 'hand_l', 'hand_r', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r', 'foot_l', 'foot_r'];
 let seedN = 0;
 // scan faces: CONFIG.people.scanFaces, or ?scanfaces=1 / ?scanfaces=0 in the address for one visit (to compare before the owner approves)
@@ -82,14 +93,19 @@ export function createPerson(cfg, key) {
     if (bones.pelvis) { off.set(px, py, 0).applyMatrix3(pelvisM); bones.pelvis.position.copy(pelvisRest).add(off); }
   }
 
-  // o: { face: wanted facing (rad, the holder's frame; +z = 0), go: wants to walk, gaze: [x, y, z] point to look at (holder frame) or null, carry: holding a load in both arms }
-  // returns { speed (m/s, along the body's facing), yaw (the body's facing) } so the caller can move the holder
-  function drive(dt, o) {
-    if (!ready) return { speed: 0, yaw: root.rotation.y };
-    dt = Math.max(0, dt); st.time += dt;
-    // desktop scan faces: bid for the one shared key light by distance to the player (src/peoplehi.js)
-    if (keyBid) keyBid(o.gaze ? Math.hypot(o.gaze[0], o.gaze[2]) : 1e3);
-    if (!st.init) { st.init = true; st.feet = root.rotation.y; st.head.x = st.chest.x = st.hips.x = st.feet; }
+  // o: { face: wanted facing (rad, the holder's frame; +z = 0), go: wants to walk, gaze: [x, y, z] point to look at (holder frame) or null, carry: holding a load in both arms,
+  //      move: true = drive() walks the holder (root.parent) itself, in the same fixed slices, so the path is the same at any frame rate }
+  // returns { speed (m/s, along the body's facing), yaw (the body's facing), moved } so a caller that does not pass move can move the holder
+  // The motion runs in fixed slices of CONFIG.people.motion.slice s (a frame of 1/30 or 1/60 s is a whole number of slices), so 30 and 60 frames a second give the same motion.
+  const M = P.motion, lock = [{ on: false, w: 0, rel: 9, T: new THREE.Vector3() }, { on: false, w: 0, rel: 9, T: new THREE.Vector3() }];
+  st.acc = 0; st.feetV = 0; st.plant = [true, true]; st.hipX = 0; st.drop = 0;
+  // the swing foot's path over the ground: speeds up over the first `ramp` share of the swing, keeps its pace, slows over the last `ramp` share (heel strike), so it never
+  // rushes; returns the share of the step's ground covered at q (0..1 of the swing)
+  const ramp = clamp(M.swingRamp, 0.05, 0.5), vPk = 1 / (1 - ramp);
+  const swingW = (q) => { q = clamp(q, 0, 1); if (q < ramp) { const u = q / ramp; return vPk * ramp * (u * u * u - 0.5 * u * u * u * u); } if (q > 1 - ramp) return 1 - swingW(1 - q);
+    return vPk * ramp * 0.5 + vPk * (q - ramp); };
+  function slice(dt, o) {
+    st.time += dt;
     for (const k of BONES) { const p = pose[k]; p[0] = p[1] = p[2] = 0; }
     // where to face: unwrapped next to the head so a turn always takes the short way
     let face = o.face == null ? st.feet : o.face, gy = null, gp = 0;
@@ -104,22 +120,25 @@ export function createPerson(cfg, key) {
     follow(st.chest, delayed(T.lead), T.follow[1], dt, T.maxSpeed[1]);
     follow(st.hips, delayed(2 * T.lead), T.follow[2], dt, T.maxSpeed[2]);
     let lift = 0, liftSide = 0;
-    if (gw > 0.2) { st.step = null; st.feet += clamp((st.hips.x - st.feet) * (1 - Math.exp(-P.walk.follow * dt)), -P.walk.corner * dt, P.walk.corner * dt); }
-    else {
-      if (!st.step) { const e = st.hips.x - st.feet, goal = delayed(2 * T.lead) - st.feet; if (Math.abs(e) > T.stepStart || (Math.abs(e) > T.minStep && Math.abs(st.hips.v) < 0.3)) { let amt = clamp(e + st.hips.v * G.step * T.predict, -T.maxStep, T.maxStep); if (Math.abs(amt) > Math.abs(goal) && Math.sign(goal) === Math.sign(amt)) amt = goal; st.stepSide = amt > 0 ? 1 : -1; if (st.lastSide === st.stepSide) st.stepSide = -st.stepSide; st.lastSide = st.stepSide; st.step = { from: st.feet, by: amt, t: 0, len: G.step * (1 + G.vary * (rnd() * 2 - 1)) }; } }
-      if (st.step) { const s = st.step; s.t += dt; const u = clamp(s.t / s.len, 0, 1); st.feet = s.from + s.by * sstep(u); lift = Math.sin(Math.PI * u); liftSide = st.stepSide; if (u >= 1) st.step = null; }
-    }
+    // the feet: a pivot step, once started, always finishes (cutting it off dropped the lifted leg in one frame); walking, the feet follow the hips at a turn rate that
+    // changes by at most M.turnAcc rad/s each second; a new pivot step starts only once that turn has slowed to a stop
+    const ac = M.turnAcc * dt;
+    if (st.step) { /* finished below */ } else if (gw > 0.2) { const goalV = clamp((st.hips.x - st.feet) * P.walk.follow, -P.walk.corner, P.walk.corner); st.feetV += clamp(goalV - st.feetV, -ac, ac); st.feet += st.feetV * dt; }
+    else if (Math.abs(st.feetV) > 1e-3) { st.feetV -= clamp(st.feetV, -ac, ac); st.feet += st.feetV * dt; }
+    else { st.feetV = 0; const e = st.hips.x - st.feet, goal = delayed(2 * T.lead) - st.feet; if (Math.abs(e) > T.stepStart || (Math.abs(e) > T.minStep && Math.abs(st.hips.v) < 0.3)) { const len = G.step * (1 + G.vary * (rnd() * 2 - 1)), cap = Math.min(T.maxStep, M.stepAcc * len * len / 6); let amt = clamp(e + st.hips.v * G.step * T.predict, -cap, cap); if (Math.abs(amt) > Math.abs(goal) && Math.sign(goal) === Math.sign(amt)) amt = goal; st.stepSide = amt > 0 ? 1 : -1; if (st.lastSide === st.stepSide) st.stepSide = -st.stepSide; st.lastSide = st.stepSide; st.step = { from: st.feet, by: amt, t: 0, len }; } }
+    if (st.step) { const s = st.step; s.t += dt; const u = clamp(s.t / s.len, 0, 1); st.feet = s.from + s.by * sstep(u); st.feetV = s.by * 6 * u * (1 - u) / s.len; lift = Math.sin(Math.PI * u); liftSide = st.stepSide; if (u >= 1) { st.step = null; st.feetV = 0; } }
     if (!st.step && gw <= 0.2 && Math.abs(st.hips.x - st.feet) < T.minStep * 0.5) st.lastSide = 0;
-    root.rotation.y = st.feet;
     const hipOff = sat(st.hips.x - st.feet, T.twist), chestOff = sat(st.chest.x - (st.feet + hipOff), T.chestTwist), headOff = sat(st.head.x - (st.feet + hipOff + chestOff), T.headMax);
     // ---- gait (Muybridge: fixed stride time per build, leg swing from speed so planted feet do not slide, a little random change in every step)
     if (v > 0.01 || gw > 0.001) { const before = st.phase; st.phase += dt / (G.cycle * st.rate); if (Math.floor(before * 2) !== Math.floor(st.phase * 2)) st.rate = 1 + G.vary * (rnd() * 2 - 1); st.phase %= 1; }
     const S0 = G.stance, A = Math.asin(clamp((v * S0 * G.cycle) / (2 * legLen), 0, 0.7));
-    const leg = (ph) => { const p = (st.phase + ph) % 1; if (p < S0) return [-A + 2 * A * (p / S0), G.kneeStance * Math.sin(Math.PI * p / S0)]; const q = (p - S0) / (1 - S0), e = sstep(q); return [A - 2 * A * e, G.knee * Math.sin(Math.PI * q) * (A / 0.45)]; };
+    // swing: the leg comes forward so the FOOT covers the ground on swingW's path (the body keeps moving meanwhile), which also carries on the stance leg's motion at toe-off
+    const leg = (ph) => { const p = (st.phase + ph) % 1; if (p < S0) return [-A + 2 * A * (p / S0), G.kneeStance * Math.sin(Math.PI * p / S0)]; const q = (p - S0) / (1 - S0), e = (swingW(q) - (1 - S0) * q) / S0; return [A - 2 * A * e, G.knee * Math.sin(Math.PI * q) * (A / 0.45)]; };
     const L = leg(0), R = leg(0.5);
-    // hips over the standing foot: furthest left (+x) at the left foot's mid-stance; the body is lowest when both feet are down (the stance leg is a pendulum)
-    const sw = Math.cos(2 * Math.PI * (st.phase - S0 / 2)), sway = sw * G.sway * gw; let ang = 0; if (st.phase < S0) ang = Math.abs(L[0]); if ((st.phase + 0.5) % 1 < S0) ang = Math.max(ang, Math.abs(R[0]));
-    let drop = legLen * (1 - Math.cos(ang)) * G.drop * gw;
+    // hips over the standing foot: furthest left (+x) at the left foot's mid-stance; the body is lowest when both feet are down (the middle of each double support) and
+    // highest over the standing foot, on a smooth curve (it was taken from the standing leg's angle, which jumped when a foot left the ground)
+    const sw = Math.cos(2 * Math.PI * (st.phase - S0 / 2)), sway = sw * G.sway * gw;
+    let drop = legLen * (1 - Math.cos(A)) * G.drop * gw * (0.5 + 0.5 * Math.cos(4 * Math.PI * (st.phase - (S0 - 0.5) / 2)));
     // ---- rest: slow weight shift from foot to foot, breathing, the gaze drifting
     const idle = 1 - gw; const sh = st.shift; sh.t += dt; if (sh.t >= sh.len) { sh.t = 0; sh.from = sh.to; sh.to = -sh.to * (0.6 + 0.4 * rnd()); sh.len = I.shift[0] + rnd() * (I.shift[1] - I.shift[0]); }
     st.sway2 = (st.sway2 || rnd() * 6.28) + dt * 2 * Math.PI / I.slow; const wsh = ((sh.from + (sh.to - sh.from) * sstep(sh.t / Math.min(sh.len, I.move))) * (1 - I.slowShare) + Math.sin(st.sway2) * I.slowShare) * idle;
@@ -135,6 +154,9 @@ export function createPerson(cfg, key) {
       const free = idle * Math.max(0, -wsh * sg) * I.knee, st1 = liftSide === sg ? lift : 0, th = Lg[0] * gw - st1 * T.stepLift - free * 0.4, cf = Lg[1] * gw + free + st1 * T.stepLift * 2;
       add('thigh_' + s, th, -hipOff, legComp - sg * G.track); add('calf_' + s, cf, 0, 0); add('foot_' + s, -(th + cf) * 0.85 + st1 * 0.2, 0, -legComp * 0.6 + sg * G.track);
     }
+    // which feet stand on the ground (held there by the foot lock in drive): walking, the leg in its stance; a pivot step, the other foot; standing, both
+    const walking = gw > 0.2 && !st.step;
+    st.plant[0] = walking ? st.phase % 1 < S0 : liftSide !== 1; st.plant[1] = walking ? (st.phase + 0.5) % 1 < S0 : liftSide !== -1;
     // body: lean (a spring, so it rocks a little when a walk starts or stops), counter-turn against the hips, waddle (child), breathing; the head kept level
     const lean = spring(st.lean, G.lean * gw + (G.stoop || 0) - (o.carry ? 0.04 : 0), S.leanHz, S.leanDamp, dt);
     const counter = -G.twist * Math.sin(2 * Math.PI * st.phase) * gw * 1.4, waddle = (G.waddle || 0) * Math.sin(2 * Math.PI * (st.phase - S0 / 2)) * gw;
@@ -158,8 +180,39 @@ export function createPerson(cfg, key) {
       add('upperarm_' + s, a, 0, sg * (G.armOut + br * I.chest * 0.3) - sg * hipRoll * 0.2);
       add('lowerarm_' + s, f + G.elbow, 0, 0); add('hand_' + s, hd, 0, 0);
     }
-    apply(hipX, -drop);
-    return { speed: v, yaw: st.feet };
+    st.hipX = hipX; st.drop = drop;
+    // walk the holder along the facing (o.move)
+    if (o.move && root.parent) { root.parent.position.x += Math.sin(st.feet) * v * dt; root.parent.position.z += Math.cos(st.feet) * v * dt; }
+    return v;
+  }
+  // the foot lock: a foot on the ground stays where it was put down (two-bone leg reach, src people.js legReach); a foot that lifts is let go over M.lockRelease s
+  const LEGS = [['thigh_l', 'calf_l', 'foot_l'], ['thigh_r', 'calf_r', 'foot_r']], fk = new THREE.Vector3(), tg = new THREE.Vector3();
+  function footLock(dt) {
+    if (!scn) return; scn.updateWorldMatrix(true, true);
+    for (let i = 0; i < 2; i++) { const [a, b, c] = LEGS[i], th = bones[a], ca = bones[b], ft = bones[c], lk = lock[i]; if (!th || !ca || !ft) continue;
+      ft.getWorldPosition(fk);
+      if (st.plant[i] && !lk.on) { if (lk.w > 0) lk.T.lerpVectors(fk, lk.T, lk.w); else lk.T.copy(fk); lk.on = true; lk.w = 1; }
+      else if (!st.plant[i] && lk.on) { lk.on = false; lk.rel = 0; }
+      if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = 1 - sstep(lk.rel / M.lockRelease); }
+      if (lk.w <= 0) continue;
+      // a foot far from where the leg puts it (a teleport, a long pause) is let go
+      if (Math.hypot(lk.T.x - fk.x, lk.T.z - fk.z) > M.lockSlip) { lk.on = false; lk.w = 0; continue; }
+      tg.lerpVectors(fk, lk.T, lk.w); legReach(th, ca, ft, tg);
+    }
+  }
+  function drive(dt, o) {
+    if (!ready) return { speed: 0, yaw: root.rotation.y };
+    dt = Math.max(0, dt);
+    // desktop scan faces: bid for the one shared key light by distance to the player (src/peoplehi.js)
+    if (keyBid) keyBid(o.gaze ? Math.hypot(o.gaze[0], o.gaze[2]) : 1e3);
+    if (!st.init) { st.init = true; st.feet = root.rotation.y; st.head.x = st.chest.x = st.hips.x = st.feet; }
+    // a long gap (the scene was left) is not played through: at most M.maxSlices slices, and the feet are let go
+    const h = M.slice; st.acc += dt; let n = Math.floor(st.acc / h + 1e-6); st.acc -= n * h; if (n > M.maxSlices) { n = M.maxSlices; st.acc = 0; lock[0].w = lock[1].w = 0; lock[0].on = lock[1].on = false; }
+    let v = st.speed.x; for (let i = 0; i < n; i++) v = slice(h, o);
+    root.rotation.y = st.feet;
+    apply(st.hipX, -st.drop);
+    footLock(n * h);
+    return { speed: v, yaw: st.feet, moved: !!o.move };
   }
   // the gait numbers and live turn state, for tools/animcheck.cjs
   const probe = () => ({ kind, cycle: G.cycle, speed: G.speed, now: st.speed.x, phase: st.phase, step: !!st.step, yaw: { head: st.head.x, chest: st.chest.x, hips: st.hips.x, feet: st.feet }, legLen });

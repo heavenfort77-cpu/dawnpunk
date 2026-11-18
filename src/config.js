@@ -141,6 +141,13 @@ export const CONFIG = {
     idle: { shift: [3.5, 6.5], move: 1.4, slow: 7.5, slowShare: 0.35, hip: 0.025, roll: 0.03, knee: 0.14, breath: 4.2, chest: 0.012, look: 0.07 },
     settle: { armHz: 1.7, armDamp: 0.45, foreHz: 2.0, foreDamp: 0.3, handHz: 2.6, handDamp: 0.3, inertia: 0.35, headHz: 2.0, headDamp: 0.5, leanHz: 1.3, leanDamp: 0.55 },
     walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.85 },
+    // motion (tools/humanmotioncheck.cjs measures it):
+    // slice: the motion runs in fixed steps of this many seconds (1/120: a 30 or 60 fps frame is a whole number of them, so the motion is the same at both); maxSlices: at most this many per frame (a longer gap is skipped)
+    // turnAcc: walking, the body's turn rate changes by at most this many rad/s each second (30 = 1720 deg/s2; no snapped turns at a corner)
+    // stepAcc: a pivot step turns the body with at most this angular acceleration (rad/s2; 80 = 4580 deg/s2, under the ~100 rad/s2 legs can give a turn); bigger turns take more steps
+    // swingRamp: the swing foot speeds up and slows down over this share of its swing each (0.2: its top speed is 1.25 x its mean, as a walking foot; 0.5 would be 2 x)
+    // lockRelease: a foot that lifts is let go of its spot over this many seconds; lockSlip: a foot more than this many m from where the leg puts it is let go (a teleport or a long pause)
+    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, swingRamp: 0.2, lockRelease: 0.12, lockSlip: 0.3 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
