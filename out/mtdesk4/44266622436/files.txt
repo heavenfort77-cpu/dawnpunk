@@ -1,0 +1,7 @@
+mt/desk/01_start_screen.jpg 14254
+mt/desk/02_film_1.jpg 43907
+mt/desk/03_film_2.jpg 97658
+mt/desk/04_base_wake.jpg 91412
+mt/desk/05_base_after_card.jpg 91501
+mt/desk/06_marla_dialog_day1.jpg 23393
+mt/desk/run.txt 2427

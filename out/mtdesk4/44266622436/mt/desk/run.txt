@@ -1,0 +1,20 @@
+11.4 STAGE start
+18.7 SNAP start_screen {"count":"","time":"","game":{"state":"menu","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":[]}
+35.4 ACT clicked #enter (the begin button)
+48.8 STAGE film
+356.5 SNAP film_1 {"count":"","time":"","game":{"state":"intro","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":120},"buttons":[]}
+1186.5 SNAP film_2 {"cineCap":"MARLA: Up, Potts. Sun is wasting.","count":"","time":"","game":{"state":"intro","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":[]}
+1280.1 NOTE watched the opening film for 57.8 game s
+1295.5 STAGE base day 1: waking
+1367.0 SNAP base_wake {"csay":"Click to start · E to talk","bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||"]}
+1382.4 NOTE the job card closed by itself before 8 real seconds of reading
+1472.4 SNAP base_after_card {"csay":"Click to start · E to talk","bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||"]}
+1492.3 ACT clicked the game (the prompt says Click to start)
+1553.8 NOTE waking at -0.6,-9.3; Marla stands 2.5 m away; prompt: "E: talk to Marla, the Scout"
+1559.0 STAGE base day 1: talk to Marla
+1584.9 NOTE prompt at Marla: "E: talk to Marla, the Scout"
+1600.2 ACT pressed KeyE (Marla)
+1677.4 STAGE base day 1: Marla dialog
+1751.5 SNAP marla_dialog_day1 {"bstat":"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food","scout":"Marla, the Scout / \"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run","count":"","time":"","game":{"state":"base","hp":null,"sun":null,"food":null,"machines":null,"drill":null,"dayLeft":null},"buttons":["bPause:||"]}
+1845.2 ACT clicked #go (Ride out)
+1860.9 STAGE street by day
