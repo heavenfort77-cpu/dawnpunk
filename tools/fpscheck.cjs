@@ -1,0 +1,14 @@
+// frames drawn in 6 s on the street, in a house by day and in the base (software renderer: only useful for comparing builds and tiers, not as a phone or desktop number).
+// Usage: node tools/fpscheck.cjs [low|high] [width height scale]. With a tier, dist/ is served over local http (so the high tier's texture files beside index.html really load) and ?quality=<tier> is added.
+const { chromium } = require('playwright'); const http = require('http'); const fs = require('fs'); const path = require('path');
+const tier = process.argv[2], W = +process.argv[3] || 844, H = +process.argv[4] || 390, SC = +process.argv[5] || 1, DIST = path.join(__dirname, '..', 'dist');
+const srv = http.createServer((q, r) => { const f = path.join(DIST, decodeURIComponent(q.url.split('?')[0])); if (!f.startsWith(DIST) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); r.end(); return; } r.writeHead(200, { 'Content-Type': { '.html': 'text/html', '.jpg': 'image/jpeg', '.png': 'image/png', '.mp3': 'audio/mpeg' }[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(r); });
+(async () => { if (tier) await new Promise((ok) => srv.listen(0, '127.0.0.1', ok));
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: SC });
+  await p.goto(tier ? 'http://127.0.0.1:' + srv.address().port + '/index.html?quality=' + tier : 'file://' + __dirname + '/../dist/index.html'); await p.waitForFunction(() => window.__game && window.__game.startRun);
+  const fps = () => p.evaluate(() => new Promise((res) => { let n = 0; const t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 6000) requestAnimationFrame(f); else res((n / 6).toFixed(1)); }; requestAnimationFrame(f); }));
+  await p.evaluate(() => window.__game.enterBase()); await p.waitForTimeout(3000); const fb = await fps();
+  await p.evaluate(() => { document.getElementById('selRing').value = '1'; window.__game.startRun(0); }); await p.waitForTimeout(2500); const fs2 = await fps();
+  await p.evaluate(() => window.__game.enterHouse(0)); await p.waitForTimeout(2000); const fh = await fps();
+  const q = await p.evaluate(() => window.__game.quality ? window.__game.quality() : null);
+  console.log('frames per second in the test renderer' + (tier ? ' [' + q.tier + ', ' + W + 'x' + H + ' x' + SC + ', textures ' + q.wallTex + ' px, cloud layers now ' + q.sky + ']' : '') + ': base ' + fb + ', street ' + fs2 + ', house ' + fh); await b.close(); if (tier) srv.close(); })();

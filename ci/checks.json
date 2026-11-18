@@ -1,0 +1,47 @@
+{
+  "_about": [
+    "The check list for .github/workflows/checks.yml. One entry = one GitHub job (except job 'logic', run by the logic job).",
+    "tier: logic (game logic, the same on desktop and phone, run ONCE on the low tier), desktop (graphics, high tier only), phone (phone screen fit / overlap).",
+    "quality: the graphics tier the check opens (low, high, both, auto = no ?quality in the address). timeout: minutes for the check itself.",
+    "args: {dist} = absolute path of the built dist/ folder, {out} = a scratch folder for pictures (not uploaded).",
+    "pass / fail: line patterns (JavaScript regex); default ^\\s*PASS\\b and ^\\s*FAIL\\b. A check fails if it prints a fail line, exits non-zero, times out, or prints no pass/fail line at all."
+  ],
+  "checks": [
+    { "name": "test.js", "script": "test.js", "args": [], "tier": "logic", "quality": "node", "timeout": 60, "job": "logic" },
+
+    { "name": "keycheck", "script": "tools/keycheck.cjs", "args": ["{out}/keys.png"], "tier": "logic", "quality": "auto", "timeout": 25 },
+    { "name": "mousecheck", "script": "tools/mousecheck.cjs", "args": ["low"], "tier": "logic", "quality": "low", "timeout": 25 },
+    { "name": "solarcheck", "script": "tools/_low_solarcheck.cjs", "args": [], "tier": "logic", "quality": "low", "timeout": 20 },
+    { "name": "hintscheck", "script": "tools/hintscheck.cjs", "args": [], "tier": "logic", "quality": "low", "timeout": 20 },
+    { "name": "marlatalkcheck", "script": "tools/marlatalkcheck.cjs", "args": [], "tier": "logic", "quality": "low", "timeout": 20 },
+    { "name": "musrotcheck", "script": "tools/musrotcheck.cjs", "args": [], "tier": "logic", "quality": "low", "timeout": 20 },
+    { "name": "drillcheck", "script": "tools/drillcheck.cjs", "args": ["{dist}/index.html"], "tier": "logic", "quality": "low", "timeout": 35 },
+    { "name": "freshfixcheck", "script": "tools/freshfixcheck.cjs", "args": ["{dist}/index.html", "low"], "tier": "logic", "quality": "low", "timeout": 45 },
+    { "name": "voicecheck", "script": "tools/voicecheck.cjs", "args": ["{dist}/index_single.html", "low"], "tier": "logic", "quality": "low", "timeout": 35 },
+    { "name": "workshopcheck", "script": "tools/workshopcheck.cjs", "args": ["low"], "tier": "logic", "quality": "low", "timeout": 45 },
+    { "name": "avianscheck", "script": "tools/avianscheck.cjs", "args": ["low"], "tier": "logic", "quality": "low", "timeout": 45 },
+    { "name": "watercheck", "script": "tools/watercheck.cjs", "args": ["low"], "tier": "logic", "quality": "low", "timeout": 35 },
+    { "name": "lorecheck", "script": "tools/lorecheck.cjs", "args": ["low", "{out}/lore_"], "tier": "logic", "quality": "low", "timeout": 35 },
+    { "name": "guidecheck", "script": "tools/guidecheck.cjs", "args": ["{out}/"], "tier": "logic", "quality": "low", "timeout": 20 },
+    { "name": "stairgapcheck", "script": "tools/stairgapcheck.cjs", "args": [], "tier": "logic", "quality": "low", "timeout": 20 },
+    { "name": "hud2check", "script": "tools/hud2check.cjs", "args": ["low"], "tier": "logic", "quality": "low", "timeout": 35 },
+
+    { "name": "hudcheck_phone", "script": "tools/_low_hudcheck.cjs", "args": ["{out}/hud"], "tier": "phone", "quality": "low", "timeout": 25 },
+    { "name": "phonehudcheck", "script": "tools/phonehudcheck.cjs", "args": [], "tier": "phone", "quality": "low", "timeout": 45 },
+    { "name": "panelfixcheck", "script": "tools/panelfixcheck.cjs", "args": ["{dist}/index.html"], "tier": "phone", "quality": "low", "timeout": 35 },
+    { "name": "bookcheck", "script": "tools/bookcheck.cjs", "args": ["{dist}/index_single.html"], "tier": "phone", "quality": "low", "timeout": 30 },
+    { "name": "rotcheck", "script": "tools/rotcheck.cjs", "args": [], "tier": "phone", "quality": "auto", "timeout": 15 },
+    { "name": "gloomhitcheck_phone", "script": "tools/gloomhitcheck.cjs", "args": ["low"], "tier": "phone", "quality": "low", "timeout": 35 },
+
+    { "name": "hudcheck_desktop", "script": "tools/_high_hudcheck.cjs", "args": ["{out}/hud"], "tier": "desktop", "quality": "high", "timeout": 35 },
+    { "name": "gloomcheck", "script": "tools/_high_gloomcheck.cjs", "args": [], "tier": "desktop", "quality": "high", "timeout": 35 },
+    { "name": "gloomglbcheck", "script": "tools/gloomglbcheck.cjs", "args": ["walker,lurcher,hauler,stilt,lantern,ticks,warden"], "tier": "desktop", "quality": "high", "timeout": 100 },
+    { "name": "gloommotioncheck", "script": "tools/gloommotioncheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
+    { "name": "animcheck", "script": "tools/animcheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
+    { "name": "bosscheck", "script": "tools/bosscheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
+    { "name": "openingcheck", "script": "tools/openingcheck.cjs", "args": ["high", "{out}/open_", "{dist}/index_single.html", "1280x720"], "tier": "desktop", "quality": "high", "timeout": 100 },
+    { "name": "gloomhitcheck_desktop", "script": "tools/gloomhitcheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
+    { "name": "qualitycheck", "script": "tools/qualitycheck.cjs", "args": [], "tier": "desktop", "quality": "both", "timeout": 35 },
+    { "name": "marlasoak", "script": "tools/marlasoak.cjs", "args": [], "tier": "desktop", "quality": "high", "timeout": 25, "pass": "NO ERRORS\\s*$", "fail": "(?<!NO )ERRORS\\b" }
+  ]
+}

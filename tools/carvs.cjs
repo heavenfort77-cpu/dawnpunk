@@ -1,0 +1,10 @@
+// Abandoned cars, same framing, on one graphics tier. Usage: node tools/carvs.cjs <out_prefix> <low|high> [how many cars, default 3] [extra query]
+// writes <out_prefix>_car<i>_<tier>.png (a three-quarter view of each car); tools/gloomvs_join.py puts phone and desktop side by side.
+const { chromium } = require('playwright'); const tier = process.argv[3] || 'high', N = +(process.argv[4] || 3);
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = []; const p = await b.newPage({ viewport: { width: 800, height: 560 } }); p.on('pageerror', (e) => errs.push(String(e))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 300)); });
+  await p.goto('file://' + __dirname + '/../dist/index.html?quality=' + tier + '&seed=777' + (process.argv[5] ? '&' + process.argv[5] : '')); await p.waitForFunction(() => window.__game && window.__game.startRun);
+  await p.evaluate(() => { window.__noHands = true; window.__game.enterBase(); document.getElementById('selRing').value = '1'; window.__game.startRun(0); document.getElementById('hud').style.visibility = 'hidden'; }); await p.waitForTimeout(2500);
+  const cars = await p.evaluate(() => window.__game.run.cars.filter((c) => !c.ghost).map((c) => ({ x: c.x, z: c.z, yaw: c.yaw, cond: c.cond, kind: c.kind })));
+  for (let i = 0; i < Math.min(N, cars.length); i++) { const c = cars[i], a = c.yaw + 0.9, x = c.x + Math.sin(a) * 4.6, z = c.z + Math.cos(a) * 4.6;
+    await p.evaluate(([x, z, yaw]) => { const g = window.__game; g.setTown(x, z); g.setYaw(yaw); g.setPitch && g.setPitch(-0.14); g.cam.fov = 50; g.cam.updateProjectionMatrix(); }, [x, z, Math.atan2(-(c.x - x), -(c.z - z))]); await p.waitForTimeout(2000); await p.screenshot({ path: process.argv[2] + '_car' + i + '_' + tier + '.png', timeout: 180000 }); }
+  console.log(tier, 'cars', cars.length, 'kinds', cars.slice(0, N).map((c) => c.kind + '/' + c.cond).join(' '), '|', errs.length ? [...new Set(errs)].join('|').slice(0, 500) : 'NO ERRORS'); await b.close(); })();

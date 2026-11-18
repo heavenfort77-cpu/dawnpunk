@@ -1,0 +1,29 @@
+// Desktop vs phone pictures of the Gloom machines, in the game. Usage: node tools/gloomhishot.cjs <out_prefix> <low|high> [mode] [kinds, comma separated] [walk steps] [extra query]
+// mode each (default): every kind alone at about 3 m, same framing on both tiers -> <prefix>_<kind>_<tier>.png. mode back: the same from behind. mode all: the seven in a row by day. mode night: the seven at night,
+// each with a light made from the game's own machine light at the place and colour the machine gives (userData.lamp / lampColor). walk steps: the machine is walked that many 4 cm steps first (legs, rams and cables in a walking pose).
+// Join a phone and a desktop picture with tools/gloomvs_join.py. Headless software renderer: proves it loads and draws, says nothing about speed.
+const { chromium } = require('playwright');
+const ALL = ['walker', 'lurcher', 'hauler', 'stilt', 'lantern', 'ticks', 'warden'], TOP = { walker: 2.15, lurcher: 1.9, hauler: 2.35, stilt: 3.5, lantern: 2.6, ticks: 0.75, warden: 3.0 }, DIST = { walker: 3.0, lurcher: 3.0, hauler: 3.2, stilt: 3.6, lantern: 3.3, ticks: 1.9, warden: 4.0 };
+const out = process.argv[2], tier = process.argv[3] || 'high', mode = process.argv[4] || 'each', K = process.argv[5] && process.argv[5] !== 'all' ? process.argv[5].split(',') : ALL, walk = +(process.argv[6] || 0);
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const wide = mode === 'all' || mode === 'night', p = await b.newPage({ viewport: wide ? { width: 1500, height: 640 } : { width: 800, height: 760 } }); const errs = []; p.on('pageerror', (e) => errs.push(String(e))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 300)); });
+  await p.goto('file://' + __dirname + '/../dist/index_single.html?quality=' + tier + '&seed=777' + (process.argv[7] ? '&' + process.argv[7] : ''), { timeout: 180000 }); await p.waitForFunction(() => window.__game && window.__game.startRun);
+  await p.evaluate(() => { window.__noHands = true; window.__game.enterBase(); document.getElementById('selRing').value = '0'; window.__game.startRun(0); document.getElementById('hud').style.visibility = 'hidden'; }); await p.waitForTimeout(2500);
+  const stand = (k, x, z, ry, t) => p.evaluate(([k, x, z, ry, t, walk]) => { const g = window.__game; g.gloomSample(k, x, z, ry, t, false); const o = window.__lastSample; for (let i = 1; i <= walk; i++) o.userData.anim(t + i * 0.05, { x: x, z: z + i * 0.04 }); return true; }, [k, x, z, ry, t, walk]);
+  if (!wide) for (const k of K) { const i = ALL.indexOf(k), x = -60 + i * 9, d = DIST[k];
+    await stand(k, x, 0.6, mode === 'back' ? 0.5 : Math.PI + 0.5, 3.6);
+    await p.evaluate(([x, d, top]) => { const g = window.__game; g.setTown(x, 0.6 + d); g.setYaw(0); g.cam.fov = top > 3.2 ? 58 : 50; g.cam.updateProjectionMatrix(); g.setPitch(Math.atan((top * 0.52 - g.cam.position.y) / d)); if (g.hands && g.hands.g) g.hands.g.visible = false; }, [x, d, TOP[k]]); await p.waitForTimeout(2500);
+    await p.screenshot({ path: out + '_' + k + '_' + tier + '.png', timeout: 240000 }); }
+  else { const xs = [-4.4, -3.0, -1.4, 0.3, 1.7, 2.9, 4.6], ds = [0, 0.2, 0, -0.5, 0.2, 1.6, -0.8]; let o = { x: -57.5, z: 0.4, nx: 0, nz: 1 };
+    // by day: a clear stretch of the street. At night the game is inside a house: the machines stand outside one of its openings and are seen from further out, against the house
+    if (mode === 'night') { await p.evaluate(() => { window.__game.enterHouse(0); window.__game.nightfall(); }); await p.waitForTimeout(2500); o = await p.evaluate(() => { const s = window.__game.sim; s.gloom.length = 0; s.player.hp = 100; const q = s.breaches.find((x) => x.floor === 0 && x.type !== 'door') || s.breaches[0]; return { x: q.x - q.nx * 3.2, z: q.z - q.nz * 3.2, nx: -q.nx, nz: -q.nz }; }); }
+    const ry = Math.atan2(o.nx, o.nz) + Math.PI;
+    for (let i = 0; i < ALL.length; i++) { await stand(ALL[i], o.x + o.nz * xs[i] + o.nx * ds[i], o.z - o.nx * xs[i] + o.nz * ds[i], ry - (i - 3) * 0.14, 3.6 + i * 0.37);
+      await p.evaluate(() => { (window.__samples = window.__samples || []).push(window.__lastSample); }); }
+    // at night: as many machine lights as the tier allows (quality.<tier>.lights), on the machines nearest the camera, like the game does
+    if (mode === 'night') await p.evaluate((cam) => { const g = window.__game, n = window.CONFIG.quality[g.quality().tier].lights, l0 = g.glights[0]; if (!l0) return;
+      window.__samples.filter((m) => m.userData.lamp).sort((a, b) => Math.hypot(a.position.x - cam[0], a.position.z - cam[1]) - Math.hypot(b.position.x - cam[0], b.position.z - cam[1])).slice(0, n).forEach((m) => { const l = l0.clone(); l.color.setHex(m.userData.lampColor); l.intensity = window.CONFIG.gloomLook.lightPower; l.distance = window.CONFIG.gloomLook.lightReach; l.position.copy(m.userData.lamp); l.visible = true; m.add(l); }); }, [o.x + o.nx * 5.6, o.z + o.nz * 5.6]);
+    const cam = [o.x + o.nx * 5.6 + o.nz * 0.2, o.z + o.nz * 5.6 - o.nx * 0.2];
+    for (let k = 0; k < 3; k++) { await p.evaluate(([cam, o, night]) => { const g = window.__game; if (night) { const s = g.sim; s.gloom.length = 0; s.player.hp = 100; s.player.x = cam[0]; s.player.z = cam[1]; } else g.setTown(cam[0], cam[1]); g.setYaw(Math.atan2(o.nx, o.nz)); g.cam.fov = 56; g.cam.updateProjectionMatrix(); g.setPitch(0.03); if (g.hands && g.hands.g) g.hands.g.visible = false; }, [cam, o, mode === 'night']); await p.waitForTimeout(1200); }
+    await p.screenshot({ path: out + '_' + mode + '_' + tier + '.png', timeout: 240000 }); }
+  const tris = await p.evaluate((K) => K.map((k) => k + ' ' + window.__game.gloomTris(k)), ALL); console.log(tier, 'triangles:', tris.join(', '));
+  console.log(errs.length ? [...new Set(errs)].join('|').slice(0, 900) : 'NO ERRORS'); await b.close(); })();

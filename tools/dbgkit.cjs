@@ -1,0 +1,7 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const p = await b.newPage({ viewport: { width: 844, height: 390 } });
+  await p.goto('file://' + __dirname + '/../dist/index.html'); await p.waitForFunction(() => window.__game && window.__game.enterBase); await p.evaluate(() => localStorage.clear());
+  await p.click('#enter'); await p.waitForTimeout(1500); await p.evaluate(() => { const g = window.__game; const w = g.marla.root.getWorldPosition(new g.marla.root.position.constructor()); g.setBase(w.x + 1.2, w.z + 1.2); }); await p.waitForTimeout(1500); await p.click('#bFire'); await p.waitForTimeout(700); await p.click('#go'); await p.waitForTimeout(3000);
+  const st = () => p.evaluate(() => { const g = window.__game, r = g.run, m = g.marla.root; return JSON.stringify({ px: r.px.toFixed(1), pz: r.pz.toFixed(1), mx: m.position.x.toFixed(1), mz: m.position.z.toFixed(1), kit: g.kitOpen, parent: !!m.parent }); });
+  console.log(await st()); const h = await p.evaluate(() => { const r = window.__game.run, h = r.houses.slice().sort((a, b) => Math.hypot(a.doorX, a.doorZ) - Math.hypot(b.doorX, b.doorZ))[0]; return [h.doorX, h.doorZ, h.row]; }); console.log(h);
+  await p.evaluate(([x, z, row]) => { const g = window.__game; g.setTown(x, z - row * 3); }, h); await p.waitForTimeout(1200); console.log(await st()); await b.close(); })();

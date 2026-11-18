@@ -1,0 +1,132 @@
+# Dawnpunk checks, run side by side on GitHub's runners. Started by hand only (Actions tab, or tools/ci_run.sh), never on push.
+# The check list is ci/checks.json; ci/ci.mjs plans, runs and sums them up.
+name: checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      group:
+        description: "Which checks: all, logic (test.js + logic checks, low tier), desktop (graphics, high tier), phone (screen fit)"
+        type: choice
+        options: [all, logic, desktop, phone]
+        default: all
+
+concurrency:
+  group: checks
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PW_VERSION: "1.63.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      checks: ${{ steps.plan.outputs.checks }}
+      logic: ${{ steps.plan.outputs.logic }}
+      names: ${{ steps.plan.outputs.names }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node build.mjs
+      - id: plan
+        run: node ci/ci.mjs plan "${{ inputs.group || 'all' }}" | tee -a "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            dist/
+            !dist/solardg-itch.zip
+          retention-days: 1
+          if-no-files-found: error
+
+  logic:
+    needs: build
+    if: needs.build.outputs.logic == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node ci/ci.mjs run test.js
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: log-test.js
+          path: ci-logs/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  check:
+    needs: build
+    if: needs.build.outputs.checks != '[]' && needs.build.outputs.checks != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.minutes }}
+    name: ${{ matrix.tier }} ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include: ${{ fromJSON(needs.build.outputs.checks) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # the checks require('playwright'); kept out of package.json so the game's own install stays small
+      - run: npm install --no-save --no-audit --no-fund playwright@${{ env.PW_VERSION }}
+      - id: pwcache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PW_VERSION }}-shell
+      - if: steps.pwcache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps --only-shell chromium
+      - if: steps.pwcache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - run: node ci/ci.mjs run "${{ matrix.name }}"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: log-${{ matrix.name }}
+          path: ci-logs/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  summary:
+    needs: [build, logic, check]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: log-*
+          path: ci-logs
+          merge-multiple: true
+      - name: Summary table
+        run: node ci/ci.mjs summary '${{ needs.build.outputs.names }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: summary
+          path: ci-logs/summary.txt
+          retention-days: 30

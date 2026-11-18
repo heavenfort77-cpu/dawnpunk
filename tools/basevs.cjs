@@ -1,0 +1,16 @@
+// The base on one graphics tier, same framing every time (phone vs desktop pairs). Usage: node tools/basevs.cjs <out_prefix> <low|high> [extra query] [views, comma list]
+// views: base (the plaza from the spawn point), station (the storage station from its front, 6 m), home (your home from the plaza), cats (the three painted cats, 1.6 m),
+// devices (six bloom-tech devices in a row, 3 m), night (the street at night is shot by streetvs; here: the base at its darkest is not a game state). Writes <out_prefix>_<view>_<tier>.png
+const { chromium } = require('playwright'); const tier = process.argv[3] || 'high', XQ = process.argv[4] || '', VIEWS = (process.argv[5] || 'base,station,home,cats,devices').split(',');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = []; const p = await b.newPage({ viewport: { width: 960, height: 600 } }); p.on('pageerror', (e) => errs.push(String(e))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 300)); });
+  await p.goto('file://' + __dirname + '/../dist/index_single.html?quality=' + tier + '&seed=777' + (XQ ? '&' + XQ : ''), { timeout: 120000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 120000 });
+  await p.evaluate(() => { window.__noHands = true; window.__game.enterBase(); for (const id of ['hud', 'marla', 'msg', 'bprompt', 'bq', 'bstat', 'mlook']) { const e = document.getElementById(id); if (e) e.style.visibility = 'hidden'; } }); await p.waitForFunction(() => window.__game.marla.ready, null, { timeout: 120000 }).catch(() => {});
+  const shot = async (v) => { await p.waitForTimeout(3500); await p.screenshot({ path: process.argv[2] + '_' + v + '_' + tier + '.png', timeout: 240000 }); };
+  const look = async (x, z, tx, tz, pitch, fov) => { await p.evaluate(([x, z, yaw, pt, fov]) => { const g = window.__game; g.setBase(x, z); g.setYaw(yaw); g.setPitch(pt); g.cam.fov = fov; g.cam.updateProjectionMatrix(); }, [x, z, Math.atan2(-(tx - x), -(tz - z)), pitch, fov]); };
+  const st = await p.evaluate(() => { const B = window.__game.B; return B && B.STATIONS ? { s: B.STATIONS.storage, h: B.HOME } : null; });
+  if (VIEWS.includes('base')) await shot('base');
+  if (VIEWS.includes('station') && st) { await look(st.s.x + 2.5, st.s.z + 6.5, st.s.x, st.s.z, 0.12, 60); await shot('station'); }
+  if (VIEWS.includes('home') && st) { await look(st.h.x + 3.5, st.h.z + 8, st.h.x, st.h.z, 0.1, 60); await shot('home'); }
+  if (VIEWS.includes('cats')) { await p.evaluate(() => { const g = window.__game; for (let i = 0; i < 3; i++) g.catSample(i, 3 + (i - 1) * 0.75, 2.5, 0, 1); }); await look(3, 4.05, 3, 2.5, -0.32, 50); await shot('cats'); }
+  if (VIEWS.includes('devices')) { await p.evaluate(() => { const g = window.__game; ['lance', 'collector', 'mist', 'chime', 'moon', 'prism'].forEach((k, i) => g.deviceSample(k, -0.5 + (i - 2.5) * 1.1, 1.5, 0, true)); }); await look(-0.5, 4.3, -0.5, 1.5, -0.18, 55); await shot('devices'); }
+  console.log(tier, 'base', st ? '' : '(no station positions)', '|', errs.length ? [...new Set(errs)].join('|').slice(0, 500) : 'NO ERRORS'); await b.close(); })();

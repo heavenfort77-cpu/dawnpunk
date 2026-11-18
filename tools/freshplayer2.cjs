@@ -1,0 +1,31 @@
+// First-time player, part 2: the things part 1 did not touch. Base: quest board, a villager, a delivery, the hidden cat and the shelf. Run: a two-floor house: stairs up, capsules upstairs, ladder down.
+// Logs what the screen says at each step. Usage: node tools/freshplayer2.cjs <outdir/>
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const S = process.argv[2];
+  const p = await b.newPage({ viewport: { width: 844, height: 390 } }); const errs = []; p.on('pageerror', (e) => errs.push(String(e)));
+  await p.goto('file://' + __dirname + '/../dist/index.html'); await p.waitForFunction(() => window.__game && window.__game.enterBase); await p.evaluate(() => localStorage.clear());
+  const txt = (id) => p.evaluate((id) => { const el = document.getElementById(id); return el && el.offsetParent !== null ? el.textContent.trim().replace(/\s+/g, ' ') : ''; }, id);
+  const say = async (n) => { const o = {}; for (const id of ['bprompt', 'msg', 'marla', 'bq', 'count']) { const t = await txt(id); if (t) o[id] = t; } console.log('[' + n + '] ' + JSON.stringify(o)); await p.screenshot({ path: S + 'fp2_' + n.replace(/\W+/g, '_') + '.png' }); };
+  const go = async (x, z) => { await p.evaluate(([x, z]) => window.__game.setBase(x, z), [x, z]); await p.waitForTimeout(900); }, use = async () => { await p.click('#bFire'); await p.waitForTimeout(700); };
+  const panel = async (n) => { const o = await p.evaluate(() => { const q = document.getElementById('qb'); return q.style.display === 'none' ? null : { text: q.innerText.replace(/\s+/g, ' ').slice(0, 420), buttons: [...q.querySelectorAll('button')].map((x) => x.textContent.trim()) }; }); console.log('   panel ' + n + ': ' + JSON.stringify(o)); return o; };
+  const press = async (re) => p.evaluate((src) => { const r = new RegExp(src, 'i'), x = [...document.querySelectorAll('#qb button')].find((q) => r.test(q.textContent)); if (x) { x.click(); return x.textContent.trim(); } return null; }, re);
+  await p.click('#enter'); await p.waitForTimeout(1500);
+  const P = await p.evaluate(() => { const g = window.__game, B = g.B, sv = g.save, c = sv.cats.find((q) => q.state === 'hidden'), cp = B.catPos(c), d = Math.hypot(cp.x, cp.z) || 1; return { st: B.STATIONS, npc: B.NPCS, home: B.HOME, cat: [cp.x + cp.x / d * 1.2, cp.z + cp.z / d * 1.2], hint: cp.hint }; });
+  await go(P.st.board.x + 1.2, P.st.board.z + 1.2); await say('at the quest board'); await use(); const pb = await panel('quest board'); if (pb) { const c = await press('take|accept|deliver|carry|ok'); console.log('   pressed: ' + c); await p.waitForTimeout(500); await panel('quest board after'); await press('close|back|leave|done'); await p.waitForTimeout(400); } await say('after the board');
+  await go(P.npc.bram.x + 1.2, P.npc.bram.z + 0.8); await say('by Bram'); await use(); await panel('Bram'); const c2 = await press('take|accept|yes|ok|help'); console.log('   pressed: ' + c2); await p.waitForTimeout(500); await panel('Bram after'); await press('close|back|leave|done|bye'); await p.waitForTimeout(400); await say('after Bram');
+  for (const k of ['storage', 'garden', 'workshop']) { await go(P.st[k].x + 1.5, P.st[k].z + 2.9); await say('at ' + k); await use(); await panel(k); await press('close|back|leave|done'); await p.waitForTimeout(400); await say('after using ' + k); }
+  console.log('   the cat: rumour says "' + P.hint + '"; nothing on day 1 tells him it exists'); await go(P.cat[0], P.cat[1]); await p.waitForTimeout(1200); await say('touching the cat');
+  await say('carrying the cat'); await go(P.home.slots[1][0], P.home.slots[1][2] + 0.9); await p.waitForTimeout(600); await say('at the shelf'); await use(); await say('cat on the shelf');
+  // a two-floor house: stairs, upstairs capsules, ladder
+  await p.evaluate(() => { const g = window.__game; const w = g.marla.root.getWorldPosition(new g.marla.root.position.constructor()); g.setBase(w.x + 1.2, w.z + 1.2); }); await p.waitForTimeout(1200); await use(); await p.click('#go'); await p.waitForTimeout(2500);
+  const h = await p.evaluate(() => { const r = window.__game.run, h = r.houses.find((q) => q.L > 1); return h ? [h.doorX, h.doorZ, h.row, h.L] : null; }); console.log('   two-floor house: ' + JSON.stringify(h));
+  if (h) { await p.evaluate(([x, z, row]) => window.__game.setTown(x, z - row * 0.4), h); await p.waitForTimeout(1800); await say('inside the two-floor house');
+    const st = await p.evaluate(() => { const s = window.__game.sim; return { st: s.stairs[0], ld: s.ladders[0], up: s.crates.filter((c) => c.floor === 1).length }; }); console.log('   stairs ' + JSON.stringify(st.st) + ' ladder ' + JSON.stringify(st.ld) + ' capsules upstairs ' + st.up);
+    await p.evaluate(() => { const s = window.__game.sim, q = s.stairs[0]; s.player.x = q.bx + (q.bx < q.tx ? -0.8 : 0.8); s.player.z = q.bz; }); await p.waitForTimeout(1200); await say('near the foot of the stairs');
+    await p.evaluate(() => { const s = window.__game.sim, q = s.stairs[0]; s.player.x = q.bx; s.player.z = q.bz; }); await p.waitForTimeout(3500); console.log('   floor after stepping on the stairs: ' + await p.evaluate(() => window.__game.sim.player.floor)); await say('upstairs');
+    const got = await p.evaluate(async () => { const s = window.__game.sim, cs = s.crates.filter((c) => c.floor === 1 && !c.got); for (const c of cs) { s.player.x = c.x; s.player.z = c.z; await new Promise((r) => setTimeout(r, 500)); } return [cs.length, s.crates.filter((c) => c.floor === 1 && !c.got).length]; }); console.log('   upstairs capsules walked into / left: ' + got.join(' / '));
+    await p.evaluate(() => { const s = window.__game.sim, q = s.ladders[0]; s.player.x = q.x + 1.2; s.player.z = q.z; }); await p.waitForTimeout(1200); await say('near the ladder');
+    await p.evaluate(() => { const s = window.__game.sim, q = s.ladders[0]; s.player.x = q.x; s.player.z = q.z; }); await p.waitForTimeout(3500); console.log('   floor after stepping on the ladder: ' + await p.evaluate(() => window.__game.sim.player.floor)); await say('after the ladder'); }
+  console.log(errs.length ? 'ERRORS ' + errs.slice(0, 3).join('|') : 'NO ERRORS'); await b.close();
+})();

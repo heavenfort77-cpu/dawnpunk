@@ -1,0 +1,6 @@
+// Do upgrades matter? Average bot, smallest house, rings 3 to 5: starter kit against a fully upgraded save. Usage: node tools/upcheck.mjs [runs] [countMult as a,b,c,d,e]
+import { CONFIG } from '../src/config.js'; import * as B from '../src/base.js'; import { runBot } from '../src/bots.js';
+const N = +process.argv[2] || 60, cm = process.argv[3] ? process.argv[3].split(',').map(Number) : null, base = JSON.parse(JSON.stringify(CONFIG)); if (cm) base.ring.countMult = cm;
+const mk = (up) => { const save = B.newSave(base, 5); Object.assign(save.up, up); const c = B.makeCfg(base, save), e = B.nightEnergyBonus(base, save); return { ...c, day: { ...c.day, startEnergy: c.day.startEnergy + e } }; };
+const kits = { starter: mk({}), 'panel+turbine+battery 3': mk({ panel: 3, turbine: 3, energy: 3 }) };
+for (const skill of (process.argv[4] === 'charge' ? ['average', 'averageC', 'expert', 'expertC'] : ['novice', 'average'])) for (const [name, cfg] of Object.entries(kits)) { const row = []; for (const ring of [0, 1, 2, 3, 4]) { let w = 0; for (let sd = 1; sd <= N; sd++) if (runBot(skill, cfg, ring, 5, sd).win) w++; row.push(Math.round(100 * w / N)); } console.log(skill.padEnd(8), name.padEnd(26), 'smallest house, rings 1-5:', row.join('/')); }

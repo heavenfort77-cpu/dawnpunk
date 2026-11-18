@@ -1,0 +1,19 @@
+// The street and its plants on one graphics tier, same framing every time (phone vs desktop pairs). Usage: node tools/streetvs.cjs <out_prefix> <low|high> [extra query] [views, comma list]
+// views: wide (down the street, as tools/fxshot.cjs), kerb (2 m from the kerb, looking along the road edge), tree (a street tree from 4 m), pole (the verge by house 0 where the desolate pole lies),
+// grass (looking down at the verge from 1.6 m), night (down the street after nightfall, from inside the nearest house door). Writes <out_prefix>_<view>_<tier>.png
+const { chromium } = require('playwright'); const tier = process.argv[3] || 'high', XQ = process.argv[4] || '', VIEWS = (process.argv[5] || 'wide,kerb,tree,pole,grass').split(',');
+(async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = []; const p = await b.newPage({ viewport: { width: 960, height: 600 } }); p.on('pageerror', (e) => errs.push(String(e))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 300)); });
+  await p.goto('file://' + __dirname + '/../dist/index_single.html?quality=' + tier + '&seed=777' + (XQ ? '&' + XQ : ''), { timeout: 120000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 120000 });
+  await p.evaluate(() => { window.__noHands = true; window.__game.enterBase(); document.getElementById('selRing').value = '0'; window.__game.startRun(0); for (const id of ['hud', 'marla', 'msg', 'mlook']) { const e = document.getElementById(id); if (e) e.style.visibility = 'hidden'; } }); await p.waitForTimeout(3000);
+  const look = async (x, z, tx, tz, pitch, fov) => { await p.evaluate(([x, z, yaw, pt, fov]) => { const g = window.__game; g.setTown(x, z); g.setYaw(yaw); g.setPitch(pt); g.cam.fov = fov; g.cam.updateProjectionMatrix(); }, [x, z, Math.atan2(-(tx - x), -(tz - z)), pitch, fov]); };
+  const shot = async (v) => { await p.waitForTimeout(3500); await p.screenshot({ path: process.argv[2] + '_' + v + '_' + tier + '.png', timeout: 240000 }); };
+  const h0 = await p.evaluate(() => { const h = window.__game.run.houses[0]; return { dx: h.doorX, z: h.z }; }), side = Math.sign(h0.z) || 1;
+  if (VIEWS.includes('wide')) { await look(-19.2, 0, -40, 0, 0.04, 55); await shot('wide'); }
+  if (VIEWS.includes('kerb')) { await look(h0.dx + 6, side * 2.2, h0.dx - 6, side * 3.9, -0.35, 60); await shot('kerb'); }
+  if (VIEWS.includes('tree')) { const t = await p.evaluate(() => { const w = window.__game.world.g; let best = null; w.traverse((o) => { if (o.userData && o.userData.tintM && !o.userData.look && o.parent === w && Math.abs(o.position.z) < 8 && Math.abs(o.position.z) > 3) { if (!best || Math.abs(o.position.x + 19) < Math.abs(best[0] + 19)) best = [o.position.x, o.position.z]; } }); return best; });
+    if (t) { await look(t[0] + 3.2, t[1] - Math.sign(t[1]) * 2.6, t[0], t[1], 0.32, 60); await shot('tree'); } }
+  if (VIEWS.includes('pole')) { await look(h0.dx - 3, -side * 1.5, h0.dx - 12, side * 4.5, -0.05, 60); await shot('pole'); }
+  if (VIEWS.includes('grass')) { await look(h0.dx + 12, side * 4.0, h0.dx + 12, side * 8.0, -0.55, 60); await shot('grass'); }
+  if (VIEWS.includes('night')) { await p.evaluate(() => { const g = window.__game; g.setTown(-19.2, 0); g.nightfall(); }); await p.waitForTimeout(14000); const H = await p.evaluate(() => { const s = window.__game.sim, d = s.breaches.find((q) => q.floor === 0 && q.type === 'door') || s.breaches[0]; return d; });
+    await p.evaluate(([x, z, yaw]) => { const g = window.__game, s = g.sim; s.player.x = x; s.player.z = z; g.setYaw(yaw); g.setPitch(0.02); g.cam.fov = 70; g.cam.updateProjectionMatrix(); }, [H.x + H.nx * 1.5, H.z + H.nz * 1.5, Math.atan2(H.nx, H.nz)]); await shot('night'); }
+  console.log(tier, 'street', '|', errs.length ? [...new Set(errs)].join('|').slice(0, 500) : 'NO ERRORS'); await b.close(); })();

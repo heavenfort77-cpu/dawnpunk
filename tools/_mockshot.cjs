@@ -1,0 +1,2 @@
+const { chromium } = require('playwright');
+(async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 2330 } }); await p.goto('file://' + '/tmp/claude-0/-home-claude/f6d1c949-d179-5fcf-9724-bf18824fc0f0/scratchpad/mock.html'); await p.waitForTimeout(500); await p.screenshot({ path: '/home/claude/solard-g/docs/sample_title_hud_mockup.png', fullPage: true }); await b.close(); })();

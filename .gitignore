@@ -1,0 +1,18 @@
+# build output and local installs
+node_modules/
+dist/
+ci-logs/
+ci-out/
+# pictures written by checks and tools
+/*.png
+tools/**/*.png
+tools/**/*.jpg
+__pycache__/
+*.pyc
+# backups never go in the repo
+*_before_*
+*_batch[0-9]*
+# secrets never go in the repo
+.env
+*.pem
+*.key

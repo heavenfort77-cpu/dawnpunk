@@ -1,0 +1,16 @@
+// Crash hunt: runs the steps up to a night one by one and prints memory after each, and the last page messages if the page dies. Usage: node tools/crashrepro.cjs '<query>' [index.html|index_single.html]
+const { chromium } = require('playwright');
+(async () => { const q = process.argv[2] || 'seed=777&fx=0', file = process.argv[3] || 'index.html'; const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const p = await b.newPage({ viewport: { width: 1280, height: 720 } }); const log = []; if (process.argv[5] === 'nomarlahi') { await p.route('**/marla_hi.glb', (r) => r.abort()); console.log('desktop Marla file blocked'); }
+  p.on('console', (m) => log.push(m.type() + ': ' + m.text().slice(0, 200))); p.on('pageerror', (e) => log.push('PAGEERROR ' + String(e).slice(0, 300))); p.on('crash', () => log.push('CRASH'));
+  const step = async (name, f, wait) => { try { await f(); await p.waitForTimeout(wait || 800); const m = await p.evaluate(() => ({ heap: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) : -1, geo: window.__game.gpu().geometries, tex: window.__game.gpu().textures })); console.log('OK', name, JSON.stringify(m)); } catch (e) { console.log('FAIL at', name, String(e).slice(0, 160)); console.log(log.slice(-12).join('\n')); await b.close().catch(() => {}); process.exit(0); } };
+  await step('load', async () => { await p.goto('file:///home/claude/solard-g/dist/' + file + '?' + q); await p.waitForFunction(() => window.__game && window.__game.startRun); }, 1500);
+  await step('enterBase', () => p.evaluate(() => window.__game.enterBase()), 1500);
+  if (process.argv[4] === 'click') { await step('click (mouse lock)', () => p.mouse.click(640, 300), 1500); await step('mousemove', () => p.evaluate(() => dispatchEvent(new MouseEvent('mousemove', { movementX: 90, movementY: 10 }))), 1500); await step('wait 4s in base', async () => {}, 4000); }
+  if (process.argv[4] === 'face') { await step('wait for her model', async () => {}, 4000); await step('turn toward Marla', () => p.evaluate(() => { const g = window.__game, m = g.marla.root; m.updateWorldMatrix(true, false); const e = m.matrixWorld.elements; g.setBase(e[12], e[14] + 3); g.setYaw(0); }), 3000); await step('wait 4s', async () => {}, 4000); }
+  if (process.argv[4] === 'clickonly') { await step('click (mouse lock)', () => p.mouse.click(640, 300), 1500); await step('held?', () => p.evaluate(() => console.log('held ' + window.__game.mouseHeld)), 500); await step('wait 6s in base', async () => {}, 6000); }
+  if (process.argv[4] === 'moveonly') { await step('mousemove, no lock', () => p.evaluate(() => dispatchEvent(new MouseEvent('mousemove', { movementX: 90, movementY: 10 }))), 1500); await step('wait 4s', async () => {}, 4000); }
+  await step('startRun', () => p.evaluate(() => { document.getElementById('selRing').value = '0'; window.__game.startRun(0); }), 2500);
+  await step('enterHouse', () => p.evaluate(() => window.__game.enterHouse(0)), 2500);
+  await step('endDay', () => p.evaluate(() => window.__game.endDay()), 3000);
+  await step('night 5s', async () => {}, 5000);
+  console.log('SURVIVED', log.filter((l) => /error|PAGEERROR|CRASH/i.test(l)).slice(-6).join(' | ')); await b.close(); })();
