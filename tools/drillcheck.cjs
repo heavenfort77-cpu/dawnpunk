@@ -105,6 +105,17 @@ const { chromium, devices } = require('playwright');
     await p.evaluate(() => { const g = window.__game; g.enterHouse(0); }); await p.waitForTimeout(1200); await p.evaluate(() => window.__game.endDay()); await p.waitForTimeout(1500);
     o = await clash(); add(vp.width + 'x' + vp.height + ' night in a house: the clock frame overlaps nothing' + (o.length ? ' (' + o.join(', ') + ')' : ''), !o.length);
     await ctx.close(); }
+  // ---- DESKTOP: the lesson cannot kill a slow first-timer (fresh-player review Nov 18; CONFIG.drill shootSpeed, shootStop, laterSpeed, laterDmg, hpFloor): 30 game seconds with no input
+  // at the shoot step (the machine halts short of arm's length and never hits), then 30 more at the place step (it hits, health stops at the floor, the night goes on)
+  { const { ctx, p } = await open({ viewport: { width: 1280, height: 720 } });
+    const gameWait = (secs) => p.evaluate((secs) => new Promise((res) => { let t = 0, last = performance.now(), done = false; const S = window.__dk = window.__dk || { minD: 99, minHp: 999 }; const f = (now) => { t += Math.max(0, Math.min(window.__dtMax || 0.1, (now - last) / 1000)); last = now; const s = window.__game.sim; if (s) { const P = s.player; for (const g of s.gloom) if (g.floor === P.floor && g.phase === 'inside') S.minD = Math.min(S.minD, Math.hypot(g.x - P.x, g.z - P.z)); S.minHp = Math.min(S.minHp, P.hp); } if (done) return res(); if (t >= secs) done = true; requestAnimationFrame(f); }; requestAnimationFrame(f); }), secs);
+    const read = () => p.evaluate(() => { const s = window.__game.sim, d = window.__game.drillInfo(), S = window.__dk; const r = { step: d ? d.step : null, hp: Math.round(s.player.hp), minHp: Math.round(S.minHp), minD: +S.minD.toFixed(2), done: !!s.done, state: window.__game.state, n: s.gloom.length }; S.minD = 99; S.minHp = 999; return r; });
+    const D = await p.evaluate(() => window.__game.cfg().drill);
+    await night(p, 0); let s = await waitStep(p, 'shoot'); await gameWait(30); const a = await read();
+    add('lesson, shoot step, 30 game s with no input: still at "shoot", alive, the machine stayed ' + a.minD + ' m away (halts at ' + D.shootStop + ' m) and never hit: ' + JSON.stringify(a), s === 'shoot' && a.step === 'shoot' && a.hp === 100 && a.minHp === 100 && !a.done && a.state === 'play');
+    await p.evaluate(() => { window.__game.sim.player.energy = 60; window.__game.fire(); }); s = await waitStep(p, 'place', 3000); await gameWait(30); const b2 = await read();
+    add('lesson, place step, 30 game s with no input: alive and still in the lesson, health never under the floor ' + D.hpFloor + ': ' + JSON.stringify(b2), s === 'place' && b2.step === 'place' && b2.hp >= D.hpFloor && b2.minHp >= D.hpFloor && !b2.done && b2.state === 'play');
+    await ctx.close(); }
   add('no page errors' + (errs.length ? ': ' + errs.slice(0, 2).join(' | ') : ''), !errs.length);
   let bad = 0; for (const [n, ok] of out) { console.log((ok ? 'PASS ' : 'FAIL ') + n); if (!ok) bad++; } console.log(bad ? 'SOME FAILED' : 'ALL PASS'); await b.close();
 })();

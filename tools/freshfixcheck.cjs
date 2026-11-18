@@ -118,6 +118,30 @@ const path = require('path');
     add('phone drill: the second line names the button, no mouse words: "' + ph.sub + '"', /FIRE/.test(ph.sub) && !/click|mouse|key/i.test(ph.sub));
     await ctx.close(); });
   // ---- LOADING PAGE: the V, the bar, the stage line, the lore line and the begin button as one group in the middle; the music button top right
+  // ---- MARLA TEACHING FIXES (fresh-player review Nov 18): a scripted day 1 on desktop and phone: the collector order names the real control and repeats rarely, no "undefined" ever on screen,
+  // the first collector keeps its own message, the night-start line matches the button, the bell is followed by one line
+  for (const [lab, opts] of [['desktop', { viewport: { width: 1280, height: 720 } }], ['phone', { ...devices['Pixel 7 landscape'] }]]) await sect('teach ' + lab, async () => { const { ctx, p } = await open(opts);
+    const C = await p.evaluate(() => { const c = window.__game.cfg(); return { F: c.firstSolar, N: c.nightStart, bell: c.day.bell }; }), D = lab === 'desktop';
+    await p.evaluate(() => { localStorage.setItem('dawnpunk.drill', '{"skip":true}'); const g = window.__game; g.enterBase(); g.save.nights = 0; g.save.solarDone = false; document.getElementById('selRing').value = '0'; g.startRun(0);
+      const S = window.__seen = { marla: [], undef: [], solarShows: 0 }; let last = ''; const f = () => { const m = document.getElementById('marla'), t = m.classList.contains('hq') ? '' : m.textContent; if (t && !S.marla.includes(t)) S.marla.push(t); if (t !== last && /Collector first/.test(t)) S.solarShows++; last = t;
+        const b = document.body.innerText; if (/undefined/.test(b) && S.undef.length < 5) S.undef.push(b.split('\n').filter((l) => /undefined/.test(l))[0]); requestAnimationFrame(f); }; requestAnimationFrame(f); });
+    await gameWait(p, 3); await p.evaluate(() => window.__game.enterHouse(0)); await gameWait(p, 2);
+    const s1 = await p.evaluate(() => ({ marla: document.getElementById('marla').textContent, b0: document.getElementById('b0').textContent, chip: document.getElementById('dchip').textContent }));
+    add(lab + ' teach: the first house\'s collector order names the real control ("' + s1.marla + '", chip "' + s1.chip + '", collector button "' + s1.b0 + '")', s1.marla === (D ? C.F.marlaD : C.F.marlaP) && (D ? s1.chip === 'Q' : /SOLAR/.test(s1.b0)));
+    await p.evaluate(() => window.__game.leaveHouse()); await frames(p, 2); const m1 = await txt(p, 'msg');
+    add(lab + ' teach: leaving before the collector flashes "' + m1 + '"', m1 === (D ? C.F.blockD : C.F.blockP));
+    await gameWait(p, 20); const n1 = await p.evaluate(() => window.__seen.solarShows);
+    add(lab + ' teach: over 22 game seconds the collector order showed ' + n1 + ' times (every ' + C.F.repeat + ' s, not every 4 s)', n1 >= 1 && n1 <= Math.ceil(22 / C.F.repeat));
+    const pl = await p.evaluate(() => { const g = window.__game, s = g.sim, P = s.player, bs = s.breaches.filter((b) => b.floor === P.floor && b.type !== 'hatch'), out = [];
+      for (const b of bs.slice(0, 4)) { P.x = b.inX + b.nx * 1.0; P.z = b.inZ + b.nz * 1.0; P.yaw = Math.atan2(b.nx, b.nz); const n = s.devices.length; g.doPlace('collector'); out.push([s.devices.length > n, document.getElementById('msg').textContent]); if (out.length === 1 && !out[0][0]) continue; if (out.filter((q) => q[0]).length >= 2) break; } return out; });
+    const ok = pl.filter((q) => q[0]);
+    add(lab + ' teach: the first collector keeps "First collector up..." and the next one reads "Solar collector placed: ..." (' + JSON.stringify(pl.map((q) => q[1])) + ')', ok.length >= 2 && /^First collector up\./.test(ok[0][1]) && /^Solar collector placed: /.test(ok[1][1]));
+    await gameWait(p, 60); await p.evaluate((b) => { window.__game.sim.dayT = b + 0.5; }, C.bell); await gameWait(p, 13);
+    const s2 = await p.evaluate(() => ({ seen: window.__seen.marla, undef: window.__seen.undef, dusk: document.getElementById('bDusk').textContent }));
+    const nl = D ? C.N.lineD : C.N.lineP, hl = D ? C.N.houseD : C.N.houseP, bad = s2.seen.filter((t) => /HOLD DUSK|Sun is full/.test(t));
+    add(lab + ' teach: the night-start line (' + nl + ') and the after-bell line (' + hl + ') were said, the button reads "' + s2.dusk + '", no old wording' + (bad.length ? ' (' + bad.join(' | ') + ')' : ''), s2.seen.includes(nl) && s2.seen.includes(hl) && s2.dusk === C.N.btn && !bad.length);
+    add(lab + ' teach: no "undefined" on screen in the whole day-1 run' + (s2.undef.length ? ' (' + s2.undef.join(' | ') + ')' : ''), s2.undef.length === 0);
+    await ctx.close(); });
   if (!only.length || only.includes('loading')) for (const [lab, opts] of [['desktop', { viewport: { width: 1280, height: 720 } }], ['phone', { ...devices['Pixel 7 landscape'] }]]) {
     const { ctx, p } = await open(opts); await p.waitForFunction(() => window.__splash && window.__splash.phase === 'ready', null, { timeout: 180000 }).catch(() => {}); await p.waitForTimeout(1200);
     const g = await p.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(), a = r('slogo'), e = r('enter'), m = r('bMus'), H = innerHeight, W = innerWidth; return { top: Math.round(a.top), bottom: Math.round(e.bottom), mid: Math.round((a.top + e.bottom) / 2), H, mus: [Math.round(W - m.right), Math.round(m.top)], gapLogoBar: Math.round(r('sbar').top - a.bottom) }; });
