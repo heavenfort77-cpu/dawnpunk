@@ -512,6 +512,12 @@ export const CONFIG = {
       // every: frames between sweeps for new objects; rules: [roughness, metalness] by painted texture name (0 rough = mirror, 1 = matt; 1 metal = bare metal); glass: see-through panes; plain: anything else; shineFull: the old shine value that counts as fully glossy
       pbr: { env: 0.6, hemiKeep: 0.45, hemiDay: 1.6, sky: [0x5f8fd6, 0xcfe0f2, 0x6a6458], sun: 0xfff0d0, sunPower: 9, every: 20, shineFull: 110, glass: [0.06, 0], plain: [0.9, 0],
         rules: { metal: [0.38, 0.9], carrust: [0.5, 0.55], rust: [0.7, 0.45], glaze: [0.18, 0], gloom: [0.45, 0.6], tiles: [0.55, 0], roof: [0.8, 0], asphalt: [0.85, 0], wood: [0.75, 0], brick: [0.9, 0], plaster: [0.95, 0], render: [0.95, 0], interior: [0.9, 0], siding: [0.8, 0], block: [0.9, 0], fabric: [1, 0], cat: [0.15, 0] } } },
+    // MEDIUM (owner's performance rules Nov 19): the DEFAULT tier on every device. The desktop builds and models with these settings laid over the high block (src/quality.js);
+    // the budget is under 500 draw calls and 0.5 M triangles a frame in the heaviest scene. fx.ao 0: no contact shading pass (it drew the whole scene a second time; the colour
+    // grade and the physically based surfaces stay); lights: machine screen lights at night; scenery: fewer grass blades and leaves, grass drawn to a shorter distance, fewer far trees
+    // and sunflowers (high keeps the full counts)
+    medium: { pixelRatio: 1.25, aniso: 4, reliefAniso: 4, lights: 2, fx: { ao: 0 },
+      scenery: { grass: { blades: 10, bladesFar: 4, near: 12, far: 36, density: 3.0 }, foliage: { cover: 0.8 }, base: { sunflowers: 500, farTrees: 300, outTrees: 24 }, street: { farTrees: 300, near: 14, far: 40, shrubs: 50 } } },
     low: { pixelRatio: 1.5, smooth: true, shadowMap: 2048, baseShadowMap: 2048, shadowSoft: 1, aniso: 4, reliefAniso: 1, hiTex: false, lights: 3, grassMore: 0, leafMore: 0, skyDetail: 4, round: 1, roundMax: 64, machineTris: 9000, fx: null, pbr: null, gloom: null, car: null, house: null, street: null, base: null, density: null, scenery: null } }, // gloom: null = phones keep their own machine builders (no tested low setting of the master builder yet)
   // DESOLATE SAMPLE (2026-11-15; not approved, off by default): the old world left alone for years, on ONE house, ONE car, the Walker and the stretch of street in front of them.
   // ?look=desolate turns it on (restyle + place); ?desolate=place only moves the sample car and a sleeping Walker into the same spots in today's look (for the before pictures). src/desolate.js, gloomkit.js walkerDesolate.
@@ -1131,7 +1137,12 @@ export const CONFIG = {
     // While it shows the game is held still (no game time passes) and the heavy work is done: the night's Gloom and boss models are waited for (at most maxWait s), their maps
     // uploaded, every shader of the scene built, and the sun shadow map drawn once. on: the switch; min: shortest time each card shows (s); titles: the card's line per change
     // mergeCell: the street's static pieces are merged per material and per square cell of this size (m) on the desktop builds (src/world.js), so out-of-view cells are culled
-    mergeCell: 16,
+    mergeCell: 24,
+    // mergeSplitVerts: only a material with at least this many vertices in the whole street is split by cell; smaller ones stay one mesh
+    mergeSplitVerts: 30000,
+    // farPad: the camera's far plane follows the fog: fog end plus this (m), never past the camera's own 90 m. Beyond the fog's end everything is pure fog colour, so
+    // nothing visible is lost; at night (fog ends at 34 m) the far street, woods and hills are no longer drawn at all. The sky dome is scaled to fit inside it.
+    farPad: 2,
     // dtMax: longest game step one frame may take (s; was 0.1): after a long frame the game slows for a moment instead of jumping (all tiers; the checks set their own)
     dtMax: 0.05,
     card: { on: true, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' } },

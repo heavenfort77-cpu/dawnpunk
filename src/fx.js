@@ -26,7 +26,7 @@ export function createFx(renderer, scene, cam, F, P, hemi) {
   ao._overrideVisibility = () => { ov(); cp.setFromMatrixPosition(cam.matrixWorld); scene.traverse((o) => { if (o.visible && (o.isSprite || (o.material && !Array.isArray(o.material) && (o.material.transparent || o.material.alphaTest > 0)) || o.userData.noAO || tooFar(o))) { o.visible = false; hid.push(o); } }); };
   ao._restoreVisibility = () => { for (const o of hid) o.visible = true; hid.length = 0; rv(); };
   const render = () => { if (P) { if (tick-- <= 0) { tick = P.every; upgrade(scene, P); } scene.environmentIntensity = P.env * Math.min(1.5, hemi.intensity / P.hemiDay); } const h0 = hemi.intensity; if (P) hemi.intensity = h0 * P.hemiKeep; renderer.render(scene, cam); hemi.intensity = h0; if (!aoOn) return; ao.render(renderer, null, null); ao.blendMaterial.uniforms.intensity.value = F.ao; ao.blendMaterial.uniforms.tDiffuse.value = ao.pdRenderTarget.texture; ao._renderPass(renderer, ao.blendMaterial, null); };
-  // setAO(false): the automatic step-down (src/perfstep.js) turns the contact shading off without a reload
-  let aoOn = true;
+  // F.ao 0 (the medium tier): no shading pass at all; setAO(false): the automatic step-down (src/perfstep.js) turns the contact shading off without a reload
+  let aoOn = F.ao > 0;
   return { render, setSize: () => { const s = renderer.getDrawingBufferSize(new THREE.Vector2()); ao.setSize(Math.max(1, Math.round(s.x * sc)), Math.max(1, Math.round(s.y * sc))); }, ao, setAO: (v) => { aoOn = !!v; }, get aoOn() { return aoOn; } };
 }

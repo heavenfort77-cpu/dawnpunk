@@ -81,9 +81,11 @@ let perf = null; const perfRest = () => { if (perf) perf.rest(); };
 // the opening film's kinds load at once for a first visit (no save yet), so the film shows the models
 const FILM_KINDS = [...new Set([CONFIG.opening.grid.machine[0], ...CONFIG.opening.turning.walkers.map((w) => w[0])])];
 function runModels() { const ring = +(($('selRing') || {}).value || 0), K = CONFIG.gloom.kinds; gloomPreload(Object.keys(K).filter((k) => (K[k].minRing || 0) <= ring && K[k].share > 0)); }
-const glights = []; for (let i = 0; i < Q.lights; i++) { const l = new THREE.PointLight(0xffffff, 0, CONFIG.gloomLook.lightReach, 2); scene.add(l); glights.push(l); }
+const glights = []; for (let i = 0; i < Q.lights; i++) { const l = new THREE.PointLight(0xffffff, 0, CONFIG.gloomLook.lightReach, 2); l.visible = false; scene.add(l); glights.push(l); }
 const gl_v = new THREE.Vector3();
-function tickGloomLights(on) { GK.nightGlow(on ? 1 : 0); if (!glights.length) return; const list = on ? [...gMesh.values()].filter((m) => m.userData.lamp).map((m) => [m.position.distanceToSquared(cam.position), m]).sort((a, b) => a[0] - b[0]) : [];
+// LAG FIX Nov 19 (owner: no zero-intensity lights, light count fixed during play): the machine lights are in the scene only at night (and in the film); the change
+// happens under the night card (sceneCard), which builds the shaders for it, so the light count never changes in the middle of play
+function tickGloomLights(on) { GK.nightGlow(on ? 1 : 0); if (!glights.length) return; if (glights[0].visible !== on) for (const l of glights) l.visible = on; const list = on ? [...gMesh.values()].filter((m) => m.userData.lamp).map((m) => [m.position.distanceToSquared(cam.position), m]).sort((a, b) => a[0] - b[0]) : [];
   const use = Math.max(0, glights.length - sky.strain);
   glights.forEach((l, i) => { const q = i < use ? list[i] : null; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
 let dormM = [];
@@ -517,7 +519,7 @@ function opLids(closed) {
 }
 // screen light on the nearest awake machines (the same pool of lights the night uses)
 function opScreens(list) { const use = list.filter((o) => o && o.userData.lamp && o.visible).map((o) => [o.position.distanceToSquared(cam.position), o]).sort((a, b) => a[0] - b[0]);
-  glights.forEach((l, i) => { const q = use[i]; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
+  glights.forEach((l, i) => { l.visible = true; const q = use[i]; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
 // part 1: lights die, the machine wakes and turns
 function opGrid(I, t) {
   const C = CONFIG.opening, G = C.grid, c = opPath(G.cam, t), tt = performance.now() / 1000;
@@ -553,7 +555,7 @@ function opTurning(I, t, dt) {
 // leave the street: the base at dawn is built while the screen is black
 function introToBase() {
   const I = intro; if (!CONFIG.opening.on) { introToBaseOld(); return; } I.part = 'base'; if (I.grp) { scene.remove(I.grp); drop(I.grp); I.grp = null; } I.walkers = [];
-  dropWorld(); run = null; GK.nightGlow(0); glights.forEach((l) => { l.intensity = 0; }); hemi.color.setHex(CONFIG.baseLight.sky); hemi.groundColor.setHex(CONFIG.baseLight.ground); sky.mesh.visible = false;
+  dropWorld(); run = null; GK.nightGlow(0); glights.forEach((l) => { l.intensity = 0; l.visible = false; }); hemi.color.setHex(CONFIG.baseLight.sky); hemi.groundColor.setHex(CONFIG.baseLight.ground); sky.mesh.visible = false;
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   bview.build(save); applyRelief(bview.group); I.hide = []; I.stands = []; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 0; if (o.isSprite && o.userData.kind) I.hide.push(o); if (o.isDirectionalLight && !I.sun) I.sun = o; if (opStandIn(o)) I.stands.push(o.parent); }); renderer.shadowMap.needsUpdate = true; shadowT = 1.5;
 }
@@ -1243,7 +1245,9 @@ function breakCue(ev) {
 
 // ---- loop
 let fx = null; const FXOFF = (() => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } })();
-function draw() { pshadow.tick(cam, state === 'base' || state === 'play', pshadowFloor());if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (holdDraw) return; if (QUALITY === 'high') lodTick(cam); if (fx && fx.render) fx.render(); else renderer.render(scene, cam); }
+function draw() { pshadow.tick(cam, state === 'base' || state === 'play', pshadowFloor());if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (holdDraw) return; fitFar(); if (QUALITY === 'high') lodTick(cam); if (fx && fx.render) fx.render(); else renderer.render(scene, cam); }
+// the far plane follows the fog (CONFIG.lag.farPad): nothing past the fog's end is drawn; the sky dome (40 m) shrinks to stay inside the far plane
+const FAR0 = cam.far; function fitFar() { const f = scene.fog && scene.fog.isFog ? Math.min(FAR0, scene.fog.far + CONFIG.lag.farPad) : FAR0; if (Math.abs(cam.far - f) > 0.25) { cam.far = f; cam.updateProjectionMatrix(); } sky.mesh.scale.setScalar(Math.min(1, (cam.far - 1) / 40)); }
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); if (fx && fx.setSize) fx.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 // ---- LOADING CARDS (owner Nov 19 05:49; CONFIG.lag.card): at a scene change the card covers the screen while the heavy work is done, so play does not hitch.
@@ -1266,7 +1270,7 @@ const LCARD = { on: false, n: 0 }, BOTRUN = () => { try { return !!window.__dtMa
 const nap = (ms) => new Promise((r) => setTimeout(r, ms));
 async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
-  LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; fill(0.1); $('lcard').style.display = 'flex';
+  LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
   try {
     if (QUALITY === 'high' && kind !== 'home') { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
     fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);

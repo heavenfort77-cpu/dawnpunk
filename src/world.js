@@ -378,6 +378,9 @@ export function buildWorld(cfg, run) {
       dead.push(o);
     });
     for (const o of dead) { o.geometry.dispose(); o.parent.remove(o); }
+    // a material with few vertices in all stays ONE mesh (splitting it by cell only adds draws); only big ones are split
+    if (CELL) { const byM = new Map(); for (const [k, b] of buckets) { const l = byM.get(b.m) || []; l.push([k, b]); byM.set(b.m, l); }
+      for (const l of byM.values()) { if (l.length < 2 || l.reduce((a, q) => a + q[1].p.length / 3, 0) >= CONFIG.lag.mergeSplitVerts) continue; const b0 = l[0][1]; for (const [k, b] of l.slice(1)) { for (const key of ['p', 'n', 'u', 'c']) for (const x of b[key]) b0[key].push(x); buckets.delete(k); } } }
     for (const b of buckets.values()) { const m = b.m, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.u, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(b.c, 3)); m.vertexColors = true; m.needsUpdate = true; const mm = new THREE.Mesh(geo, m); mm.receiveShadow = true; mm.castShadow = !m.transparent; g.add(mm); }
   }
 
