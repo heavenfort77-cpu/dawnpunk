@@ -32,6 +32,6 @@ for l in open(sys.argv[1]):
     if m: fps[(ref,m.group(1),m.group(2))]=float(m.group(3))
 for (r,t) in sorted({k[:2] for k in fps}):
     h=fps.get((r,t,'hub'))
-    for sp in ('house','boss'):
+    for sp in ('house','boss','combat','bosscombat'):
         if h and (r,t,sp) in fps: print(('PASS' if fps[(r,t,sp)]>=h else 'FAIL')+f' {r} {t} {sp} {fps[(r,t,sp)]} fps vs hub {h} fps (night must not be slower)')
 PY

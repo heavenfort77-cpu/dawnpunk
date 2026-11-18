@@ -122,7 +122,7 @@ function wakeDormant(i, how) { const D = CONFIG.dormant, d = run && run.dormant 
 function tickStir(dt) { if (!run || !run.dormant || !dormG) return; const D = CONFIG.dormant, t = performance.now() / 1000; run.dormant.forEach((d, i) => { if (!(d.stir > 0)) return; d.stir = Math.max(0, d.stir - dt); const o = dormM[i]; if (!o) return; const k = d.stir > 0 ? 1 : 0, w = t * D.shakeHz * Math.PI * 2;
   o.rotation.y = d.ry + k * D.shake * Math.sin(w); o.rotation.z = k * D.shake * 0.5 * Math.sin(w * 1.3); for (const m of o.userData.scr || []) m.color.setScalar(k && Math.sin(t * D.flick * Math.PI * 2) > 0 ? D.lit : 0.03); }); }
 function aimedDormant(cs, reach) { if (!run || !run.dormant) return -1; const fx = -Math.sin(yaw), fz = -Math.cos(yaw); let best = cs, bi = -1; run.dormant.forEach((d, i) => { const dx = d.x - run.px, dz = d.z - run.pz, dd = Math.hypot(dx, dz); if (dd < 0.3 || dd > reach) return; const c = (dx * fx + dz * fz) / dd; if (c > best) { best = c; bi = i; } }); return bi; }
-function dropWorld() { nightCull.reset(); if (dormG) { if (world) world.g.remove(dormG); drop(dormG); dormG = null; } if (world) { scene.remove(world.g); world.dispose(); world = null; } }
+function dropWorld() { nightCull.reset(); dropWarm(); if (dormG) { if (world) world.g.remove(dormG); drop(dormG); dormG = null; } if (world) { scene.remove(world.g); world.dispose(); world = null; } }
 function buildGrounding() { depthMats(); const D = CONFIG.depth, g = new THREE.Group(), put = (x, z, w, l, ry) => { const s = new THREE.Mesh(flatGeo, shadeMat); s.scale.set(w, 1, l); s.position.set(x, 0.035, z); s.rotation.y = ry; s.renderOrder = 1; s.userData.blob = true; g.add(s); };
   for (const h of run.houses) { const th = -Math.atan2(h.sn, h.cs), R = h.H + D.wallOut; for (const [lx, lz, q] of [[0, R, 0], [0, -R, 0], [R, 0, Math.PI / 2], [-R, 0, Math.PI / 2]]) put(h.x + lx * h.cs - lz * h.sn, h.z + lx * h.sn + lz * h.cs, 2 * h.H * D.wallLen, D.wallW, th + q); }
   for (const cr of run.cars || []) put(cr.x, cr.z, D.car[0], D.car[1], cr.yaw);
@@ -138,6 +138,8 @@ function noSmallCasters(root) { const R = CONFIG.lag.smallCaster, v = new THREE.
 function needWorld() { if (!world) { if (DESO.place && !run.desoPlaced) { placeSample(run, CONFIG); run.desoPlaced = true; } world = buildWorld(CONFIG, run); noSmallCasters(world.g); scene.add(world.g); applyRelief(world.g); buildGrounding(); buildTrim(); shadowT = 1.5; } renderer.shadowMap.needsUpdate = true; return world; } // the sun's shadows are static: drawn again only when the world is moved or its textures arrive
 let sim = null, state = 'menu', roomGroup = null, catG = null, catArm = null, camY = 1.6;
 const landAt = new Map(); // device id -> time its thrown pod lands: the device is drawn from then, growing in over CONFIG.hands.landGrow s
+// the night card's warm-up copies (sceneCard, warmNight below)
+const warmG = new THREE.Group(); warmG.name = 'warm';
 let gMesh = new Map(), dMesh = new Map(), bpGroup = new THREE.Group(), bpParts = [], bpFlash = [];
 scene.add(bpGroup);
 
@@ -1273,14 +1275,25 @@ function perfHud(ms) {
   if (PH.t < 2000) return; const st = perf ? perf.state : { taken: [] }, avg = PH.sum / PH.n;
   PH.el.textContent = (1000 / avg).toFixed(0) + ' fps  avg ' + avg.toFixed(1) + ' ms  worst ' + PH.worst.toFixed(0) + ' ms\ncalls ' + PH.calls + '  tris ' + (PH.tris / 1e6).toFixed(2) + ' M\ntier ' + TIER + ' (' + QPICK.by + ')  ratio ' + renderer.getPixelRatio().toFixed(2) + '  steps ' + st.taken.length + (st.taken.length ? ' ' + st.taken.join(',') : '');
   window.__perfHud = { fps: 1000 / avg, avg, worst: PH.worst, calls: PH.calls, tris: PH.tris }; PH.t = 0; PH.n = 0; PH.sum = 0; PH.worst = 0; }
-const LCARD = { on: false, n: 0 }, BOTRUN = () => { try { return !!window.__dtMax || !!navigator.webdriver; } catch (e) { return false; } };
+// ?cards=1: the scripted checks get the real card work too (tools/perfcheck.cjs on the real GPU), not the quick bot card
+const CARDS_REAL = (() => { try { return new URLSearchParams(location.search).get('cards') === '1'; } catch (e) { return false; } })();
+const LCARD = { on: false, n: 0 }, BOTRUN = () => { if (CARDS_REAL) return false; try { return !!window.__dtMax || !!navigator.webdriver; } catch (e) { return false; } };
+// warm-up copies for the night card: one machine of every kind the ring can send and one of every device you carry, built and drawn into the shader cache under the card,
+// then kept hidden until the run ends (a disposed material would free its shader program), so the first machine of a kind or the first device placed does not stall a frame
+function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); drop(c); } scene.remove(warmG); }
+function warmNight() { dropWarm(); if (!run) return; const K = CONFIG.gloom.kinds, ring = run.ring || 0;
+  for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); m.position.set(0, -50, 0); warmG.add(m); }
+  for (const k of new Set(slotKinds())) { const m = deviceMesh(k); m.position.set(0, -50, 0); warmG.add(m); }
+  warmG.visible = true; scene.add(warmG); }
 const nap = (ms) => new Promise((r) => setTimeout(r, ms));
 async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
   LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
   try {
     if (QUALITY === 'high' && kind !== 'home') { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
+    if (kind === 'night') warmNight(); else dropWarm();
     fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
+    warmG.visible = false;
     fill(0.9); renderer.shadowMap.needsUpdate = true;
   } catch (e) { /* the card never blocks the game */ }
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
@@ -1384,7 +1397,9 @@ function frame(now) {
       let m = gMesh.get(g.id); if (!m) { m = gloomMesh(g); shadeUnder(m, CONFIG.depth.gloom * (gloomKind(g) === 'warden' ? 1.8 : gloomKind(g) === 'hauler' ? 1.4 : gloomKind(g) === 'ticks' ? 0.8 : 1)); scene.add(m); gMesh.set(g.id, m); }
       // the height it is drawn at comes from the sim (src/sim.js gloomY), so the aimed shot aims where the model stands
       const gy = sim.gloomY(g);
-      m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; if (m.userData.anim) m.userData.anim(performance.now() / 1000, g); else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
+      // LAG FIX Nov 19 (owner 07:10): at night in a house a machine outside that no opening shows is neither drawn nor animated (src/nightcull.js sees; CONFIG.lag.nightCull.gloomR)
+      m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; m.visible = nightCull.sees(g.x, gy + CONFIG.lag.nightCull.gloomY, g.z, CONFIG.lag.nightCull.gloomR, sim, cam); if (!m.visible) continue;
+      if (m.userData.anim) m.userData.anim(performance.now() / 1000, g); else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
     }
     tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000); nightCull.tick(world, sim, cam, dormG);
     bossTick(dt, sim, { scene, cam, audio }); scrapTick(dt, { scene }); // the final-night boss (src/bosshi.js): after the camera is set, before the frame is drawn
@@ -1456,6 +1471,7 @@ window.__game.marlaVoice = () => ({ n: MV.hook.n, last: MV.hook.last, lastText: 
 window.__game.wakeText = () => wakeT; window.__game.uiNow = () => ui; window.__game.isPaused = () => paused;
 window.__game.wsTip = () => wsTipT;
 // the automatic step-down (tools/perfcheck.cjs): its state, and take the next step now
+window.__game.cardOn = () => LCARD.on;
 window.__game.perfStep = () => (perf ? { ...perf.state } : null); window.__game.perfForce = () => (perf ? { ...perf.force() } : null);
 window.__game.baseEvening = (t) => bview.setEvening(t);
 window.__game.cfg = CONFIG;

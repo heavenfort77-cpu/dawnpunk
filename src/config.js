@@ -1150,7 +1150,9 @@ export const CONFIG = {
     // nightCull: at night inside a house only what can be seen is drawn (src/nightcull.js): on = the switch; housePad = metres round the house that always count as the house
     // (gutters, sills, the yard just outside); roof = metres above the top floor; pad = metres added round each opening; doorway = standing this close to an opening's
     // plane (m), everything beyond it counts as seen
-    nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35 },
+    // gloom: the same test for the Gloom machines (src/main.js; owner 07:10 night combat): one outside that no opening shows is not drawn or animated. gloomY: height (m)
+    // of the machine's test sphere above its feet, gloomR: its radius (m), generous so a tall Warden or a Stilt's head showing at a window always counts as seen
+    nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2 },
     // smallCaster: a static piece smaller than this (bounding sphere radius, m) casts no sun shadow (owner's rule: small props castShadow off; their shadows were a few pixels)
     smallCaster: 0.12,
     // dtMax: longest game step one frame may take (s; was 0.1): after a long frame the game slows for a moment instead of jumping (all tiers; the checks set their own)

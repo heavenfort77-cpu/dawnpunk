@@ -22,7 +22,7 @@ on:
         type: string
         default: medium
       spots:
-        description: "Spots, comma list (hub, street, house, boss)"
+        description: "Spots, comma list (hub, street, house, boss, combat, bosscombat); spots joined with + run in ONE job (same machine, for the night >= hub gate)"
         type: string
         default: hub,street,house,boss
       secs:
@@ -102,9 +102,10 @@ jobs:
           SPOTS: ${{ matrix.spot }}
           SECS: ${{ inputs.secs }}
           SETTLE: ${{ inputs.settle }}
+          CSECS: "20"
           BREAK: ${{ inputs.brk }}
           PROFILE: ${{ inputs.prof }}
           NOEXTRA: ${{ matrix.spot != 'hub' && '1' || '' }}
         run: |
           echo "JOB ref=${{ matrix.ref }} tier=${{ matrix.tier }} spot=${{ matrix.spot }}"
-          node tools/perfcheck.cjs "${{ matrix.tier }}" 2>&1 | grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^BREAK|^PROFILE|^  |^ BY|INFO (dist|.*downloaded|.*page errors|Gloom present|boss view)" || true
+          node tools/perfcheck.cjs "${{ matrix.tier }}" 2>&1 | grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^BREAK|^PROFILE|^  |^ BY|INFO (dist|.*downloaded|.*page errors|Gloom present|boss view|combat)" || true

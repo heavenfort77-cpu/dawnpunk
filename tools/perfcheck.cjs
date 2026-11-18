@@ -11,10 +11,24 @@
 // SECS seconds are timed: fps, average, 95th percentile and worst frame (ms) of steady play, with game time held still so the picture is the same throughout.
 // PASS / FAIL lines: the owner's budget (Nov 19) on the default tier (medium) at every spot; other tiers are printed only. On the default tier it also checks the ?perf=1
 // overlay, the automatic step-down and that GPU memory does not grow across runs (NOEXTRA=1 skips that).
+// COMBAT (owner Nov 19 07:10: night combat must not fail; FPS first). Two more spots measure REAL combat, not a still camera, with game time running:
+// combat = a street house at night (ring index 2), bosscombat = THE BECKONER's night (ring index 4) once the boss is up and summoning. A bot drives the game's own
+// input paths in the page: it aims at the nearest Gloom (and at the boss on its night), fires quick shots and a charged shot every few seconds (the shots, hits, kills,
+// scrap debris and impact effects of main.js doFire), places the loadout's devices (main.js doPlace) and lets Marla's lines run. The number of Gloom alive is kept
+// at the night's normal maximum (COMBAT_N / BOSS_N; the average bot's median of the most alive at once over 12 nights per ring: ring index 2 -> 18, ring index 4 -> 24),
+// topped up through the sim's own addGloom at the breaches. After SETTLE s it times CSECS s (default 20): fps, p95, worst; draw calls and triangles are averaged
+// per frame over the same window (max printed too). The loading cards run for real (?cards=1: shader builds and uploads under the card, as for a player).
+// Gates (PASS/FAIL) on the DEFAULT tier: average >= 60 fps, p95 <= 25 ms, no frame over 100 ms from the first frame after the card (settle included),
+// fps >= the hub's (when the hub is measured in the same job: spots joined with '+' run in one job, one machine), under 500 calls and 0.5 M triangles.
+// Low tier: >= 60 fps gate too. High: printed only.
 const { chromium } = require('playwright'); const http = require('http'); const fs = require('fs'); const path = require('path');
 const ARG = process.argv[2] || 'medium', OUT = process.argv[3] || '', SEED = +(process.env.SEED || 777), FRAMES = +(process.env.FRAMES || 6), DIST = path.join(__dirname, '..', 'dist');
 const GPU = !!process.env.GPU, SECS = +(process.env.SECS || (GPU ? 8 : 0)), SETTLE = +(process.env.SETTLE || 6);
-const ONLY = process.env.SPOTS ? process.env.SPOTS.split(',') : ['hub', 'street', 'house', 'boss'];
+const ONLY = process.env.SPOTS ? process.env.SPOTS.split(/[,+]/) : ['hub', 'street', 'house', 'boss'];
+// combat spots: ring index, Gloom kept alive (the night's normal most at once, see the header), seconds timed
+const COMBAT = { combat: { ring: 2, n: +(process.env.COMBAT_N || 18) }, bosscombat: { ring: 4, n: +(process.env.BOSS_N || 24), boss: true } }, CSECS = +(process.env.CSECS || 20);
+// combat gates: fps at least, 95th percentile frame at most (ms), worst frame at most (ms); on the default tier, and the fps gate on low too
+const CGATE = { fps: 60, p95: 25, worst: 100 };
 // targets (owner's budget Nov 19) on the DEFAULT tier (TT, medium): draw calls per frame (all passes), triangles per frame (all passes), MB downloaded before the hub is ready
 const TT = 'medium', TARGET = { hub: { calls: 500, tris: 0.5e6 }, street: { calls: 500, tris: 0.5e6 }, house: { calls: 500, tris: 0.5e6 }, boss: { calls: 500, tris: 0.5e6 }, startMB: 20 };
 if (OUT) fs.mkdirSync(OUT, { recursive: true });
@@ -49,7 +63,7 @@ const BREAKDOWN = (spot) => {
   const groups = new Map(); let tv = 0, dv = 0, ts = 0, ds = 0, tAll = 0, dAll = 0, nLights = 0;
   const walk = (o, path, vis) => { if (!o.visible) return; if (o.isLight) nLights++; const nm = o.name || (o.userData && (o.userData.hiInst || o.userData.kind || o.userData.part)) || ''; const p2 = nm ? (path ? path + '/' : '') + String(nm).slice(0, 18) : path;
     if ((o.isMesh || o.isPoints || o.isLine) && o.geometry) { const ge = o.geometry, n = ge.index ? ge.index.count : (ge.attributes.position ? ge.attributes.position.count : 0), dr = Math.min(n, ge.drawRange.count === Infinity ? n : ge.drawRange.count), mats = Array.isArray(o.material) ? o.material.length : 1;
-      const t = Math.floor(dr / 3) * (o.isInstancedMesh ? o.count : 1) * (o.isMesh ? 1 : 0), iv = inView(o); tAll += t; dAll += mats; if (iv && o.layers.mask === 2) { hT += t; hD += mats; } if (o.castShadow) { ts += t; ds += mats; }
+      const t = Math.floor(dr / 3) * (o.isInstancedMesh ? o.count : 1) * (o.isMesh ? 1 : 0), iv0 = inView(o), lay = (o.layers.mask & cam.layers.mask) !== 0, iv = iv0 && lay; tAll += t; dAll += mats; if (iv0 && !lay) { hT += t; hD += mats; } if (o.castShadow) { ts += t; ds += mats; }
       if (iv) { tv += t; dv += mats; const ud = Object.keys(o.userData || {}).filter((k) => k !== 'keep').slice(0, 3).join(','), sz = t > 20000 ? '>20k' : t > 2000 ? '>2k' : t > 200 ? '>200' : '<200'; const key = p2.split('/').slice(-3).join('/') + ' | ' + o.type + ' ' + (ge.type || '').replace('Geometry', 'G') + ' ' + (Array.isArray(o.material) ? 'multi' : o.material.type) + (o.castShadow ? ' cs' : '') + (o.frustumCulled ? '' : ' NOCULL') + (o.layers.mask === 2 ? ' HIDDEN-BEHIND-WALLS' : '') + ' ud[' + ud + '] ' + sz + ' top:' + topOf(o); const q = groups.get(key) || { t: 0, d: 0, n: 0 }; q.t += t; q.d += mats; q.n++; groups.set(key, q); } }
     for (const c of o.children) walk(c, p2, vis); };
   walk(sc, '', true);
@@ -67,7 +81,7 @@ const BREAKDOWN = (spot) => {
     served = []; T0 = Date.now(); const errs = [];
     const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); await ctx.addInitScript(INIT, { seed: SEED });
     const p = await ctx.newPage(); p.setDefaultTimeout(900000); p.on('pageerror', (e) => errs.push(String(e).slice(0, 200))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 200)); });
-    await p.goto(URL0 + '?quality=' + tier + '&seed=' + SEED, { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info(tier + ': page up ' + el() + ', ' + MB(sumB()) + ' MB so far');
+    await p.goto(URL0 + '?quality=' + tier + '&seed=' + SEED + (GPU ? '&cards=1' : ''), { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info(tier + ': page up ' + el() + ', ' + MB(sumB()) + ' MB so far');
     const frames = (n) => p.evaluate((n) => new Promise((res) => { let k = 0; const f = () => (++k >= n ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
     const waitGame = (secs, cap) => p.evaluate(([secs, cap]) => new Promise((res) => { window.__dtMax = cap; let acc = 0, last = performance.now(), n = 0; const f = (now) => { acc += Math.min(cap, (now - last) / 1000); last = now; if (acc >= secs || ++n > 400) res(n); else requestAnimationFrame(f); }; requestAnimationFrame(f); }), [secs, cap || 0.3]);
     async function waitLoads(what) { for (let k = 0; k < 400; k++) { const s = await p.evaluate(() => { const q = window.__game.quality().hi, G = window.__gloomGlb || {}, B = window.__boss || {}; return { hi: q.ok + q.failed >= q.asked, marla: window.__game.marla.ready, glb: Object.values(G).every((v) => v !== 'loading'), boss: B.model !== 'loading' }; }); if (s.hi && s.marla && s.glb && s.boss) { info(what + ' loaded ' + el() + ' ' + MB(sumB()) + ' MB so far'); return; } await p.waitForTimeout(1000); } info(what + ': loads not all done'); }
@@ -134,6 +148,50 @@ const BREAKDOWN = (spot) => {
       info('boss view ' + JSON.stringify(w) + ' ' + JSON.stringify(await p.evaluate(() => ({ model: window.__boss.model, boss: !!window.__game.sim.boss }))));
       await waitGame(0.3, 0.05); await measure('boss');
     }
+    // COMBAT spots (see the header): a real night fight driven by the bot below, game time running
+    for (const spot of ['combat', 'bosscombat']) { if (!ONLY.includes(spot)) continue; const C = COMBAT[spot];
+      await midSave(C.boss ? { day: 14, nights: 11, food: 31, ess: 18, ringOpen: 5, scout: 2, cats: [0, 2, 3] } : { day: 7, nights: 5, food: 19, ess: 11, ringOpen: 3, scout: 2, cats: [0, 2, 3] });
+      const r = await startRun(C.ring); await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null);
+      if (C.boss) for (let k = 0; k < 300; k++) { if (await p.evaluate(() => !window.__boss || ['ready', 'failed', 'none'].includes(window.__boss.model))) break; await p.waitForTimeout(1000); }
+      const hi = pickHouse(r, 4); await p.evaluate((i) => { const g = window.__game; g.enterHouse(i); g.sim.player.energy = 62; }, hi); await waitGame(1.5, 0.3);
+      await p.evaluate(() => { window.__dtMax = 0.05; window.__game.nightfall(); }); await p.waitForTimeout(300); await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null); await waitLoads('combat night');
+      // the boss night: on until THE BECKONER is up and acting (summoning or striking), in the sim alone (as the boss spot does)
+      if (C.boss) for (let k = 0; k < 240; k++) { const v = await p.evaluate(() => { const s = window.__game.sim; s.player.hp = 1e6; for (let i = 0; i < 5 && !s.done; i++) { const B = s.boss; if (B && B.act) return true; s.step(0.1); } return false; }); if (v) break; }
+      // the bot: the game's own shot, charged shot and device placing (main.js doFire / doPlace), the aim set as the mouse would; HP and Sun topped up so the fight goes on
+      await p.evaluate(({ n, boss }) => { const g = window.__game, s = g.sim, P = s.player, bps = s.breaches.map((b, i) => i).filter((i) => s.breaches[i].floor === 0);
+        const kinds = (g.save && g.save.loadout) || ['turbine', 'lance', 'panel', 'mine']; const st = window.__cb = { on: true, quick: 0, charged: 0, placed: 0, placeOk: 0, kills0: s.killed, maxAlive: 0, sumAlive: 0, sumInside: 0, frames: 0, lines: 0, boss: !!s.boss };
+        P.x = 0; P.z = 0; P.floor = 0; P.climb = null; let last = performance.now(), tq = 0, tc = 0, tp = 0, tb = 0, slot = 0, line = '';
+        const loop = (now) => { if (!st.on || s.done) return; const dt = Math.min(0.1, (now - last) / 1000); last = now; tq += dt; tc += dt; tp += dt; tb += dt;
+          P.hp = Math.max(P.hp, 60); P.energy = Math.max(P.energy, 80); if (s.gloom.length < n) s.addGloom(n - s.gloom.length, { at: s.t, gap: 0.35, bps });
+          let t = null, bd = 1e9, inside = 0; for (const q of s.gloom) { if (q.phase === 'inside') inside++; if (q.floor !== P.floor) continue; const d = Math.hypot(q.x - P.x, q.z - P.z) - (q.phase === 'inside' ? 8 : 0); if (d < bd) { bd = d; t = q; } }
+          st.frames++; st.sumAlive += s.gloom.length; st.sumInside += inside; st.maxAlive = Math.max(st.maxAlive, s.gloom.length);
+          let tx, ty, tz; if (boss && s.boss && s.boss.at && (tb % 6) > 3.5) { const pt = s.boss.at([0, 4.5, 0]); tx = pt.x; ty = 4.5; tz = pt.z; } else if (t) { tx = t.x; ty = s.gloomY(t) + 0.9; tz = t.z; }
+          if (tx !== undefined) { const dx = tx - P.x, dz = tz - P.z; g.setYaw(Math.atan2(-dx, -dz)); g.setPitch(Math.max(-0.6, Math.min(0.6, Math.atan2(ty - 1.6, Math.hypot(dx, dz))))); }
+          if (tq >= 0.3) { tq = 0; g.doFire(false); st.quick++; }
+          if (tc >= 3) { tc = 0; g.doFire(true); st.charged++; }
+          if (tp >= 4) { tp = 0; const nd = s.devices.length; g.doPlace(kinds[slot++ % kinds.length]); st.placed++; if (s.devices.length > nd) st.placeOk++; }
+          const m = document.getElementById('marla'); if (m && m.textContent && m.textContent !== line) { line = m.textContent; st.lines++; }
+          requestAnimationFrame(loop); };
+        requestAnimationFrame(loop); }, { n: C.n, boss: !!C.boss });
+      // timing: every frame from the first one after the card (the settle counts toward the worst frame), the steady window for fps / p95 / calls / triangles
+      const f = await p.evaluate(([settle, secs]) => new Promise((res) => { const ts = [], cs = [], tr = []; let t0 = 0, last = 0, worstAll = 0, c0 = null; const step = (now) => { if (!t0) t0 = now; if (last) worstAll = Math.max(worstAll, now - last); last = now;
+          if (now - t0 < settle * 1000) { requestAnimationFrame(step); return; } const pc = window.__pc; if (c0) { cs.push(pc.calls - c0.calls); tr.push(pc.tris - c0.tris); } c0 = { calls: pc.calls, tris: pc.tris }; ts.push(now);
+          if (now - t0 < (settle + secs) * 1000) { requestAnimationFrame(step); return; }
+          const d = ts.slice(1).map((t, i) => t - ts[i]).sort((a, b) => a - b), avg = d.reduce((a, b) => a + b, 0) / Math.max(1, d.length), mean = (a) => a.reduce((x, y) => x + y, 0) / Math.max(1, a.length);
+          res({ n: d.length, fps: 1000 / avg, avg, p95: d[Math.floor(d.length * 0.95)] || 0, worst: d[d.length - 1] || 0, worstAll, calls: Math.round(mean(cs)), callsMax: Math.max(0, ...cs), tris: Math.round(mean(tr)), trisMax: Math.max(0, ...tr) }); }; requestAnimationFrame(step); }), [SETTLE, CSECS]);
+      const cb = await p.evaluate(() => { const c = window.__cb, s = window.__game.sim; c.on = false; return { quick: c.quick, charged: c.charged, placed: c.placed, placeOk: c.placeOk, kills: s.killed - c.kills0, maxAlive: c.maxAlive, avgAlive: +(c.sumAlive / Math.max(1, c.frames)).toFixed(1), avgInside: +(c.sumInside / Math.max(1, c.frames)).toFixed(1), lines: c.lines, devices: s.devices.length, boss: !!s.boss && !!s.boss.act, done: s.done, gpu: window.__game.gpu() }; });
+      const row = { tier, spot, calls: f.calls, tris: f.tris, callsMax: f.callsMax, trisMax: f.trisMax, fps: +f.fps.toFixed(1), avgMs: +f.avg.toFixed(1), p95: +f.p95.toFixed(1), worst: +f.worst.toFixed(1), worstAll: Math.round(f.worstAll), mb: MB(sumB()), combat: cb }; rows.push(row);
+      console.log('FPS ' + tier + ' ' + spot + ': ' + row.fps + ' fps, avg ' + row.avgMs + ' ms, p95 ' + row.p95 + ' ms, worst ' + row.worst + ' ms (' + f.n + ' frames), worst from the card on ' + row.worstAll + ' ms');
+      console.log('PERF ' + tier + ' ' + spot + ': calls ' + row.calls + ' (max ' + row.callsMax + '), triangles ' + (row.tris / 1e6).toFixed(2) + ' M (max ' + (row.trisMax / 1e6).toFixed(2) + ' M), downloaded ' + row.mb + ' MB');
+      console.log('INFO combat ' + tier + ' ' + spot + ': ' + JSON.stringify(cb));
+      if (process.env.BREAK) console.log(await p.evaluate(BREAKDOWN, spot));
+      if (process.env.PROFILE) { const cdp = await p.context().newCDPSession(p); await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 250 }); await p.evaluate(() => { window.__cb.on = true; });
+        await cdp.send('Profiler.start'); await p.waitForTimeout(5000); const { profile } = await cdp.send('Profiler.stop');
+        const self = new Map(), byId = new Map(profile.nodes.map((q) => [q.id, q])); let tot = 0; profile.samples.forEach((id, i) => { const dt = (profile.timeDeltas[i] || 0) / 1000, cf = byId.get(id).callFrame; tot += dt; const k = (cf.functionName || '(anon)') + ' ' + (cf.url || '').split('/').pop() + ':' + (cf.lineNumber + 1); self.set(k, (self.get(k) || 0) + dt); });
+        console.log('PROFILE ' + tier + ' ' + spot + ' (' + Math.round(tot) + ' ms sampled; the bot was stopped, so this is the game alone):\n' + [...self.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([k, v]) => '  ' + v.toFixed(0) + ' ms ' + (100 * v / tot).toFixed(1) + '% ' + k).join('\n')); await cdp.detach(); }
+      if (OUT) { await p.screenshot({ path: path.join(OUT, tier + '_' + spot + '.png'), timeout: 900000 }); }
+      await p.evaluate(() => { window.__dtMax = 0.3; });
+    }
     const lo = served.filter((s) => /models\//.test(s.f)).map((s) => s.f.replace('models/', '') + ' @' + Math.round((s.t - T0) / 1000) + 's').join(', ');
     info(tier + ' total downloaded ' + MB(sumB()) + ' MB in ' + served.length + ' requests; models fetched: ' + (lo || 'none'));
     console.log(errs.length ? 'INFO page errors (' + tier + '): ' + [...new Set(errs)].slice(0, 4).join(' | ') : 'INFO no page errors (' + tier + ')');
@@ -160,6 +218,15 @@ const BREAKDOWN = (spot) => {
   for (const r of rows) { if (r.tier !== TT || !TARGET[r.spot]) continue; const T = TARGET[r.spot];
     out.push([TT + ' ' + r.spot + ': ' + r.calls + ' draw calls per frame (target < ' + T.calls + ')', r.calls < T.calls]);
     out.push([TT + ' ' + r.spot + ': ' + (r.tris / 1e6).toFixed(2) + ' M triangles per frame (target < ' + (T.tris / 1e6).toFixed(2) + ' M)', r.tris < T.tris]); }
+  // owner Nov 19 07:10: night combat must not fail. On the default tier every combat gate; on low the frame-rate gates; high is printed only.
+  { const hub = (rows.find((r) => r.tier === TT && r.spot === 'hub') || {}).fps;
+    for (const r of rows) { if (!COMBAT[r.spot] || r.tier === 'high' || !r.fps) continue; const t = r.tier + ' ' + r.spot + ' (combat): ';
+      out.push([t + r.fps + ' fps (target >= ' + CGATE.fps + ')', r.fps >= CGATE.fps]); out.push([t + 'p95 ' + r.p95 + ' ms (target <= ' + CGATE.p95 + ')', r.p95 <= CGATE.p95]);
+      out.push([t + 'worst frame from the card on ' + r.worstAll + ' ms (target <= ' + CGATE.worst + ')', r.worstAll <= CGATE.worst]);
+      if (r.tier !== TT) continue;
+      if (hub) out.push([t + r.fps + ' fps vs hub ' + hub + ' fps in the same job (the night must not be slower)', r.fps >= hub]);
+      out.push([t + r.calls + ' draw calls per frame on average (target < 500; max ' + r.callsMax + ')', r.calls < 500]); out.push([t + (r.tris / 1e6).toFixed(2) + ' M triangles per frame on average (target < 0.50 M; max ' + (r.trisMax / 1e6).toFixed(2) + ' M)', r.tris < 0.5e6]);
+      const c = r.combat || {}; out.push([t + 'the fight was real: ' + c.quick + ' quick and ' + c.charged + ' charged shots, ' + c.kills + ' kills, ' + c.placeOk + ' devices placed, ' + c.avgAlive + ' Gloom alive on average (' + c.avgInside + ' inside)' + (COMBAT[r.spot].boss ? ', boss acting ' + c.boss : ''), c.kills > 0 && c.charged > 0 && c.avgAlive >= COMBAT[r.spot].n * 0.6 && (!COMBAT[r.spot].boss || c.boss)]); } }
   // owner Nov 19 06:43: the night house and the boss night are the most intense play, so on the default tier their real frame rate (GPU=1) must be at least the hub's
   { const f = (sp) => (rows.find((r) => r.tier === TT && r.spot === sp) || {}).fps; const hub = f('hub');
     if (hub) for (const sp of ['house', 'boss']) if (f(sp)) out.push([TT + ' ' + sp + ': ' + f(sp) + ' fps, hub ' + hub + ' fps (the night must not be slower than the hub)', f(sp) >= hub]); }
