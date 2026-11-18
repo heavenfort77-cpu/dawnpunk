@@ -29,11 +29,11 @@ const A = process.argv.slice(2);
 const tier = A[0] === 'high' ? 'high' : 'low';
 const opt = (k) => { const i = A.indexOf(k); return i >= 0 ? A[i + 1] : null; };
 const page0 = A.find((a) => a.endsWith('.html')) || path.join(__dirname, '../dist/index_single.html');
-const FR = opt('--frames'), B64 = A.includes('--b64'), JSONF = opt('--json'), ONLY = (opt('--only') || 'base,street,night,film').split(','), NO30 = A.includes('--no30');
+const DUMP = opt('--dump'), FR = opt('--frames'), B64 = A.includes('--b64'), JSONF = opt('--json'), ONLY = (opt('--only') || 'base,street,night,film').split(','), NO30 = A.includes('--no30');
 const LIM = {
   popBase: 1.0, popK: 2.5,                 // m/s, and times the ground speed
   snapStand: 20, snapWalk: 50, walkV: 0.3, // m/s2; ground speed (m/s) above which a person counts as walking
-  plantCm: 3, plantDy: 0.015, skate: 0.15, stride: 0.15,
+  plantCm: 3, plantDy: 0.015, skate: 0.15, stride: 0.15, slideDeg: 0.1, hipJump: 0.5,
   yawRate: 450, yawAcc: 5700, headRate: 400, headAcc: 10000,
   fpsCm: 5, fpsDeg: 5,
   handIdle: 0.25, handAct: 2.5, handIdleDeg: 30, handActDeg: 720, handSnapMm: 2, handFpsMm: 1,
@@ -79,6 +79,14 @@ function pageSetup(o) {
   HM.take = (key) => { const tr = HM.traces[key]; return { key, n: tr.n, info: tr.info, b64: b64(tr.d) }; };
   HM.takeHands = () => ({ n: HM.hand.length / o.HS, b64: b64(HM.hand) });
   HM.cvs = () => document.getElementById('c');
+  // the main scene (the parent of a sample machine, removed again at once)
+  HM.scene = () => { g.gloomSample('walker', 0, -400, 0, 0, false); const smp = window.__lastSample, sc = smp.parent; sc.remove(smp); return sc; };
+  // drawing cost only: on frames that are not pictures, everything but the measured people (and lights) is hidden; the game's logic does not read what is drawn
+  HM.hid = []; HM.mkHide = (scene, keep) => { HM.setHidden(false); HM.hid = []; const ks = new Set(); for (const k of keep) { let x = k; while (x) { ks.add(x); x = x.parent; } }
+    const lit = (o) => { let f = false; o.traverse((x) => { if (x.isLight) f = true; }); return f; };
+    const walk = (o) => { for (const c of o.children) { if (!c.visible || c.isLight || c.isCamera) continue; if (ks.has(c)) { if (!keep.includes(c)) walk(c); continue; } if (lit(c)) { walk(c); continue; } HM.hid.push(c); } };
+    walk(scene); HM.hidOn = false; };
+  HM.setHidden = (on) => { if (HM.hidOn === on) return; HM.hidOn = on; for (const c of HM.hid) c.visible = !on; };
   HM.shot = (label) => { if (!o.frames) return; try { HM.frames.push({ label, url: HM.cvs().toDataURL('image/jpeg', 0.82) }); } catch (e) { HM.notes.push('frame ' + label + ': ' + e); } };
   // base: render from a camera placed by the test (the game loop is held), labels hidden for the picture
   HM.baseShot = (label, from, at) => { if (!o.frames) return; const cam = g.cam, hid = []; g.bview.group.traverse((x) => { if (x.isSprite && x.visible) { x.visible = false; hid.push(x); } });
@@ -95,11 +103,11 @@ function baseRun(o) {
   if (g.marla.ready && pk.scoutG && g.marla.root.parent === pk.scoutG) { const w = wpos(pk.scoutG); subj.push({ id: 'marla', c: [w[0], w[1]], f: w[2], inside: false, marla: true }); HM.track('marla', g.marla.root, { kind: 'woman', who: 'Marla' }); }
   else out.notes.push('Marla model not in the base');
   for (const id of ['bram', 'pip', 'oko']) { const ch = pk.chars[id], og = pk.npcG[id]; if (!ch || !ch.ready || !og) { out.notes.push(id + ' not ready'); continue; } const w = wpos(og.p); const fr = wpos(ch.root);
-    subj.push({ id, c: [w[0], w[1]], f: fr[2], inside: !!(g.B.NPCS[id] && g.B.NPCS[id].inside) }); HM.track(id, ch.root, { kind: ch.kind, who: id[0].toUpperCase() + id.slice(1), scan: ch.scan }); }
-  for (const r of pk.npcs) if (r.ch && r.ch.ready && r.ch.root.parent === r.n) HM.track('rec_' + r.p.role, r.ch.root, { kind: r.ch.kind, who: r.p.name + ' (' + r.p.role + ')', role: r.p.role, carry: !!r.crate.visible });
+    subj.push({ id, c: [w[0], w[1]], f: fr[2], inside: !!(g.B.NPCS[id] && g.B.NPCS[id].inside) }); HM.track(id, ch.root, { kind: ch.kind, who: id[0].toUpperCase() + id.slice(1), scan: ch.scan, gait: ch.probe && ch.probe() }); }
+  for (const r of pk.npcs) if (r.ch && r.ch.ready && r.ch.root.parent === r.n) HM.track('rec_' + r.p.role, r.ch.root, { kind: r.ch.kind, who: r.p.name + ' (' + r.p.role + ')', role: r.p.role, carry: !!r.crate.visible, gait: r.ch.probe && r.ch.probe() });
   // the script: a list of [duration, label, P(u) (u = seconds into the segment), on start]
   const seg = [], SP = 4, R0 = 2.2, at = (c, a, r) => [c[0] + Math.sin(a) * r, c[1] + Math.cos(a) * r];
-  seg.push([4, 'idle', () => [40, 40]]);
+  seg.push([4, 'start (player far)', () => [40, 40]]);
   for (const s of subj) {
     const c = s.c, f = s.f, k = s.id + ':';
     if (s.inside) { const sd = [Math.cos(f), -Math.sin(f)], side = (r, l) => [c[0] + Math.sin(f) * r + sd[0] * l, c[1] + Math.cos(f) * r + sd[1] * l];
@@ -138,28 +146,31 @@ function baseRun(o) {
 // a fixed-step segment through the game's own frame: script(t) sets the inputs for the frame that ends at t; sampling after every frame
 function fixedSeg(o) {
   return new Promise((done) => {
-    const HM = window.__HM, dt = o.dt; let k = 0; const N = Math.round(o.dur / dt), sc = window.__seg;
-    sc.input(dt);                                         // inputs for the first frame
+    const HM = window.__HM, dt = o.dt; let k = 0; const N = Math.round(o.dur / dt), sc = window.__seg, caps = sc.caps || [], t0 = performance.now();
+    const hideNow = () => { HM.mkHide(sc.scene(), sc.keep()); HM.setHidden(true); };
+    const capIn = (t) => caps.some((c) => c > t - dt + 1e-9 && c <= t + 1e-9);
+    sc.input(dt); if (!sc.lateHide) hideNow(); if (capIn(dt)) HM.setHidden(false);
     window.__fix = dt; window.__dtMax = 1;
-    window.__after = () => { k++; const t = k * dt; sc.sample(t); if (k >= N || sc.stop && sc.stop(t)) { window.__after = null; window.__fix = 1e-6; window.__dtMax = 1e-6; done({ frames: k, t }); return; } sc.input(t + dt); };
+    window.__after = () => { k++; const t = k * dt; sc.sample(t); if (k >= N || (sc.stop && sc.stop(t))) { window.__after = null; HM.setHidden(false); window.__fix = 1e-6; window.__dtMax = 1e-6; done({ frames: k, t, msPerFrame: (performance.now() - t0) / k }); return; }
+      if (sc.lateHide && (k === 2 || (sc.rehide && sc.rehide()))) hideNow(); sc.input(t + dt); HM.setHidden(!capIn(t + dt)); };
   });
 }
 // ---- street: Marla by day
 function streetPrep(o) {
-  const g = window.__game, HM = window.__HM, G = g.cfg().marla.guide, M = g.marla.root, c = [M.position.x, M.position.z], f = M.rotation.y, SP = 4, R0 = 2.5, at = (a, r) => [c[0] + Math.sin(a) * r, c[1] + Math.cos(a) * r];
+  const g = window.__game, HM = window.__HM, G = (typeof g.cfg === 'function' ? g.cfg() : g.cfg).marla.guide, M = g.marla.root, c = [M.position.x, M.position.z], f = M.rotation.y, SP = 4, R0 = 2.5, at = (a, r) => [c[0] + Math.sin(a) * r, c[1] + Math.cos(a) * r];
   HM.offAll(); HM.track('marla_street', M, { kind: 'woman', who: 'Marla (street)' });
   const seg = [[0.6, 'street:far', () => at(f, 10)], [(10 - R0) / SP, 'street:approach', (u) => at(f, 10 - SP * u)], [3.5, 'street:talk', () => at(f, R0)], [1.5 * Math.PI * R0 / SP, 'street:circle', (u) => at(f + SP / R0 * u, R0), () => { if (g.kitOpen) g.closeKit(); }],
     [2, 'street:hold', () => at(f + 1.5 * Math.PI, R0)], [Math.PI * R0 / SP, 'street:circleBack', (u) => at(f + 1.5 * Math.PI - SP / R0 * u, R0)], [1.5, 'street:hold2', () => at(f + 0.5 * Math.PI, R0)],
     [(12 - R0) / SP, 'street:leave', (u) => at(f + 0.5 * Math.PI, R0 + SP * u)], [3, 'street:far2', () => at(f + 0.5 * Math.PI, 12)]];
   const total = seg.reduce((a, s) => a + s[0], 0), segAt = (tt) => { let a = 0; for (const s of seg) { if (tt < a + s[0] - 1e-9) return [s, tt - a]; a += s[0]; } return [seg[seg.length - 1], 0]; };
   let cur = null, lab = 0; const shots = o.frames ? [0, 1, 2, 3].map((i) => (0.6 + (10 - R0) / SP + 3.5) + i * (1.5 * Math.PI * R0 / SP) / 3.2) : []; let si = 0;
-  window.__seg = { input: (t) => { const [sg, u] = segAt(t - o.dt); if (sg !== cur) { cur = sg; lab = HM.lab(sg[1]); if (sg[3]) sg[3](); } const P = sg[2](u); g.setTown(P[0], P[1]); g.setYaw(Math.atan2(-(c[0] - P[0]), -(c[1] - P[1]))); },
+  window.__seg = { scene: () => M.parent, keep: () => [M], caps: shots, input: (t) => { const [sg, u] = segAt(t - o.dt); if (sg !== cur) { cur = sg; lab = HM.lab(sg[1]); if (sg[3]) sg[3](); } const P = sg[2](u); g.setTown(P[0], P[1]); g.setYaw(Math.atan2(-(c[0] - P[0]), -(c[1] - P[1]))); },
     sample: (t) => { HM.sample(t, lab, () => (g.kitOpen ? 1 : 0)); while (si < shots.length && shots[si] <= t + 1e-9) { si++; HM.shot('Marla (street) turning to you'); } } };
   return { total, c, f };
 }
 // ---- night: the hands
 function nightPrep(o) {
-  window.__HM.offAll(); const g = window.__game, HM = window.__HM, s = g.sim, FINE = !matchMedia('(pointer: coarse)').matches, kinds = (g.cfg().loadout && g.cfg().loadout.first) || [];
+  window.__HM.offAll(); const g = window.__game, HM = window.__HM, s = g.sim, FINE = !matchMedia('(pointer: coarse)').matches, kinds = ((typeof g.cfg === 'function' ? g.cfg() : g.cfg).loadout && (typeof g.cfg === 'function' ? g.cfg() : g.cfg).loadout.first) || [];
   const key = (code, down) => window.dispatchEvent(new KeyboardEvent(down ? 'keydown' : 'keyup', { code, key: code, bubbles: true }));
   const placeOk = (k) => { if (!k) return false; const before = g.hands.state().tThrow; g.doPlace(k); return g.hands.state().tThrow < before; };
   const fireOk = () => { const before = g.hands.state().tFire; g.doFire(); return g.hands.state().tFire < before; };
@@ -173,19 +184,22 @@ function nightPrep(o) {
     [17.0, 'walk start', () => key('KeyW', true)], [17.5, 'fire while walking', fireOk], [18.4, 'walk stop', () => key('KeyW', false)]];
   const lab = (t) => { let l = 'night:idle'; for (const e of ev) if (t >= e[0]) l = 'night:after ' + e[1]; return HM.lab(l); };
   let ei = 0, moving = false; const shots = o.frames ? [[0.8, 'hands idle'], [1.9, 'hands walking (bob)'], [9.55, 'hands firing (recoil)'], [11.5 + 0.75 * 0.4, 'hands placing a device']] : []; let si = 0;
-  window.__seg = { input: (t) => { s.player.hp = Math.max(s.player.hp, 90); s.player.energy = 100; s.gloom.length = 0; while (ei < ev.length && ev[ei][0] <= t - o.dt + 1e-9) { const e = ev[ei++]; const r = e[2](); HM.events.push({ t: e[0], what: e[1], ok: r !== false }); if (/walk start/.test(e[1])) moving = true; if (/walk stop/.test(e[1])) moving = false; } },
+  const scn = HM.scene();
+  window.__seg = { scene: () => scn, keep: () => [], caps: shots.map((x) => x[0]), input: (t) => { s.player.hp = Math.max(s.player.hp, 90); s.player.energy = 100; s.gloom.length = 0; while (ei < ev.length && ev[ei][0] <= t - o.dt + 1e-9) { const e = ev[ei++]; const r = e[2](); HM.events.push({ t: e[0], what: e[1], ok: r !== false }); if (/walk start/.test(e[1])) moving = true; if (/walk stop/.test(e[1])) moving = false; } },
     sample: (t) => { HM.handSample(t, lab(t), moving); while (si < shots.length && shots[si][0] <= t + 1e-9) HM.shot(shots[si++][1]); } };
   return { FINE, kinds, dur: 19.5 };
 }
 // ---- film: from 44 s to the end
 function filmPrep(o) {
-  window.__HM.offAll(); const g = window.__game, HM = window.__HM, C = g.cfg().opening, P = C.parts, t0 = o.from, fade = document.getElementById('cineFade');
+  window.__HM.offAll(); const g = window.__game, HM = window.__HM, C = (typeof g.cfg === 'function' ? g.cfg() : g.cfg).opening, P = C.parts, t0 = o.from, fade = document.getElementById('cineFade');
   let lastPk = null; const trackAll = () => { const pk = g.bview.peek && g.bview.peek(); if (!pk || !pk.chars) return; lastPk = pk;
     if (pk.scoutG && g.marla.root.parent === pk.scoutG) HM.track('marla_film', g.marla.root, { kind: 'woman', who: 'Marla (film)' });
     for (const id of ['bram', 'pip', 'oko']) { const ch = pk.chars[id]; if (ch && ch.ready && ch.root.parent) HM.track(id + '_film', ch.root, { kind: ch.kind, who: id[0].toUpperCase() + id.slice(1) + ' (film)' }); }
     for (const r of pk.npcs || []) if (r.ch && r.ch.ready && r.ch.root.parent === r.n) HM.track('rec_' + r.p.role + '_film', r.ch.root, { kind: r.ch.kind, who: r.p.name + ' (' + r.p.role + ', film)', role: r.p.role }); };
   const shots = o.frames ? [P[3] + 2.5, P[3] + 4.5, P[3] + 6.5, P[3] + 8.5] : []; let si = 0, lab = 0;
-  window.__seg = { input: () => { trackAll(); }, stop: () => g.state !== 'intro',
+  let nKeep = 0; const keepNow = () => Object.values(HM.traces).filter((x) => x.key.endsWith('_film') && x.root.parent).map((x) => x.root);
+  window.__seg = { lateHide: true, scene: () => g.bview.group.parent || HM.scene(), keep: () => { const k = keepNow(); nKeep = k.length; return k; }, rehide: () => keepNow().length !== nKeep, caps: shots.map((x) => x - t0),
+    input: () => { trackAll(); }, stop: () => g.state !== 'intro',
     sample: (t) => { const ft = t0 + t; lab = HM.lab(ft < P[3] ? 'film:dawn' : 'film:wake'); if (Object.keys(HM.traces).some((k) => k.endsWith('_film'))) HM.sample(t, lab, () => +(fade && fade.style.opacity || 0)); while (si < shots.length && shots[si] <= ft + 1e-9) { si++; HM.shot('opening: you wake, Marla at the door'); } } };
   return { parts: P, from: t0 };
 }
@@ -207,19 +221,19 @@ async function pass(b, dt, frames) {
   if (ONLY.includes('street') || ONLY.includes('night')) {
     await p.evaluate(() => { const g = window.__game; g.save.nights = 3; document.getElementById('selRing').value = '0'; g.startRun(); });
     await p.waitForFunction(() => window.__game.state === 'play' && window.__game.run && window.__game.marla.root.parent, null, { timeout: 300000 });
-    if (ONLY.includes('street')) { R.street = await p.evaluate(streetPrep, { dt, frames: !!frames }); R.street.run = await p.evaluate(fixedSeg, { dt, dur: R.street.total }); lg('street done'); }
+    if (ONLY.includes('street')) { R.street = await p.evaluate(streetPrep, { dt, frames: !!frames }); R.street.run = await p.evaluate(fixedSeg, { dt, dur: R.street.total }); lg('street done, ' + Math.round(R.street.run.msPerFrame) + ' ms per frame'); }
     if (ONLY.includes('night')) {
       await p.evaluate(() => window.__game.nightfall());
       await p.waitForFunction(() => window.__game.sim && window.__game.sim.phase === 'night', null, { timeout: 120000 }).catch(() => null);
       R.nightPhase = await p.evaluate(() => window.__game.sim && window.__game.sim.phase);
-      R.night = await p.evaluate(nightPrep, { dt, frames: !!frames }); R.night.run = await p.evaluate(fixedSeg, { dt, dur: R.night.dur }); R.night.events = await p.evaluate(() => window.__HM.events); lg('night done');
+      R.night = await p.evaluate(nightPrep, { dt, frames: !!frames }); R.night.run = await p.evaluate(fixedSeg, { dt, dur: R.night.dur }); R.night.events = await p.evaluate(() => window.__HM.events); lg('night done, ' + Math.round(R.night.run.msPerFrame) + ' ms per frame');
     }
   }
   if (ONLY.includes('film')) {
     await p.evaluate(() => { window.__game.startIntro(); });
     await p.waitForFunction(() => window.__game.state === 'intro', null, { timeout: 120000 });
     await p.evaluate(() => window.__game.introAt(44));
-    R.film = await p.evaluate(filmPrep, { dt, frames: !!frames, from: 44 }); R.film.run = await p.evaluate(fixedSeg, { dt, dur: 15 }); lg('film done (' + R.film.run.t.toFixed(1) + ' s)');
+    R.film = await p.evaluate(filmPrep, { dt, frames: !!frames, from: 44 }); R.film.run = await p.evaluate(fixedSeg, { dt, dur: 15 }); lg('film done (' + R.film.run.t.toFixed(1) + ' s, ' + Math.round(R.film.run.msPerFrame) + ' ms per frame)');
   }
   R.labels = await p.evaluate(() => window.__HM.labels);
   R.notes.push(...(await p.evaluate(() => window.__HM.notes)), ...(R.base ? R.base.notes : []));
@@ -238,6 +252,7 @@ function analyzePerson(tr, dt, labels) {
   const F = tr.f, n = tr.n, at = (i, k) => F[i * S + k], T = (i) => at(i, 0), lab = (i) => labels[at(i, 1)] || '?';
   const ok = (i) => i > 0 && Math.abs(T(i) - T(i - 1) - dt) < dt * 0.5;
   const bp = (i, b) => [at(i, 12 + b * 3), at(i, 13 + b * 3), at(i, 14 + b * 3)];
+  const gs = ((tr.info.gait && tr.info.gait.speed) || 1.1) * (tr.info.carry ? 0.85 : 1), cyc = (tr.info.gait && tr.info.gait.cycle) || 1;
   const vb = new Float64Array(n); for (let i = 1; i < n; i++) vb[i] = ok(i) ? Math.hypot(at(i, 2) - at(i - 1, 2), at(i, 4) - at(i - 1, 4)) / dt : 0;
   const r = { n, seconds: n * dt };
   // pops (speed) and snaps (one-sample excess over both neighbours), and the largest acceleration
@@ -277,15 +292,26 @@ function analyzePerson(tr, dt, labels) {
     if (cur) plants.push(cur); }
   for (const p of plants) { const a = bp(p.i0, BONES.indexOf(p.foot)), c = bp(p.i1, BONES.indexOf(p.foot)); p.net = Math.hypot(c[0] - a[0], c[2] - a[2]); p.t = T(p.i0); p.dur = (p.i1 - p.i0) * dt; p.at = lab(p.i0); p.walk = p.m > 0 && p.vb / p.m > LIM.walkV; p.mid = [(a[0] + c[0]) / 2, (a[2] + c[2]) / 2]; }
   const worstPlant = plants.reduce((m, p) => (p.path > (m ? m.path : -1) ? p : m), null);
-  const walkP = plants.filter((p) => p.walk && p.m >= 3), skate = walkP.length ? walkP.reduce((s, p) => s + (p.path / (p.m * dt)) / (p.vb / p.m), 0) / walkP.length : null, worstSkate = walkP.reduce((m, p) => Math.max(m, (p.path / (p.m * dt)) / (p.vb / p.m)), 0);
+  const walkP = plants.filter((p) => p.walk && p.m >= 3 && p.vb / p.m > 0.6 * gs), skate = walkP.length ? walkP.reduce((s, p) => s + (p.path / (p.m * dt)) / (p.vb / p.m), 0) / walkP.length : null, worstSkate = walkP.reduce((m, p) => Math.max(m, (p.path / (p.m * dt)) / (p.vb / p.m)), 0);
   const signed = walkP.length ? walkP.reduce((s, p) => s + (p.along / (p.m * dt)) / (p.vb / p.m), 0) / walkP.length : null;
   // stride: consecutive plants of the same foot while walking
-  const strides = []; for (const f of ['foot_l', 'foot_r']) { const ps = plants.filter((p) => p.foot === f && p.walk); for (let k = 1; k < ps.length; k++) { const a = ps[k - 1], b = ps[k], Tt = (b.i0 - a.i0) * dt; if (Tt <= 0.3 || Tt > 2.5) continue; let v = 0; for (let i = a.i0 + 1; i <= b.i0; i++) v += vb[i]; v /= (b.i0 - a.i0); if (v < LIM.walkV) continue; strides.push({ ratio: Math.hypot(b.mid[0] - a.mid[0], b.mid[1] - a.mid[1]) / Tt / v, T: Tt, v, t: T(a.i0), at: lab(a.i0) }); } }
+  const strides = []; for (const f of ['foot_l', 'foot_r']) { const ps = plants.filter((p) => p.foot === f && p.walk); for (let k = 1; k < ps.length; k++) { const a = ps[k - 1], b = ps[k], Tt = (b.i0 - a.i0) * dt; if (Tt < 0.6 * cyc || Tt > 1.6 * cyc) continue; let v = 0, vmin = 9; for (let i = a.i0 + 1; i <= b.i0; i++) { v += vb[i]; vmin = Math.min(vmin, vb[i]); } v /= (b.i0 - a.i0); if (vmin < 0.6 * gs) continue; strides.push({ ratio: Math.hypot(b.mid[0] - a.mid[0], b.mid[1] - a.mid[1]) / Tt / v, T: Tt, v, t: T(a.i0), at: lab(a.i0) }); } }
   strides.sort((a, b) => a.ratio - b.ratio); const med = strides.length ? strides[Math.floor(strides.length / 2)] : null, worstStride = strides.reduce((m, s) => (Math.abs(s.ratio - 1) > (m ? Math.abs(m.ratio - 1) : -1) ? s : m), null);
   r.feet = { plants: plants.length, worst: worstPlant && { cm: worstPlant.path * 100, net: worstPlant.net * 100, foot: worstPlant.foot, t: worstPlant.t, dur: worstPlant.dur, at: worstPlant.at, walk: worstPlant.walk },
     over: plants.filter((p) => p.path * 100 > LIM.plantCm).length, walkPlants: walkP.length, skate, worstSkate, signed, strides: strides.length, strideMed: med && med.ratio, strideT: med && med.T, worstStride };
   // per-phase worst foot drift (where the slides happen)
-  const byPh = {}; for (const p of plants) { const k = p.at.replace(/^[a-z_]+:/, ''); if (!byPh[k] || p.path > byPh[k]) byPh[k] = p.path; } r.feet.byPhase = Object.fromEntries(Object.entries(byPh).map(([k, v]) => [k, +(v * 100).toFixed(1)]));
+  const byPh = {}; for (const p of plants) { const k = p.at.replace(/^[a-z_]+:/, ''); if (!byPh[k] || p.path > byPh[k]) byPh[k] = p.path; } 
+  { let turnSlide = 0, turnDeg = 0, win = { cm: 0 }; const y5 = (i) => at(i, 5);
+    for (const fb of [18, 19]) { const arr = new Float64Array(n); for (const p of plants) { if (BONES[fb] !== p.foot) continue; for (let i = p.i0 + 1; i <= p.i1; i++) { if (!ok(i)) continue; const a = bp(i, fb), q = bp(i - 1, fb), d = Math.hypot(a[0] - q[0], a[2] - q[2]); let dy = y5(i) - y5(i - 1); dy = Math.abs(Math.atan2(Math.sin(dy), Math.cos(dy))) * D; arr[i] = d; if (dy > 0.05 && vb[i] < LIM.walkV) { turnSlide += d; turnDeg += dy; } } }
+      const Wn = Math.round(1 / dt); let acc = 0; for (let i = 0; i < n; i++) { acc += arr[i]; if (i >= Wn) acc -= arr[i - Wn]; if (vb[i] < LIM.walkV && acc * 100 > win.cm) win = { cm: acc * 100, foot: BONES[fb], t: T(i), at: lab(i) }; } }
+    r.slide = { perDeg: turnDeg > 1 ? turnSlide * 100 / turnDeg : null, turnDeg, win };
+    // walking: the pelvis moving up or down faster than LIM.hipJump in one sample (a 2-3 cm walking bob at 2 Hz peaks near 0.3 m/s)
+    let hj = 0, hjMax = { cm: 0 }, wT = 0; for (let i = 1; i < n; i++) { if (!ok(i) || vb[i] < 0.6 * gs) continue; wT += dt; const dyp = Math.abs(at(i, 13) - at(i - 1, 13)); if (dyp / dt > LIM.hipJump) hj++; if (dyp * 100 > hjMax.cm) hjMax = { cm: dyp * 100, t: T(i), at: lab(i) }; }
+    r.hip = { jumps: hj, perSec: wT ? hj / wT : 0, walkS: wT, max: hjMax };
+    // turning in bursts: how often the body starts turning (still -> turning) per second of turning
+    let bursts = 0, turnS = 0, on = false; for (let i = 1; i < n; i++) { if (!ok(i)) { on = false; continue; } let dy = at(i, 5) - at(i - 1, 5); dy = Math.abs(Math.atan2(Math.sin(dy), Math.cos(dy))) * D / dt; const m = dy > 5; if (m) turnS += dt; if (m && !on) bursts++; on = m; }
+    r.bursts = { n: bursts, turnS, perSec: turnS ? bursts / turnS : 0 }; }
+  r.feet.byPhase = Object.fromEntries(Object.entries(byPh).map(([k, v]) => [k, +(v * 100).toFixed(1)]));
   return r;
 }
 function compareFps(a, b, labels) {
@@ -343,12 +369,15 @@ function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); 
     ok(r.pop.ratio <= 1, nm + ' pops (bone speed): worst ' + r.pop.bone + ' ' + f2(r.pop.v) + ' m/s (' + f1(r.pop.cm) + ' cm in one sample, limit ' + f2(r.pop.lim) + ' m/s)' + W(r.pop) + ', ' + r.pop.count + ' samples over');
     ok(r.snap.ratio <= 1, nm + ' snaps (one-sample jump over both neighbours): worst ' + r.snap.bone + ' ' + f2(r.snap.cm) + ' cm (limit ' + f2(r.snap.limCm) + ' cm)' + W(r.snap) + ', ' + r.snap.count + ' over');
     info(nm + ' largest bone acceleration ' + f0(r.acc.a) + ' m/s2 (' + r.acc.bone + (r.acc.walking ? ', walking' : ', standing') + ')' + W(r.acc));
-    if (r.feet.worst) ok(r.feet.worst.cm <= LIM.plantCm, nm + ' planted foot drift: worst ' + f1(r.feet.worst.cm) + ' cm in one plant (' + r.feet.worst.foot + ', ' + f2(r.feet.worst.dur) + ' s, net ' + f1(r.feet.worst.net) + ' cm)' + W(r.feet.worst) + '; ' + r.feet.over + ' of ' + r.feet.plants + ' plants over ' + LIM.plantCm + ' cm; worst per phase ' + JSON.stringify(r.feet.byPhase));
+    ok(r.slide.win.cm <= LIM.plantCm, nm + ' planted foot slide (not walking): worst ' + f1(r.slide.win.cm) + ' cm in 1 s (' + r.slide.win.foot + W(r.slide.win) + ', limit ' + LIM.plantCm + ' cm)');
+    if (r.slide.turnDeg > 10) ok(r.slide.perDeg <= LIM.slideDeg, nm + ' feet while the body turns on the spot: ' + f2(r.slide.perDeg) + ' cm of planted-foot slide per degree (' + f0(r.slide.turnDeg) + ' deg turned; a 90 deg turn slides ' + f0(r.slide.perDeg * 90) + ' cm; limit ' + LIM.slideDeg + ' cm/deg = pivoting on the ball of the foot)');
+    if (r.bursts.turnS > 0.5) info(nm + ' turning: ' + r.bursts.n + ' starts in ' + f1(r.bursts.turnS) + ' s of turning (' + f1(r.bursts.perSec) + ' per s)');
+    if (r.hip.walkS > 1) ok(r.hip.perSec === 0, nm + ' walking hiccup: pelvis moves up/down faster than ' + LIM.hipJump + ' m/s in ' + r.hip.jumps + ' samples (' + f1(r.hip.perSec) + ' per s of walking, ' + f0(r.hip.walkS) + ' s walked), largest ' + f1(r.hip.max.cm) + ' cm in one sample' + W(r.hip.max));
     if (r.feet.walkPlants) { ok(r.feet.worstSkate <= LIM.skate, nm + ' walking: planted foot speed / body speed mean ' + f2(r.feet.skate) + ', worst ' + f2(r.feet.worstSkate) + ' (signed along the walk ' + f2(r.feet.signed) + '; + skates forward, - moonwalks)');
       if (r.feet.strides) ok(Math.abs(r.feet.worstStride.ratio - 1) <= LIM.stride, nm + ' stride / ground speed: median ' + f2(r.feet.strideMed) + ' (stride time ' + f2(r.feet.strideT) + ' s), worst ' + f2(r.feet.worstStride.ratio) + W(r.feet.worstStride) + ' over ' + r.feet.strides + ' strides'); }
     ok(r.yaw.rate.v <= LIM.yawRate && r.yaw.acc.v <= LIM.yawAcc, nm + ' body turn: fastest ' + f0(r.yaw.rate.v) + ' deg/s' + W(r.yaw.rate) + ', sharpest change ' + f0(r.yaw.acc.v) + ' deg/s2' + (r.yaw.acc.from != null ? ' (' + f0(r.yaw.acc.from) + ' -> ' + f0(r.yaw.acc.to) + ' deg/s in one sample)' : '') + W(r.yaw.acc));
     ok(r.head.rate.v <= LIM.headRate && r.head.acc.v <= LIM.headAcc, nm + ' head: fastest ' + f0(r.head.rate.v) + ' deg/s' + W(r.head.rate) + ', sharpest change ' + f0(r.head.acc.v) + ' deg/s2' + W(r.head.acc));
-    if (rb) ok(rb.pop.ratio <= 1 && rb.snap.ratio <= 1 && rb.yaw.acc.v <= LIM.yawAcc && rb.head.acc.v <= LIM.headAcc && (!rb.feet.worst || rb.feet.worst.cm <= LIM.plantCm), nm + ' at 30 fps: pop ' + f2(rb.pop.v) + ' m/s (' + rb.pop.bone + W(rb.pop) + '), snap ' + f2(rb.snap.cm) + ' cm (limit ' + f2(rb.snap.limCm) + '), turn change ' + f0(rb.yaw.acc.v) + ' deg/s2, head change ' + f0(rb.head.acc.v) + ' deg/s2, foot drift ' + f1(rb.feet.worst && rb.feet.worst.cm) + ' cm');
+    if (rb) ok(rb.pop.ratio <= 1 && rb.snap.ratio <= 1 && rb.yaw.acc.v <= LIM.yawAcc && rb.head.acc.v <= LIM.headAcc && rb.slide.win.cm <= LIM.plantCm, nm + ' at 30 fps: pop ' + f2(rb.pop.v) + ' m/s (' + rb.pop.bone + W(rb.pop) + '), snap ' + f2(rb.snap.cm) + ' cm (limit ' + f2(rb.snap.limCm) + '), turn change ' + f0(rb.yaw.acc.v) + ' deg/s2, head change ' + f0(rb.head.acc.v) + ' deg/s2, foot slide ' + f1(rb.slide.win.cm) + ' cm in 1 s');
     if (cmp) ok(cmp.root.v <= LIM.fpsCm && cmp.yaw.v <= LIM.fpsDeg && cmp.bone.v <= LIM.fpsCm, nm + ' same motion at 30 and 60 fps: root path ' + f1(cmp.root.v) + ' cm' + W(cmp.root) + ', facing ' + f1(cmp.yaw.v) + ' deg' + W(cmp.yaw) + ', any bone ' + f1(cmp.bone.v) + ' cm (' + cmp.bone.bone + W(cmp.bone) + '), ' + cmp.matched + ' samples');
   }
   if (RA.hands) {
@@ -366,6 +395,7 @@ function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); 
   for (const l of lines) console.log(l);
   const js = JSON.stringify(summary, (k, v) => (typeof v === 'number' ? +v.toFixed(4) : v));
   console.log('JSON ' + js); if (JSONF) fs.writeFileSync(JSONF, js);
+  if (DUMP) { fs.mkdirSync(DUMP, { recursive: true }); for (const [nm, R] of [['60', RA], ['30', RB]]) { if (!R) continue; fs.writeFileSync(path.join(DUMP, 'labels' + nm + '.json'), JSON.stringify(R.labels)); for (const [k, t] of Object.entries(R.traces)) fs.writeFileSync(path.join(DUMP, k + '_' + nm + '.f32'), Buffer.from(t.f.buffer)); if (R.hands) fs.writeFileSync(path.join(DUMP, 'hands_' + nm + '.f32'), Buffer.from(R.hands.f.buffer)); } }
   if (RA.frames) {
     if (FR) { fs.mkdirSync(FR, { recursive: true }); RA.frames.forEach((fr, i) => fs.writeFileSync(path.join(FR, tier + '_' + String(i).padStart(3, '0') + '.jpg'), Buffer.from(fr.url.split(',')[1], 'base64'))); fs.writeFileSync(path.join(FR, tier + '_labels.json'), JSON.stringify(RA.frames.map((f) => f.label))); }
     if (B64) RA.frames.forEach((fr, i) => { const d = fr.url.split(',')[1]; console.log('IMG ' + i + ' ' + tier + ' ' + fr.label); for (let k = 0; k < d.length; k += 3000) console.log('IMGD ' + i + ' ' + d.slice(k, k + 3000)); });

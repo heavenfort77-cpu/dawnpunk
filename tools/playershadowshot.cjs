@@ -26,7 +26,9 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m), info = (m) => con
   const place = (p, x, z, yaw, pitch, fov) => p.evaluate(([x, z, yaw, pitch, fov]) => { const g = window.__game; g.setTown(x, z); g.setYaw(yaw); g.setPitch(pitch); g.cam.fov = fov; g.cam.updateProjectionMatrix(); }, [x, z, yaw, pitch, fov]);
   const shots = [];
   async function shot(p, name) {
-    const f = OUT + name + '_' + tier + '.jpg'; await p.screenshot({ path: f, type: 'jpeg', quality: 88, timeout: 300000 }); shots.push([name, f]); info('wrote ' + f); return f;
+    const f = OUT + name + '_' + tier + '.jpg'; await p.screenshot({ path: f, type: 'jpeg', quality: 88, timeout: 300000 }); shots.push([name, f]); info('wrote ' + f);
+    if (B64) { const s = fs.readFileSync(f).toString('base64'); for (let i = 0, k = 0; i < s.length; i += 3000, k++) console.log('PSIMG ' + name + ' ' + k + ' ' + s.slice(i, i + 3000)); console.log('PSIMG ' + name + ' end'); }
+    return f;
   }
   // a clear stretch of road: away from cars, sleeping machines and Marla's spot
   const clearSpot = (p, len) => p.evaluate((len) => {
@@ -51,20 +53,16 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m), info = (m) => con
     // 3. standing still, the shadow seen at an angle (the body faces 50 degrees off the shadow line)
     await place(p, sp.x, sp.z, along + 0.9, -0.62, 70); await frames(p, 14); I = await ps(p);
     ok(I.amp < 0.05, 'standing: the stride has eased out (stride ' + I.amp + ', speed ' + I.speed + ')');
-    const fStill = await shot(p, 'still');
-    // the same view with the body hidden: the difference is the shadow alone
-    await p.evaluate(() => { window.__pshadow.body.root.scale.setScalar(1e-4); }); await frames(p, 3); const fNone = await shot(p, 'still_nobody');
-    await p.evaluate(() => { window.__pshadow.body.root.scale.setScalar(1); }); await frames(p, 2);
-    const cmp = await p.evaluate(async ([a, c]) => {
-      const load = (s) => new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = s; });
-      const A = await load(a), C = await load(c), cv = document.createElement('canvas'); cv.width = A.width; cv.height = A.height; const x = cv.getContext('2d', { willReadFrequently: true });
-      x.drawImage(A, 0, 0); const da = x.getImageData(0, 0, A.width, A.height).data; x.drawImage(C, 0, 0); const dc = x.getImageData(0, 0, A.width, A.height).data;
-      let dark = 0, bright = 0, ratio = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1; const L = (d, i) => 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
-      for (let i = 0; i < da.length; i += 4) { const la = L(da, i), lc = L(dc, i); if (la < lc - 10) { dark++; ratio += la / Math.max(1, lc); const q = i / 4, px = q % A.width, py = (q / A.width) | 0; x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py); } else if (la > lc + 10) bright++; }
-      return { dark, bright, ratio: dark ? ratio / dark : 0, box: [x0, y0, x1, y1], n: da.length / 4 }; }, ['data:image/jpeg;base64,' + fs.readFileSync(fStill).toString('base64'), 'data:image/jpeg;base64,' + fs.readFileSync(fNone).toString('base64')]);
-    info('still view, body shown vs hidden: ' + JSON.stringify(cmp));
-    ok(cmp.dark > 1500, 'the body casts a visible shadow in the still view (' + cmp.dark + ' darker pixels, ' + (100 * cmp.dark / cmp.n).toFixed(2) + '% of the view, shadow/lit brightness ' + cmp.ratio.toFixed(2) + ')');
-    ok(cmp.bright < cmp.dark * 0.02, 'the shadow adds no light anywhere (' + cmp.bright + ' brighter pixels against ' + cmp.dark + ' darker)');
+    await shot(p, 'still');
+    // the same frame drawn twice in one go, with and without the body: the difference is the shadow alone
+    const cmp = await p.evaluate(() => window.__pshadow.compare()); info('still view, body shown vs hidden (same frame): ' + JSON.stringify(cmp));
+    ok(cmp && cmp.dark > 1500, 'the body casts a visible shadow in the still view (' + (cmp && cmp.dark) + ' darker pixels, ' + (cmp ? (100 * cmp.dark / cmp.n).toFixed(2) : 0) + '% of the view, shadow/lit brightness ' + (cmp && cmp.ratio) + ')');
+    ok(cmp && cmp.bright === 0, 'the shadow adds no light anywhere (' + (cmp && cmp.bright) + ' brighter pixels)');
+    // standing in a house's shadow: the body's shadow must vanish (it only removes sunlight, so nothing doubles)
+    const sh = await p.evaluate((sun) => window.__pshadow.findShade(window.__game.world.g, window.__game.run.houses, sun), sun); info('house-shadow spot ' + JSON.stringify(sh));
+    if (sh) { await place(p, sh.x, sh.z, along + 0.9, -0.62, 70); await frames(p, 4); const c2 = await p.evaluate(() => window.__pshadow.compare()); info('in a house shadow, body shown vs hidden: ' + JSON.stringify(c2));
+      ok(c2 && c2.dark < 0.05 * cmp.dark && c2.bright === 0, 'in a house\'s shadow the body adds no second shadow (' + (c2 && c2.dark) + ' darker pixels against ' + cmp.dark + ' in the sun)'); }
+    else info('no house-shadow spot found; the no-doubling test was not run');
     // 2. a sunlit house wall beside you: find a front wall facing the sun, stand 1.1 m off it, look at your shadow on it
     const wall = await p.evaluate((sun) => window.__pshadow.findWall(window.__game.world.g, window.__game.run.houses, sun), sun);
     info('wall pick ' + JSON.stringify(wall));
@@ -91,6 +89,5 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m), info = (m) => con
     await q.close();
   }
   ok(!errs.length, 'no page errors' + (errs.length ? ': ' + [...new Set(errs)].join(' | ').slice(0, 600) : ''));
-  if (B64) for (const [name, f] of shots) { const s = fs.readFileSync(f).toString('base64'); for (let i = 0, k = 0; i < s.length; i += 3000, k++) console.log('PSIMG ' + name + ' ' + k + ' ' + s.slice(i, i + 3000)); }
   await b.close();
 })().catch((e) => { console.log('FAIL crashed: ' + String(e).slice(0, 500)); process.exit(1); });

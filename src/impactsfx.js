@@ -90,8 +90,8 @@ export const IMPACT_SFX = {
     sprayQ: 1.2,
     // spray: loudness of the first droplet (later ones are quieter)
     sprayGain: 0.5,
-    // thud: length of the noise strike on the metal (s)
-    strikeLen: 0.005,
+    // thud: length of the knock on the metal (s; shorter = brighter strike)
+    strikeLen: 0.0022,
     // thud: lowpass on the strike (Hz; lower = softer, duller strike)
     strikeLp: 2200,
     // thud: loudness of the strike into the resonances
@@ -144,8 +144,8 @@ export const IMPACT_SFX = {
     glassModes: [2950, 4370, 5830, 7690],
     // crack: Q of the glass resonances
     glassQ: [28, 30, 32, 34],
-    // crack: loudness of the glass resonances
-    glassGain: 1.6,
+    // crack: loudness of the glass resonances (struck by the same ticks)
+    glassGain: 1,
     // static: number of crackle bursts
     fizz: 34,
     // static: first burst (s)
@@ -215,7 +215,7 @@ export const IMPACT_SFX = {
     // collapse: strike loudness into the resonances
     strikeGain: 10,
     // collapse: length of a strike (s)
-    strikeLen: 0.006,
+    strikeLen: 0.0026,
     // rumble: lowpass noise cutoff at the start (Hz)
     rumbleF0: 320,
     // rumble: cutoff at the end (Hz)
@@ -337,6 +337,9 @@ const NOISE = new WeakMap();
 const ROOMS = new WeakMap();
 function noiseBuf(a) { let b = NOISE.get(a); if (b) return b; b = a.createBuffer(1, a.sampleRate, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; NOISE.set(a, b); return b; }
 function env(g, t, peak, attack, len) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + attack + len); }
+const PULSES = new WeakMap();
+// a smooth one-off knock (raised-cosine pulse, len seconds) that strikes the resonances the same way each time; noise on top gives each strike its texture
+function pulseBuf(a, len) { let m = PULSES.get(a); if (!m) { m = new Map(); PULSES.set(a, m); } const n = Math.max(2, Math.round(len * a.sampleRate)); let b = m.get(n); if (b) return b; b = a.createBuffer(1, n, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * (i + 0.5)) / n); m.set(n, b); return b; }
 function src(a, t, stop, rnd) { const s = a.createBufferSource(); s.buffer = noiseBuf(a); s.loop = true; s.start(t, rnd() * 0.9); s.stop(stop); return s; }
 
 // a noise burst through a filter whose cutoff glides from f0 to f1; returns its end time
@@ -359,10 +362,11 @@ function resonator(a, d, freqs, qs, gains, k) {
   freqs.forEach((f, i) => { if (f * k >= a.sampleRate * 0.45) return; const b = a.createBiquadFilter(), g = a.createGain(); b.type = 'bandpass'; b.frequency.value = f * k; b.Q.value = qs[i]; g.gain.value = gains[i]; inp.connect(b); b.connect(g); g.connect(d); });
   return inp;
 }
-// a lowpassed noise strike into a resonator bank; the ring time follows Q (about Q / (pi f) per e-fold); returns the end time
-function strike(a, d, t, len, lp, gain, freqs, qs, gains, k, rnd) {
-  const r = resonator(a, d, freqs, qs, gains, k), f = a.createBiquadFilter(), g = a.createGain(), end = t + len + 0.01, s = src(a, t, end, rnd);
-  f.type = 'lowpass'; f.frequency.value = lp; env(g, t, gain, 0.0008, len); s.connect(f); f.connect(g); g.connect(r);
+// a strike into a resonator bank: a smooth knock of length len plus lowpassed noise (share 'grit' of it); the ring time follows Q (about Q / (pi f) per e-fold); returns the end time
+function strike(a, d, t, len, lp, gain, freqs, qs, gains, k, rnd, grit) {
+  const r = resonator(a, d, freqs, qs, gains, k), f = a.createBiquadFilter(), g = a.createGain(), end = t + len + 0.01, s = src(a, t, end, rnd), p = a.createBufferSource(), pg = a.createGain();
+  p.buffer = pulseBuf(a, len); pg.gain.value = gain; p.connect(pg); pg.connect(r); p.start(t);
+  f.type = 'lowpass'; f.frequency.value = lp; env(g, t, gain * (grit === undefined ? 0.3 : grit), 0.0008, len); s.connect(f); f.connect(g); g.connect(r);
   const ring = Math.max(...freqs.map((fr, i) => (qs[i] / (Math.PI * fr * k)) * 7)); return end + ring;
 }
 // sorted random times between from and to, bunched early by 'bunch' (1 = even)
@@ -432,8 +436,8 @@ export function impactPlay(a, dest, kind, t, opt) {
   const rr = resonator(a, out, H.rattleModes, H.rattleQ, [1, 0.7, 0.45], pk * (0.95 + 0.1 * rnd())), rt = times(H.rattle, H.rattleFrom, H.rattleTo * lk, 1.2, rnd);
   end = Math.max(end, grains(a, rr, t, rt, rt.map((x, i) => H.rattleGain * gk * (1 - 0.6 * i / H.rattle) * (0.5 + 0.5 * rnd())), 0.003, 'lowpass', 3500, 0.7, rnd));
   if (hd) {
-    const ht = t + P.delay, gr = resonator(a, out, P.glassModes, P.glassQ, [1, 0.8, 0.6, 0.45], pv), ct = times(P.crackTicks, 0, P.crackSpan, 1.8, rnd), cg = ct.map((x, i) => P.crackGain * (1 - 0.7 * i / P.crackTicks) * (0.5 + 0.5 * rnd()));
-    end = Math.max(end, grains(a, out, ht, ct, cg, P.crackTick, 'highpass', P.crackHp, 0.7, rnd));
+    const ht = t + P.delay, gr = resonator(a, out, P.glassModes, P.glassQ, [1, 0.8, 0.6, 0.45], pv), ct = times(P.crackTicks, 0, P.crackSpan, 1.8, rnd), cg = ct.map((x, i) => (1 - 0.7 * i / P.crackTicks) * (0.5 + 0.5 * rnd()));
+    end = Math.max(end, grains(a, out, ht, ct, cg.map((x) => x * P.crackGain), P.crackTick, 'highpass', P.crackHp, 0.7, rnd));
     end = Math.max(end, grains(a, gr, ht, ct, cg.map((x) => x * P.glassGain), P.crackTick, 'highpass', P.crackHp, 0.7, rnd));
     const ft = times(P.fizz, P.fizzFrom, P.fizzTo, 1.3, rnd);
     end = Math.max(end, grains(a, out, ht, ft, ft.map((x) => P.fizzGain * nk * Math.pow(1 - (x - P.fizzFrom) / (P.fizzTo - P.fizzFrom), 1.2) * (0.3 + 0.7 * rnd())), P.fizzGrain, 'bandpass', P.fizzHz * pv, P.fizzQ, rnd));

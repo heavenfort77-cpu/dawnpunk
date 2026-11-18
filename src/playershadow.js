@@ -89,7 +89,7 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   let blob = null;
   if (T.blob) { blob = blobMesh(C.blob); blob.visible = false; scene.add(blob); }
   // ---- desktop body shadow
-  let PS = null, body = null, bodyScene = null, fresh = false, cleared = false, sun = null;
+  let PS = null, body = null, bodyScene = null, fresh = false, cleared = false, sun = null, lastCam = null;
   if (T.body && patchShader()) {
     const S = C.body;
     PS = new THREE.DirectionalLight(0xffffff, 0); PS.name = 'playerShadowLight'; PS.castShadow = true;
@@ -111,7 +111,7 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   // ---- per frame: follow the camera, pose the body, aim the shadow box
   api.tick = (cam, on) => {
     const now = performance.now(), dt = Math.min(window.__dtMax || 0.1, (now - last) / 1000); last = now; t += dt;
-    want = !!on; const x = cam.position.x, y = cam.position.y - EYE, z = cam.position.z, yaw = cam.rotation.y, pitch = cam.rotation.x;
+    want = !!on; lastCam = cam; const x = cam.position.x, y = cam.position.y - EYE, z = cam.position.z, yaw = cam.rotation.y, pitch = cam.rotation.x;
     if (blob) { blob.visible = want; if (want) { blob.position.set(x, y + C.blob.lift, z); blob.rotation.set(-Math.PI / 2, yaw, 0); } }
     if (!body) return;
     body.root.visible = want;
@@ -149,7 +149,7 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   api.info = () => ({ on: true, tier, body: !!body, blob: !!blob, active: want, speed: +spd.toFixed(3), amp: +amp.toFixed(3), phase: +phase.toFixed(3), twist: +twist.toFixed(3), sun: sunDir.toArray().map((q) => +q.toFixed(4)), passes, passMs: +passMs.toFixed(1), map: body ? T.map : 0 });
   // test helper for tools/playershadowshot.cjs: a flat, sunlit front wall beside a door, where to stand (stand m off it) and where to look to see your own shadow on it
   api.findWall = (root, houses, sun, stand) => {
-    stand = stand || 1.1; const rc = new THREE.Raycaster(), L = new THREE.Vector3(-sun[0], -sun[1], -sun[2]), o = new THREE.Vector3(), d = new THREE.Vector3(); root.updateMatrixWorld(true);
+    stand = stand || 1.1; const rc = new THREE.Raycaster(); rc.camera = lastCam; const L = new THREE.Vector3(-sun[0], -sun[1], -sun[2]), o = new THREE.Vector3(), d = new THREE.Vector3(); root.updateMatrixWorld(true);
     const hit = (x, y, z, nx, nz) => { o.set(x, y, z); d.set(-nx, 0, -nz); rc.set(o, d); rc.far = 8; for (const h of rc.intersectObject(root, true)) { const m = h.object.material; if (!h.object.visible || !h.face || (m && (m.transparent || m.alphaTest > 0))) continue; return h; } return null; };
     let best = null;
     for (const h of houses) {
@@ -164,6 +164,25 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
       }
     }
     return best;
+  };
+  // test helper: a spot in a house's shadow, where the feet and the ground 3 m further down the rays are both shaded by the house (the body's shadow must vanish there: nothing doubles)
+  api.findShade = (root, houses, sun) => {
+    const rc = new THREE.Raycaster(); rc.camera = lastCam; const U = new THREE.Vector3(sun[0], sun[1], sun[2]), hx = -sun[0], hz = -sun[2], hl = Math.hypot(hx, hz) || 1; root.updateMatrixWorld(true);
+    const shaded = (x, z) => { rc.set(new THREE.Vector3(x, 0.08, z), U); rc.far = 40; return rc.intersectObject(root, true).some((h) => h.object.visible && h.face && !(h.object.material && (h.object.material.transparent || h.object.material.alphaTest > 0))); };
+    for (const h of houses) for (const d of [3, 4, 5]) for (const s of [-1.5, 0, 1.5]) {
+      const x = h.x + hx / hl * (h.H + d) - hz / hl * s, z = h.z + hz / hl * (h.H + d) + hx / hl * s;
+      if (shaded(x, z) && shaded(x + hx / hl * 3, z + hz / hl * 3) && shaded(x + hx / hl * 1.5, z + hz / hl * 1.5)) return { house: h.i, x: +x.toFixed(3), z: +z.toFixed(3) };
+    }
+    return null;
+  };
+  // test helper: draw the frame twice in one go (no game time passes), with and without the body, and count the pixels its shadow darkens and brightens
+  api.compare = () => {
+    if (!lastCam || !body) return null; const cv = renderer.domElement, w = cv.width, h = cv.height, c2 = document.createElement('canvas'); c2.width = w; c2.height = h; const x = c2.getContext('2d', { willReadFrequently: true });
+    const grab = (vis) => { body.root.visible = vis; fresh = true; renderer.render(scene, lastCam); x.drawImage(cv, 0, 0); return x.getImageData(0, 0, w, h).data; };
+    const a = grab(true), b = grab(false); body.root.visible = want; fresh = true;
+    let dark = 0, bright = 0, ratio = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1; const L = (d, i) => 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    for (let i = 0; i < a.length; i += 4) { const la = L(a, i), lb = L(b, i); if (la < lb - 3) { dark++; ratio += la / Math.max(1, lb); const q = i / 4, px2 = q % w, py2 = (q / w) | 0; x0 = Math.min(x0, px2); x1 = Math.max(x1, px2); y0 = Math.min(y0, py2); y1 = Math.max(y1, py2); } else if (la > lb + 3) bright++; }
+    return { dark, bright, ratio: dark ? +(ratio / dark).toFixed(3) : 0, box: [x0, y0, x1, y1], n: w * h };
   };
   api.light = PS; api.body = body; api.blob = blob;
   try { window.__pshadow = api; } catch (e) { /* no window */ }
