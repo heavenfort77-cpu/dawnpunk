@@ -1,0 +1,51 @@
+# Real-GPU frame rates (owner Nov 19): run tools/gpuprobe.cjs on a runner with a real graphics chip. macOS runners (Apple silicon) expose the
+# Apple GPU through the VM; Linux and Windows runners are software-only. Started by hand only. The log prints RENDERER and FPS lines.
+name: gpuprobe
+run-name: "gpuprobe ${{ inputs.os }} ${{ inputs.tiers }} @ ${{ inputs.ref }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: "Runner image"
+        type: choice
+        options: [macos-15, macos-14, macos-26, windows-latest, ubuntu-latest]
+        default: macos-15
+      ref:
+        description: "Commit or branch to build"
+        type: string
+        default: main
+      tiers:
+        description: "Tiers to measure, comma list"
+        type: string
+        default: high,low
+      secs:
+        description: "Seconds measured per tier"
+        type: string
+        default: "10"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Use this commit's probe script if the built ref has none
+        shell: bash
+        run: |
+          git fetch --depth 1 origin main
+          [ -f tools/gpuprobe.cjs ] || git show FETCH_HEAD:tools/gpuprobe.cjs > tools/gpuprobe.cjs
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: node build.mjs
+      - run: npm install --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install chromium
+      - name: Probe
+        shell: bash
+        run: node tools/gpuprobe.cjs "${{ inputs.tiers }}" "${{ inputs.secs }}" 2>&1 | grep -E "RENDERER|FPS|LAUNCH|ERROR"

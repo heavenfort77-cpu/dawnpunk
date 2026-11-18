@@ -1,0 +1,57 @@
+# Put a test build of the game on GitHub Pages (https://heavenfort77-cpu.github.io/dawnpunk/) so the owner can open it on a real device
+# (phone, any laptop browser) and read real frame rates with ?perf=1. Started by hand only, never on push.
+# Needs the repo setting Settings > Pages > Build and deployment > Source: GitHub Actions (turned on once by the owner).
+name: pages
+run-name: "pages test build from ${{ inputs.ref }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit or branch to build (default main)"
+        type: string
+        default: main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node build.mjs
+      - name: Keep only the playable multi-file build
+        run: |
+          set -euo pipefail
+          mkdir -p site
+          cp -r dist/. site/
+          rm -f site/solardg-itch.zip site/index_single.html
+          echo "commit $(git rev-parse HEAD)" > site/build.txt
+          du -sh site
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
