@@ -1,4 +1,4 @@
-// Player shadow (STAGE 1 SAMPLE, owner Nov 18 13:21): desktop (high) gets a real body shadow, phones (low) a soft blob under the feet. Every number is in CONFIG.playerShadow.
+// Player shadow (owner Nov 18 13:21; sample approved Nov 18 15:37, on by default): desktop (high) gets a real body shadow, phones (low) a soft blob under the feet. Every number is in CONFIG.playerShadow.
 // Desktop: an invisible body (never drawn in colour) casts into its own small shadow map. That map belongs to light PS: same direction as the sun, a tight box round the player, redrawn every frame.
 // The big static sun maps are not redrawn for it: renderer.shadowMap.render is wrapped so the other lights are drawn only when the game asks (exactly as before) and PS's map every frame,
 // from a private scene that holds the body alone. PS gives no light of its own (intensity 0); a small patch of three's light shader multiplies each directional light (the sun, the
@@ -121,16 +121,21 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
     };
   }
   // ---- per frame: follow the camera, pose the body, aim the shadow box
-  api.tick = (cam, on) => {
+  // floorY: height of the floor under the feet (m) as the game knows it (street 0, a house floor, a base deck); null while hanging on the ladder (the body follows the view, the blob hides);
+  // left out: the feet are taken from the view (eye height 1.6 m). With a floor the body always stands on it, so it never sinks into a floor or floats while the view eases after the stairs or a drop.
+  let hang = false, feet = 0, blobOn = false;
+  api.tick = (cam, on, floorY) => {
     const now = performance.now(), dt = Math.min(window.__dtMax || 0.1, (now - last) / 1000); last = now; t += dt;
-    want = !!on; lastCam = cam; const x = cam.position.x, y = cam.position.y - EYE, z = cam.position.z, yaw = cam.rotation.y, pitch = cam.rotation.x;
-    if (blob) { blob.visible = want; if (want) { blob.position.set(x, y + C.blob.lift, z); blob.rotation.set(-Math.PI / 2, yaw, 0); } }
+    want = !!on; lastCam = cam; hang = floorY === null; const eyeFeet = cam.position.y - EYE, x = cam.position.x, y = typeof floorY === 'number' ? floorY : eyeFeet, z = cam.position.z, yaw = cam.rotation.y, pitch = cam.rotation.x; feet = y;
+    // the blob lies on the floor, and only while the view has settled over it (not on the ladder, not mid-way after the stairs or a drop)
+    if (blob) { blobOn = want && !hang && Math.abs(eyeFeet - y) <= C.blob.settle; blob.visible = blobOn; if (blobOn) { blob.position.set(x, y + C.blob.lift, z); blob.rotation.set(-Math.PI / 2, yaw, 0); } }
     if (!body) return;
     body.root.visible = want;
-    if (!want) { PS.shadow.intensity = 0; px = null; return; }
+    if (!want) { PS.shadow.intensity = 0; px = null; yawS = null; spd = 0; twist = 0; return; }
     PS.shadow.intensity = T.darkness;
     // speed and direction from the camera's own movement (teleports and floor changes reset it)
-    let vx = 0, vz = 0; if (px !== null && dt > 0) { const dx = x - px, dz = z - pz; if (Math.hypot(dx, dz) < 3 && Math.abs(y - py) < 1.5) { vx = dx / dt; vz = dz / dt; } }
+    const M0 = C.motion;
+    let vx = 0, vz = 0; if (px !== null && dt > 0) { const dx = x - px, dz = z - pz; if (Math.hypot(dx, dz) < M0.jump * Math.max(dt, 1 / 60) && Math.abs(y - py) < 1.5) { vx = dx / dt; vz = dz / dt; } }
     px = x; pz = z; py = y;
     const v = Math.hypot(vx, vz), M = C.motion; spd += (v - spd) * Math.min(1, dt * M.ease);
     if (yawS === null) yawS = yaw; { let d = yaw - yawS; d = Math.atan2(Math.sin(d), Math.cos(d)); yawS += d * Math.min(1, dt * M.turn); }
@@ -158,7 +163,7 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
     PS.target.position.copy(v1); PS.position.copy(v1).addScaledVector(sunDir, T.back); PS.updateMatrixWorld(); PS.target.updateMatrixWorld();
     fresh = true;
   };
-  api.info = () => ({ on: true, tier, body: !!body, blob: !!blob, active: want, speed: +spd.toFixed(3), amp: +amp.toFixed(3), phase: +phase.toFixed(3), twist: +twist.toFixed(3), sun: sunDir.toArray().map((q) => +q.toFixed(4)), passes, passMs: +passMs.toFixed(1), map: body ? T.map : 0 });
+  api.info = () => ({ on: true, tier, body: !!body, blob: !!blob, active: want, feet: +feet.toFixed(3), hang, blobOn, blobY: blob ? +blob.position.y.toFixed(3) : null, at: body ? body.root.position.toArray().map((q) => +q.toFixed(3)) : null, sunI: sun ? +sun.intensity.toFixed(3) : 0, psI: PS ? PS.shadow.intensity : 0, speed: +spd.toFixed(3), amp: +amp.toFixed(3), phase: +phase.toFixed(3), twist: +twist.toFixed(3), sun: sunDir.toArray().map((q) => +q.toFixed(4)), passes, passMs: +passMs.toFixed(1), map: body ? T.map : 0 });
   // test helper for tools/playershadowshot.cjs: a flat, sunlit front wall beside a door, where to stand (stand m off it) and where to look to see your own shadow on it
   api.findWall = (root, houses, sun, stand) => {
     stand = stand || 0.75; const rc = new THREE.Raycaster(); rc.camera = lastCam; const L = new THREE.Vector3(-sun[0], -sun[1], -sun[2]), o = new THREE.Vector3(), d = new THREE.Vector3(); root.updateMatrixWorld(true);

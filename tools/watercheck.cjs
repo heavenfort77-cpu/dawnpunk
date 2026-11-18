@@ -20,8 +20,12 @@ const { chromium } = require('playwright'); const QL = process.argv[2] || 'low',
     const pk = bv.peek(); out.a0 = pk.life && pk.life.wheel; out.cost = pk.life && pk.life.cost; out.plots = pk.life && pk.life.plots.map((q) => q.stage); return out; });
   R.bridges.forEach((q, i) => { check('footbridge ' + (i + 1) + ': you walk across it both ways', q.there < 0.15 && q.back < 0.15, q.there + ' / ' + q.back + ' m short'); check('footbridge ' + (i + 1) + ': 3.2 m up and down the stream from it you cannot cross', q.beside > 1.0 && q.beside2 > 1.0, q.beside + ' / ' + q.beside2 + ' m short'); });
   check('the stream stops you everywhere else (' + R.tried + ' crossings tried)', R.tried >= 10 && R.crossed === 0, R.crossed + ' got across');
-  // CI Nov 18: the wheel turns by game time, and a slow software-rendered frame rate (GitHub runner) gives less game time per wall second; wait longer (was 2.5 s)
-  await p.waitForTimeout(8000); const a1 = await p.evaluate(() => window.__game.bview.peek().life.wheel);
+  // CI Nov 18: the wheel turns by game time (CONFIG.baseWater.wheel.speed rad per game second), and on the GitHub runner one high-tier frame takes several seconds, so 8 s of wall
+  // time gave about one frame (0.06 rad). Wait for WHEEL_GAME_SECS of the game's own time instead: each frame adds at most window.__dtMax (0.1 s for players), as src/main.js frame() counts it.
+  // At the configured speed that is about 0.55 rad, well over the 0.2 rad the line asks for; a stopped or crawling wheel still fails.
+  const WHEEL_GAME_SECS = 1.0;
+  await p.waitForTimeout(2500); await p.evaluate((secs) => new Promise((res) => { let t = 0, last = performance.now(), done = false; const f = (now) => { t += Math.max(0, Math.min(window.__dtMax || 0.1, (now - last) / 1000)); last = now; if (done) return res(); if (t >= secs) done = true; requestAnimationFrame(f); }; requestAnimationFrame(f); }), WHEEL_GAME_SECS);
+  const a1 = await p.evaluate(() => window.__game.bview.peek().life.wheel);
   check('the waterwheel turns', R.a0 !== null && Math.abs(a1 - R.a0) > 0.2, 'angle ' + (+R.a0).toFixed(2) + ' -> ' + (+a1).toFixed(2) + ' rad');
   check('houses, plots and set pieces built (' + (R.cost ? R.cost.tris + ' triangles in ' + R.cost.meshes + ' meshes' : 'none') + ')', !!R.cost && R.cost.meshes > 5 && R.plots.length === 6 && R.plots.every((s) => s === 'empty'), JSON.stringify(R.plots));
   // round 2: your view rides over a footbridge (rises up the ramp, over the arch, back down) with the game's own frames running; the water sound is heard by the stream, and 0 off the base

@@ -247,6 +247,7 @@ async function pass(b, dt, frames) {
     R.film = await p.evaluate(filmPrep, { dt, frames: !!frames, from: 44 }); R.film.run = await p.evaluate(fixedSeg, { dt, dur: 15 }); lg('film done (' + R.film.run.t.toFixed(1) + ' s, ' + Math.round(R.film.run.msPerFrame) + ' ms per frame)');
   }
   R.labels = await p.evaluate(() => window.__HM.labels);
+  R.cfgH = await p.evaluate(() => { const c = window.__game.cfg().hands; return { throwTime: c.throwTime, grabTime: c.grabTime, recoilTime: c.recoilTime }; });
   R.notes.push(...(await p.evaluate(() => window.__HM.notes)), ...(R.base ? R.base.notes : []));
   R.afterErr = await p.evaluate(() => window.__afterErr || null);
   const keys = await p.evaluate(() => Object.keys(window.__HM.traces));
@@ -368,7 +369,7 @@ function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); 
   const RA = await pass(b, 1 / 60, true);
   let RB = null; if (!NO30) { try { RB = await pass(b, 1 / 30, false); } catch (e) { info('30 fps pass failed: ' + String(e).slice(0, 200)); } }
   await b.close();
-  const cfgH = { throwTime: 0.75, grabTime: 0.35, recoilTime: 0.14 };
+  const cfgH = RA.cfgH; // the hand action times from the game's CONFIG.hands
   const summary = { tier, page: path.basename(page0), limits: LIM, people: {}, hands: null, notes: RA.notes, models: RA.models };
   info('tier ' + tier + ', page ' + path.basename(page0) + ', samples at 60 fps' + (RB ? ' and a second pass at 30 fps' : '') + '; models ' + JSON.stringify(RA.models));
   if (RA.afterErr) ok(false, 'test script error in a frame: ' + RA.afterErr.slice(0, 200));
@@ -402,7 +403,9 @@ function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); 
     ok(h.snap.mm <= LIM.handSnapMm, 'hands one-sample jump over both neighbours: worst ' + f2(h.snap.mm) + ' mm (' + h.snap.hand + W(h.snap) + ', limit ' + LIM.handSnapMm + ' mm)');
     info('hands largest acceleration ' + f0(h.stop.a) + ' m/s2 (' + h.stop.hand + W(h.stop) + ')');
     for (const e of h.perEvent) ok(e.snapMm <= LIM.handSnapMm, 'hands at "' + e.what + '"' + (e.ok ? '' : ' (game refused it)') + ' t ' + f2(e.t) + ' s: largest move ' + f2(e.mmPerSample) + ' mm/sample (before ' + f2(e.mmBefore) + '), one-sample jump ' + f2(e.snapMm) + ' mm');
-    if (hb) ok(hb.snap.mm <= LIM.handSnapMm * 4 && hb.idle.v <= LIM.handIdle, 'hands at 30 fps: worst jump ' + f2(hb.snap.mm) + ' mm (limit ' + LIM.handSnapMm * 4 + ' mm at 30 fps)' + W(hb.snap) + ', fastest with no action ' + f2(hb.idle.v) + ' m/s');
+    // 30 fps: a one-sample excess of a smooth curve grows with the sample time cubed (8 x at half the frame rate); a real jump does not shrink with it, so the 60 fps line and the
+    // 30-vs-60 path line below are what catch jumps
+    if (hb) ok(hb.snap.mm <= LIM.handSnapMm * 8 && hb.idle.v <= LIM.handIdle, 'hands at 30 fps: worst jump ' + f2(hb.snap.mm) + ' mm (limit ' + LIM.handSnapMm * 8 + ' mm at 30 fps)' + W(hb.snap) + ', fastest with no action ' + f2(hb.idle.v) + ' m/s');
     if (hc) ok(hc.mm <= LIM.handFpsMm, 'hands same path at 30 and 60 fps: worst ' + f2(hc.mm) + ' mm (' + hc.hand + ' at ' + f2(hc.t) + ' s), ' + hc.matched + ' samples compared');
   }
   ok(!RA.errs.length && !(RB && RB.errs.length), 'no page errors ' + RA.errs.concat(RB ? RB.errs : []).join(' | ').slice(0, 300));
