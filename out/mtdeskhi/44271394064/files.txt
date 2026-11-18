@@ -1,0 +1,13 @@
+mt/deskhi/01_hi_start_screen.jpg 16477
+mt/deskhi/02_hi_film.jpg 54557
+mt/deskhi/03_hi_base_wake.jpg 91150
+mt/deskhi/04_hi_base_after_card.jpg 90771
+mt/deskhi/05_hi_marla_dialog_day1.jpg 23396
+mt/deskhi/06_hi_marla_setup_day1.jpg 50412
+mt/deskhi/07_hi_street_start.jpg 107913
+mt/deskhi/08_hi_house_inside.jpg 81281
+mt/deskhi/09_hi_house_solar.jpg 81235
+mt/deskhi/10_hi_drill_shoot.jpg 57765
+mt/deskhi/11_hi_drill_hold_H.jpg 80741
+mt/deskhi/log.json 15546
+mt/deskhi/run.txt 12140

@@ -1,0 +1,7 @@
+$ mkdir -p mt/deskhi && node tools/marlateach.cjs deskhi mt/deskhi/ high > mt/deskhi/run.txt 2>&1; tail -5 mt/deskhi/run.txt   (limit 90 min)
+48.8 | 1078.5 | night 1 drill | keys | Keys / W A S D / walk / Mouse / look (click the game first; Esc frees the mouse) / Left click / fire; hold it to charge, let go for a charged shot / Right click / place: the solar collector by day, the picked device at night / 1 to 5 / wheel / pick a device / Q / solar collector (by day) / F / eat (
+48.8 | 1078.5 | night 1 drill | dkeys | Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause
+48.8 | 1078.5 | night 1 drill | VOICE | drill_shoot_again (el): Shoot. It. Now.
+frames, wall s, game s: [213,1136.5028,51.8332]
+NO PAGE ERRORS
+exit code 0

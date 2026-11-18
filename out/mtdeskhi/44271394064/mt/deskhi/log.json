@@ -1,0 +1,355 @@
+{
+ "mode": "deskhi",
+ "page": "/home/runner/work/dawnpunk/dawnpunk/dist/index.html?quality=high&film=1",
+ "fps": [
+  213,
+  1136.5028,
+  51.8332
+ ],
+ "errs": [],
+ "log": [
+  {
+   "gt": 6.1,
+   "wt": 23.2,
+   "st": "start",
+   "k": "SNAP",
+   "t": "hi_start_screen {\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"menu\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[]}"
+  },
+  {
+   "gt": 6.8,
+   "wt": 42.9,
+   "st": "start",
+   "k": "ACT",
+   "t": "clicked #enter (the begin button)"
+  },
+  {
+   "gt": 8.3,
+   "wt": 90.8,
+   "st": "start",
+   "k": "cineCap",
+   "t": "The night the grid failed, the machines came looking for power."
+  },
+  {
+   "gt": 8.3,
+   "wt": 90.8,
+   "st": "start",
+   "k": "QUIET",
+   "t": "4.8 s with no guiding line on screen (from 3.6)"
+  },
+  {
+   "gt": 12.1,
+   "wt": 202.5,
+   "st": "film",
+   "k": "SNAP",
+   "t": "hi_film {\"cineCap\":\"The night the grid failed, the machines came looking for power.\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"intro\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":120},\"buttons\":[]}"
+  },
+  {
+   "gt": 12.3,
+   "wt": 209.7,
+   "st": "film",
+   "k": "SHORTCUT",
+   "t": "high tier: skipped the film (its lines were read in full on the low-tier desktop play)"
+  },
+  {
+   "gt": 12.8,
+   "wt": 232.5,
+   "st": "film",
+   "k": "bstat",
+   "t": "Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food"
+  },
+  {
+   "gt": 12.8,
+   "wt": 232.5,
+   "st": "film",
+   "k": "jobCard",
+   "t": "Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it (Enter)"
+  },
+  {
+   "gt": 13.8,
+   "wt": 258.2,
+   "st": "base day 1: waking",
+   "k": "csay",
+   "t": "Click to start · E to talk"
+  },
+  {
+   "gt": 17.1,
+   "wt": 345,
+   "st": "base day 1: waking",
+   "k": "SNAP",
+   "t": "hi_base_wake {\"csay\":\"Click to start · E to talk\",\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\"]}"
+  },
+  {
+   "gt": 18.6,
+   "wt": 383.5,
+   "st": "base day 1: waking",
+   "k": "csay",
+   "t": "E to talk to Marla"
+  },
+  {
+   "gt": 18.6,
+   "wt": 383.5,
+   "st": "base day 1: waking",
+   "k": "ACT",
+   "t": "clicked the game"
+  },
+  {
+   "gt": 21.6,
+   "wt": 460.6,
+   "st": "base day 1: waking",
+   "k": "SNAP",
+   "t": "hi_base_after_card {\"csay\":\"E to talk to Marla\",\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\"]}"
+  },
+  {
+   "gt": 22.3,
+   "wt": 479.9,
+   "st": "base day 1: waking",
+   "k": "scout",
+   "t": "Marla, the Scout / \"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run"
+  },
+  {
+   "gt": 22.3,
+   "wt": 479.9,
+   "st": "base day 1: waking",
+   "k": "ACT",
+   "t": "pressed KeyE (talk to Marla)"
+  },
+  {
+   "gt": 25.6,
+   "wt": 563.1,
+   "st": "base day 1: Marla dialog",
+   "k": "SNAP",
+   "t": "hi_marla_dialog_day1 {\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"scout\":\"Marla, the Scout / \\\"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\\\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\"]}"
+  },
+  {
+   "gt": 26.6,
+   "wt": 588.8,
+   "st": "base day 1: Marla dialog",
+   "k": "scout",
+   "t": "Marla, the Scout / \"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\" / Ride out: go loot the old street, then hold a house tonight. / Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend the house you are in until dawn. / Ring / 1 (10 km) · loot x1 · Gloom x1 / 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first / 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first / 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first / 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4"
+  },
+  {
+   "gt": 26.6,
+   "wt": 588.8,
+   "st": "base day 1: Marla dialog",
+   "k": "ACT",
+   "t": "clicked #ssetup (Set up the run)"
+  },
+  {
+   "gt": 29.3,
+   "wt": 659.5,
+   "st": "base day 1: Marla dialog",
+   "k": "SNAP",
+   "t": "hi_marla_setup_day1 {\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"scout\":\"Marla, the Scout / \\\"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\\\" / Ride out: go loot the old street, then hold a house tonight. / Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend the house you are in until dawn. / Ring / 1 (10 km) · loot x1 · Gloom x1 / 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first / 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first / 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first / 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first / Devices: / Turbine / Lance / Panel / Mine / Turbine / Lance / Panel / Mine / Turbine / Lance / Panel / Mine / Solar (by day, free): place it by a door or window; it fills your Sun. / Turbine (12 Sun): makes Sun all night; place it first. At most 2 Sun makers. / Lance (8 Sun): shoots the nearest Gloom it can see through an opening or inside. / Panel (6 Sun): a shield across an opening; Gloom must break it to get in. Shoot heads over it. / Ride out / Look around first / Hide the setup\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\"]}"
+  },
+  {
+   "gt": 30.1,
+   "wt": 687.2,
+   "st": "base day 1: Marla dialog",
+   "k": "mlook",
+   "t": "Click to look with the mouse · Esc frees it"
+  },
+  {
+   "gt": 30.1,
+   "wt": 687.2,
+   "st": "base day 1: Marla dialog",
+   "k": "dkeys",
+   "t": "Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause"
+  },
+  {
+   "gt": 30.1,
+   "wt": 687.2,
+   "st": "base day 1: Marla dialog",
+   "k": "ACT",
+   "t": "clicked #go (Ride out)"
+  },
+  {
+   "gt": 30.6,
+   "wt": 699.5,
+   "st": "base day 1: Marla dialog",
+   "k": "marla",
+   "t": "Six houses, Potts. Walk into a door to loot it."
+  },
+  {
+   "gt": 30.6,
+   "wt": 699.5,
+   "st": "base day 1: Marla dialog",
+   "k": "VOICE",
+   "t": "day_six_houses (el): Six houses, Potts. Walk into a door to loot it."
+  },
+  {
+   "gt": 34.6,
+   "wt": 797,
+   "st": "street by day",
+   "k": "SNAP",
+   "t": "hi_street_start {\"marla\":\"Six houses, Potts. Walk into a door to loot it.\",\"dkeys\":\"Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause\",\"count\":\"Houses 0/6 · Food 2 · Essentials 0 · Walk speed 100%\",\"time\":\"DAYLIGHT LEFT / 11h 40m\",\"game\":{\"state\":\"play\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":116},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\"]}"
+  },
+  {
+   "gt": 34.8,
+   "wt": 802.9,
+   "st": "street by day",
+   "k": "SHORTCUT",
+   "t": "high tier: entered the nearest house with the game hook"
+  },
+  {
+   "gt": 35.3,
+   "wt": 819.8,
+   "st": "street by day",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 35.3,
+   "wt": 819.8,
+   "st": "street by day",
+   "k": "dchip",
+   "t": "Q"
+  },
+  {
+   "gt": 35.3,
+   "wt": 819.8,
+   "st": "street by day",
+   "k": "HP",
+   "t": "health 100 (day; 0 machines inside or near, nearest none)"
+  },
+  {
+   "gt": 35.8,
+   "wt": 829.3,
+   "st": "house 1 by day",
+   "k": "VOICE",
+   "t": "day_first_solar (el): Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 39.1,
+   "wt": 889.4,
+   "st": "house 1 by day",
+   "k": "SNAP",
+   "t": "hi_house_inside {\"marla\":\"Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.\",\"dchip\":\"Q\",\"dkeys\":\"Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause\",\"count\":\"Crates left 4 · Food 2 · Essentials 0 · Walk speed 100% · Floor 1 of 1\",\"time\":\"DAYLIGHT LEFT / 11h 30m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":12,\"food\":2,\"machines\":0,\"drill\":null,\"dayLeft\":115},\"buttons\":[\"bPause:||\",\"bLeave:LEAVE\",\"bDusk:HOLD: start night\",\"b0:Solar free 0/3\",\"b1:Turbine at night 0/2[sel]\",\"bEat:EAT · 2 to bring home\"]}"
+  },
+  {
+   "gt": 39.8,
+   "wt": 903.3,
+   "st": "house 1 by day",
+   "k": "VOICE",
+   "t": "day_first_solar (el): Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 39.8,
+   "wt": 903.3,
+   "st": "house 1 by day",
+   "k": "ACT",
+   "t": "pressed KeyQ (Solar)"
+  },
+  {
+   "gt": 42.8,
+   "wt": 959,
+   "st": "house 1 by day",
+   "k": "SNAP",
+   "t": "hi_house_solar {\"marla\":\"Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.\",\"dchip\":\"Q\",\"dkeys\":\"Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause\",\"count\":\"Crates left 4 · Food 2 · Essentials 0 · Walk speed 100% · Floor 1 of 1\",\"time\":\"DAYLIGHT LEFT / 11h 30m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":13,\"food\":2,\"machines\":0,\"drill\":null,\"dayLeft\":115},\"buttons\":[\"bPause:||\",\"bLeave:LEAVE\",\"bDusk:HOLD: start night\",\"b0:Solar free 0/3\",\"b1:Turbine at night 0/2[sel]\",\"bEat:EAT · 2 to bring home\"]}"
+  },
+  {
+   "gt": 43.1,
+   "wt": 963.7,
+   "st": "house 1 by day",
+   "k": "SHORTCUT",
+   "t": "high tier: started the night with the game hook"
+  },
+  {
+   "gt": 43.8,
+   "wt": 979.3,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "Sun is down, Potts. Turbine first, then lances, then panels."
+  },
+  {
+   "gt": 43.8,
+   "wt": 979.3,
+   "st": "night 1 drill",
+   "k": "hchip",
+   "t": "H keys"
+  },
+  {
+   "gt": 43.8,
+   "wt": 979.3,
+   "st": "night 1 drill",
+   "k": "enNote",
+   "t": "SUN IS DOWN · WHAT YOU STORED IS ALL YOU HAVE"
+  },
+  {
+   "gt": 43.8,
+   "wt": 979.3,
+   "st": "night 1 drill",
+   "k": "VOICE",
+   "t": "dusk_sun_down (el): Sun is down, Potts. Turbine first, then lances, then panels."
+  },
+  {
+   "gt": 45.3,
+   "wt": 1009.9,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "One machine. Shoot it, Potts. Left click."
+  },
+  {
+   "gt": 45.3,
+   "wt": 1009.9,
+   "st": "night 1 drill",
+   "k": "dsub",
+   "t": "Aim at the ringed machine and left click to fire."
+  },
+  {
+   "gt": 45.3,
+   "wt": 1009.9,
+   "st": "night 1 drill",
+   "k": "dchip",
+   "t": "Left click"
+  },
+  {
+   "gt": 45.8,
+   "wt": 1020.7,
+   "st": "night 1 drill",
+   "k": "VOICE",
+   "t": "drill_shoot_desk (el): One machine. Shoot it, Potts. Left click."
+  },
+  {
+   "gt": 48.1,
+   "wt": 1064.3,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "Shoot. It. Now."
+  },
+  {
+   "gt": 48.3,
+   "wt": 1069.1,
+   "st": "night 1 drill",
+   "k": "SNAP",
+   "t": "hi_drill_shoot {\"marla\":\"Shoot. It. Now.\",\"dsub\":\"Aim at the ringed machine and left click to fire.\",\"dchip\":\"Left click\",\"hchip\":\"H keys\",\"enNote\":\"SUN IS DOWN · WHAT YOU STORED IS ALL YOU HAVE\",\"count\":\"Food 2 · Essentials 0 · Floor 1 of 1\",\"time\":\"DAWN IN / 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":13,\"food\":2,\"machines\":1,\"drill\":\"shoot\",\"dayLeft\":115},\"buttons\":[\"bPause:||\",\"b1:Turbine 12 Sun 0/2\",\"b2:Lance 8 Sun 0/6[sel]\",\"b3:Panel 6 Sun\",\"bEat:EAT · 2 to bring home\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 48.8,
+   "wt": 1078.5,
+   "st": "night 1 drill",
+   "k": "keys",
+   "t": "Keys / W A S D / walk / Mouse / look (click the game first; Esc frees the mouse) / Left click / fire; hold it to charge, let go for a charged shot / Right click / place: the solar collector by day, the picked device at night / 1 to 5 / wheel / pick a device / Q / solar collector (by day) / F / eat (heals) / E / use, talk, leave a house at its door / Hold N / start the night (in a house) / Tab / quests (in the base) / M / music on or off / Hold H / this card and the key strip / Esc / P / pause; Esc also closes a panel"
+  },
+  {
+   "gt": 48.8,
+   "wt": 1078.5,
+   "st": "night 1 drill",
+   "k": "dkeys",
+   "t": "Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause"
+  },
+  {
+   "gt": 48.8,
+   "wt": 1078.5,
+   "st": "night 1 drill",
+   "k": "VOICE",
+   "t": "drill_shoot_again (el): Shoot. It. Now."
+  },
+  {
+   "gt": 51.3,
+   "wt": 1127,
+   "st": "night 1 drill",
+   "k": "SNAP",
+   "t": "hi_drill_hold_H {\"marla\":\"Shoot. It. Now.\",\"dsub\":\"Aim at the ringed machine and left click to fire.\",\"dchip\":\"Left click\",\"enNote\":\"SUN IS DOWN · WHAT YOU STORED IS ALL YOU HAVE\",\"keys\":\"Keys / W A S D / walk / Mouse / look (click the game first; Esc frees the mouse) / Left click / fire; hold it to charge, let go for a charged shot / Right click / place: the solar collector by day, the picked device at night / 1 to 5 / wheel / pick a device / Q / solar collector (by day) / F / eat (heals) / E / use, talk, leave a house at its door / Hold N / start the night (in a house) / Tab / quests (in the base) / M / music on or off / Hold H / this card and the key strip / Esc / P / pause; Esc also closes a panel\",\"dkeys\":\"Left click fire (hold to charge) · Right click place device / 1 to 5 or wheel pick device · Q solar · F eat / E use, leave at the door · hold N night · M music · H hide hints · Esc pause\",\"count\":\"Food 2 · Essentials 0 · Floor 1 of 1\",\"time\":\"DAWN IN / 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":13,\"food\":2,\"machines\":1,\"drill\":\"shoot\",\"dayLeft\":115},\"buttons\":[\"bPause:||\",\"b1:Turbine 12 Sun 0/2\",\"b2:Lance 8 Sun 0/6[sel]\",\"b3:Panel 6 Sun\",\"bEat:EAT · 2 to bring home\",\"bSkip:Skip drill\"]}"
+  }
+ ]
+}
