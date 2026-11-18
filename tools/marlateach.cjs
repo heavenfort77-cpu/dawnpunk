@@ -82,7 +82,10 @@ class Phase extends Error { constructor(p) { super('phase ' + p); this.phase = p
     const id = await tdown(lookPt.x, lookPt.y); const n = 3; for (let i = 1; i <= n; i++) { await tmove(id, lookPt.x + (dx * i) / n, lookPt.y + (dy * i) / n); await p.waitForTimeout(30); } await p.waitForTimeout(330); await tup(id); };
   // ---------- desktop look: movement on the held pointer (headless gives no movement on a held pointer, so movementX is sent in the page; the game's own handler turns the view)
   const mouseTurn = (dyaw, dpitch = 0) => ev(([dx, dy]) => { const st = 300; let x = dx, y = dy; while (Math.abs(x) > 0.5 || Math.abs(y) > 0.5) { const sx = Math.max(-st, Math.min(st, x)), sy = Math.max(-st, Math.min(st, y)); dispatchEvent(new MouseEvent('mousemove', { movementX: sx, movementY: sy })); x -= sx; y -= sy; } }, [-dyaw / SENS, -dpitch / SENS]);
-  const turn = (dyaw, dpitch = 0) => (DESK ? mouseTurn(dyaw, dpitch) : touchTurn(dyaw, dpitch));
+  // desktop: the view turns only while the game holds the mouse; panels free it and the game then shows "Click to look with the mouse": do what it says
+  let mouseClicks = 0;
+  const ensureMouse = async () => { if (await ev(() => window.__game.mouseHeld)) return; const hint = await text('#mlook'); await p.mouse.move(VW / 2, VH / 2); await p.mouse.down(); await p.waitForTimeout(40); await p.mouse.up(); mouseClicks++; await act('clicked the game to take the mouse again (hint on screen: "' + hint + '")'); await p.waitForTimeout(150); };
+  const turn = async (dyaw, dpitch = 0) => { if (DESK) { await ensureMouse(); return mouseTurn(dyaw, dpitch); } return touchTurn(dyaw, dpitch); };
   const walkOn = async () => { if (DESK) await p.keyboard.down('KeyW'); else await stickOn(); };
   const walkOff = async () => { if (DESK) await p.keyboard.up('KeyW'); else await stickOff(); };
   const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -175,7 +178,7 @@ class Phase extends Error { constructor(p) { super('phase ' + p); this.phase = p
         if ((await collectors()) === 0) await solarHere('house ' + n + ' (the night house)');
         await stage('house ' + n + ': waiting for dusk'); await note('staying here for the night; day clock ' + JSON.stringify(await ev(() => { const r = window.__game.run, s = window.__game.sim; return { left: +(r.dayT).toFixed(1), sun: s ? +s.player.energy.toFixed(1) : null }; })));
         let held = false; const g0 = await gt();
-        for (;;) { await waitG(1, 60); const s = await ev(() => { const s = window.__game.sim; return { sun: s.player.energy, cap: s.player.energyCap || window.__game.cfg().player.energyCap }; });
+        for (;;) { await waitG(1, 60); const s = await ev(() => { const s = window.__game.sim; return { sun: s.player.energy, cap: s.player.energyCap || (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).player.energyCap }; });
           if (!held && s.sun >= s.cap - 0.5) { held = true; await act('Sun is full: holding START NIGHT'); if (DESK) { await p.keyboard.down('KeyN'); await waitG(1.6, 40).catch(() => {}); await p.keyboard.up('KeyN'); } else await tap('#bDusk', 1800); }
           if ((await gt()) - g0 > 200) { await shortcut('dusk did not come in 200 game s; started the night with the game hook'); await ev(() => window.__game.nightfall()); } }
       }
@@ -207,7 +210,7 @@ class Phase extends Error { constructor(p) { super('phase ' + p); this.phase = p
     await stage('night 1 after the drill'); await shot('after_drill'); let fires = 0, eats = 0, saves = 0, lastShot = await gt(); const n0 = await gt();
     while ((await gt()) - n0 < 400) {
       await guard();
-      const s = await ev(() => { const s = window.__game.sim; if (!s) return null; return { hp: s.player.hp, max: window.__game.cfg().player.hp, food: s.food, n: s.gloom.length }; }); if (!s) break;
+      const s = await ev(() => { const s = window.__game.sim; if (!s) return null; return { hp: s.player.hp, max: (typeof window.__game.cfg === 'function' ? window.__game.cfg() : window.__game.cfg).player.hp, food: s.food, n: s.gloom.length }; }); if (!s) break;
       if (s.hp < s.max * 0.4 && s.food > 0) { if (DESK) await p.keyboard.press('KeyF'); else await tap('#bEat'); eats++; if (eats === 1) await act('health under 40%: ate (as taught)'); }
       if (s.hp < s.max * 0.15) { await ev(() => { const s = window.__game.sim; s.player.hp += 30; }); saves++; if (saves === 1) await shortcut('health under 15%: gave +30 health so the run reaches dawn (counted at the end)'); }
       const a = await aimAt('see'); if (a && Math.abs(a.dyaw) < Math.max(0.08, Math.atan(0.3 / Math.max(0.3, a.d))) && a.d < 14) { if (DESK) await leftClick(); else await tap('#bFire', 50); fires++; } else if (!a) await p.waitForTimeout(300);
