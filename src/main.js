@@ -4,7 +4,7 @@ import { GRITTY, DESO } from './look.js';
 import { placeSample } from './desolate.js';
 import { applyRelief } from './relief.js';
 import { TEX } from './texdata.js';
-import { Q, QUALITY, QPICK, hiState, saveQuality, setGpuAniso, texLoad } from './quality.js';
+import { Q, QUALITY, QPICK, TIER, hiState, saveQuality, setGpuAniso, texLoad } from './quality.js';
 import { CONFIG } from './config.js';
 import { createSim, setShotTier } from './sim.js';
 import * as RUN from './run.js';
@@ -25,12 +25,15 @@ import { createMarla } from './marla.js';
 // the base people (Bram, Oko, Pip, recruits): their own motion module (src/people.js); Marla keeps hers
 import { createPerson } from './people.js';
 import { createFx } from './fx.js';
+import { createPerfStep } from './perfstep.js';
+import { lodTick } from './lod.js';
+import { gloomPreload, glbHooks, glbCopy } from './gloomglb.js';
 import { openBook, loadBookFonts, closeBook } from './book.js';
 import { MODELS } from './modeldata.js';
 // lore pieces (owner Nov 17 16:25): notes in the street houses, old notices on the board, the field guide's "Before:" lines
 import * as LORE from './lore.js';
 // THE BECKONER, the final-night boss on ring 5 (owner Nov 17): its picture, warnings and falling pieces (rules in src/boss.js)
-import { bossTick, bossGuide, bossEndLine, gloomScrap, scrapTick, deviceHop, hopsClear, bossPreload } from './bosshi.js';
+import { bossTick, bossGuide, bossEndLine, gloomScrap, scrapTick, deviceHop, hopsClear, bossPreload, bossHooks } from './bosshi.js';
 import { createWaterSound } from './basesound.js';
 import { createMarlaVoice } from './marlavoice.js';
 import { createImpactSfx } from './impactsfx.js';
@@ -70,6 +73,14 @@ let dormG = null; const kindQ = []; let dormTold = false;
 // the first time each kind of machine shows up in a night, Marla says what it does
 const KIND_LINE = { lurcher: 'Lurcher. Fast one, Potts. Do not blink.', hauler: 'Hauler. It breaks panels. Hit it hard.', stilt: 'Stilt! It reaches over panels. Step back.', lantern: 'Lantern! Shoot it first, it hurries the rest.', ticks: 'Ticks. Weak, but quick. Aim low.', warden: 'A Warden. Everything you have, Potts. Now.' };
 // real light from the nearest screens: a fixed pool of lights (made once, so nothing is recompiled), moved each frame to the closest machines
+// perf: the automatic step-down (made after the renderer's first resize, below); perfRest(): a new scene starts, wait before measuring frames again
+// paused: the picture is drawn once and then held (the page keeps the last frame) until play resumes; a lost WebGL context draws nothing until it is restored
+let holdDraw = false, pauseDrawn = false, ctxLost = false;
+let perf = null; const perfRest = () => { if (perf) perf.rest(); };
+// desktop Gloom models (src/gloomglb.js) load per run, not at page start: every kind the ring can send (CONFIG.gloom.kinds minRing), asked for when the run starts;
+// the opening film's kinds load at once for a first visit (no save yet), so the film shows the models
+const FILM_KINDS = [...new Set([CONFIG.opening.grid.machine[0], ...CONFIG.opening.turning.walkers.map((w) => w[0])])];
+function runModels() { const ring = +(($('selRing') || {}).value || 0), K = CONFIG.gloom.kinds; gloomPreload(Object.keys(K).filter((k) => (K[k].minRing || 0) <= ring && K[k].share > 0)); }
 const glights = []; for (let i = 0; i < Q.lights; i++) { const l = new THREE.PointLight(0xffffff, 0, CONFIG.gloomLook.lightReach, 2); scene.add(l); glights.push(l); }
 const gl_v = new THREE.Vector3();
 function tickGloomLights(on) { GK.nightGlow(on ? 1 : 0); if (!glights.length) return; const list = on ? [...gMesh.values()].filter((m) => m.userData.lamp).map((m) => [m.position.distanceToSquared(cam.position), m]).sort((a, b) => a[0] - b[0]) : [];
@@ -124,7 +135,7 @@ let gMesh = new Map(), dMesh = new Map(), bpGroup = new THREE.Group(), bpParts =
 scene.add(bpGroup);
 
 // remove an object and free its GPU memory (geometries, materials, label textures); nothing here is shared between objects
-function drop(o) { if (!o) return; scene.remove(o); o.traverse((q) => { if (q.geometry) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { if (m.userData.shared) continue; if (m.map && !m.map.userData.shared) m.map.dispose(); m.dispose(); } }); } // shared prop materials and textures (props.js) stay loaded
+function drop(o) { if (!o) return; scene.remove(o); o.traverse((q) => { if (q.geometry && !(QUALITY === 'high' && q.geometry.userData.shared)) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { if (m.userData.shared) continue; if (m.map && !m.map.userData.shared) m.map.dispose(); m.dispose(); } }); } // shared prop materials and textures (props.js) stay loaded
 // ---- light and depth inside a house: klad-painted contact shadows under things and pools of light on the floor at every opening
 const depthTex = (k) => { const t = texLoad(k); t.colorSpace = THREE.SRGBColorSpace; t.userData.shared = true; return t; };
 let shadeMat = null, poolMat = null;
@@ -270,7 +281,7 @@ const SKY = { day: new THREE.Color(CONFIG.sky.horizon), dusk: new THREE.Color(0x
 let skyK = 1, hintN = 0, duskT = 0, duskDown = false, solarT = 0;
 // darker night (panel fix, CONFIG.nightLook per tier): at night n (0 day .. 1 full night) the exposure, the fill light and the house lamps go down by the tier's factors
 function nightLook(n) { const NL = CONFIG.nightLook[QUALITY === 'high' ? 'high' : 'low']; if (CONFIG.render.tone) renderer.toneMappingExposure *= 1 + (NL.exposure - 1) * n; hemi.intensity *= 1 + (NL.fill - 1) * n; if (roomGroup) for (const l of roomGroup.children) if (l.userData.roomLamp) l.intensity = CONFIG.world.lamp * (1 + (NL.lamp - 1) * n); }
-function applySky(k, dawn) { depthLight(Math.max(0, k - dawn)); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure + (CONFIG.render.exposureNight - CONFIG.render.exposure) * Math.min(1, Math.max(0, k - dawn)); if (world) { world.light(Math.max(0, k - dawn)); if (Math.abs(k - skyShadowK) > 0.04) { skyShadowK = k; renderer.shadowMap.needsUpdate = true; } } if (k < 0.55) skyC.copy(SKY.day).lerp(SKY.dusk, k / 0.55); else skyC.copy(SKY.dusk).lerp(SKY.night, (k - 0.55) / 0.45); skyC.lerp(SKY.dawn, dawn); hemi.intensity = 1.6 + (world ? CONFIG.world.fillDay : 1.6) * Math.max(1 - k, dawn * 0.6); nightLook(Math.min(1, Math.max(0, k - dawn))); hemi.groundColor.setHex(world ? CONFIG.world.fill : 0x403830); hemi.color.setHex(0xb4c4ff); scene.background = skyC; sky.mesh.visible = true; sky.set(k, dawn, skyC); if (scene.fog) { scene.fog.color.copy(skyC); scene.fog.near = 20 - 12 * k; scene.fog.far = 80 - 46 * k; } }
+function applySky(k, dawn) { depthLight(Math.max(0, k - dawn)); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure + (CONFIG.render.exposureNight - CONFIG.render.exposure) * Math.min(1, Math.max(0, k - dawn)); if (world) { world.light(Math.max(0, k - dawn)); if (Math.abs(k - skyShadowK) > 0.04) { skyShadowK = k; if (QUALITY !== 'high') renderer.shadowMap.needsUpdate = true; } } if (k < 0.55) skyC.copy(SKY.day).lerp(SKY.dusk, k / 0.55); else skyC.copy(SKY.dusk).lerp(SKY.night, (k - 0.55) / 0.45); skyC.lerp(SKY.dawn, dawn); hemi.intensity = 1.6 + (world ? CONFIG.world.fillDay : 1.6) * Math.max(1 - k, dawn * 0.6); nightLook(Math.min(1, Math.max(0, k - dawn))); hemi.groundColor.setHex(world ? CONFIG.world.fill : 0x403830); hemi.color.setHex(0xb4c4ff); scene.background = skyC; sky.mesh.visible = true; sky.set(k, dawn, skyC); if (scene.fog) { scene.fog.color.copy(skyC); scene.fog.near = 20 - 12 * k; scene.fog.far = 80 - 46 * k; } }
 function buildCrates() { for (const m of crateMesh.values()) drop(m); crateMesh.clear(); for (const c of sim.crates) { const m = (LOOK_OLD ? PR.crateMesh : BT.crateV2)(c.kind); m.position.set(c.x, c.floor * FH + 0.06, c.z); m.rotation.y = (c.id * 1.7) % 3; shadeUnder(m, CONFIG.depth.crate, 0.02); scene.add(m); crateMesh.set(c.id, m); } }
 const DAY_HINTS = [[0.5, 'Grab the crates, Potts. Green is food, blue is essentials.'], [7, 'Tap SOLAR by a door or window. It fills your Sun.'], [14, 'Full Sun wins nights. Do not rush the sunset.'], [21, 'Got what you came for? Hold START NIGHT. You choose when the fight begins.']];
 const NIGHT_HINTS = [[0.8, 'Tap the right side to FIRE. Tap a device button to place it; hold it to read what it does.'], [9, 'Panels go in the openings: face one and tap Panel. Heads count double.'], [13, 'Hold FIRE until the ring turns gold, then let go: a charged shot through the whole line.'], [15, 'They smash collectors. Each one saved pays at dawn.']];
@@ -482,7 +493,7 @@ function opMachine(kind, dormant) { const o = GK.gloomMachine(kind, { dormant })
   // an awake machine gets a soft glow on its screen (phones have no screen lights; CONFIG.opening.grid.screenGlow)
   if (!dormant && o.userData.lamp) { const G = CONFIG.opening.grid.screenGlow, s = opGlow(o.userData.lampColor, G[0], G[1]); s.position.copy(o.userData.lamp); o.add(s); }
   return o; }
-function startIntro() {
+function startIntro() { gloomPreload(FILM_KINDS);
   if (!CONFIG.opening.on) { startIntroOld(); return; }
   if (!save) return; clearScene(); dropWorld(); bview.dispose(); sim = null; ui = null; paused = false;
   if (save.day === 1 && !save.nights) save.scoutSpot = 4; // she is at your door when you wake
@@ -626,7 +637,7 @@ addEventListener('keydown', (e) => { if (state !== 'intro' || !intro || intro.t 
 addEventListener('pointerdown', (e) => { if (state !== 'intro' || !intro || intro.t < CONFIG.opening.grace || e.target === $('cineSkip')) return; e.preventDefault(); e.stopImmediatePropagation(); opSwallow = performance.now() + 700; finishIntro(); }, true);
 addEventListener('click', (e) => { if (performance.now() < opSwallow) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 $('watch').textContent = 'Watch the opening';
-function startRun() {
+function startRun() { perfRest(); runModels(); queueMicrotask(() => sceneCard('ride'));
   fromBase = true; bview.dispose(); dropWorld(); $('scout').style.display = 'none'; ui = null;
   run = RUN.createRun(B.makeCfg(CONFIG, save), +$('selRing').value, (() => { try { const q = new URLSearchParams(location.search).get('seed'); if (q) return +q; } catch (e) { /* no address */ } return (Math.random() * 1e9) | 0; })(), { gloomMult: B.gloomMult(CONFIG, save), extraEnergy: B.nightEnergyBonus(CONFIG, save) });
   if (CONFIG.boss && CONFIG.boss.on && run.ring === CONFIG.boss.ring) bossPreload(); // desktop: the boss model loads while you walk the street (src/bosshi.js)
@@ -651,7 +662,7 @@ function enterTown() {
   townDoors.length = 0; for (const m of world.marks) townDoors.push(m); needDormant();
   { const G = CONFIG.marla.guide; if (!run.guide) { run.guide = { x: G.x, z: G.z }; for (const dx of [0, -3, 3, -6, 6, -9, 9]) { const x = G.x + dx; if (!run.houses.some((h) => Math.abs(h.doorX - x) < G.clearDoor)) { run.guide.x = x; break; } } } G.x = run.guide.x; G.z = run.guide.z; marla.root.position.set(G.x, 0, G.z); marla.root.rotation.set(0, 0, 0); scene.add(marla.root); kitArmed = !run.guideMet || Math.hypot(run.px - G.x, run.pz - G.z) > G.rearm; run.guideMet = true; } // by day Marla stands on the street: walk up to her to change devices
 }
-function enterHouse(i, quiet) {
+function enterHouse(i, quiet) { perfRest();
   if (!run) return; const first = !run.houses[i].seen; duskT = 0;
   scene.remove(marla.root); if (kitOpen) closeKit();
   sim = RUN.enter(run, i); if (run.hurt) sim.player.hp = Math.min(sim.player.hp, CONFIG.player.hp - run.hurt); clearScene(); needWorld().frame(i); buildRoomDyn(); buildBreaches(); buildCrates(); buildDepth(); loreHouse(i); // same world, moved so this house sits at the sim's origin
@@ -663,7 +674,7 @@ function enterHouse(i, quiet) {
 function solarBlock() { return FINE ? CONFIG.firstSolar.blockD : CONFIG.firstSolar.blockP; }
 function mustSolar() { return !!(run && sim && fromBase && save && !save.solarDone && !(save.nights > 0) && sim.phase === 'day'); }
 function leaveHouse() { if (!run || !sim || state !== 'play' || paused) return; if (mustSolar()) { flash(solarBlock(), 1); return; } const h = run.houses[run.inside]; if (!RUN.leave(run)) return; if (save && (save.nights || 0) < 2 && !run.toldPick) { run.toldPick = true; queueHint(1, 'More openings, more Gloom. Pick where you stand.'); } sim = null; yaw = h.row < 0 ? Math.PI : 0; pitch = 0; enterTown(); } // step out facing the street
-function nightfall(byHold) { if (!run) return; if (byHold && mustSolar()) { flash(solarBlock(), 1); return; } if (!sim) { const h = facedHouse() || RUN.nearest(run, run.px, run.pz); run.caught = !byHold; enterHouse(byHold ? h.i : RUN.nearest(run, run.px, run.pz).i, true); } sim.endDay(); }
+function nightfall(byHold) { if (!run) return; perfRest(); if (byHold && mustSolar()) { flash(solarBlock(), 1); return; } if (!sim) { const h = facedHouse() || RUN.nearest(run, run.px, run.pz); run.caught = !byHold; enterHouse(byHold ? h.i : RUN.nearest(run, run.px, run.pz).i, true); } sim.endDay(); }
 // the house whose door you are looking at (within range and a narrow angle), else null
 function facedHouse() { const T = CONFIG.town, fx = -Math.sin(yaw), fz = -Math.cos(yaw); let best = null, ba = T.faceAngle; for (const h of run.houses) { const dx = h.doorX - run.px, dz = h.doorZ - run.pz, d = Math.hypot(dx, dz); if (d > T.infoRange || d < 0.01) continue; const a = Math.acos(Math.max(-1, Math.min(1, (dx * fx + dz * fz) / d))); if (a < ba) { ba = a; best = h; } } return best; }
 function townFrame(dt) {
@@ -716,6 +727,8 @@ const marla = createMarla(CONFIG);
 const bview = createBaseView(scene, CONFIG, marla, (id) => (MODELS[id] ? createPerson(CONFIG, id) : null));
 let save = null, carry = null, ui = null, bp = { x: 0, z: 4 }, curTarget = null, chimeT = 0, storage = null;
 try { storage = window.localStorage; storage.getItem('x'); } catch (e) { storage = null; }
+// a first visit (no save yet) plays the opening film on Enter: its Gloom models start loading now, behind the title (desktop only; src/gloomglb.js)
+try { if (!(storage && storage.getItem('solardg.save'))) gloomPreload(FILM_KINDS); } catch (e) { gloomPreload(FILM_KINDS); }
 // MARLA'S VOICE (owner Nov 18; src/marlavoice.js, CONFIG.voice.marla): her run lines spoken; frame() ticks it, musicTick() ducks the music while she talks
 const MV = createMarlaVoice(() => audio(), storage, H2.FINE2);
 // impact sounds (src/impactsfx.js, CONFIG.sfx.impact): the cannon shot, hits on machines and boss weak points, a machine destroyed. Phones (the HUD's pointer test) get the phone mix; the street gets the drier room
@@ -734,7 +747,7 @@ function impactEvents(list) { if (!sim) return; const pops = list.filter((e) => 
     if (ev.boss !== undefined && ev.x !== undefined) impCall('hit', panOf(ev), false);
     if (ev.charged) { for (const q of ev.hits || []) if (!gone(q)) impCall('charged', panOf(q)); } else if (ev.boss === undefined && ev.x !== undefined && !gone(ev)) impCall('hit', panOf(ev), ev.head); } }
 const persist = () => B.writeSave(save, storage);
-function enterBase(intro) {
+function enterBase(intro) { perfRest();
   clearScene(); dropWorld(); sim = null; run = null; hintQ.length = 0; ui = null; state = 'base'; hemi.intensity = CONFIG.baseLight.power; hemi.color.setHex(CONFIG.baseLight.sky); hemi.groundColor.setHex(CONFIG.baseLight.ground);
   if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   sky.mesh.visible = false; scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95);
@@ -898,9 +911,10 @@ function tickHud(dt) { keysAuto(); tickBar(dt); tickWake(); tickDrillUi(); tickC
 function chime(v) { const a = audio(); if (!a) return; const t = a.currentTime; [1318, 1760].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t + i * 0.09); g.gain.exponentialRampToValueAtTime(0.14 * v, t + i * 0.09 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.5); o.connect(g); g.connect(a.destination); o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.55); }); }
 $('lookT').textContent = 'Look: ' + (GRITTY ? 'realistic worn' : 'painted (old)') + ' - tap to switch'; $('lookT').onclick = () => { try { localStorage.setItem('dawnpunk.look', GRITTY ? 'painted' : 'gritty'); } catch (e) { /* not kept */ } location.href = location.href.split('?')[0]; };
 // graphics tier (src/quality.js, CONFIG.quality): the title link and the pause-menu button switch it; the choice is saved and the page reloads, because edge smoothing and the texture set are fixed when the page starts
-const GFX_OTHER = QUALITY === 'high' ? 'low' : 'high', gfxGo = () => { saveQuality(GFX_OTHER); let u = location.href.split('#')[0]; try { const x = new URL(u); x.searchParams.set('quality', GFX_OTHER); if (x.searchParams.get('film') !== '0') x.searchParams.set('film', '1'); u = x.href; } catch (e) { /* keep the address */ } location.href = u; };
-const gfxPauseLabel = () => 'Graphics: ' + QUALITY + (QUALITY === 'high' ? ' (desktop)' : ' (phone)');
-let gfxArm = 0; $('gfxT').textContent = 'Graphics: ' + (QUALITY === 'high' ? 'high (desktop and laptop)' : 'low (phone)') + ' - tap to switch'; $('gfxT').onclick = gfxGo;
+// the button cycles medium (the default) -> high -> low -> medium (owner Nov 19: tiers by measured frame time; medium on every device by default)
+const GFX_OTHER = TIER === 'medium' ? 'high' : TIER === 'high' ? 'low' : 'medium', gfxGo = () => { saveQuality(GFX_OTHER); let u = location.href.split('#')[0]; try { const x = new URL(u); x.searchParams.set('quality', GFX_OTHER); if (x.searchParams.get('film') !== '0') x.searchParams.set('film', '1'); u = x.href; } catch (e) { /* keep the address */ } location.href = u; };
+const gfxPauseLabel = () => 'Graphics: ' + TIER + (TIER === 'medium' ? ' (default)' : '');
+let gfxArm = 0; $('gfxT').textContent = 'Graphics: ' + TIER + (TIER === 'medium' ? ' (default)' : '') + ' - tap to switch'; $('gfxT').onclick = gfxGo;
 $('bGfx').textContent = gfxPauseLabel(); $('bGfx').addEventListener('click', () => { if (!gfxArm) { gfxArm = 1; $('bGfx').textContent = 'Switch to ' + GFX_OTHER + '? Reloads: this night ends. Tap again'; return; } gfxGo(); });
 GK.speak.fn = (kind, line, obj) => sfxVoice(kind, line, obj);
 $('watch').onclick = () => { if (paused) setPause(false); audio(); musicUnlock(); save = B.loadSave(CONFIG, storage); carry = save.carry || null; startIntro(); }; $('cineSkip').onclick = () => finishIntro();
@@ -915,7 +929,7 @@ $('kitDone').onclick = () => closeKit(); $('marla').style.setProperty('--face', 
 $('sback').onclick = () => { $('scout').style.display = 'none'; ui = null; marla.talk(false); };
 $('again').onclick = () => {
   if (fromBase && save && sim) {
-    enterBase(homeMsg);
+    enterBase(homeMsg); sceneCard('home');
   } else { $('end').style.display = 'none'; $('menu').style.display = 'flex'; $('hud').style.display = 'none'; state = 'menu'; }
 };
 
@@ -939,6 +953,10 @@ addEventListener('wheel', (e) => { if (!FINE || state !== 'play' || paused) retu
 // MOUSE LOOK (desktop, player and user feedback Nov 15): click the game once and the mouse turns the view with no button held (the browser hides and holds the pointer);
 // while held, the left and right buttons fire (hold to charge) or use what you face in the base; Esc frees the mouse (in a run it also pauses). Menus and panels free it by themselves.
 const FINE = (() => { try { return !matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
+// LAG FIX Nov 19 (lag report finding 10): the pointer kind, read once and again only when it changes (was a matchMedia call every frame in the base)
+const COARSE = { now: false }; try { const mq = matchMedia('(pointer: coarse)'); COARSE.now = mq.matches; const f = (e) => { COARSE.now = e.matches; }; if (mq.addEventListener) mq.addEventListener('change', f); else if (mq.addListener) mq.addListener(f); } catch (e) { COARSE.now = false; }
+// write a HUD line only when its text changes (the base HUD rebuilt and wrote three lines every frame). On the desktop draw() shows a 'USE:' prompt as 'E:', so that form counts as unchanged.
+function setText(id, t) { const e = $(id); if (!e) return; const shown = FINE && id === 'bprompt' && t.startsWith('USE:') ? 'E:' + t.slice(4) : t; if (e.textContent !== shown) e.textContent = t; }
 // window.__fakeLock: TEST ONLY (tools/mousecheck.cjs). The headless test browser runs out of memory while it really holds the pointer, so tests set it to false before loading;
 // the game then pretends to hold the pointer instead of asking the browser, and counts the requests it would have made in window.__lockAsks. Players never have it set.
 // MEMFIX (Nov 18): a browser driven by a test tool (navigator.webdriver is true) gets the same pretend hold by itself, so a test that only clicks (the fresh-player driver)
@@ -1225,14 +1243,52 @@ function breakCue(ev) {
 
 // ---- loop
 let fx = null; const FXOFF = (() => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } })();
-function draw() { pshadow.tick(cam, state === 'base' || state === 'play', pshadowFloor());if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (fx && fx.render) fx.render(); else renderer.render(scene, cam); }
+function draw() { pshadow.tick(cam, state === 'base' || state === 'play', pshadowFloor());if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (holdDraw) return; if (QUALITY === 'high') lodTick(cam); if (fx && fx.render) fx.render(); else renderer.render(scene, cam); }
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); if (fx && fx.setSize) fx.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
+// ---- LOADING CARDS (owner Nov 19 05:49; CONFIG.lag.card): at a scene change the card covers the screen while the heavy work is done, so play does not hitch.
+// The game is held still meanwhile (frame() returns at once), so no rule or timer changes: the change itself (startRun, dusk, enterBase) has already happened as before.
+// Work: wait for the night's Gloom models and the boss model (they load from startRun; capped at maxWait s), build every shader the scene uses (renderer.compileAsync;
+// skipped in the scripted checks, whose software GPU builds them on the first frame as before), and draw the sun shadow map once on the first frame after.
+cvs.addEventListener('webglcontextlost', (e) => { e.preventDefault(); ctxLost = true; }, false);
+cvs.addEventListener('webglcontextrestored', () => { ctxLost = false; renderer.shadowMap.needsUpdate = true; }, false);
+// ---- PERF OVERLAY (owner Nov 19 05:55): ?perf=1 shows real frame rates on a real device in a corner: FPS, average and worst frame (ms) over the last ~2 s, draw calls and
+// triangles per frame (every render of the frame summed), tier, pixel ratio and the automatic step-downs taken. Off (and costing nothing) without ?perf=1.
+const PERFHUD = (() => { try { return new URLSearchParams(location.search).get('perf') === '1'; } catch (e) { return false; } })();
+const PH = { el: null, t: 0, n: 0, sum: 0, worst: 0, calls: 0, tris: 0 };
+if (PERFHUD) { renderer.info.autoReset = false; PH.el = document.createElement('div'); PH.el.id = 'perfhud'; PH.el.style.cssText = 'position:fixed;left:calc(4px + env(safe-area-inset-left));bottom:calc(4px + env(safe-area-inset-bottom));z-index:60;pointer-events:none;font:12px/1.35 ui-monospace,monospace;color:#fff;background:#000a;padding:4px 6px;border-radius:4px;white-space:pre'; document.body.appendChild(PH.el); }
+function perfHud(ms) {
+  if (!PERFHUD) return; const I = renderer.info.render; PH.calls = I.calls; PH.tris = I.triangles; renderer.info.reset(); PH.n++; PH.sum += ms; PH.worst = Math.max(PH.worst, ms); PH.t += ms;
+  if (PH.t < 2000) return; const st = perf ? perf.state : { taken: [] }, avg = PH.sum / PH.n;
+  PH.el.textContent = (1000 / avg).toFixed(0) + ' fps  avg ' + avg.toFixed(1) + ' ms  worst ' + PH.worst.toFixed(0) + ' ms\ncalls ' + PH.calls + '  tris ' + (PH.tris / 1e6).toFixed(2) + ' M\ntier ' + TIER + ' (' + QPICK.by + ')  ratio ' + renderer.getPixelRatio().toFixed(2) + '  steps ' + st.taken.length + (st.taken.length ? ' ' + st.taken.join(',') : '');
+  window.__perfHud = { fps: 1000 / avg, avg, worst: PH.worst, calls: PH.calls, tris: PH.tris }; PH.t = 0; PH.n = 0; PH.sum = 0; PH.worst = 0; }
+const LCARD = { on: false, n: 0 }, BOTRUN = () => { try { return !!window.__dtMax || !!navigator.webdriver; } catch (e) { return false; } };
+const nap = (ms) => new Promise((r) => setTimeout(r, ms));
+async function sceneCard(kind) {
+  const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
+  LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; fill(0.1); $('lcard').style.display = 'flex';
+  try {
+    if (QUALITY === 'high' && kind !== 'home') { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
+    fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
+    fill(0.9); renderer.shadowMap.needsUpdate = true;
+  } catch (e) { /* the card never blocks the game */ }
+  const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
+  fill(1); if (id === LCARD.n) { LCARD.on = false; $('lcard').style.display = 'none'; perfRest(); }
+}
+// the automatic step-down on the desktop tier (src/perfstep.js, CONFIG.lag.step); phones never run it
+perf = createPerfStep({ renderer, scene, resize, fx: () => fx, lights: glights, onLow: () => flash('Graphics will start on low next time (frames were slow)', true) });
+// LAG FIX Nov 19 (finding 5): a desktop model's maps go to the GPU as it finishes loading, and the Gloom model shader is built then (async), so the first machine
+// of a kind (or the boss) no longer stalls the frame it first appears in
+const warmMaps = (root) => root.traverse((o) => { if (!o.isMesh) return; for (const m of Array.isArray(o.material) ? o.material : [o.material]) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap']) if (m && m[k] && !m[k].userData.warm) { m[k].userData.warm = true; renderer.initTexture(m[k]); } });
+glbHooks.ready = (kind, sc) => { warmMaps(sc); if (renderer.compileAsync) renderer.compileAsync(glbCopy(kind, new THREE.Color(1, 1, 1)), cam, scene).catch(() => {}); };
+bossHooks.ready = (root) => warmMaps(root);
 let last = performance.now(), acc = 0, hurtT = 0;
 function frame(now) {
   requestAnimationFrame(frame);
+  // a loading card is up (sceneCard): the game is held still and nothing is drawn under it
+  if (LCARD.on) { last = now; return; }
   // window.__dtMax is set only by the slow headless checks (software renderer, under 1 frame a second) so game time keeps up; players never set it.
-  const dt = Math.min(window.__dtMax || 0.1, (now - last) / 1000); last = now;
+  const rawMs = now - last, dt = Math.min(window.__dtMax || CONFIG.lag.dtMax, rawMs / 1000); last = now; holdDraw = (paused && pauseDrawn) || ctxLost; pauseDrawn = paused; perfHud(rawMs); perf.tick(rawMs, (state === 'base' || state === 'play') && !paused);
   if (shadowT > 0) { shadowT -= dt; if (shadowT <= 0) renderer.shadowMap.needsUpdate = true; }
   if (catArm) catArm.rotation.x = -0.5 + Math.sin(now / 280) * 0.45; // the lucky cat beckons
   // the scene's dark under-plane (y -0.08) would show through the base's sunken stream channel: while the base is in the scene it lies below the channel bed (CONFIG.baseWater.under)
@@ -1251,10 +1307,10 @@ function frame(now) {
     baseCamY += (1.6 + (u.deck || 0) - baseCamY) * Math.min(1, dt * ((CONFIG.baseWater && CONFIG.baseWater.camEase) || 8)); cam.position.set(bp.x, baseCamY, bp.z); cam.rotation.set(pitch, yaw, 0, 'YXZ');
     { const hide = !!u.target && (u.target.kind === 'npc' || u.target.kind === 'scout'), q = $('bq'); if ((q.style.visibility === 'hidden') !== hide) q.style.visibility = hide ? 'hidden' : ''; }
     if (mx || mz) baseMoved = true;
-    $('bprompt').textContent = ui ? '' : (u.target && u.target.kind === 'cat' ? '' : (u.prompt || (save.day === 1 && !save.nights && !baseMoved ? (matchMedia('(pointer: coarse)').matches ? 'Left thumb walks, right thumb looks' : 'W A S D to walk, drag the mouse to look, E or click to use') : '')));
+    setText('bprompt', ui ? '' : (u.target && u.target.kind === 'cat' ? '' : (u.prompt || (save.day === 1 && !save.nights && !baseMoved ? (COARSE.now ? 'Left thumb walks, right thumb looks' : 'W A S D to walk, drag the mouse to look, E or click to use') : ''))));
     if (save) {
       const c = (r) => B.count(save, r);
-      $('bstat').textContent = 'Day ' + save.day + ' · Food ' + save.food + ' · Essentials ' + save.essentials + ' · People ' + save.personnel.length + ' · ' + (save.cleared ? 'Goal reached: ring 5 held' : 'Goal: survive a night in ring ' + CONFIG.ring.mult.length + ' · next ride: ring ' + (+$('selRing').value + 1) + ' (' + (save.ringOpen || 1) + ' of ' + CONFIG.ring.mult.length + ' open)') + ' · ' + B.recruitLine(CONFIG, save.food) + (B.carriedCats(save) ? ' · Cats carried ' + B.carriedCats(save) : '') + (B.placedCats(save) ? ' · Cats home ' + B.placedCats(save) : '');
+      setText('bstat', 'Day ' + save.day + ' · Food ' + save.food + ' · Essentials ' + save.essentials + ' · People ' + save.personnel.length + ' · ' + (save.cleared ? 'Goal reached: ring 5 held' : 'Goal: survive a night in ring ' + CONFIG.ring.mult.length + ' · next ride: ring ' + (+$('selRing').value + 1) + ' (' + (save.ringOpen || 1) + ' of ' + CONFIG.ring.mult.length + ' open)') + ' · ' + B.recruitLine(CONFIG, save.food) + (B.carriedCats(save) ? ' · Cats carried ' + B.carriedCats(save) : '') + (B.placedCats(save) ? ' · Cats home ' + B.placedCats(save) : ''));
       if (questOpenT > 0) questOpenT -= dt;
       const act = save.quests.filter((q) => q.state === 'active' || q.state === 'ready').map((q) => (q.state === 'ready' ? '? Hand in ' + B.NPCS[q.giver].name + '\'s posting at the board' : '- ' + q.text)).join('\n');
       const qAll = (carry ? 'Carrying a crate: take it to ' + B.STATIONS[carry.to].name + '\n' : '') + (act ? 'Quests:\n' + act : 'Quests: read the board by the Workshop') + (CONFIG.miniMap.on ? '' : '\nFind Marla (' + B.scoutPos(save).hint + ')' + whereIs(B.scoutPos(save))) + (save.food >= CONFIG.base.recruitFood && save.personnel.length < CONFIG.base.maxPersonnel ? '\nGarden: welcome a new person (' + CONFIG.base.recruitFood + ' food)' : '') + (save.nights && (save.nights <= 3 || save.essentials >= UP_MIN) ? (bview.rooms.WS ? '\nWorkshop: go in, Oko upgrades devices (from ' + UP_MIN + ' essentials, you have ' + save.essentials + ')' + whereIs((([x, z]) => ({ x, z }))(doorAt(bview.rooms.WS, 0.6))) : '\nWorkshop: upgrades from ' + UP_MIN + ' essentials (you have ' + save.essentials + ')') : '') + (CONFIG.avians && CONFIG.avians.on && save.avians && (save.avians.coop || save.avians.held || save.toldHatchery === save.day) ? '\nHatchery: ' + (save.avians.held ? 'warm your ' + save.avians.held + ' egg' + (save.avians.held > 1 ? 's' : '') + ' in the dome' : save.avians.coop ? save.avians.coop + ' egg' + (save.avians.coop > 1 ? 's' : '') + ' in the coop' : 'eggs go in the warm dome') + whereIs({ x: CONFIG.avians.at[0] - 0.7, z: CONFIG.avians.at[1] - 2.35 }) : '') + (save.nights && !save.readDesk ? '\nJournal desk at home: every device and machine' + whereIs({ x: B.HOME.desk[0], z: B.HOME.desk[1] }) : '') + (save.cats.some((c) => c.state === 'carried') ? '\nLucky cat: set it on the shelf in your home' + whereIs({ x: B.HOME.x, z: B.HOME.z - 1 }) : '') + (save.cats.some((c) => c.state === 'hidden') ? '\nRumour: a golden paw waves ' + B.catPos(save.cats.find((c) => c.state === 'hidden')).hint : '');
@@ -1262,7 +1318,7 @@ function frame(now) {
       if (!save.nights) { const mi = qL.findIndex((l) => l.startsWith('Find Marla')); if (mi > 0) qL.unshift(qL.splice(mi, 1)[0]); }
       if (save.toldHatchery === save.day) { const hi2 = qL.findIndex((l) => l.startsWith('Hatchery')); if (hi2 > 0) qL.unshift(qL.splice(hi2, 1)[0]); }
       if (bview.rooms.WS && save.toldWorkshop === save.day) { const wi = qL.findIndex((l) => l.startsWith('Workshop')); if (wi > 0) qL.unshift(qL.splice(wi, 1)[0]); }      // before the first night, finding Marla is the line that matters
-      $('bq').textContent = questOpenT > 0 || qL.length <= qN ? qL.join('\n') : qL.slice(0, qN).join('\n') + '\n+' + (qL.length - qN) + ' more (' + (FINE ? 'Tab' : 'tap') + ')';
+      setText('bq', questOpenT > 0 || qL.length <= qN ? qL.join('\n') : qL.slice(0, qN).join('\n') + '\n+' + (qL.length - qN) + ' more (' + (FINE ? 'Tab' : 'tap') + ')');
     }
     if (u.catDist < CONFIG.cat.chimeRange) { chimeT -= dt; if (chimeT <= 0) { chime(1 - u.catDist / CONFIG.cat.chimeRange * 0.8); chimeT = 0.4 + (u.catDist / CONFIG.cat.chimeRange) * 1.6; } }
     tickWsTip(dt); tickHud(dt); tickAim(dt); tickCharge(dt); tickMap(dt);
@@ -1298,7 +1354,7 @@ function frame(now) {
       if (ev.e === 'alert') marlaAlert(ev);
       if (ev.e === 'kind' && KIND_LINE[ev.kind] && GLOOM_Q !== 'hood' && CONFIG.gloomLook.machines) { kindQ.push(KIND_LINE[ev.kind]); }
       if (ev.e === 'kind' && save && fromBase) { save.met = save.met || {}; if (!save.met[ev.kind]) { save.met[ev.kind] = true; persist(); } }
-      if (ev.e === 'dusk') { kindQ.length = 0; if (run && run.wakeExtra && !sim.wakeAdded && sim.addGloom) { sim.wakeAdded = true; sim.addGloom(run.wakeExtra); } }
+      if (ev.e === 'dusk') { sceneCard('night'); kindQ.length = 0; if (run && run.wakeExtra && !sim.wakeAdded && sim.addGloom) { sim.wakeAdded = true; sim.addGloom(run.wakeExtra); } }
       if (ev.e === 'crate' || ev.e === 'cat') hands.grab();
       if (ev.e === 'crate') flash('+' + ev.v + (ev.kind === 'food' ? ' food' : ' essentials'));
       if (ev.e === 'dusk') { hintN = 0; hintQ.length = 0; $('time').style.color = ''; sfxAlert('inbound'); $('marla').textContent = run && run.caught ? 'Dark caught you outside, Potts. Nearest house it is.' : 'Sun is down, Potts. Turbine first, then lances, then panels.'; marlaT = 4.5; sayAt = performance.now() / 1000 + 2; sayPrio = 3; }
@@ -1349,7 +1405,7 @@ function frame(now) {
     $('hp').style.width = (100 * p.hp / CONFIG.player.hp) + '%'; $('en').style.width = (100 * p.energy / CONFIG.player.energyCap) + '%';
     H2.setClock($('time'), dayNow ? sim.dayT : leftN, !dayNow); H2.setClockBar(dayNow ? sim.dayT : leftN, !dayNow); H2.setVit($('enL'), p.energy, !dayNow, 100 * p.hp / CONFIG.player.hp);
     H2.setCount($('count'), [dayNow ? ['Crates left', sim.crates.filter((c) => !c.got).length] : null, ['Food', sim.food], ['Essentials', sim.ess], [CONFIG.ui.sun, Math.round(p.energy), 1], dayNow && run ? ['Walk speed', Math.round(100 * sim.speedMult()) + '%'] : null, ['Floor', (p.floor + 1) + ' of ' + sim.L]]);
-    $('coins').textContent = sim.coins ? 'Lucky cat found' : '';
+    setText('coins', sim.coins ? 'Lucky cat found' : '');
     { const sk = slotKinds(), list = [['b0', 'collector', 'Solar', 'Q']]; for (let i = 0; i < 5; i++) list.push(['b' + (i + 1), sk[i] || null, sk[i] ? CONFIG.devices[sk[i]].name : '', String(i + 1)]);
       for (const [id, kind, key, hot] of list) {
         const el = $(id); el.classList.toggle('sel', id === 'b' + (selSlot + 1)); if (!kind) { if (el.style.display !== 'none') el.style.display = 'none'; continue; } if (el.style.display === 'none') el.style.display = '';
@@ -1366,7 +1422,7 @@ function frame(now) {
   tickHud(dt); tickAim(dt); tickCharge(dt);
   sky.follow(cam, world ? world.g.rotation.y : 0, dt); draw();
   if (sim && run) tickDormant(sim.phase === 'night');
-  if (sim && state === 'play') { hands.update(paused ? 0 : dt, Math.hypot(stick.x, stick.y) > 0.1 || keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD, sim.player.energy / CONFIG.player.energyCap, sim.phase === 'night'); (window.__noHands || hands.render(renderer, cam.aspect)); }
+  if (sim && state === 'play') { hands.update(paused ? 0 : dt, Math.hypot(stick.x, stick.y) > 0.1 || keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD, sim.player.energy / CONFIG.player.energyCap, sim.phase === 'night'); (window.__noHands || holdDraw || hands.render(renderer, cam.aspect)); }
 }
 function endScreen() {
   state = 'end'; $('bLeave').style.display = 'none'; $('time').style.color = ''; const lm = fromBase && save ? B.lootMult(CONFIG, save) : 1, r = { ...sim.result, food: Math.round(sim.result.food * lm), essentials: Math.round(sim.result.essentials * lm) }; const opens = fromBase && r.win && save && (save.ringOpen || 1) < Math.min(CONFIG.ring.mult.length, r.ring + 2) ? '. Ring ' + (r.ring + 2) + ' is now open' : (fromBase && r.win && save && r.ring + 1 >= CONFIG.ring.mult.length && !save.cleared ? ((save.cleared = save.day), '. You held the farthest ring: the settlement can grow again. That is the end of this demo; you can keep playing') : ''); $('marla').textContent = ''; $('hs').textContent = ''; marlaT = 0; hsT = 0;
@@ -1388,6 +1444,8 @@ window.__game.drillFrom = () => (drill && drill.from ? { bp: drill.from.bp, ang:
 window.__game.marlaVoice = () => ({ n: MV.hook.n, last: MV.hook.last, lastText: MV.hook.lastText, via: MV.hook.via, playing: MV.hook.playing, on: MV.on, allowed: MV.allowed, duck: MV.duck() });
 window.__game.wakeText = () => wakeT; window.__game.uiNow = () => ui; window.__game.isPaused = () => paused;
 window.__game.wsTip = () => wsTipT;
+// the automatic step-down (tools/perfcheck.cjs): its state, and take the next step now
+window.__game.perfStep = () => (perf ? { ...perf.state } : null); window.__game.perfForce = () => (perf ? { ...perf.force() } : null);
 window.__game.baseEvening = (t) => bview.setEvening(t);
 window.__game.cfg = CONFIG;
 window.__game.waterGain = () => waterSnd.gain();
@@ -1396,7 +1454,7 @@ window.__game.tipKind = () => tipKind;
 window.__game.catSet = (i, o) => bview.catSet(i, o);
 // graphics tier readout for tools/qualitycheck.cjs: what was picked and what the renderer and the textures really use
 window.__game.quality = () => { let shadow = 0, plaster = 0, plasterN = 0; const root = state === 'base' ? bview.group : world && world.g; if (root) root.traverse((o) => { if (o.isDirectionalLight && o.castShadow) shadow = Math.max(shadow, o.shadow.mapSize.x); if (o.isMesh && o.material && o.material.map && o.material.map.userData.tex === (state === 'base' ? 'render' : 'plaster')) { const m = o.material; plaster = Math.max(plaster, (m.map.image && m.map.image.width) || 0); if (m.normalMap && m.normalMap.image) plasterN = Math.max(plasterN, m.normalMap.image.width); } });
-  return { tier: QUALITY, by: QPICK.by, pixelRatio: renderer.getPixelRatio(), antialias: !!renderer.getContextAttributes().antialias, lights: glights.length, sky: sky.detail, shadow, wallTex: plaster, wallRelief: plasterN, hi: { ...hiState }, gpuAniso: renderer.capabilities.getMaxAnisotropy() }; };
+  return { tier: TIER, asset: QUALITY, want: { pixelRatio: Math.min(window.devicePixelRatio || 1, Q.pixelRatio), lights: Q.lights, shadow: Q.shadowMap, baseShadow: Q.baseShadowMap, aniso: Q.aniso, fx: !!Q.fx }, by: QPICK.by, pixelRatio: renderer.getPixelRatio(), antialias: !!renderer.getContextAttributes().antialias, lights: glights.length, sky: sky.detail, shadow, wallTex: plaster, wallRelief: plasterN, hi: { ...hiState }, gpuAniso: renderer.capabilities.getMaxAnisotropy() }; };
 // test hooks for tools/lorecheck.cjs: this visit's note (where, and whether the prompt shows), read it, is it open, the notes found
 // test hook for tools/openingcheck.cjs: person stand-in figures visible in the base right now (the wake shot must show none)
 window.__game.standInsShown = () => { let n = 0; bview.group.traverse((o) => { if (!opStandIn(o)) return; for (let q = o; q; q = q.parent) if (!q.visible) return; n++; }); return n; };

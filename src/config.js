@@ -380,10 +380,14 @@ export const CONFIG = {
     feetY: 652, houseX: 640, houseW: 160, houseY: 486, hill: [640, 604, 626, 598, 618, 592, 620, 600],
     word: ['#f0c66a', '#c4722a88', 104, 11], line: ['#cdbb8c', '#b9a06a', '#8a7a52'] },
   quality: {
-    high: { pixelRatio: 2, smooth: true, shadowMap: 4096, baseShadowMap: 4096, shadowSoft: 2.5, aniso: 16, reliefAniso: 16, hiTex: true, lights: 6, grassMore: 420, leafMore: 2, skyDetail: 6, round: 2, roundMax: 64, machineTris: 60000,
-      // fx: the desktop picture pass (src/fx.js). ao: strength of the contact shading, aoRadius: how far it reaches (m), aoSamples: quality
+    // LAG FIX Nov 19 (owner approved): pixelRatio 2 -> 1.25 (the automatic step-down, CONFIG.lag.step, can take it to 1); sun shadow maps 4096 -> 2048 with shadowSoft 2.5 -> 1.25,
+    // the same blur width in metres as before; lights (machine screens that throw real light) 6 -> 3, the three nearest machines, always in the scene so no shader is rebuilt at night
+    high: { pixelRatio: 1.25, smooth: true, shadowMap: 2048, baseShadowMap: 2048, shadowSoft: 1.25, aniso: 16, reliefAniso: 16, hiTex: true, lights: 3, grassMore: 420, leafMore: 2, skyDetail: 6, round: 2, roundMax: 64, machineTris: 60000,
+      // fx: the desktop picture pass (src/fx.js). ao: strength of the contact shading, aoRadius: how far it reaches (m), aoSamples: quality (LAG FIX Nov 19: 16 -> 8, at half size)
       // keepOut: stencil number of pixels the contact shading leaves alone (Marla's hair, CONFIG.marlaHi.keepOut; keep both the same; 0 = off)
-      fx: { ao: 0.8, aoRadius: 0.6, aoSamples: 16, keepOut: 1 },
+      // aoScale: size of the contact shading pass as a share of the screen (0.5 = half width and height, a quarter of the pixels; the shading is soft, so it is scaled up smoothly);
+      // aoFar: things whose nearest point is farther than this (m) are left out of the shading pass (at that distance the 0.6 m shading is a few pixels wide and the fog is on it)
+      fx: { ao: 0.8, aoRadius: 0.6, aoSamples: 8, keepOut: 1, aoScale: 0.5, aoFar: 45 },
       // car: the master build of the abandoned cars (src/carhi.js). paint: [roughness, metalness, clear coat, clear coat roughness] (the clear coat thins with rust), chrome: [roughness, metalness], glass: [roughness, opacity, sky reflection],
       // holes: rust-through holes [fewest, most] by how rusty the car is, holeSize: their size in cut-out-picture pixels [min, max], holeBand: how high up the body they sit [from, to] as a share of the paint picture's height, ajar: chance a door hangs open, shards: glass shards left in a broken window, treadBlocks: blocks round each tyre (3 rows), leaves: dead leaves on it,
       // tint: colour multiplied onto the paint picture (the desktop surfaces take more sky light; untinted the cars came out paler and greyer than on the phone), nose: how far the shell's rounded nose and tail stand past the car's nominal length (m; lamps, grille and bumpers sit on it).
@@ -1105,5 +1109,30 @@ export const CONFIG = {
     quests: { deliverFood: 2, huntBase: 4, huntFood: 4, collectBase: 3, collectEss: 3 },
     labelRange: 7,
     upgrades: { panel: { name: 'Sturdy panels', max: 3, cost: [8, 14, 20], days: [2, 2, 2], per: 0.25, text: '+25% panel strength per level' }, turbine: { name: 'Efficient turbines', max: 3, cost: [10, 16, 24], days: [2, 2, 2], per: 0.10, text: '+10% turbine Sun per level' }, energy: { name: 'Sun cells', max: 3, cost: [8, 12, 18], days: [2, 2, 2], per: 5, text: '+5 start Sun per level' }, slots: { name: 'Carry frame', max: 2, cost: [16, 28], days: [2, 2], per: 1, text: '+1 device slot per level' }, dev_twin: { name: 'Unlock: Twin Lance', max: 1, cost: [12], days: [2], text: 'two pellets per shot' }, dev_mist: { name: 'Unlock: Mist Coil', max: 1, cost: [12], days: [2], text: 'pellets chill and slow a Gloom' }, dev_trellis: { name: 'Unlock: Tall Trellis', max: 1, cost: [10], days: [2], text: 'a tall, tough panel; nothing shoots over it' }, dev_flask: { name: 'Unlock: Biogas Flask', max: 1, cost: [16], days: [2], text: 'one-shot area burst where you aim' }, dev_press: { name: 'Unlock: Mulch Press', max: 1, cost: [14], days: [2], text: 'grinds one Gloom, then resets' }, dev_shard: { name: 'Unlock: Shard Plate', max: 1, cost: [8], days: [2], text: 'floor plate that hurts Gloom walking over it' }, dev_sling: { name: 'Unlock: Sling Press', max: 1, cost: [14], days: [2], text: 'lobs shots over walls' }, dev_prism: { name: 'Unlock: Prism Lens', max: 1, cost: [14], days: [2], text: 'shots fired near it hit harder' }, dev_chime: { name: 'Unlock: Chime Pole', max: 1, cost: [8], days: [2], text: 'a sound that pulls Gloom toward it' }, dev_moon: { name: 'Unlock: Moon Panel', max: 1, cost: [36], days: [2], text: 'strong night Sun; shares the limit of 2 Sun makers with turbines' } }, 
+  },
+  // LAG FIX (lag report Nov 18, owner approved Nov 19: fix the cost, keep the desktop look). Desktop (high tier) only unless a line says otherwise; phones keep every setting they had.
+  lag: {
+    // cull: skinned characters are culled again (src/lod.js cullSkinned); their bounding sphere, taken in the bind pose, is grown: radius times grow, plus pad metres
+    cull: { grow: 1.35, pad: 0.35 },
+    // lod: a reduced copy of big meshes for far away (src/lod.js; meshoptimizer simplifier). on: the switch; minTris: meshes with fewer triangles than this keep only their full mesh;
+    // kinds: per kind of model, near = metres from the camera within which the full mesh is drawn, ratio = share of triangles the far copy aims for, error = largest change of shape
+    // allowed as a share of that mesh part's size (the simplifier stops there even if the ratio is not reached, so the far copy keeps the silhouette)
+    lod: { on: true, minTris: 1500,
+      kinds: { people: { near: 7, ratio: 0.3, error: 0.005 }, gloom: { near: 9, ratio: 0.35, error: 0.01 }, boss: { near: 14, ratio: 0.5, error: 0.006 } } },
+    // step: automatic step-down while playing (src/perfstep.js; never in the scripted checks, which run with window.__dtMax or a webdriver browser, unless ?autostep=1).
+    // on: the switch (?autostep=0 / 1 overrides it for one visit); slowMs: a frame slower than this on average is too slow; watch: seconds averaged per reading;
+    // hold: readings in a row that must be too slow before one step is taken; settle: seconds after a step (or the start of a scene) before measuring again;
+    // ignoreMs: single frames longer than this (a tab switch, a load) are left out of the average
+    step: { on: true, slowMs: 20, watch: 2, hold: 2, settle: 4, ignoreMs: 400,
+      // order: the steps, one at a time, cheapest look loss first: ratio = sharpness cap down to `ratio`, ao = contact shading off, shadow = sun shadow maps down to `shadow` px, lights = machine screen lights down to `lights`
+      order: ['ratio', 'ao', 'shadow', 'lights'], ratio: 1, shadow: 1024, lights: 1 },
+    // card: the loading card at scene changes (owner Nov 19 05:49; src/main.js sceneCard): ride = base to the day street, night = day to night (short), home = night or dawn to the base.
+    // While it shows the game is held still (no game time passes) and the heavy work is done: the night's Gloom and boss models are waited for (at most maxWait s), their maps
+    // uploaded, every shader of the scene built, and the sun shadow map drawn once. on: the switch; min: shortest time each card shows (s); titles: the card's line per change
+    // mergeCell: the street's static pieces are merged per material and per square cell of this size (m) on the desktop builds (src/world.js), so out-of-view cells are culled
+    mergeCell: 16,
+    // dtMax: longest game step one frame may take (s; was 0.1): after a long frame the game slows for a moment instead of jumping (all tiers; the checks set their own)
+    dtMax: 0.05,
+    card: { on: true, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' } },
   },
 };

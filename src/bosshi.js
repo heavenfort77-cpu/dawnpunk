@@ -8,6 +8,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
 import { say } from './hud2.js';
+import { lodPrepare, lodCopy } from './lod.js';
 
 const BC = CONFIG.boss, VW = BC.view, PH = BC.physics, S = BC.scale;
 const fxOff = (() => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } })();
@@ -39,6 +40,8 @@ const BREAK_PLATES = { beckon: ['plate0', 'plate2', 'plate4'], slam: ['plate1', 
 const COLLAPSE = ['plate6', 'plate7', 'plate8', 'plate9', 'coreDoorL', 'coreDoorR', 'jaw', 'bell', 'head', 'beckonFore', 'slamPaw', 'coin'];
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z), UPV = V3(0, 1, 0);
+// LAG FIX Nov 19 (owner: never frustumCulled = false): the code-built cat's skinned meshes get a sphere twice their bind-pose size (arms swing, pieces fall), the sparks and scissor bars a 40 m one
+const bigSphere = (g) => { if (!g.boundingSphere) g.computeBoundingSphere(); const b = g.boundingSphere.clone(); b.radius *= 2; return b; };
 const sm = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
 const col = (h) => new THREE.Color(h);
 
@@ -221,7 +224,7 @@ function buildCode() {
   lamp('coin', 0, 0.86, -0.33, 0.045, 'coin'); lamp('bell', 0, 1.14, -0.265, 0.042, 'bell');
   for (const s of [-1, 1]) lamp('head', s * 0.3, 1.6, -0.36, 0.022, 'lamp'); lamp('head', 0, 1.56, -0.62, 0.024, 'lamp'); lamp('head', -0.09, 2.31, 0.08, 0.02, 'standby');
   for (const [x, y, z] of [[0.2, 1.1, -0.22], [-0.27, 0.62, -0.3], [0.33, 0.4, 0.2], [-0.2, 0.95, 0.27], [0.33, 0.1, -0.45]]) lamp('body', x, y, z, 0.014, 'standby');
-  const mk = (geos, mat) => { const g = mergeGeometries(geos, false); for (const q of geos) q.dispose(); const sk = new THREE.Skeleton(list), m = new THREE.SkinnedMesh(g, mat); m.add(bones.base); m.bind(sk); m.frustumCulled = false; return m; };
+  const mk = (geos, mat) => { const g = mergeGeometries(geos, false); for (const q of geos) q.dispose(); const sk = new THREE.Skeleton(list), m = new THREE.SkinnedMesh(g, mat); m.add(bones.base); m.bind(sk); m.boundingSphere = bigSphere(g); return m; };
   root.remove(bones.base);
   // Phong with flat shading for hard highlights on the metal edges; its own lamps light the paint a little at night (CONFIG.boss.view.selfLit), tinted by each part's own colour
   // (the night's strong sky fill washed the first in-game picture pale: a softer highlight and a little less light taken in, so it keeps the approved dark colours)
@@ -231,7 +234,7 @@ function buildCode() {
   const body = mk(solid, bm);
   // the glow mesh keeps per-light vertex ranges so each light can change colour alone
   const ranges = {}; let at = 0; for (const g of glow) { const n = g.attributes.position.count, k = g.userData.glow; (ranges[k] = ranges[k] || []).push([at, n]); at += n; }
-  const gl = mergeGeometries(glow, false); for (const q of glow) q.dispose(); const gm = new THREE.SkinnedMesh(gl, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, toneMapped: false })); gm.bind(body.skeleton, body.matrixWorld); gm.frustumCulled = false;
+  const gl = mergeGeometries(glow, false); for (const q of glow) q.dispose(); const gm = new THREE.SkinnedMesh(gl, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, toneMapped: false })); gm.bind(body.skeleton, body.matrixWorld); gm.boundingSphere = bigSphere(gl);
   root.add(body); root.add(gm);
   const C = gl.attributes.color;
   const setGlow = (key, c, k) => { const r = ranges[key]; if (!r) return; const cc = col(c).multiplyScalar(k); for (const [a, n] of r) for (let i = a; i < a + n; i++) C.setXYZ(i, cc.r, cc.g, cc.b); C.needsUpdate = true; };
@@ -245,16 +248,19 @@ function loadModel() {
   if (bossState.model !== 'none') return; bossState.model = 'loading';
   if (!MODEL.startsWith('data:') && location.protocol === 'file:') { bossState.model = 'failed'; return; }
   const fail = (e) => { bossState.model = 'failed'; console.warn('boss model not loaded', e); };
-  fetch(MODEL).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (g) => { tpl = g.scene; bossState.model = 'ready'; }, fail)).catch(fail);
+  fetch(MODEL).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (g) => { tpl = g.scene; bossState.model = 'ready'; tpl.traverse((o) => { if (o.isMesh) o.geometry.userData.shared = true; }); lodPrepare(tpl, 'boss', false); if (bossHooks.ready) try { bossHooks.ready(tpl); } catch (e) { /* warm-up only */ } }, fail)).catch(fail);
 }
 // desktop: start loading the Blender model when a run on the boss ring starts (main.js startRun), so it is ready before the boss rises 1 s into the night
 // (a night begun straight from the street, or with Dusk at once, left too little time and the code-built stand-in stayed all night)
 export function bossPreload() { if (DESK && VW.glb) loadModel(); }
+// bossHooks.ready(scene): main.js uploads the model's maps while it loads (LAG FIX Nov 19), not at the boss's first frame
+export const bossHooks = { ready: null };
 function buildGlb() {
   const sc = tpl.clone(true), nodes = {}, mats = [], glows = {};
   sc.traverse((o) => { if (o.name && PIV[o.name] !== undefined && !nodes[o.name]) nodes[o.name] = o; });
   const lensFor = (name) => { const m = new THREE.MeshBasicMaterial({ color: 0x111111, fog: false, toneMapped: false }); glows[name] = m; return m; };
-  sc.traverse((o) => { if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false;
+  // LAG FIX Nov 19: the model's parts are rigid (moved by their nodes), so they are culled again like any mesh (they were drawn even when off screen)
+  sc.traverse((o) => { if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true;
     const m0 = o.material; if (m0.name === 'gloom_lens') { let p = o.parent, key = 'lamp'; while (p) { if (['eyeL', 'eyeR', 'beckonCore', 'slamCore', 'coin', 'bell'].includes(p.name)) { key = p.name; break; } p = p.parent; } o.material = glows[key] || lensFor(key); return; }
     if (!o.userData.bossMat) { const m = m0.clone(); m.fog = !VW.fogOff; if (m.map) { m.emissiveMap = m.map; m.emissive = new THREE.Color(0x000000); } o.material = m; mats.push(m); o.userData.bossMat = true; } });
   // small red standby lights on the body (the code-built cat has them in its glow mesh)
@@ -262,6 +268,7 @@ function buildGlb() {
   const setGlow = (key, c, k) => { const m = glows[key]; if (m) m.color.set(c).multiplyScalar(k); };
   let n = 0; sc.traverse((o) => { if (o.isMesh) n += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; }); bossState.tris = n;
   // v2 model (owner 18:51): the CRT face plate is 0.42 x 0.24 and the screen draws the eyes, like the approved phone build
+  lodCopy(sc, 'boss');
   return { root: sc, nodes, setGlow, kind: 'glb', mats, screenEyes: true, screenSize: [0.42, 0.24] };
 }
 
@@ -297,8 +304,8 @@ function build(sim) {
   const flat = (geo, c, o) => { const me = new THREE.Mesh(geo, new THREE.MeshBasicMaterial(Object.assign({ color: c, transparent: true, depthWrite: false, fog: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4 }, o || {}))); me.rotation.x = -Math.PI / 2; me.visible = false; me.renderOrder = 3; g.add(me); return me; };
   const ring = flat(new THREE.RingGeometry(BC.slam.ring - 0.25, BC.slam.ring, 40), VW.ring[0], { opacity: 0.95 }), fill = flat(new THREE.CircleGeometry(1, 40), VW.ring[0], { opacity: 0.35 }), shadow = flat(new THREE.CircleGeometry(1, 24), 0x000000, { opacity: 0.0 });
   const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(), color: VW.teal, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); halo.visible = false; halo.scale.setScalar(VW.halo); g.add(halo);
-  const SC = VW.scissor, bars = new THREE.InstancedMesh(new THREE.BoxGeometry(1, SC.bar, SC.bar * 0.6), new THREE.MeshStandardMaterial({ color: 0x5c5248, roughness: 0.75, metalness: 0.55, fog: !VW.fogOff }), SC.cells * 2); bars.visible = false; bars.frustumCulled = false; g.add(bars);
-  const spk = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ color: 0xffd080, size: 0.12, fog: false, transparent: true, depthWrite: false })); spk.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(VW.sparks * 3 * 4), 3)); spk.frustumCulled = false; g.add(spk);
+  const SC = VW.scissor, bars = new THREE.InstancedMesh(new THREE.BoxGeometry(1, SC.bar, SC.bar * 0.6), new THREE.MeshStandardMaterial({ color: 0x5c5248, roughness: 0.75, metalness: 0.55, fog: !VW.fogOff }), SC.cells * 2); bars.visible = false; bars.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 40); g.add(bars);
+  const spk = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ color: 0xffd080, size: 0.12, fog: false, transparent: true, depthWrite: false })); spk.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(VW.sparks * 3 * 4), 3)); spk.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 40); g.add(spk);
   // a steel grille over the coin (both tiers), on the body node
   let grille = null; if (m.nodes.body) { grille = new THREE.Group(); const bm = new THREE.MeshStandardMaterial({ color: 0x3e3c36, roughness: 0.6, metalness: 0.7, fog: !VW.fogOff }), bg = new THREE.BoxGeometry(0.018, 0.34, 0.018);
     for (const x of [-0.08, 0, 0.08]) { const b = new THREE.Mesh(bg, bm); b.position.set(x, 0.86 - 0.2, -0.305); grille.add(b); } const hb = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.018, 0.018), bm); hb.position.set(0, 0.66, -0.305); grille.add(hb); m.nodes.body.add(grille); }

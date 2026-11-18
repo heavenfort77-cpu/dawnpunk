@@ -51,7 +51,7 @@ function blobMesh(B) {
   const t = new THREE.CanvasTexture(cv);
   // black texels with a fading alpha: the colour stays black, the edge fades out
   const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: B.dark, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
-  const o = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), m); o.rotation.order = 'YXZ'; o.scale.set(B.size[0], B.size[1], 1); o.renderOrder = 2; o.frustumCulled = false; o.userData.noAO = true; o.name = 'playerBlob';
+  const o = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), m); o.rotation.order = 'YXZ'; o.scale.set(B.size[0], B.size[1], 1); o.renderOrder = 2; o.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 4); o.userData.noAO = true; o.name = 'playerBlob';
   return o;
 }
 

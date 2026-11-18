@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
+import { lodPrepare, lodCopy } from './lod.js';
 
 const FILES = { walker: 'models/gloom_walker_hi.glb', lurcher: 'models/gloom_lurcher_hi.glb', ticks: 'models/gloom_ticks_hi.glb', hauler: 'models/gloom_hauler_hi.glb', stilt: 'models/gloom_stilt_hi.glb', lantern: 'models/gloom_lantern_hi.glb', warden: 'models/gloom_warden_hi.glb' };
 const TPL = {};
@@ -14,6 +15,8 @@ try { const q = new URLSearchParams(location.search).get('gloomglb'); const G = 
   if (q && G && G.models) for (const k of (q === 'all' ? Object.keys(FILES) : q.split(','))) if (FILES[k]) G.models[k] = true; } catch (e) { /* no location */ }
 // loading state per kind ('loading', 'ready', 'failed'); the checks read it as window.__gloomGlb
 export const glbState = {};
+// glbHooks.ready(kind, scene): main.js uploads the model's maps and builds its shader while it loads (LAG FIX Nov 19), not when the first one of that kind walks in
+export const glbHooks = { ready: null };
 try { window.__gloomGlb = glbState; } catch (e) { /* no window */ }
 const fxOff = () => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } };
 const on = (kind) => { const G = CONFIG.quality.high.gloom; return QUALITY === 'high' && !fxOff() && !!(G && G.models && G.models[kind]) && !!FILES[kind]; };
@@ -26,9 +29,13 @@ function load(kind) {
   fetch(url).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => { o.userData.keep = true; if (!o.isMesh) return; o.geometry.userData.shared = true; const m = o.material; m.userData.shared = true; m.userData.relief = true; m.userData.pbr = true;
       for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap']) if (m[k]) { m[k].userData.shared = true; m[k].anisotropy = 8; } });
-    TPL[kind] = sc; glbState[kind] = 'ready'; }, fail)).catch(fail);
+    TPL[kind] = sc; glbState[kind] = 'ready'; lodPrepare(sc, 'gloom', false); if (glbHooks.ready) try { glbHooks.ready(kind, sc); } catch (e) { /* warm-up only */ } }, fail)).catch(fail);
 }
-for (const k in FILES) if (on(k)) load(k);
+// LAG FIX Nov 19 (lag report finding 9): no model is fetched at page start any more. main.js asks for the kinds a run can meet when the run starts (its day on the street
+// comes first), and for the opening film's kinds on a first visit. The builder stands in for a kind that has not arrived, as before.
+export function gloomPreload(kinds) { for (const k of kinds || Object.keys(FILES)) if (on(k) && !glbState[k]) load(k); }
+// a page opened with ?gloomglb=<kinds> (samples and checks) loads those kinds at once, as every kind did before
+try { const q = new URLSearchParams(location.search).get('gloomglb'); if (q) gloomPreload(q === 'all' ? null : q.split(',')); } catch (e) { /* no location */ }
 
 // the loaded model for this kind, or null (not wanted, not here yet, or failed)
 export function glbModel(kind) { return on(kind) && glbState[kind] === 'ready' ? TPL[kind] : null; }
@@ -42,5 +49,7 @@ export function glbCopy(kind, tint) {
         s.fragmentShader = 'uniform vec3 uTint;\n' + s.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n#ifdef USE_METALNESSMAP\n\tdiffuseColor.rgb *= mix( vec3( 1.0 ), uTint, texture2D( metalnessMap, vMetalnessMapUv ).r );\n#endif'); };
       m.customProgramCacheKey = () => 'gloomGlbTint'; mats.set(m0, m); }
     o.material = mats.get(m0); });
+  // LAG FIX Nov 19: its meshes draw the reduced copy past CONFIG.lag.lod.kinds.gloom.near metres (src/lod.js)
+  lodCopy(sc, 'gloom');
   return sc;
 }

@@ -8,6 +8,7 @@ import { MODELS } from './modeldata.js';
 import { QUALITY } from './quality.js';
 import { hiMat, hiLights } from './marlahi.js';
 import { createStepper } from './people.js';
+import { cullSkinned, lodPrepare } from './lod.js';
 
 // `key` picks the model in src/modeldata.js: 'marla', or a villager ('bram', 'oko', 'pip'). Villagers have a neutral face only.
 export function createMarla(cfg, key = 'marla') {
@@ -28,7 +29,10 @@ export function createMarla(cfg, key = 'marla') {
     for (const s of ['l', 'r']) { const sg = s === 'l' ? 1 : -1; turn(bones['upperarm_' + s], Z, -sg * P.armDown); turn(bones['lowerarm_' + s], Z, -sg * P.elbow); turn(bones['lowerarm_' + s], X, -P.elbowFwd); }
     for (const k of ['thigh_l', 'thigh_r', 'calf_l', 'calf_r', 'upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r']) if (bones[k]) rest[k] = bones[k].quaternion.clone();
     { sc.updateMatrixWorld(true); const a = new THREE.Vector3(), b = new THREE.Vector3(); if (bones.thigh_l && bones.foot_l) { bones.thigh_l.getWorldPosition(a); bones.foot_l.getWorldPosition(b); legLen = Math.max(0.3, a.y - b.y); } }
-    scn = sc; root.add(sc); if (isHi) hiLights(root, cfg.marlaHi); hiModel = !!isHi; ready = true; if (onReady) onReady();
+    scn = sc; root.add(sc);
+    // LAG FIX Nov 19: culled again with a grown sphere (every tier), and on the desktop builds a reduced copy of the big meshes past CONFIG.lag.lod.kinds.people.near metres (src/lod.js)
+    sc.traverse((q) => { if (q.isMesh) cullSkinned(q); }); if (QUALITY === 'high') lodPrepare(sc, 'people', true);
+    if (isHi) hiLights(root, cfg.marlaHi); hiModel = !!isHi; ready = true; if (onReady) onReady();
   }, (e) => console.error(key + ' model failed to load', e));
   // a page opened straight from a folder (file://) cannot fetch the model file beside it: it then keeps the packed model (the single-file build carries the desktop model inside and is not affected)
   if (HI && (HI.startsWith('data:') || location.protocol !== 'file:')) fetch(HI).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, true)).catch(() => go(bin, false)); else go(bin, false);

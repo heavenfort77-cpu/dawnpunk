@@ -6,9 +6,13 @@
 // so it equals renderer.info.render.calls / .triangles summed over every renderer.render() of a frame, averaged over FRAMES frames (default 6) with game time held still.
 // "screen" = the draws into the visible picture only (framebuffer null). Bytes = everything the local server sent (index.html and the files beside it), as itch serves the zip.
 // Frame time is printed for reference only (software GPU on the runner: not a real frame rate).
+// REAL FRAME RATES (coordinator Nov 19): GPU=1 runs Chromium on the real GPU of a GitHub macOS runner (.github/workflows/perfgpu.yml; tools/gpu_task.sh starts it):
+// at each spot, after the counting, SETTLE seconds of frames are drawn (first-use hitches: shader builds, uploads; their worst frame is printed as 'first'), then
+// SECS seconds are timed: fps, average, 95th percentile and worst frame (ms) of steady play, with game time held still so the picture is the same throughout.
 // PASS / FAIL lines: the targets below, set from the measured numbers after the lag fixes (Nov 19); the low tier (phone) is printed but has no targets (phones are frozen).
 const { chromium } = require('playwright'); const http = require('http'); const fs = require('fs'); const path = require('path');
 const ARG = process.argv[2] || 'high', OUT = process.argv[3] || '', SEED = +(process.env.SEED || 777), FRAMES = +(process.env.FRAMES || 6), DIST = path.join(__dirname, '..', 'dist');
+const GPU = !!process.env.GPU, SECS = +(process.env.SECS || (GPU ? 8 : 0)), SETTLE = +(process.env.SETTLE || 6);
 const ONLY = process.env.SPOTS ? process.env.SPOTS.split(',') : ['hub', 'street', 'house', 'boss'];
 // targets on the high tier: draw calls per frame (all passes), triangles per frame (all passes), MB downloaded before the hub is ready
 const TARGET = { hub: { calls: 500, tris: 1.0e6 }, street: { calls: 500, tris: 1.0e6 }, house: { calls: 500, tris: 1.0e6 }, boss: { calls: 500, tris: 1.0e6 }, startMB: 20 };
@@ -51,11 +55,12 @@ const BREAKDOWN = (spot) => {
 };
 (async () => {
   await new Promise((ok) => srv.listen(0, '127.0.0.1', ok)); const URL0 = 'http://127.0.0.1:' + srv.address().port + '/index.html';
-  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const out = [], rows = [];
+  const b = await chromium.launch({ args: GPU ? ['--ignore-gpu-blocklist', '--enable-gpu', '--enable-webgl', '--use-angle=metal', '--disable-gpu-vsync', '--disable-frame-rate-limit'] : ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const out = [], rows = [];
   { const files = ['index.html', 'index_single.html', 'solardg-itch.zip']; for (const d of ['models', 'tex', 'music', 'voice']) { const p = path.join(DIST, d); if (fs.existsSync(p)) files.push(d + '/'); }
     const size = (f) => { const p = path.join(DIST, f); if (!fs.existsSync(p)) return 0; if (!fs.statSync(p).isDirectory()) return fs.statSync(p).size; return fs.readdirSync(p).reduce((a, x) => a + size(path.join(f, x)), 0); };
     info('dist sizes MB: ' + files.map((f) => f + ' ' + MB(size(f))).join(', ')); }
-  for (const tier of ARG === 'both' ? ['high', 'low'] : [ARG]) {
+  if (GPU) { const pg = await b.newPage(); console.log('RENDERER ' + await pg.evaluate(() => { const c = document.createElement('canvas'), gl = c.getContext('webgl2'); if (!gl) return 'no WebGL2'; const d = gl.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; })); await pg.close(); }
+  for (const tier of ARG === 'both' ? ['high', 'low'] : ARG === 'all' ? ['medium', 'high', 'low'] : ARG.split(',')) {
     served = []; T0 = Date.now(); const errs = [];
     const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); await ctx.addInitScript(INIT, { seed: SEED });
     const p = await ctx.newPage(); p.setDefaultTimeout(900000); p.on('pageerror', (e) => errs.push(String(e).slice(0, 200))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 200)); });
@@ -70,6 +75,10 @@ const BREAKDOWN = (spot) => {
       const r = { tier, spot, calls: Math.round((c1.calls - c0.calls) / FRAMES), tris: Math.round((c1.tris - c0.tris) / FRAMES), sCalls: Math.round((c1.sCalls - c0.sCalls) / FRAMES), sTris: Math.round((c1.sTris - c0.sTris) / FRAMES), ms: Math.round((c1.t - c0.t) / FRAMES), mb: MB(sumB()) };
       r.cam = await p.evaluate(() => { const c = window.__game.cam; return [c.position.x, c.position.y, c.position.z].map((v) => v.toFixed(1)).join(',') + ' yaw ' + window.__game.yaw.toFixed(2); });
       if (process.env.BREAK) console.log(await p.evaluate(BREAKDOWN, spot));
+      if (SECS) { const f = await p.evaluate(([settle, secs]) => new Promise((res) => { const ts = []; let t0 = 0, first = 0, last = 0; const step = (now) => { if (!t0) t0 = now; if (now - t0 < settle * 1000) { if (last) first = Math.max(first, now - last); last = now; requestAnimationFrame(step); return; } ts.push(now); if (now - t0 < (settle + secs) * 1000) requestAnimationFrame(step); else {
+          const d = ts.slice(1).map((t, i) => t - ts[i]).sort((a, b) => a - b), avg = d.reduce((a, b) => a + b, 0) / Math.max(1, d.length); res({ n: d.length, fps: 1000 / avg, avg, p95: d[Math.floor(d.length * 0.95)] || 0, worst: d[d.length - 1] || 0, first }); } }; requestAnimationFrame(step); }), [SETTLE, SECS]);
+        r.fps = +f.fps.toFixed(1); r.avgMs = +f.avg.toFixed(1); r.p95 = +f.p95.toFixed(1); r.worst = +f.worst.toFixed(1); r.first = Math.round(f.first);
+        console.log('FPS ' + tier + ' ' + spot + ': ' + r.fps + ' fps, avg ' + r.avgMs + ' ms, p95 ' + r.p95 + ' ms, worst ' + r.worst + ' ms (' + f.n + ' frames), worst first-use frame ' + r.first + ' ms'); }
       rows.push(r); console.log('PERF ' + tier + ' ' + spot + ': calls ' + r.calls + ' (screen ' + r.sCalls + '), triangles ' + (r.tris / 1e6).toFixed(2) + ' M (screen ' + (r.sTris / 1e6).toFixed(2) + ' M), frame ' + r.ms + ' ms (software GPU), downloaded ' + r.mb + ' MB, cam ' + r.cam);
       if (OUT) { const f = path.join(OUT, tier + '_' + spot + '.png'); await p.screenshot({ path: f, timeout: 900000 }); info('wrote ' + f); }
       await p.evaluate(() => { window.__dtMax = 0.3; });

@@ -37,7 +37,7 @@ export function createSky(cfg) {
   const mat = new THREE.ShaderMaterial({ uniforms: u, side: THREE.BackSide, depthWrite: false, fog: false, fragmentShader: FRAG,
     vertexShader: 'varying vec3 vD; void main() { vD = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }' });
   mat.userData.shared = true;
-  const mesh = new THREE.Mesh(new THREE.SphereGeometry(40, 24, 16), mat); mesh.frustumCulled = false; mesh.renderOrder = 900; mesh.userData.keep = true;
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(40, 24, 16), mat); mesh.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e5); mesh.renderOrder = 900; mesh.userData.keep = true;
   const a = new THREE.Color(), b = new THREE.Color(), three = (arr, k, out) => (k < 0.55 ? out.set(arr[0]).lerp(a.set(arr[1]), k / 0.55) : out.set(arr[1]).lerp(a.set(arr[2]), (k - 0.55) / 0.45));
   let slowT = 0, slowN = 0, strain = 0;
   // strain: how many times the frame was still too slow after the clouds were at their cheapest; the game sheds other costs by it (the machines' screen lights first)

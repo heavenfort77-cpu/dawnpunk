@@ -1,19 +1,24 @@
-// Graphics tier (2026-11-15; user: "it is reasonable for mobile to be less detail but on desktop and laptop details and texture cannot skim").
-// Picked once at start: ?quality=high|low in the address wins, then the choice saved from the Graphics link (localStorage 'dawnpunk.quality'),
-// then the primary pointer: coarse (a phone or tablet) = low, fine (mouse or trackpad, touch laptops included) = high. Every number is in CONFIG.quality.
+// Graphics tier (2026-11-15, tiers reworked Nov 19 below; user: "it is reasonable for mobile to be less detail but on desktop and laptop details and texture cannot skim").
+// Picked once at start (see TIERS below). Every number is in CONFIG.quality.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { TEX } from './texdata.js';
 import { TEXHI } from './texhi.js';
 
+// TIERS (owner's performance rules, Nov 19): low | medium | high. MEDIUM is the default on every device (desktop included), never high by default; the tier is chosen
+// by measured frame time, not by mouse or touch: src/perfstep.js steps the look down while you play and, if frames are still slow after its last step, saves low for the
+// next start. ?quality=low|medium|high in the address wins (the scripted checks pass their tier), then the choice saved from the Graphics button.
+// medium and high both use the desktop builds and models (QUALITY 'high' below, the switch every module reads); medium is CONFIG.quality.medium laid over CONFIG.quality.high.
 export const QPICK = (() => {
-  try { const u = new URLSearchParams(location.search).get('quality'); if (u === 'high' || u === 'low') return { tier: u, by: 'address' }; } catch (e) { /* no address */ }
-  try { const s = localStorage.getItem('dawnpunk.quality'); if (s === 'high' || s === 'low') return { tier: s, by: 'saved' }; } catch (e) { /* storage blocked */ }
-  let coarse = true;
-  try { coarse = matchMedia('(pointer: coarse)').matches; } catch (e) { /* unknown: stay on the phone settings */ }
-  return { tier: coarse ? 'low' : 'high', by: 'pointer' };
+  const ok = (t) => t === 'high' || t === 'low' || t === 'medium';
+  try { const u = new URLSearchParams(location.search).get('quality'); if (ok(u)) return { tier: u, by: 'address' }; } catch (e) { /* no address */ }
+  try { const s = localStorage.getItem('dawnpunk.quality'); if (ok(s)) return { tier: s, by: 'saved' }; } catch (e) { /* storage blocked */ }
+  return { tier: 'medium', by: 'default' };
 })();
-export const QUALITY = QPICK.tier;
+export const TIER = QPICK.tier;
+export const QUALITY = TIER === 'low' ? 'low' : 'high';
+// medium: its settings laid over the high block in place (every module that reads CONFIG.quality.high sees them); arrays and plain values replace, objects merge
+if (TIER === 'medium' && CONFIG.quality.medium) { const lay = (a, b) => { for (const k in b) { const v = b[k]; if (v && typeof v === 'object' && !Array.isArray(v) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])) lay(a[k], v); else a[k] = v; } }; lay(CONFIG.quality.high, CONFIG.quality.medium); }
 export const Q = CONFIG.quality[QUALITY];
 export function saveQuality(tier) { try { localStorage.setItem('dawnpunk.quality', tier); return true; } catch (e) { return false; } }
 

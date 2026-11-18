@@ -8,7 +8,8 @@ import { houseHi } from './househi.js';
 import { streetHi, tuftGeo, tuftMat } from './streethi.js';
 import * as THREE from 'three';
 import { TEX } from './texdata.js';
-import { Q, texLoad, aniso, seg } from './quality.js';
+import { Q, QUALITY, texLoad, aniso, seg } from './quality.js';
+import { CONFIG } from './config.js';
 // desktop and laptop: cars are built by the master car builder (src/carhi.js); phones, and ?fx=0, keep the cars below
 const HICAR = !!Q.car && (() => { try { return new URLSearchParams(location.search).get('fx') !== '0'; } catch (e) { return true; } })();
 // desktop and laptop: the houses' frames, sashes, doors, roof, chimney, gutters, trims and ivy come from the master house builder (src/househi.js), with the approved desolate look; phones, and ?fx=0, keep the parts below
@@ -364,17 +365,20 @@ export function buildWorld(cfg, run) {
   // ---------------------------------------------------------------- batching: everything static is merged per material (about 1,100 draw calls become a few dozen)
   {
     g.updateMatrixWorld(true); const keep = new Set(marks.map((q) => q.mark)); keep.add(tufts); const buckets = new Map(), dead = [], v = new THREE.Vector3(), nm = new THREE.Matrix3(), WHITE = new THREE.Color(1, 1, 1);
+    const CELL = QUALITY === 'high' ? CONFIG.lag.mergeCell : 0;
     const tintOf = (o, m) => { for (let q = o; q; q = q.parent) { if (q.userData.tint) return q.userData.tint; if (q.userData.tintM && q.userData.tintM[m.uuid]) return q.userData.tintM[m.uuid]; } return WHITE; };
     g.traverse((o) => {
       // (desktop scenery, src/scenehi.js: its leaf masses, hills and roofs carry their own vertex colours and cells, so they are left out of the merge)
       if (!o.isMesh || o.isInstancedMesh || keep.has(o) || o.userData.scenery) return; const geo = o.geometry, P = geo.attributes.position, N = geo.attributes.normal, U = geo.attributes.uv, idx = geo.index, mats = Array.isArray(o.material) ? o.material : [o.material];
       const total = idx ? idx.count : P.count, groups = geo.groups.length && mats.length > 1 ? geo.groups : [{ start: 0, count: total, materialIndex: 0 }]; nm.getNormalMatrix(o.matrixWorld);
-      for (const gr of groups) { const m = mats[gr.materialIndex] || mats[0]; let b = buckets.get(m); if (!b) { b = { p: [], n: [], u: [], c: [] }; buckets.set(m, b); } const tc = tintOf(o, m);
+      // LAG FIX Nov 19 (desktop): one merged mesh per material AND per cell of CELL m (by where each piece stands), so the parts behind you or out of view are culled
+      const ck = CELL ? Math.floor(o.matrixWorld.elements[12] / CELL) + ',' + Math.floor(o.matrixWorld.elements[14] / CELL) : '';
+      for (const gr of groups) { const m = mats[gr.materialIndex] || mats[0], bk = CELL ? m.uuid + ck : m; let b = buckets.get(bk); if (!b) { b = { p: [], n: [], u: [], c: [], m }; buckets.set(bk, b); } const tc = tintOf(o, m);
         for (let k = gr.start; k < Math.min(total, gr.start + gr.count); k++) { const i = idx ? idx.getX(k) : k; v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); b.p.push(v.x, v.y, v.z); if (N) { v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); b.n.push(v.x, v.y, v.z); } else b.n.push(0, 1, 0); if (U) b.u.push(U.getX(i), U.getY(i)); else b.u.push(0, 0); b.c.push(tc.r, tc.g, tc.b); } }
       dead.push(o);
     });
     for (const o of dead) { o.geometry.dispose(); o.parent.remove(o); }
-    for (const [m, b] of buckets) { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.u, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(b.c, 3)); m.vertexColors = true; m.needsUpdate = true; const mm = new THREE.Mesh(geo, m); mm.frustumCulled = false; mm.receiveShadow = true; mm.castShadow = !m.transparent; g.add(mm); }
+    for (const b of buckets.values()) { const m = b.m, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.u, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(b.c, 3)); m.vertexColors = true; m.needsUpdate = true; const mm = new THREE.Mesh(geo, m); mm.receiveShadow = true; mm.castShadow = !m.transparent; g.add(mm); }
   }
 
   return {

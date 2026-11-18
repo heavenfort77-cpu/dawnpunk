@@ -1,0 +1,73 @@
+# Lag fix (Nov 19): REAL frame rates on a real GPU. Runs tools/perfcheck.cjs with GPU=1 on a macOS runner (Apple GPU through the VM; Linux runners are software only)
+# at the four spots (hub, street, night house with Gloom, boss night). Started by tools/gpu_task.sh (or by hand). The perfcheck script always comes from main, so a
+# baseline commit is measured the same way. The log prints RENDERER, PERF (draw calls, triangles), FPS (steady frame rate after a settle) and PASS/FAIL lines.
+name: perfgpu
+run-name: "perfgpu ${{ inputs.tiers }} ${{ inputs.spots }} @ ${{ inputs.ref }} ${{ inputs.tag }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: "Runner image"
+        type: string
+        default: macos-15
+      ref:
+        description: "Commit or branch to build"
+        type: string
+        default: main
+      tiers:
+        description: "Tiers, comma list (medium, high, low)"
+        type: string
+        default: medium
+      spots:
+        description: "Spots, comma list (hub, street, house, boss)"
+        type: string
+        default: hub,street,house,boss
+      secs:
+        description: "Seconds of steady frames timed per spot"
+        type: string
+        default: "8"
+      settle:
+        description: "Seconds drawn first (first-use hitches) per spot"
+        type: string
+        default: "6"
+      brk:
+        description: "1 = also print what the draws and triangles are made of (perfcheck BREAK)"
+        type: string
+        default: ""
+      tag:
+        description: "Free label shown in the run name"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Use main's perfcheck script
+        shell: bash
+        run: |
+          git fetch --depth 1 origin main
+          git show FETCH_HEAD:tools/perfcheck.cjs > tools/perfcheck.cjs
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: node build.mjs
+      - run: npm install --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install chromium
+      - name: Measure
+        shell: bash
+        env:
+          GPU: "1"
+          SPOTS: ${{ inputs.spots }}
+          SECS: ${{ inputs.secs }}
+          SETTLE: ${{ inputs.settle }}
+          BREAK: ${{ inputs.brk }}
+        run: node tools/perfcheck.cjs "${{ inputs.tiers }}" 2>&1 | grep -E "RENDERER|PERF|FPS|PASS|FAIL|BREAK|^  |INFO (dist|.*downloaded|.*page errors|Gloom present|boss view)" || true
