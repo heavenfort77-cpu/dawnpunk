@@ -1,0 +1,6 @@
+$ mkdir -p hm && node tools/humanmotioncheck.cjs high "$PWD/dist/index_single.html" --frames hm --json hm/high.json   (limit 150 min)
+[3 s, 60 fps] base entered; waiting for the people
+[59 s, 60 fps] base done (81 s of game time)
+[333 s, 60 fps] street done, 221 ms per frame
+[404 s, 60 fps] night done, 56 ms per frame
+[663 s, 60 fps] film done (14.0 s, 287 ms per frame)
