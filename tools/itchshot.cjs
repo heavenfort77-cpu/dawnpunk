@@ -93,7 +93,7 @@ const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s 
     const p = await open(); await midSave(p, { day: 6, nights: 4, food: 23, ess: 9, ringOpen: 3, scout: 1, cats: [0, 2, 3] }); await waitGame(p, 9, 1);
     const views = process.env.VIEWS ? JSON.parse(process.env.VIEWS) : [[10.5, -8, 11, -15], [11.5, -8.5, 10.5, -15.5], [9, -8.5, 11.5, -15], [13.5, -8, 10, -15.5], [8, -9.5, 12, -15], [12, -7, 10, -16], [16, -9, 9, -16], [9.5, -10, 12, -15.5], [7, -8, 11.5, -16], [6.5, -6.5, 11.5, -15.5]];
     await freeze(p);
-    for (let k = 0; k < views.length; k++) { const [x, z, tx, tz] = views[k]; await p.evaluate(([x, z, tx, tz]) => { const g = window.__game; g.setBase(x, z); g.setYaw(Math.atan2(-(tx - x), -(tz - z))); g.setPitch(0.0); }, [x, z, tx, tz]); await frames(p, 2); await shot(p, 'base_' + k, CLEAN.includes('base_' + k)); }
+    for (let k = 0; k < views.length; k++) { const [x, z, tx, tz] = views[k]; await p.evaluate(([x, z, tx, tz, pt]) => { const g = window.__game; g.setBase(x, z); g.setYaw(Math.atan2(-(tx - x), -(tz - z))); g.setPitch(pt || 0); }, [x, z, tx, tz, +(process.env.BPITCH || 0)]); await frames(p, 2); await shot(p, 'base_' + k, CLEAN.includes('base_' + k)); }
   }
 
   if (SHOT === 'street') {
