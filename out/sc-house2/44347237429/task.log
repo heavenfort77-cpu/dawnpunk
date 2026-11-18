@@ -1,0 +1,34 @@
+$ mkdir -p shots && SCALE=0.5 node tools/itchshot.cjs house shots   (limit 90 min)
+INFO page up 8 s
+INFO base loaded 25 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 66 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":2,"cat":2,"houses":[{"i":0,"n":18,"L":2,"door":["42.7","-5.6"],"row":-1},{"i":1,"n":16,"L":2,"door":["-4.7","-6.0"],"row":-1},{"i":2,"n":14,"L":2,"door":["-44.0","6.5"],"row":1},{"i":3,"n":13,"L":2,"door":["51.9","6.7"],"row":1},{"i":4,"n":12,"L":2,"door":["-51.2","-6.9"],"row":-1},{"i":5,"n":11,"L":2,"door":["3.1","7.1"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO house 5
+INFO night: first Gloom {"t":4.399999999999992,"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0,"type":"window","floor":0},"H":7.275,"n":11}
+INFO second opening {"x":-7.275,"z":3.1178571428571384,"d":8.31428571428571,"type":"window","i":9}
+INFO placed ok,ok,ok,ok
+INFO moment cross {"ok":false,"t":48.699999999999356} [["lantern","approach",2,13,1.6],["hauler","inside",2,3.9,-0.6],["stilt","inside",6,5.8,-0.5],["lantern","approach",8,2.4,-13],["stilt","cross",8,2,-7.3],["walker","cross",1,2.2,8.7]]
+INFO wrote shots/house_00.png (347 s) cam -4.08,1.60,-6.10 yaw 1.921 | HUD marla="Floor 2, upstairs! Move, Potts!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 8h 00m" hs=""
+CATVIEW house_00: none
+INFO wrote shots/house_01.png (418 s) cam -4.08,1.60,-4.30 yaw 1.220 | HUD marla="Floor 2, upstairs! Move, Potts!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 8h 00m" hs=""
+CATVIEW house_01: none
+INFO wrote shots/house_02.png (501 s) cam -3.08,1.60,-6.70 yaw 2.005 | HUD marla="Floor 2, upstairs! Move, Potts!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 8h 00m" hs=""
+CATVIEW house_02: none
+INFO wrote shots/house_03.png (569 s) cam -3.08,1.60,-3.70 yaw 1.136 | HUD marla="Floor 2, upstairs! Move, Potts!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 8h 00m" hs=""
+CATVIEW house_03: none
+INFO wrote shots/house_04.png (643 s) cam -2.08,1.60,-4.60 yaw 1.422 | HUD marla="Floor 2, upstairs! Move, Potts!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 8h 00m" hs=""
+CATVIEW house_04: none
+INFO moment in {"ok":false,"t":90.79999999999711} [["lantern","approach",2,13,1.6],["lantern","approach",8,2.4,-13],["lantern","approach",3,-0.6,13],["walker","inside",1,-1.7,-3.7],["warden","inside",10,-4.4,-1.9],["lantern","approach",10,-13.1,0]]
+INFO wrote shots/house_10.png (785 s) cam -4.08,1.60,-6.10 yaw 1.921 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 4h 40m" hs=""
+CATVIEW house_10: none
+INFO wrote shots/house_11.png (851 s) cam -4.08,1.60,-4.30 yaw 1.220 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 4h 40m" hs=""
+CATVIEW house_11: none
+INFO wrote shots/house_12.png (929 s) cam -3.08,1.60,-6.70 yaw 2.005 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 4h 40m" hs=""
+CATVIEW house_12: none
+INFO wrote shots/house_13.png (992 s) cam -3.08,1.60,-3.70 yaw 1.136 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 4h 40m" hs=""
+CATVIEW house_13: none
+INFO wrote shots/house_14.png (1060 s) cam -2.08,1.60,-4.60 yaw 1.422 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 4h 40m" hs=""
+CATVIEW house_14: none
+NO PAGE ERRORS
+done 1068 s
+exit code 0
