@@ -173,7 +173,7 @@ export const IMPACT_SFX = {
     // lengths (share of the body hit)
     length: 1.5,
     // loudness of the body layers (share of the body hit)
-    gain: 1.25,
+    gain: 1,
     // more droplets (share of the body hit's count)
     spray: 1.7,
     // steam: delay after the hit (s)
