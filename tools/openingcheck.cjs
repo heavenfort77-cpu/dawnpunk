@@ -29,7 +29,9 @@ const path = require('path');
     console.log('INFO t=' + t + ' ' + JSON.stringify(info));
   }
   // waits for the base, not a fixed time: the "Your job" card closes by itself CONFIG.lore.jobCardSecs (15 s) after it opens, and a fixed 15 s wait on high ran past it
-  await p.evaluate(() => { window.__dtMax = 0.5; window.__game.introAt(window.__game.cfg.opening.parts[4] - 0.2); });
+  // the card's own 15 s close timer runs in real seconds, and one desktop-tier frame on the software renderer can take several, so the check gives the card 10 minutes here
+  // (it is about what the card shows and what closes it; the timer itself is CONFIG.lore.jobCardSecs) and puts the 15 s back after
+  await p.evaluate(() => { window.__jobSecs = window.__game.cfg.lore.jobCardSecs; window.__game.cfg.lore.jobCardSecs = 600; window.__dtMax = 0.5; window.__game.introAt(window.__game.cfg.opening.parts[4] - 0.2); });
   await p.waitForFunction(() => window.__game.state === 'base', null, { timeout: 240000 }).catch(() => {}); await p.waitForTimeout(1500);
   const end = await p.evaluate(() => { const g = window.__game, s = g.save, sp = g.B.scoutPos(s); return { state: g.state, hint: sp.hint, cine: document.getElementById('cine').style.display, hud: document.getElementById('hud').style.display, msg: document.getElementById('msg').textContent, day: s.day, nights: s.nights, seen: s.seenIntro, pos: g.basePos(), filter: document.getElementById('c').style.filter }; });
   ok('played to the end it stands you in the base with Marla at your door', end.state === 'base' && end.hint === 'at your door' && end.cine === 'none' && end.hud === 'block' && !end.filter, JSON.stringify(end));
@@ -44,6 +46,7 @@ const path = require('path');
   await p.keyboard.down('KeyW'); await p.waitForTimeout(700); await p.keyboard.up('KeyW'); await p.mouse.move(vw * 0.6, vh * 0.5); await p.mouse.move(vw * 0.7, vh * 0.45); await p.waitForTimeout(500);
   const stay = await p.evaluate(() => { const c = document.getElementById('jobCard'); if (!c) return { card: false }; const r = c.getBoundingClientRect(), cx = innerWidth / 2, cy = innerHeight / 2; return { card: true, clear: !(cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) }; });
   ok('walking and looking leave the card up, and it does not cover the crosshair', stay.card && stay.clear, JSON.stringify(stay));
+  await p.evaluate(() => { window.__game.cfg.lore.jobCardSecs = window.__jobSecs; });
   await p.keyboard.press('Enter'); await p.waitForTimeout(1500);
   const gone = await p.evaluate(() => ({ card: !!document.getElementById('jobCard'), seen: window.__game.save.jobCard, stored: JSON.parse(localStorage.getItem('solardg.save') || '{}').jobCard }));
   ok('Enter closes the card, and it is saved as seen', !gone.card && gone.seen === true && gone.stored === true, JSON.stringify(gone));
