@@ -1,0 +1,39 @@
+$ mkdir -p perfshots && node tools/perfcheck.cjs high perfshots 2>&1 | tee perf.txt   (limit 120 min)
+INFO dist sizes MB: index.html 12.5, index_single.html 84.1, solardg-itch.zip 52.5, models/ 41.1, tex/ 7.2, music/ 3.1, voice/ 2.3
+INFO high: page up 20 s, 53.3 MB so far
+INFO hub loaded 86 s 55.9 MB so far
+PERF high hub: calls 2106 (screen 1169), triangles 4.21 M (screen 2.82 M), frame 12973 ms (software GPU), downloaded 55.9 MB, cam 3.0,1.6,7.0 yaw 0.00
+INFO wrote perfshots/high_hub.png
+INFO high downloaded before the hub was ready: 55.9 MB (81 requests)
+INFO base loaded 511 s 55.9 MB so far
+INFO run loaded 605 s 55.9 MB so far
+PERF high street: calls 719 (screen 434), triangles 4.75 M (screen 2.85 M), frame 12736 ms (software GPU), downloaded 55.9 MB, cam 0.0,1.6,0.0 yaw 0.00
+INFO wrote perfshots/high_street.png
+INFO base loaded 945 s 55.9 MB so far
+INFO run loaded 1033 s 55.9 MB so far
+INFO night loaded 1220 s 56 MB so far
+INFO night: first Gloom {"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0}}
+INFO night gloom loaded 1344 s 56 MB so far
+INFO Gloom present: walker,ticks,walker,walker,walker,ticks
+PERF high house: calls 973 (screen 634), triangles 6.05 M (screen 3.52 M), frame 15083 ms (software GPU), downloaded 56 MB, cam -1.9,1.6,-5.2 yaw 1.57
+INFO wrote perfshots/high_house.png
+INFO base loaded 1653 s 56 MB so far
+INFO run loaded 1814 s 63.3 MB so far
+INFO boss view {"x":-3.543984156606088,"z":7.508194474288627,"dd":17.995876745199016} {"model":"ready","boss":true}
+PERF high boss: calls 939 (screen 590), triangles 5.54 M (screen 3.25 M), frame 14366 ms (software GPU), downloaded 63.5 MB, cam -3.5,1.6,7.5 yaw 2.16
+INFO wrote perfshots/high_boss.png
+INFO high total downloaded 63.5 MB in 97 requests; models fetched: gloom_walker_hi.glb @0s, gloom_lurcher_hi.glb @0s, gloom_ticks_hi.glb @0s, gloom_hauler_hi.glb @0s, gloom_stilt_hi.glb @0s, gloom_lantern_hi.glb @0s, gloom_warden_hi.glb @8s, marla_hi.glb @8s, bram_scan_hi.glb @22s, oko_hi.glb @22s, pip_hi.glb @22s, boss_beckoner_hi.glb @1664s
+INFO no page errors (high)
+PERFJSON [{"tier":"high","spot":"hub","calls":2106,"tris":4205983,"sCalls":1169,"sTris":2823288,"ms":12973,"mb":55.9,"cam":"3.0,1.6,7.0 yaw 0.00","startMB":55.9},{"tier":"high","spot":"street","calls":719,"tris":4748255,"sCalls":434,"sTris":2848354,"ms":12736,"mb":55.9,"cam":"0.0,1.6,0.0 yaw 0.00"},{"tier":"high","spot":"house","calls":973,"tris":6046691,"sCalls":634,"sTris":3519940,"ms":15083,"mb":56,"cam":"-1.9,1.6,-5.2 yaw 1.57"},{"tier":"high","spot":"boss","calls":939,"tris":5542138,"sCalls":590,"sTris":3254019,"ms":14366,"mb":63.5,"cam":"-3.5,1.6,7.5 yaw 2.16"}]
+FAIL high: downloaded before the hub is ready 55.9 MB (target < 20)
+PASS high: no page errors
+FAIL high hub: 2106 draw calls per frame (target < 500)
+FAIL high hub: 4.21 M triangles per frame (target < 1.00 M)
+FAIL high street: 719 draw calls per frame (target < 500)
+FAIL high street: 4.75 M triangles per frame (target < 1.00 M)
+FAIL high house: 973 draw calls per frame (target < 500)
+FAIL high house: 6.05 M triangles per frame (target < 1.00 M)
+FAIL high boss: 939 draw calls per frame (target < 500)
+FAIL high boss: 5.54 M triangles per frame (target < 1.00 M)
+PERF CHECK FAILED (9)
+exit code 0
