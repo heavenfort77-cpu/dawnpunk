@@ -47,7 +47,7 @@ const path = require('path');
     await say(p, GREEN); await gwait(p, 1500); const o3 = await mv(p); add('desktop: with Voice off no clip plays (count ' + of.n + ' -> ' + o3.n + ')', o3.n === of.n);
     await p.evaluate(() => document.getElementById('bVoice').click()); await say(p, BAR); const o4 = await waitMv(p, (v) => v.last === 'day_sun_bar' && v.n > o3.n, 4000);
     add('desktop: Voice on again plays the next line (' + o4.last + ', saved ' + (await p.evaluate(() => localStorage.getItem('solardg.voice'))) + ')', o4.last === 'day_sun_bar' && o4.n > o3.n && o4.on);
-    await night(p, 0); const d1 = await waitMv(p, (v) => /^drill_/.test(v.last), 30000);
+    await night(p, 0); const d1 = await waitMv(p, (v) => /^drill_/.test(v.last), 30000); console.log('  dbg drill ' + JSON.stringify(await p.evaluate(() => [window.__gt, document.getElementById('marla').textContent, window.__game.drillInfo()])));
     add('desktop night 1: the drill order plays the DESKTOP clip (' + d1.last + ': "' + d1.lastText + '")', d1.last === 'drill_shoot_desk' && d1.lastText === "One machine. Shoot it, Potts. Left click.");
     await p.evaluate(() => window.__game.enterBase()); await gwait(p, 1500); const e0 = await mv(p); await say(p, HEAVY); await gwait(p, 2500); const e1 = await mv(p);
     add('desktop: back in the base the clip is stopped and no line plays (count ' + e0.n + ' -> ' + e1.n + ', playing ' + e1.playing + ')', e1.n === e0.n && !e1.playing && !e0.playing);

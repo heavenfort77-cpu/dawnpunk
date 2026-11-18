@@ -997,7 +997,7 @@ let drill = null, drillSim = null, drillPh = null;
 function drillStore() { try { return JSON.parse((storage && storage.getItem(CONFIG.drill.store)) || '{}') || {}; } catch (e) { return {}; } }
 function drillKeep(o) { try { storage && storage.setItem(CONFIG.drill.store, JSON.stringify(o)); } catch (e) { /* not saved */ } }
 function drillBegin() { const D = CONFIG.drill; drill = null; if (!D.on || !sim || sim.phase !== 'night' || !fromBase || !save || (save.nights || 0) > 0 || sim.boss) return; const st = drillStore(); if (st.skip) return; const todo = D.steps.filter((q) => !(st.done || []).includes(q.id)); if (todo.length) drill = { todo, i: -1, since: 0, again: false, held: null, t0: 0 }; }
-function drillStep() { const D = CONFIG.drill, q = drill.todo[drill.i], P = sim.player; drill.since = performance.now(); drill.again = false;
+function drillStep() { const D = CONFIG.drill, q = drill.todo[drill.i], P = sim.player; drill.since = performance.now(); drill.gs = 0; drill.again = false;
   if (q.id === 'eat') { if (P.hp > CONFIG.player.hp * D.eatHp) P.hp = CONFIG.player.hp * D.eatHp; if (sim.food <= 0) sim.food = 1; }
   if (q.id === 'charge') P.energy = Math.max(P.energy, CONFIG.cannon.cost * CONFIG.cannon.charge.cost + 1); if (q.id === 'place') P.energy = Math.max(P.energy, CONFIG.devices[slotKinds()[selSlot]].cost + 1); // the picked device (the cheapest, from the drill's start) is paid for, so the step cannot dead-end
   drillSay(FINE ? q.desk : q.phone); }
@@ -1009,7 +1009,8 @@ function drillTick(dt) { if (drillSim !== sim || drillPh !== (sim && sim.phase))
   // one machine at a time, of the step's kind, through an opening you can see (drillOpening: in view, a few metres out, so it walks in in front of you)
   if (!sim.gloom.length && sim.spawned >= sim.spawns.length) { const at = drillOpening(); sim.spawns.push({ t: sim.t, bp: at.bp, hpv: 1, from: { x: at.x, z: at.z } }); drill.kind = q.kind; drill.from = at; }
   for (const g of sim.gloom) if (!g.drillKind && drill.kind) { g.drillKind = true; g.kind = drill.kind; }
-  if (!drill.again && performance.now() - drill.since > D.idle * 1000) { drill.again = true; drillSay(q.again); } } // idle counts real seconds (game time runs slow on a slow machine)
+  // the repeat also waits D.idleGame seconds of game time, so the order is on screen (and spoken) for a few frames even where one frame takes longer than D.idle
+  drill.gs += dt; if (!drill.again && performance.now() - drill.since > D.idle * 1000 && drill.gs >= D.idleGame) { drill.again = true; drillSay(q.again); } } // idle counts real seconds (game time runs slow on a slow machine)
 // the step's action happened: next step, or the end of the drill
 function drillDid(id) { if (!drill || !drill.held) return false; const q = drill.todo[drill.i]; if (!q || q.id !== id) return false; const st = drillStore(); st.done = (st.done || []).concat(id); drillKeep(st); drill.i++; if (drill.i >= drill.todo.length) drillEnd(false); else drillStep(); return true; }
 function drillEnd(skip) { if (!drill) return; if (skip) { const st = drillStore(); st.skip = true; drillKeep(st); } if (sim && drill.held) { sim.spawns.push(...drill.held); sim.spawns.sort((a, b) => a.t - b.t); } drill = null; H2.say('marla', skip ? CONFIG.drill.skipped : CONFIG.drill.done, CONFIG.ui.centre.marla, 4); }

@@ -912,6 +912,8 @@ export const CONFIG = {
     startAt: 2,
     // seconds without the step's action before Marla repeats it once, shorter
     idle: 20,
+    // and at least this many seconds of game time: a slow machine whose frames take longer than idle (a new machine's first draw) still shows the full order for a few frames before the repeat
+    idleGame: 3,
     // seconds a Marla drill line stays up; 0 = until the step changes (a slow machine took longer than 30 s to show it)
     lineSecs: 0,
     // the key that skips the rest of the drill (desktop); phones get a Skip button
