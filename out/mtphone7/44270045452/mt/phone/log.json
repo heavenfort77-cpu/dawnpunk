@@ -1,0 +1,1307 @@
+{
+ "mode": "phone",
+ "page": "/home/runner/work/dawnpunk/dawnpunk/dist/index.html?quality=low&film=1",
+ "fps": [
+  1947,
+  867.1365,
+  456.03279999999995
+ ],
+ "errs": [],
+ "log": [
+  {
+   "gt": 2.4,
+   "wt": 2.7,
+   "st": "start",
+   "k": "SNAP",
+   "t": "start_screen {\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"menu\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[]}"
+  },
+  {
+   "gt": 3.3,
+   "wt": 7.7,
+   "st": "start",
+   "k": "ACT",
+   "t": "tapped #enter (the begin button)"
+  },
+  {
+   "gt": 4.3,
+   "wt": 9.7,
+   "st": "start",
+   "k": "cineCap",
+   "t": "The night the grid failed, the machines came looking for power."
+  },
+  {
+   "gt": 4.3,
+   "wt": 9.7,
+   "st": "start",
+   "k": "QUIET",
+   "t": "3.3 s with no guiding line on screen (from 1.0)"
+  },
+  {
+   "gt": 17,
+   "wt": 28.9,
+   "st": "film",
+   "k": "SNAP",
+   "t": "film_1 {\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"intro\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":120},\"buttons\":[]}"
+  },
+  {
+   "gt": 23.8,
+   "wt": 39.6,
+   "st": "film",
+   "k": "cineCap",
+   "t": "They found us."
+  },
+  {
+   "gt": 23.8,
+   "wt": 39.6,
+   "st": "film",
+   "k": "QUIET",
+   "t": "13.5 s with no guiding line on screen (from 10.3)"
+  },
+  {
+   "gt": 35.5,
+   "wt": 66.7,
+   "st": "film",
+   "k": "cineCap",
+   "t": "We left the grid to them, and grew our own light."
+  },
+  {
+   "gt": 35.5,
+   "wt": 66.7,
+   "st": "film",
+   "k": "QUIET",
+   "t": "5.5 s with no guiding line on screen (from 30.0)"
+  },
+  {
+   "gt": 42.5,
+   "wt": 86.4,
+   "st": "film",
+   "k": "cineCap",
+   "t": "By day they sleep. We let them."
+  },
+  {
+   "gt": 50.3,
+   "wt": 101.8,
+   "st": "film",
+   "k": "cineCap",
+   "t": "Every panel-tender gets a guide. You got Marla."
+  },
+  {
+   "gt": 54.5,
+   "wt": 108,
+   "st": "film",
+   "k": "cineCap",
+   "t": "MARLA: Up, Potts. Sun is wasting."
+  },
+  {
+   "gt": 57.2,
+   "wt": 113.9,
+   "st": "film",
+   "k": "SNAP",
+   "t": "film_2 {\"cineCap\":\"MARLA: Up, Potts. Sun is wasting.\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"intro\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[]}"
+  },
+  {
+   "gt": 61,
+   "wt": 122.5,
+   "st": "film",
+   "k": "bstat",
+   "t": "Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food"
+  },
+  {
+   "gt": 61,
+   "wt": 122.5,
+   "st": "film",
+   "k": "jobCard",
+   "t": "Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it"
+  },
+  {
+   "gt": 61.8,
+   "wt": 124.4,
+   "st": "film",
+   "k": "NOTE",
+   "t": "watched the opening film for 56.7 game s"
+  },
+  {
+   "gt": 66,
+   "wt": 135.2,
+   "st": "base day 1: waking",
+   "k": "SNAP",
+   "t": "base_wake {\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"jobCard\":\"Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE[pulse]\"]}"
+  },
+  {
+   "gt": 67,
+   "wt": 137.8,
+   "st": "base day 1: waking",
+   "k": "bprompt",
+   "t": "USE: talk to Marla, the Scout"
+  },
+  {
+   "gt": 67.3,
+   "wt": 138.4,
+   "st": "base day 1: waking",
+   "k": "NOTE",
+   "t": "the job card closed by itself before 8 real seconds of reading"
+  },
+  {
+   "gt": 71.8,
+   "wt": 149.6,
+   "st": "base day 1: waking",
+   "k": "SNAP",
+   "t": "base_after_card {\"bprompt\":\"USE: talk to Marla, the Scout\",\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE[pulse]\"]}"
+  },
+  {
+   "gt": 72.8,
+   "wt": 152.1,
+   "st": "base day 1: waking",
+   "k": "NOTE",
+   "t": "waking at -0.6,-9.3; Marla stands 2.5 m away; prompt: \"USE: talk to Marla, the Scout\""
+  },
+  {
+   "gt": 74.3,
+   "wt": 156.1,
+   "st": "base day 1: talk to Marla",
+   "k": "NOTE",
+   "t": "prompt at Marla: \"USE: talk to Marla, the Scout\""
+  },
+  {
+   "gt": 75.8,
+   "wt": 159.8,
+   "st": "base day 1: talk to Marla",
+   "k": "scout",
+   "t": "Marla, the Scout / \"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run"
+  },
+  {
+   "gt": 76.5,
+   "wt": 161.7,
+   "st": "base day 1: talk to Marla",
+   "k": "ACT",
+   "t": "tapped USE (Marla)"
+  },
+  {
+   "gt": 83.8,
+   "wt": 180.2,
+   "st": "base day 1: Marla dialog",
+   "k": "SNAP",
+   "t": "marla_dialog_day1 {\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"scout\":\"Marla, the Scout / \\\"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\\\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE\"]}"
+  },
+  {
+   "gt": 91.5,
+   "wt": 201.7,
+   "st": "base day 1: Marla dialog",
+   "k": "bprompt",
+   "t": "Walk in the door: 8 food, 4 essentials inside · 14 openings to guard · 2 floors"
+  },
+  {
+   "gt": 92.3,
+   "wt": 203,
+   "st": "base day 1: Marla dialog",
+   "k": "marla",
+   "t": "Six houses, Potts. Walk into a door to loot it."
+  },
+  {
+   "gt": 92.3,
+   "wt": 203,
+   "st": "base day 1: Marla dialog",
+   "k": "ACT",
+   "t": "tapped #go (Ride out)"
+  },
+  {
+   "gt": 96.8,
+   "wt": 210,
+   "st": "street by day",
+   "k": "bprompt",
+   "t": "Walk in the door: 8 food, 4 essentials inside · 14 openings to guard · 2 floors"
+  },
+  {
+   "gt": 97.5,
+   "wt": 211.1,
+   "st": "street by day",
+   "k": "SNAP",
+   "t": "street_start {\"bprompt\":\"Walk in the door: 8 food, 4 essentials inside · 14 openings to guard · 2 floors\",\"count\":\"Houses 0/6 | Food 2 | Essentials 0 | Sun 11 | Walk speed 100%\",\"time\":\"Daylight left 11h 30m\",\"game\":{\"state\":\"play\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":114},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\"]}"
+  },
+  {
+   "gt": 97.8,
+   "wt": 211.4,
+   "st": "street by day",
+   "k": "marla",
+   "t": "Green bar over a door: loot inside. Red: empty."
+  },
+  {
+   "gt": 102.3,
+   "wt": 217.8,
+   "st": "street by day",
+   "k": "bprompt",
+   "t": "Walk in the door: 8 food, 4 essentials inside · 14 openings to guard · 2 floors"
+  },
+  {
+   "gt": 102.8,
+   "wt": 218.5,
+   "st": "street by day",
+   "k": "ACT",
+   "t": "a sleeping machine stands 16 m away (ticks): walking toward it to see what the game says"
+  },
+  {
+   "gt": 107.3,
+   "wt": 225.5,
+   "st": "street by day",
+   "k": "aim",
+   "t": "Ticks (asleep until dark): weak, quick and low to the ground."
+  },
+  {
+   "gt": 113,
+   "wt": 233.8,
+   "st": "street by day",
+   "k": "bprompt",
+   "t": "Stand by Marla to change your devices"
+  },
+  {
+   "gt": 116.5,
+   "wt": 238.4,
+   "st": "street by day",
+   "k": "marla",
+   "t": "That bar is your Sun. Your hand drinks it in."
+  },
+  {
+   "gt": 121.3,
+   "wt": 245.2,
+   "st": "street by day",
+   "k": "bprompt",
+   "t": "Walk to a house door"
+  },
+  {
+   "gt": 122.8,
+   "wt": 247.1,
+   "st": "street by day",
+   "k": "aim",
+   "t": "Ticks (asleep until dark): weak, quick and low to the ground."
+  },
+  {
+   "gt": 123.5,
+   "wt": 248.1,
+   "st": "street by day",
+   "k": "SHORTCUT",
+   "t": "could not reach a sleeping machine in 8 game s; teleported"
+  },
+  {
+   "gt": 124.3,
+   "wt": 249,
+   "st": "street by day",
+   "k": "marla",
+   "t": "Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight."
+  },
+  {
+   "gt": 129,
+   "wt": 254.6,
+   "st": "street by day",
+   "k": "aim",
+   "t": "Ticks (asleep until dark): weak, quick and low to the ground."
+  },
+  {
+   "gt": 131.5,
+   "wt": 257.5,
+   "st": "street by day",
+   "k": "marla",
+   "t": "Something waves in a house with 7 openings."
+  },
+  {
+   "gt": 133.8,
+   "wt": 260.2,
+   "st": "street by day",
+   "k": "SNAP",
+   "t": "street_sleeper {\"marla\":\"Something waves in a house with 7 openings.\",\"count\":\"Houses 0/6 | Food 2 | Essentials 0 | Sun 18 | Walk speed 100%\",\"time\":\"Daylight left 7h 50m\",\"game\":{\"state\":\"play\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":78},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\"]}"
+  },
+  {
+   "gt": 134.8,
+   "wt": 261.4,
+   "st": "street by day: to house 1",
+   "k": "ACT",
+   "t": "walking to the nearest unvisited door (house 3, 13 m)"
+  },
+  {
+   "gt": 136.3,
+   "wt": 263.1,
+   "st": "street by day: to house 1",
+   "k": "marla",
+   "t": "At dusk you defend the house you are in."
+  },
+  {
+   "gt": 141,
+   "wt": 269.6,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk to a house door"
+  },
+  {
+   "gt": 143.8,
+   "wt": 273.7,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk in the door: 2 food, 1 essentials inside · 9 openings to guard · 2 floors"
+  },
+  {
+   "gt": 160.8,
+   "wt": 298.5,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk in the door: 8 food, 4 essentials inside · 14 openings to guard · 2 floors"
+  },
+  {
+   "gt": 162,
+   "wt": 300.7,
+   "st": "street by day: to house 1",
+   "k": "marla",
+   "t": "Hold START NIGHT only when your Sun is full, Potts."
+  },
+  {
+   "gt": 163.3,
+   "wt": 303,
+   "st": "street by day: to house 1",
+   "k": "SHORTCUT",
+   "t": "walking to house 3 (in front of its door) was blocked (straight-line steering; 9.5 m left); teleported next to it"
+  },
+  {
+   "gt": 166.5,
+   "wt": 308.1,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk in the door: 8 food, 4 essentials inside · 14 openings to guard · 2 floors"
+  },
+  {
+   "gt": 167.5,
+   "wt": 309.6,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk in the door: 2 food, 1 essentials inside · 9 openings to guard · 2 floors"
+  },
+  {
+   "gt": 172.8,
+   "wt": 319.4,
+   "st": "street by day: to house 1",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 172.8,
+   "wt": 319.4,
+   "st": "street by day: to house 1",
+   "k": "HP",
+   "t": "health 100 (day; 0 machines inside or near, nearest none)"
+  },
+  {
+   "gt": 185.3,
+   "wt": 339.7,
+   "st": "house 1 by day",
+   "k": "SNAP",
+   "t": "house1_inside {\"marla\":\"Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.\",\"count\":\"Crates left 3 | Food 2 | Essentials 0 | Sun 29 | Walk speed 100% | Floor 1 of 2\",\"time\":\"Daylight left 4h 00m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":29,\"food\":2,\"machines\":0,\"drill\":null,\"dayLeft\":39},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\",\"b0:free 0/3[pulse]\",\"b1:at night 0/2[sel]\",\"bSwitch:⇄\",\"bEat:EAT 2 home\",\"bFire:FIRE\"]}"
+  },
+  {
+   "gt": 188.8,
+   "wt": 345,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 189.8,
+   "wt": 346.8,
+   "st": "house 1 by day",
+   "k": "ACT",
+   "t": "house 1: going to the nearest window to place a collector"
+  },
+  {
+   "gt": 204.5,
+   "wt": 375.1,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 207.5,
+   "wt": 380.7,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Stairs: the Gloom use them too. The ladder: only you can climb it."
+  },
+  {
+   "gt": 208.3,
+   "wt": 382,
+   "st": "house 1 by day",
+   "k": "SHORTCUT",
+   "t": "could not reach the nearest window in 8 game s; teleported"
+  },
+  {
+   "gt": 212.5,
+   "wt": 390.4,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 215.8,
+   "wt": 396.7,
+   "st": "house 1 by day",
+   "k": "ACT",
+   "t": "tapped SOLAR (#b0)"
+  },
+  {
+   "gt": 216.3,
+   "wt": 397.6,
+   "st": "house 1 by day",
+   "k": "msg",
+   "t": "undefined placed: undefined"
+  },
+  {
+   "gt": 216.5,
+   "wt": 398.1,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Walk into the capsules to take them. Green food, blue essentials."
+  },
+  {
+   "gt": 218,
+   "wt": 401,
+   "st": "house 1 by day",
+   "k": "NOTE",
+   "t": "house 1: collectors 0 -> 1; lines: [\"msg: undefined placed: undefined\",\"marla: Walk into the capsules to take them. Green food, blue essentials.\"]"
+  },
+  {
+   "gt": 220,
+   "wt": 404.8,
+   "st": "house 1 by day",
+   "k": "SNAP",
+   "t": "house_1_solar {\"marla\":\"Walk into the capsules to take them. Green food, blue essentials.\",\"count\":\"Crates left 3 | Food 2 | Essentials 0 | Sun 36 | Walk speed 100% | Floor 1 of 2\",\"time\":\"Daylight left 3h 30m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":36,\"food\":2,\"machines\":0,\"drill\":null,\"dayLeft\":34},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\",\"b0:free 1/3\",\"b1:at night 0/2[sel]\",\"bSwitch:⇄\",\"bEat:EAT 2 home\",\"bFire:FIRE\"]}"
+  },
+  {
+   "gt": 220.5,
+   "wt": 405.8,
+   "st": "house 1 by day",
+   "k": "ACT",
+   "t": "house 1: 1 capsules on this floor, 2 on another floor (the stairs were not used)"
+  },
+  {
+   "gt": 221.5,
+   "wt": 407.9,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "LEAVE at the door for the next house."
+  },
+  {
+   "gt": 227,
+   "wt": 418.7,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "SOLAR by a door or window, in the house you will sleep in."
+  },
+  {
+   "gt": 231.8,
+   "wt": 427.6,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "HOLD DUSK to start the night early. Or wait for the bell."
+  },
+  {
+   "gt": 233.8,
+   "wt": 431,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "The bell, Potts! 2 hours of light left. Pick your house!"
+  },
+  {
+   "gt": 239,
+   "wt": 438.7,
+   "st": "house 1 by day",
+   "k": "SHORTCUT",
+   "t": "could not reach a capsule in 8 game s; teleported"
+  },
+  {
+   "gt": 239.8,
+   "wt": 439.7,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Loot is heavy: the more you carry, the slower you walk (Walk speed, top right)."
+  },
+  {
+   "gt": 242.5,
+   "wt": 443.4,
+   "st": "house 1 by day",
+   "k": "SNAP",
+   "t": "house1_after_capsules {\"marla\":\"Loot is heavy: the more you carry, the slower you walk (Walk speed, top right).\",\"count\":\"Crates left 2 | Food 3 | Essentials 0 | Sun 44 | Walk speed 99% | Floor 1 of 2\",\"time\":\"Daylight left 1h 10m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":44,\"food\":3,\"machines\":0,\"drill\":null,\"dayLeft\":11},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\",\"b0:free 1/3\",\"b1:at night 0/2[sel]\",\"bSwitch:⇄\",\"bEat:EAT 3 home\",\"bFire:FIRE\"]}"
+  },
+  {
+   "gt": 243.8,
+   "wt": 445.1,
+   "st": "house 1: waiting for dusk",
+   "k": "NOTE",
+   "t": "staying here for the night; day clock {\"left\":10,\"sun\":44.8}"
+  },
+  {
+   "gt": 253.8,
+   "wt": 459.1,
+   "st": "house 1: waiting for dusk",
+   "k": "marla",
+   "t": "Sun is down, Potts. Turbine first, then lances, then panels."
+  },
+  {
+   "gt": 253.8,
+   "wt": 459.1,
+   "st": "house 1: waiting for dusk",
+   "k": "QUIET",
+   "t": "9.5 s with no guiding line on screen (from 244.3)"
+  },
+  {
+   "gt": 255,
+   "wt": 461.1,
+   "st": "house 1: waiting for dusk",
+   "k": "NOTE",
+   "t": "day ended: the game moved to \"night\""
+  },
+  {
+   "gt": 256,
+   "wt": 462.5,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "One machine. Tap FIRE, Potts."
+  },
+  {
+   "gt": 256,
+   "wt": 462.5,
+   "st": "night 1 drill",
+   "k": "dsub",
+   "t": "Aim at the ringed machine and tap FIRE."
+  },
+  {
+   "gt": 258.5,
+   "wt": 466.2,
+   "st": "night 1 drill",
+   "k": "SNAP",
+   "t": "dusk {\"marla\":\"One machine. Tap FIRE, Potts.\",\"dsub\":\"Aim at the ringed machine and tap FIRE.\",\"count\":\"Food 3 | Essentials 0 | Sun 48 | Floor 1 of 2\",\"time\":\"Dawn in 11h 50m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":48,\"food\":3,\"machines\":1,\"drill\":\"shoot\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 3 home\",\"bFire:FIRE hold: charged[pulse]\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 260.3,
+   "wt": 468.7,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "drill step: none -> shoot (the last one took 1.3 game s)"
+  },
+  {
+   "gt": 262,
+   "wt": 471.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 100 -> 92 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 263.5,
+   "wt": 474,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 92 -> 84 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 263.8,
+   "wt": 474.5,
+   "st": "night 1 drill",
+   "k": "SNAP",
+   "t": "drill_shoot {\"marla\":\"One machine. Tap FIRE, Potts.\",\"dsub\":\"Aim at the ringed machine and tap FIRE.\",\"count\":\"Food 3 | Essentials 0 | Sun 48 | Floor 1 of 2\",\"time\":\"Dawn in 11h 50m\",\"game\":{\"state\":\"play\",\"hp\":84,\"sun\":48,\"food\":3,\"machines\":1,\"drill\":\"shoot\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 3 home\",\"bFire:FIRE hold: charged[pulse]\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 264.3,
+   "wt": 475.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 84 -> 76 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 264.8,
+   "wt": 476.2,
+   "st": "night 1 drill",
+   "k": "DBG",
+   "t": "aim check {\"yaw\":6.28,\"d\":0.9,\"see\":true,\"floor\":[0,0]}"
+  },
+  {
+   "gt": 265.3,
+   "wt": 477.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 76 -> 68 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 266.5,
+   "wt": 479.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 68 -> 60 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 267.5,
+   "wt": 481,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 60 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 268.8,
+   "wt": 483.4,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "Shoot. It. Now."
+  },
+  {
+   "gt": 268.8,
+   "wt": 483.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 269.8,
+   "wt": 485.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 270.5,
+   "wt": 486.8,
+   "st": "night 1 drill",
+   "k": "DBG",
+   "t": "aim check {\"yaw\":6.72,\"d\":0.9,\"see\":true,\"floor\":[0,0]}"
+  },
+  {
+   "gt": 270.8,
+   "wt": 487.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 272.3,
+   "wt": 490.3,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "Device in its path. Tap the device."
+  },
+  {
+   "gt": 272.3,
+   "wt": 490.3,
+   "st": "night 1 drill",
+   "k": "dsub",
+   "t": "Tap the glowing device to place it where they walk in."
+  },
+  {
+   "gt": 272.3,
+   "wt": 490.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 273,
+   "wt": 491.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 12 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 273,
+   "wt": 491.8,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped FIRE"
+  },
+  {
+   "gt": 274.3,
+   "wt": 494.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 12 -> 4 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 275.3,
+   "wt": 496.2,
+   "st": "night 1 drill",
+   "k": "end",
+   "t": "The night took you. / Marla: \"Up you get. The sun owes us a rematch.\" Minimum payout: 1 food Next recruit: 11/30 food. / Back to the base"
+  },
+  {
+   "gt": 275.3,
+   "wt": 496.2,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "drill step: shoot -> place (the last one took 15.0 game s)"
+  },
+  {
+   "gt": 276.3,
+   "wt": 498.1,
+   "st": "night 1 drill",
+   "k": "NOTE",
+   "t": "night ended: the game moved to \"end\""
+  },
+  {
+   "gt": 281.3,
+   "wt": 507.4,
+   "st": "dawn: night result",
+   "k": "SNAP",
+   "t": "night_result {\"end\":\"The night took you. / Marla: \\\"Up you get. The sun owes us a rematch.\\\" Minimum payout: 1 food Next recruit: 11/30 food. / Back to the base\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"end\",\"hp\":0,\"sun\":47,\"food\":3,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[]}"
+  },
+  {
+   "gt": 289.3,
+   "wt": 524.9,
+   "st": "dawn: night result",
+   "k": "msg",
+   "t": "Day 2. Home: +1 food, +0 essentials (run plus 0 food from gatherers, 0 essentials from hunters)."
+  },
+  {
+   "gt": 289.3,
+   "wt": 524.9,
+   "st": "dawn: night result",
+   "k": "quest",
+   "t": "Quests: read the board by the Workshop / +4 more (tap)"
+  },
+  {
+   "gt": 289.3,
+   "wt": 524.9,
+   "st": "dawn: night result",
+   "k": "bstat",
+   "t": "Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food"
+  },
+  {
+   "gt": 289.8,
+   "wt": 526.3,
+   "st": "dawn: night result",
+   "k": "ACT",
+   "t": "tapped #again (Back to the base)"
+  },
+  {
+   "gt": 290.3,
+   "wt": 527.7,
+   "st": "dawn: night result",
+   "k": "marla",
+   "t": "Workshop's on your right. Oko upgrades devices. Bring scrap."
+  },
+  {
+   "gt": 295.3,
+   "wt": 538.5,
+   "st": "base day 2",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m to your right / +4 more (tap)"
+  },
+  {
+   "gt": 296,
+   "wt": 540.2,
+   "st": "base day 2",
+   "k": "SNAP",
+   "t": "base_day2 {\"quest\":\"Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m to your right / +4 more (tap)\",\"bstat\":\"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE\"]}"
+  },
+  {
+   "gt": 305.3,
+   "wt": 560.1,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 309.8,
+   "wt": 570.4,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 310.3,
+   "wt": 571.6,
+   "st": "base day 2: Workshop",
+   "k": "bprompt",
+   "t": "Workshop: the door is round the front"
+  },
+  {
+   "gt": 310.3,
+   "wt": 571.6,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)"
+  },
+  {
+   "gt": 310.3,
+   "wt": 571.6,
+   "st": "base day 2",
+   "k": "QUIET",
+   "t": "15.0 s with no guiding line on screen (from 295.3)"
+  },
+  {
+   "gt": 310.8,
+   "wt": 572.8,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 4 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 316,
+   "wt": 586.3,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)"
+  },
+  {
+   "gt": 316.5,
+   "wt": 587.5,
+   "st": "base day 2: Workshop",
+   "k": "bprompt",
+   "t": "Workshop: go inside (Oko upgrades devices)"
+  },
+  {
+   "gt": 318.3,
+   "wt": 591.5,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 320.8,
+   "wt": 597.3,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m to your right / +4 more (tap)"
+  },
+  {
+   "gt": 322.5,
+   "wt": 600.5,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 329.8,
+   "wt": 613.4,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 4 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 330.3,
+   "wt": 614.4,
+   "st": "base day 2: Workshop",
+   "k": "bprompt",
+   "t": "Workshop: go inside (Oko upgrades devices)"
+  },
+  {
+   "gt": 330.3,
+   "wt": 614.4,
+   "st": "base day 2: Workshop",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)"
+  },
+  {
+   "gt": 330.3,
+   "wt": 614.4,
+   "st": "base day 2: Workshop",
+   "k": "QUIET",
+   "t": "12.8 s with no guiding line on screen (from 317.5)"
+  },
+  {
+   "gt": 330.8,
+   "wt": 615.6,
+   "st": "base day 2: Workshop",
+   "k": "SHORTCUT",
+   "t": "walking to the Workshop was blocked (straight-line steering; 7.9 m left); teleported next to it"
+  },
+  {
+   "gt": 331.3,
+   "wt": 616.9,
+   "st": "base day 2: Workshop",
+   "k": "bprompt",
+   "t": "USE: Talk to Oko (upgrades devices)"
+  },
+  {
+   "gt": 332.3,
+   "wt": 619.1,
+   "st": "base day 2: Workshop",
+   "k": "NOTE",
+   "t": "prompt at the Workshop: \"USE: Talk to Oko (upgrades devices)\""
+  },
+  {
+   "gt": 333.8,
+   "wt": 622.5,
+   "st": "base day 2: Workshop",
+   "k": "panel",
+   "t": "Workshop / Oko, tinkerer: \"You again! Good. The lance has been sulking.\" / Check the board by the Workshop. / Essentials: 0 | Researchers: 1 / Pick a project. It costs essentials to start, then your researchers work on it each dawn. / Sturdy panels (level 0/3): +25% panel strength per level Start: 8 essentials, 2 days / Efficient turbines (level 0/3): +10% turbine Sun per level Start: 10 essentials, 2 days / Sun cells (level 0/3): +5 start Sun per level Start: 8 essentials, 2 days / Carry frame (level 0/2): +1 device slot per level Start: 16 essentials, 2 days / Unlock: Twin Lance (level 0/1):"
+  },
+  {
+   "gt": 334.5,
+   "wt": 624.2,
+   "st": "base day 2: Workshop",
+   "k": "ACT",
+   "t": "tapped USE (the Workshop)"
+  },
+  {
+   "gt": 338,
+   "wt": 631.6,
+   "st": "base day 2: Workshop",
+   "k": "SNAP",
+   "t": "day2_workshop {\"bstat\":\"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food\",\"panel\":\"Workshop / Oko, tinkerer: \\\"You again! Good. The lance has been sulking.\\\" / Check the board by the Workshop. / Essentials: 0 | Researchers: 1 / Pick a project. It costs essentials to start, then your researchers work on it each dawn. / Sturdy panels (level 0/3): +25% panel strength per level Start: 8 essentials, 2 days / Efficient turbines (level 0/3): +10% turbine Sun per level Start: 10 essentials, 2 days / Sun cells (level 0/3): +5 start Sun per level Start: 8 essentials, 2 days / Carry frame (level 0/2): +1 device slot per level Start: 16 essentials, 2 days / Unlock: Twin Lance (level 0/1): two pellets per shot Start: 12 essentials, 2 days / Unlock: Mist Coil (level 0/1): pellets chill and slow a Gloom Start: 12 essentials, 2 days / Unlock: Tall Trellis (level 0/1): a tall, tough panel; nothing shoots over it Start: 10 essentials, 2 days / Unlock: Biogas Flask (level 0/1): one-shot area burst where you aim Start: 16 essentials, 2 days / Unlock: Mulch Press (level 0/1): grinds one Gloom, then resets Start: 14 essentials, 2 days / Unlock: Shard Plate (level 0/1): floor plate that hurts Gloom walking over it Start: 8 essentials, 2 days / Unlock: Sling Press (level 0/1): lobs shots over walls Start: 14 essentials, 2 days / Unlock: Prism Lens (level 0/1): shots fired near it hit harder Start: 14 essentials, 2 days / Unlock: Chime Pole (level 0/1): a sound that pulls Gloom toward it Start: 8 essentials, 2 days / Unlock: Moon Panel (level 0/1): strong night Sun; shares the limit of 2 Sun makers with turbines Start: 36 essentials, 2 days / Close\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE\"]}"
+  },
+  {
+   "gt": 345,
+   "wt": 646.1,
+   "st": "base day 2: Workshop",
+   "k": "bprompt",
+   "t": "USE: Talk to Oko (upgrades devices)"
+  },
+  {
+   "gt": 346,
+   "wt": 648.4,
+   "st": "base day 2: Workshop",
+   "k": "ACT",
+   "t": "tapped #qclose (close)"
+  },
+  {
+   "gt": 360,
+   "wt": 677,
+   "st": "base day 2: quest board",
+   "k": "bprompt",
+   "t": "Workshop: go inside (Oko upgrades devices)"
+  },
+  {
+   "gt": 360,
+   "wt": 677,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)"
+  },
+  {
+   "gt": 360.5,
+   "wt": 678.1,
+   "st": "base day 2: quest board",
+   "k": "bprompt",
+   "t": "USE: quest board (jobs from your people)"
+  },
+  {
+   "gt": 366.5,
+   "wt": 692.3,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 4 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 367,
+   "wt": 693.6,
+   "st": "base day 2: quest board",
+   "k": "bprompt",
+   "t": "USE: Garden (food, and welcoming new people)"
+  },
+  {
+   "gt": 367,
+   "wt": 693.6,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 367.5,
+   "wt": 694.9,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 368.3,
+   "wt": 696.8,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 10 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 371.3,
+   "wt": 703.4,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 10 m to your right / +4 more (tap)"
+  },
+  {
+   "gt": 375.8,
+   "wt": 714.9,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 10 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 379.5,
+   "wt": 723.8,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 9 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 380,
+   "wt": 724.6,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 380.5,
+   "wt": 725.5,
+   "st": "base day 2: quest board",
+   "k": "SHORTCUT",
+   "t": "walking to the quest board was blocked (straight-line steering; 9.7 m left); teleported next to it"
+  },
+  {
+   "gt": 380.5,
+   "wt": 725.5,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m ahead / +4 more (tap)"
+  },
+  {
+   "gt": 381,
+   "wt": 726.5,
+   "st": "base day 2: quest board",
+   "k": "bprompt",
+   "t": "USE: quest board (jobs from your people)"
+  },
+  {
+   "gt": 381,
+   "wt": 726.5,
+   "st": "base day 2: quest board",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)"
+  },
+  {
+   "gt": 382,
+   "wt": 728.9,
+   "st": "base day 2: quest board",
+   "k": "NOTE",
+   "t": "prompt at the quest board: \"USE: quest board (jobs from your people)\""
+  },
+  {
+   "gt": 383.5,
+   "wt": 732,
+   "st": "base day 2: quest board",
+   "k": "panel",
+   "t": "Quest board / Carry a crate of seedlings from Storage to Garden (+2 food) Take / Hunt down 6 Gloom on your next nights (0/6) (+4 food) Take / Bring home 4 essentials from collection runs (0/4) (+3 essentials) Take / Postings from your people: / Bram: take a crate of seedlings from the board to Garden (+4 food) Take / Oko: Bring home 4 essentials from collection runs (0/4) (+2 food, 3 essentials) Take / Pip: Hunt down 7 Gloom on your next nights (0/7) (+6 food, 1 essentials) Take / Rumour: golden paws wave near the water, and among the solar flowers, and under the old tree. Hunters thin the Glo"
+  },
+  {
+   "gt": 384.3,
+   "wt": 733.6,
+   "st": "base day 2: quest board",
+   "k": "ACT",
+   "t": "tapped USE (the quest board)"
+  },
+  {
+   "gt": 387.8,
+   "wt": 740.7,
+   "st": "base day 2: quest board",
+   "k": "SNAP",
+   "t": "day2_quest_board {\"quest\":\"Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) / +4 more (tap)\",\"bstat\":\"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food\",\"panel\":\"Quest board / Carry a crate of seedlings from Storage to Garden (+2 food) Take / Hunt down 6 Gloom on your next nights (0/6) (+4 food) Take / Bring home 4 essentials from collection runs (0/4) (+3 essentials) Take / Postings from your people: / Bram: take a crate of seedlings from the board to Garden (+4 food) Take / Oko: Bring home 4 essentials from collection runs (0/4) (+2 food, 3 essentials) Take / Pip: Hunt down 7 Gloom on your next nights (0/7) (+6 food, 1 essentials) Take / Rumour: golden paws wave near the water, and among the solar flowers, and under the old tree. Hunters thin the Gloom and bring essentials; gatherers bring food each dawn. / OLD NOTICES / Lost: one Ticks unit, answers to 'Dusty'. Do NOT approach after dark. / Swap: three jars of honey for a working solar cell. Ask at the hatchery. / Reminder from the council of the green roofs: we don't wake the sleepers. Not for scrap. Not for a dare. Not for anything. / Close\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE\"]}"
+  },
+  {
+   "gt": 395,
+   "wt": 755.3,
+   "st": "base day 2: quest board",
+   "k": "bprompt",
+   "t": "USE: quest board (jobs from your people)"
+  },
+  {
+   "gt": 395.8,
+   "wt": 756.8,
+   "st": "base day 2: quest board",
+   "k": "ACT",
+   "t": "tapped #qclose (close)"
+  },
+  {
+   "gt": 409.8,
+   "wt": 786.2,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 5 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 410.3,
+   "wt": 787.4,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 413,
+   "wt": 794.2,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 6 m to your left / +4 more (tap)"
+  },
+  {
+   "gt": 415.5,
+   "wt": 799.9,
+   "st": "base day 2: Marla, ring choice",
+   "k": "bprompt",
+   "t": "USE: Garden (food, and welcoming new people)"
+  },
+  {
+   "gt": 415.5,
+   "wt": 799.9,
+   "st": "base day 2: Marla, ring choice",
+   "k": "QUIET",
+   "t": "5.8 s with no guiding line on screen (from 409.8)"
+  },
+  {
+   "gt": 416,
+   "wt": 801,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 7 m to your left / +4 more (tap)"
+  },
+  {
+   "gt": 416.5,
+   "wt": 802.1,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 8 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 417,
+   "wt": 803.2,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 9 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 417.8,
+   "wt": 805,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m behind you / +4 more (tap)"
+  },
+  {
+   "gt": 421.5,
+   "wt": 812.7,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 11 m to your right / +4 more (tap)"
+  },
+  {
+   "gt": 425.8,
+   "wt": 822.2,
+   "st": "base day 2: Marla, ring choice",
+   "k": "bprompt",
+   "t": "USE: Garden (food, and welcoming new people)"
+  },
+  {
+   "gt": 425.8,
+   "wt": 822.2,
+   "st": "base day 2: Marla, ring choice",
+   "k": "quest",
+   "t": "Workshop: go in, Oko upgrades devices (from 8 essentials, you have 0) · 12 m to your right / +4 more (tap)"
+  },
+  {
+   "gt": 425.8,
+   "wt": 822.2,
+   "st": "base day 2: Marla, ring choice",
+   "k": "QUIET",
+   "t": "8.8 s with no guiding line on screen (from 417.0)"
+  },
+  {
+   "gt": 426.3,
+   "wt": 823.1,
+   "st": "base day 2: Marla, ring choice",
+   "k": "SHORTCUT",
+   "t": "walking to Marla was blocked (straight-line steering; 12.6 m left); teleported next to it"
+  },
+  {
+   "gt": 426.8,
+   "wt": 824.2,
+   "st": "base day 2: Marla, ring choice",
+   "k": "bprompt",
+   "t": "USE: talk to Marla, the Scout"
+  },
+  {
+   "gt": 427.8,
+   "wt": 825.8,
+   "st": "base day 2: Marla, ring choice",
+   "k": "NOTE",
+   "t": "prompt at Marla: \"USE: talk to Marla, the Scout\""
+  },
+  {
+   "gt": 429.3,
+   "wt": 828,
+   "st": "base day 2: Marla, ring choice",
+   "k": "scout",
+   "t": "Marla, the Scout / \"You look terrible, Potts. Good. It means you tried. Sit, drink, then pick a ring.\" / Ride out: go loot the old street, then hold a house tonight. / Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend the house you are in until dawn. / Ring / 1 (10 km) · loot x1 · Gloom x1 / 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first / 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first / 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first / 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 fir"
+  },
+  {
+   "gt": 429.8,
+   "wt": 828.7,
+   "st": "base day 2: Marla, ring choice",
+   "k": "ACT",
+   "t": "tapped USE (Marla)"
+  },
+  {
+   "gt": 435,
+   "wt": 836.9,
+   "st": "base day 2: Marla, ring choice",
+   "k": "SNAP",
+   "t": "marla_dialog_day2 {\"bstat\":\"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food\",\"scout\":\"Marla, the Scout / \\\"You look terrible, Potts. Good. It means you tried. Sit, drink, then pick a ring.\\\" / Ride out: go loot the old street, then hold a house tonight. / Further rings bring more loot and more Gloom. Pick a ring. By day you loot its six houses; when the dusk bell runs out you defend the house you are in until dawn. / Ring / 1 (10 km) · loot x1 · Gloom x1 / 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first / 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first / 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first / 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first / Devices: / Turbine / Lance / Panel / Mine / Turbine / Lance / Panel / Mine / Turbine / Lance / Panel / Mine / Solar (by day, free): place it by a door or window; it fills your Sun. / Turbine (12 Sun): makes Sun all night; place it first. At most 2 Sun makers. / Lance (8 Sun): shoots the nearest Gloom it can see through an opening or inside. / Panel (6 Sun): a shield across an opening; Gloom must break it to get in. Shoot heads over it. / Ride out / Stay at the base\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE\"]}"
+  },
+  {
+   "gt": 435.5,
+   "wt": 837.6,
+   "st": "base day 2: Marla, ring choice",
+   "k": "NOTE",
+   "t": "ring picker: 1 (10 km) · loot x1 · Gloom x1 | 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first [locked] | 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first [locked] | 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first [locked] | 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 first [locked]"
+  },
+  {
+   "gt": 442,
+   "wt": 846.8,
+   "st": "base day 2: Marla, ring choice",
+   "k": "bprompt",
+   "t": "USE: talk to Marla, the Scout"
+  },
+  {
+   "gt": 442.8,
+   "wt": 847.9,
+   "st": "base day 2: Marla, ring choice",
+   "k": "ACT",
+   "t": "tapped #sback (Stay at the base)"
+  },
+  {
+   "gt": 446.5,
+   "wt": 853.4,
+   "st": "keys card (exploring)",
+   "k": "pause",
+   "t": "Paused / Resume / Hints: on / Music: on / Graphics: low (phone) / Keys / Journal / Map / Watch the opening / New game / Progress saves by itself in the base and at dawn."
+  },
+  {
+   "gt": 446.5,
+   "wt": 853.4,
+   "st": "keys card (exploring)",
+   "k": "ACT",
+   "t": "tapped pause"
+  },
+  {
+   "gt": 449.8,
+   "wt": 858,
+   "st": "keys card (exploring)",
+   "k": "SNAP",
+   "t": "pause_menu {\"bprompt\":\"USE: talk to Marla, the Scout\",\"bstat\":\"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food\",\"pause\":\"Paused / Resume / Hints: on / Music: on / Graphics: low (phone) / Keys / Journal / Map / Watch the opening / New game / Progress saves by itself in the base and at dawn.\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE\"]}"
+  },
+  {
+   "gt": 451.5,
+   "wt": 860.5,
+   "st": "keys card (exploring)",
+   "k": "keys",
+   "t": "Keys / Left thumb / walk / Right thumb / look; a quick tap fires (uses things in the base) / FIRE / shoot; hold it till the ring glows gold, then let go / Device button / one tap places it / Switch tab / opens all devices; tap one to pick it / SOLAR / solar collector (by day) / EAT / eat (heals) / LEAVE / leave a house at its door / HOLD / start the night (in a house) / Quest box / tap to see every quest / || / pause / Close"
+  },
+  {
+   "gt": 452.3,
+   "wt": 861.6,
+   "st": "keys card (exploring)",
+   "k": "ACT",
+   "t": "tapped #pKeys (Keys)"
+  },
+  {
+   "gt": 455.5,
+   "wt": 866.4,
+   "st": "keys card (exploring)",
+   "k": "SNAP",
+   "t": "keys_card {\"bprompt\":\"USE: talk to Marla, the Scout\",\"bstat\":\"Day 2 · Food 11 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 11/30 food\",\"keys\":\"Keys / Left thumb / walk / Right thumb / look; a quick tap fires (uses things in the base) / FIRE / shoot; hold it till the ring glows gold, then let go / Device button / one tap places it / Switch tab / opens all devices; tap one to pick it / SOLAR / solar collector (by day) / EAT / eat (heals) / LEAVE / leave a house at its door / HOLD / start the night (in a house) / Quest box / tap to see every quest / || / pause / Close\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE\"]}"
+  }
+ ]
+}
