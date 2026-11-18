@@ -347,7 +347,10 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // a footbridge deck: the body rises or sinks to it on a critically damped spring (M.deckHz), each slice, so it never jumps or bobs
     if (life) { const w = 2 * Math.PI * M.deckHz, h = M.slice; o.vy = (o.vy || 0) + (w * w * (life.deckY(o.n.position.x, o.n.position.z) - o.n.position.y) - 2 * w * (o.vy || 0)) * h; o.n.position.y += o.vy * h; }
     return { face: Math.atan2(dx, dz), go: true, move: true, carry: o.crate.visible, slow: 1 - (1 - keep) * near }; }
-  function update(dt, px, pz, camY) {
+  // posAt (optional): a function of the share of this frame done (0..1] giving the player's [x, z] at that moment, for callers that know the path between frames
+  // (without it the slices take the spot on a line from last frame's)
+  function update(dt, px, pz, camY, posAt) {
+    const pAt = (x0, z0, a) => (posAt ? posAt(a) : [x0 + (px - x0) * a, z0 + (pz - z0) * a]);
     sizeLabels(px, pz);
     sky.follow({ position: { x: px, y: camY, z: pz } }, 0, dt);
     t += dt;
@@ -358,15 +361,15 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       // Oko inside the workshop: bent over the bench (head down to the trays, small turns from one tray to the next), standing back now and then; she turns to you only inside the room.
       // (Not the arms-forward 'carry' pose: switching it flicked her hands at 427 deg/s in tools/animcheck.cjs. Her hands work through src/okowork.js, eased in and out.)
       if (n.inside && WS) { const W = cfg.workshop.oko; let working = false;
-        ch.drive(dt, { plan: (h, a) => { const qx = x0 + (px - x0) * a, qz = z0 + (pz - z0) * a, dx = qx - n.x, dz = qz - n.z, d = Math.hypot(dx, dz); o.near = inRoom(WS, qx, qz) && d < (o.near ? W.far : W.near); o.wt = (o.wt || 0) + h;
+        ch.drive(dt, { plan: (h, a) => { const pq = pAt(x0, z0, a), qx = pq[0], qz = pq[1], dx = qx - n.x, dz = qz - n.z, d = Math.hypot(dx, dz); o.near = inRoom(WS, qx, qz) && d < (o.near ? W.far : W.near); o.wt = (o.wt || 0) + h;
           const cyc = W.work[0] + W.work[1], turn = W.turns[Math.floor(o.wt / cyc) % W.turns.length]; working = !o.near && (o.wt % cyc) < W.work[0]; const fy = WS.ry + (working ? turn : 0);
           return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: fy, gaze: working ? [Math.sin(fy) * W.look[0], W.look[1] + WS.floor, Math.cos(fy) * W.look[0]] : null }; } });
         okoWork(ch, o.work || (o.work = {}), dt, working); continue; }
-      ch.drive(dt, { plan: (h, a) => { const dx = x0 + (px - x0) * a - n.x, dz = z0 + (pz - z0) * a - n.z, d = Math.hypot(dx, dz); o.near = d < (o.near ? PT.far : PT.near); o.away = o.near ? 0 : (o.away || 0) + h;
+      ch.drive(dt, { plan: (h, a) => { const pq = pAt(x0, z0, a), dx = pq[0] - n.x, dz = pq[1] - n.z, d = Math.hypot(dx, dz); o.near = d < (o.near ? PT.far : PT.near); o.away = o.near ? 0 : (o.away || 0) + h;
         return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: o.away > PT.back ? 0 : null }; } }); }
     // Marla turns to you in pivot steps (her own root, inside scoutG; src/people.js createStepper), her feet held where they stand
     if (marla && scoutG) { const dx = px - scoutG.position.x, dz = pz - scoutG.position.z, d = Math.hypot(dx, dz), near = d < 7; const m0 = scoutG.userData; const jump = m0.lpx == null || Math.hypot(px - m0.lpx, pz - m0.lpz) > 2, x0 = jump ? px : m0.lpx, z0 = jump ? pz : m0.lpz; m0.lpx = px; m0.lpz = pz;
-      if (marla.turn) marla.turn(dt, (a) => { const qx = x0 + (px - x0) * a - scoutG.position.x, qz = z0 + (pz - z0) * a - scoutG.position.z; m0.near = Math.hypot(qx, qz) < 7; return m0.near ? Math.atan2(qx, qz) - scoutG.rotation.y : null; }); const ry = scoutG.rotation.y + marla.root.rotation.y, c = Math.cos(-ry), s = Math.sin(-ry); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near); }
+      if (marla.turn) marla.turn(dt, (a) => { const pq = pAt(x0, z0, a), qx = pq[0] - scoutG.position.x, qz = pq[1] - scoutG.position.z; m0.near = Math.hypot(qx, qz) < 7; return m0.near ? Math.atan2(qx, qz) - scoutG.rotation.y : null; }); const ry = scoutG.rotation.y + marla.root.rotation.y, c = Math.cos(-ry), s = Math.sin(-ry); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near); }
     for (const w of towers) w.rotation.z += dt * 1.2;
     if (life) life.update(dt);
     // evening in the base: after CONFIG.avians.evening seconds the sun warms and dims over dusk seconds and the birds go to roost
