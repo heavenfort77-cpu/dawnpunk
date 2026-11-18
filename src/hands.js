@@ -76,25 +76,31 @@ export function createHands(cfg) {
   add(new THREE.BoxGeometry(0.082, 0.005, 0.066), M.brassDark, top); add(new THREE.BoxGeometry(0.076, 0.002, 0.060), M.cell, top, 0, 0.0035, 0);
   const guard = add(new THREE.TorusGeometry(0.017, 0.003, 6, 14, Math.PI), M.brassDark, gun, 0, 0.040, -0.030); guard.rotation.set(0, Math.PI / 2, Math.PI);
   scene.add(left, right);
-  let tThrow = 9, tGrab = 9, tFire = 9, bob = 0;
-  const ease = (t) => Math.sin(Math.min(1, Math.max(0, t)) * Math.PI);
+  let tThrow = 9, tGrab = 9, tFire = 9, bob = 0, mv = 0, fadeO = 9, fadeG = 9, fromG = 0, lastG = 0; const fromO = [0, 0, 0, 0, 0, 0], lastO = [0, 0, 0, 0, 0, 0];
+  const ease = (t) => Math.sin(Math.min(1, Math.max(0, t)) * Math.PI), sst = (u) => { u = Math.min(1, Math.max(0, u)); return u * u * (3 - 2 * u); };
+  // recoil: a quick smooth kick back over the first H.recoilAttack share of the recoil, then an eased return (a sine kick started at full speed: a jump in the first frame)
+  const kick = (u) => (u >= 1 ? 0 : u < H.recoilAttack ? sst(u / H.recoilAttack) : 1 - sst((u - H.recoilAttack) / (1 - H.recoilAttack)));
   // the device in the hand while it is being placed: a small ceramic seed pod with a glowing band
   const token = new THREE.Group(), relPos = new THREE.Vector3(); { const pod = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 10), new THREE.MeshPhongMaterial({ color: 0xf2ead2, shininess: 70 })); pod.scale.set(1, 1.25, 1); token.add(pod); const band = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.006, 6, 16), new THREE.MeshBasicMaterial({ color: 0x8ff0c0 })); band.rotation.x = Math.PI / 2; token.add(band); const tip = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.03, 8), new THREE.MeshPhongMaterial({ color: 0x4f9a78 })); tip.position.y = 0.045; token.add(tip); token.visible = false; scene.add(token); }
   return {
     scene, cam, left, right, ring,
-    throw() { tThrow = 0; }, grab() { tGrab = 0; }, fire() { tFire = 0; }, pose(u) { tThrow = u * H.throwTime; },
+    // an action started again while it runs cross-fades from where the hand is over H.restartFade s (it used to jump back to the start)
+    throw() { if (tThrow < H.throwTime) { for (let i = 0; i < 6; i++) fromO[i] = lastO[i]; fadeO = 0; } tThrow = 0; }, grab() { if (tGrab < H.grabTime) { fromG = lastG; fadeG = 0; } tGrab = 0; }, fire() { tFire = 0; }, pose(u) { tThrow = u * H.throwTime; },
     state() { return { tThrow, tGrab, tFire, lz: left.position.z, ly: left.position.y, rz: right.position.z }; },
     update(dt, moving, energyFrac, night) {
       const nt = night ? 1 : 0, ef = Math.max(0, Math.min(1, energyFrac == null ? 1 : energyFrac));      // match the world: dim and cool at night, with the ring as the warm light
       hemi.intensity = 1.25 - 0.65 * nt; hemi.color.setHex(nt ? 0x8fa6d8 : 0xfff4e0); sun.intensity = 1.5 - 1.05 * nt; rim.intensity = 0.5 - 0.3 * nt; glowLight.intensity = (0.08 + 0.30 * nt) * (0.3 + 0.7 * ef);
-      tThrow += dt; tGrab += dt; tFire += dt; bob += dt * (moving ? 9 : 1.6);
-      const by = Math.sin(bob) * (moving ? H.bob : H.bob * 0.3), bx = Math.cos(bob * 0.5) * (moving ? H.bob : 0);
-      const th = ease(tThrow / H.throwTime), wind = tThrow < H.throwTime * 0.35 ? ease(tThrow / (H.throwTime * 0.35)) : 0, gr = ease(tGrab / H.grabTime), fi = ease(tFire / H.recoilTime);
+      // the walking bob fades in and out over about 1 / H.bobEase s (switching it on and off at once twitched the hands when a walk started or stopped)
+      tThrow += dt; tGrab += dt; tFire += dt; fadeO += dt; fadeG += dt; mv += ((moving ? 1 : 0) - mv) * (1 - Math.exp(-dt * H.bobEase)); bob += dt * (1.6 + 7.4 * mv);
+      const by = Math.sin(bob) * H.bob * (0.3 + 0.7 * mv), bx = Math.cos(bob * 0.5) * H.bob * mv;
+      const th = ease(tThrow / H.throwTime), wind = tThrow < H.throwTime * 0.35 ? ease(tThrow / (H.throwTime * 0.35)) : 0, fi = kick(tFire / H.recoilTime);
+      let gr = ease(tGrab / H.grabTime); if (fadeG < H.restartFade) gr = fromG + (gr - fromG) * sst(fadeG / H.restartFade); lastG = gr;
       const L = H.left, R = H.right;
       // left: at rest the hand is up and open; a throw winds back then sweeps forward with the fingers leading; a pick-up reaches forward and down
       // placing a device: the hand drops to the belt and takes one (take), lifts it into view (show), swings out and lets it fly (throw), follows through and comes back
       const TK = H.throwKeys, u = Math.min(1, tThrow / H.throwTime), o = [0, 0, 0, 0, 0, 0]; void th; void wind;
       if (u < 1) { let a = TK[0], b = TK[TK.length - 1]; for (let i = 0; i < TK.length - 1; i++) if (u >= TK[i][0] && u <= TK[i + 1][0]) { a = TK[i]; b = TK[i + 1]; break; } const ft = (u - a[0]) / Math.max(1e-6, b[0] - a[0]), f = ft * ft * (3 - 2 * ft); for (let i = 0; i < 6; i++) o[i] = a[i + 1] + (b[i + 1] - a[i + 1]) * f; }
+      if (fadeO < H.restartFade) { const k = sst(fadeO / H.restartFade); for (let i = 0; i < 6; i++) o[i] = fromO[i] + (o[i] - fromO[i]) * k; } for (let i = 0; i < 6; i++) lastO[i] = o[i];
       left.position.set(L.pos[0] + bx + o[0], L.pos[1] + by + o[1] - 0.10 * gr, L.pos[2] + o[2] - 0.16 * gr);
       left.rotation.set(L.rot[0] + o[3] - 1.25 * gr, L.rot[1] + o[4], L.rot[2] + o[5]);
       { const inHand = u >= H.throwShow && u < H.throwRelease, fly = u >= H.throwRelease && u < H.throwRelease + H.throwFly; token.visible = inHand || fly;
