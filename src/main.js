@@ -661,7 +661,8 @@ function facedHouse() { const T = CONFIG.town, fx = -Math.sin(yaw), fz = -Math.c
 function townFrame(dt) {
   const T = CONFIG.town, G = CONFIG.marla.guide;
   { const dx = run.px - G.x, dz = run.pz - G.z, d = Math.hypot(dx, dz), near = d < 9; // she turns to watch you, and blocks the way like anything else
-    marla.turn(dt, near ? Math.atan2(dx, dz) : null); // pivot steps with her feet held (src/people.js createStepper)
+    { const m0 = marla.root.userData, far = m0.lpx == null || Math.hypot(run.px - m0.lpx, run.pz - m0.lpz) > 2, x0 = far ? run.px : m0.lpx, z0 = far ? run.pz : m0.lpz, x1 = run.px, z1 = run.pz; m0.lpx = x1; m0.lpz = z1; // pivot steps with her feet held (src/people.js createStepper), deciding inside the motion's slices
+      marla.turn(dt, (a) => { const qx = x0 + (x1 - x0) * a - G.x, qz = z0 + (z1 - z0) * a - G.z; return Math.hypot(qx, qz) < 9 ? Math.atan2(qx, qz) : null; }); }
     const c = Math.cos(-marla.root.rotation.y), s = Math.sin(-marla.root.rotation.y); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near);
     if (Math.abs(marla.root.rotation.y - guideYaw) > 0.06 && shadowT <= 0) { guideYaw = marla.root.rotation.y; shadowT = 0.1; } // her shadow turns with her
     if (d > G.rearm) kitArmed = true; else if (d < G.open && kitArmed && !kitOpen && !paused && fromBase && save) { const still = Math.hypot(stick.x, stick.y) < 0.1 && !keys.KeyW && !keys.KeyA && !keys.KeyS && !keys.KeyD; kitWait = still ? kitWait + dt : 0; if (kitWait >= G.wait) { kitWait = 0; openKit(); } } else kitWait = 0;

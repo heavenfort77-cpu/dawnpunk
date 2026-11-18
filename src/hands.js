@@ -79,8 +79,12 @@ export function createHands(cfg) {
   let tThrow = 9, tGrab = 9, tFire = 9, bob = 0, mv = 0, fadeO = 9, fadeG = 9, fromG = 0, lastG = 0; const fromO = [0, 0, 0, 0, 0, 0], lastO = [0, 0, 0, 0, 0, 0], velO = [0, 0, 0, 0, 0, 0]; let velG = 0;
   const ease = (t) => Math.sin(Math.min(1, Math.max(0, t)) * Math.PI), sst = (u) => { u = Math.min(1, Math.max(0, u)); return u * u * (3 - 2 * u); };
   // recoil: a quick smooth kick back over the first H.recoilAttack share of the recoil, then an eased return (a sine kick started at full speed: a jump in the first frame)
-  // the placing throw's offsets at u (0..1 of H.throwTime): keyframes H.throwKeys, eased between each pair
-  const throwPose = (u) => { const TK = H.throwKeys, o = [0, 0, 0, 0, 0, 0]; u = Math.max(0, u); if (u >= 1) return o; let a = TK[0], b = TK[TK.length - 1]; for (let i = 0; i < TK.length - 1; i++) if (u >= TK[i][0] && u <= TK[i + 1][0]) { a = TK[i]; b = TK[i + 1]; break; } const ft = (u - a[0]) / Math.max(1e-6, b[0] - a[0]), f = ft * ft * (3 - 2 * ft); for (let i = 0; i < 6; i++) o[i] = a[i + 1] + (b[i + 1] - a[i + 1]) * f; return o; };
+  // the placing throw's offsets at u (0..1 of H.throwTime): a smooth curve through the keyframes H.throwKeys (each key's slope from its neighbours, at rest at both ends;
+  // easing to a stop at every key made the hand jerk at 30 fps)
+  const throwPose = (u) => { const TK = H.throwKeys, o = [0, 0, 0, 0, 0, 0]; u = Math.max(0, u); if (u >= 1) return o; let i = 0; while (i < TK.length - 2 && u > TK[i + 1][0]) i++;
+    const a = TK[i], b = TK[i + 1], h = Math.max(1e-6, b[0] - a[0]), t = (u - a[0]) / h, t2 = t * t, t3 = t2 * t, h00 = 2 * t3 - 3 * t2 + 1, h10 = t3 - 2 * t2 + t, h01 = -2 * t3 + 3 * t2, h11 = t3 - t2;
+    const slope = (k, c) => (k <= 0 || k >= TK.length - 1 ? 0 : (TK[k + 1][c] - TK[k - 1][c]) / (TK[k + 1][0] - TK[k - 1][0]));
+    for (let c = 0; c < 6; c++) o[c] = h00 * a[c + 1] + h10 * h * slope(i, c + 1) + h01 * b[c + 1] + h11 * h * slope(i + 1, c + 1); return o; };
   const kick = (u) => (u >= 1 ? 0 : u < H.recoilAttack ? sst(u / H.recoilAttack) : 1 - sst((u - H.recoilAttack) / (1 - H.recoilAttack)));
   // the device in the hand while it is being placed: a small ceramic seed pod with a glowing band
   const token = new THREE.Group(), relPos = new THREE.Vector3(); { const pod = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 10), new THREE.MeshPhongMaterial({ color: 0xf2ead2, shininess: 70 })); pod.scale.set(1, 1.25, 1); token.add(pod); const band = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.006, 6, 16), new THREE.MeshBasicMaterial({ color: 0x8ff0c0 })); band.rotation.x = Math.PI / 2; token.add(band); const tip = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.03, 8), new THREE.MeshPhongMaterial({ color: 0x4f9a78 })); tip.position.y = 0.045; token.add(tip); token.visible = false; scene.add(token); }
@@ -109,7 +113,7 @@ export function createHands(cfg) {
       { const inHand = u >= H.throwShow && u < H.throwRelease, fly = u >= H.throwRelease && u < H.throwRelease + H.throwFly; token.visible = inHand || fly;
         if (inHand) { token.position.set(left.position.x + H.tokenAt[0], left.position.y + H.tokenAt[1], left.position.z + H.tokenAt[2]); token.scale.setScalar(1); relPos.copy(token.position); }
         else if (fly) { const k = (u - H.throwRelease) / H.throwFly; token.position.set(relPos.x + 0.10 * k, relPos.y + 0.10 * k - 0.22 * k * k, relPos.z - 0.9 * k); token.scale.setScalar(1 - 0.55 * k); token.rotation.x += dt * 14; } }
-      right.position.set(R.pos[0] - bx, R.pos[1] - by, R.pos[2] + 0.05 * fi);
+      right.position.set(R.pos[0] - bx, R.pos[1] - by, R.pos[2] + H.recoilKick * fi);
       right.rotation.set(R.rot[0] + 0.10 * fi, R.rot[1], R.rot[2] + HANDS.r.t * Math.PI / 2);
       M.glow.color.setHex(H.glow).multiplyScalar(0.35 + 0.65 * Math.max(0, Math.min(1, energyFrac == null ? 1 : energyFrac)));
     },

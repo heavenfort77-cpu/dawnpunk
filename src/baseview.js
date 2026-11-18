@@ -338,22 +338,33 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       if (s.userData.kind === 'station') { const SH = CONFIG.ui.signHide, D = HIBASE && densityOn() && densityOn().base, signed = (D && D.sign ? SH.high : SH.low).includes(s.userData.text); s.userData.signHid = signed && d < SH.near; }
     }
   }
+  // one slice of a recruit's patrol (src/people.js drive plan): the next waypoint once within CONFIG.people.motion.wpReach m; over the last cornerDist m before a waypoint
+  // the walk slows as much as the coming corner needs (none for a bend gentler than motion.cornerCos, down to a near stop at people.walk.stopCos), so a sharp corner is met nearly standing and turned in pivot steps
+  function patrolStep(o) { const M = cfg.people.motion, Wk = cfg.people.walk; let tgt = o.wp[o.i], dx = tgt[0] - o.n.position.x, dz = tgt[1] - o.n.position.z, d = Math.hypot(dx, dz);
+    if (d < M.wpReach) { o.i = (o.i + 1) % o.wp.length; tgt = o.wp[o.i]; dx = tgt[0] - o.n.position.x; dz = tgt[1] - o.n.position.z; d = Math.hypot(dx, dz); }
+    const nx = o.wp[(o.i + 1) % o.wp.length], ex = nx[0] - tgt[0], ez = nx[1] - tgt[1], el = Math.hypot(ex, ez) || 1, c = d > 1e-6 ? (dx * ex + dz * ez) / (d * el) : 1;
+    const keep = Math.max(0.12, Math.min(1, (c - Wk.stopCos) / (M.cornerCos - Wk.stopCos))), near = Math.max(0, Math.min(1, 1 - (d - M.wpReach) / M.cornerDist));
+    return { face: Math.atan2(dx, dz), go: true, move: true, carry: o.crate.visible, slow: 1 - (1 - keep) * near }; }
   function update(dt, px, pz, camY) {
     sizeLabels(px, pz);
     sky.follow({ position: { x: px, y: camY, z: pz } }, 0, dt);
     t += dt;
     // villagers turn to you when you come close (eyes and head first, then shoulders, hips, and the feet in small pivot steps: src/people.js), and back to their own spot a while after you leave
     const PT = cfg.people.turn;
-    for (const n of Object.values(NPCS)) { const o = npcG[n.id], ch = chars[n.id]; if (!o || !ch || !ch.drive) continue; const dx = px - n.x, dz = pz - n.z, d = Math.hypot(dx, dz);
+    // each person decides inside the motion's fixed slices (ch.drive's plan), the player's spot taken on a line from last frame's: the same choices at any frame rate
+    for (const n of Object.values(NPCS)) { const o = npcG[n.id], ch = chars[n.id]; if (!o || !ch || !ch.drive) continue; const jump = o.lpx == null || Math.hypot(px - o.lpx, pz - o.lpz) > 2, x0 = jump ? px : o.lpx, z0 = jump ? pz : o.lpz; o.lpx = px; o.lpz = pz;
       // Oko inside the workshop: bent over the bench (head down to the trays, small turns from one tray to the next), standing back now and then; she turns to you only inside the room.
       // (Not the arms-forward 'carry' pose: switching it flicked her hands at 427 deg/s in tools/animcheck.cjs. Her hands work through src/okowork.js, eased in and out.)
-      if (n.inside && WS) { const W = cfg.workshop.oko; o.near = inRoom(WS, px, pz) && d < (o.near ? W.far : W.near); o.wt = (o.wt || 0) + dt;
-        const cyc = W.work[0] + W.work[1], working = !o.near && (o.wt % cyc) < W.work[0], turn = W.turns[Math.floor(o.wt / cyc) % W.turns.length];
-        const fy = WS.ry + (working ? turn : 0); ch.drive(dt, o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: fy, gaze: working ? [Math.sin(fy) * W.look[0], W.look[1] + WS.floor, Math.cos(fy) * W.look[0]] : null }); okoWork(ch, o.work || (o.work = {}), dt, working); continue; }
-      o.near = d < (o.near ? PT.far : PT.near); o.away = o.near ? 0 : (o.away || 0) + dt;
-      ch.drive(dt, o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: o.away > PT.back ? 0 : null }); }
+      if (n.inside && WS) { const W = cfg.workshop.oko; let working = false;
+        ch.drive(dt, { plan: (h, a) => { const qx = x0 + (px - x0) * a, qz = z0 + (pz - z0) * a, dx = qx - n.x, dz = qz - n.z, d = Math.hypot(dx, dz); o.near = inRoom(WS, qx, qz) && d < (o.near ? W.far : W.near); o.wt = (o.wt || 0) + h;
+          const cyc = W.work[0] + W.work[1], turn = W.turns[Math.floor(o.wt / cyc) % W.turns.length]; working = !o.near && (o.wt % cyc) < W.work[0]; const fy = WS.ry + (working ? turn : 0);
+          return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: fy, gaze: working ? [Math.sin(fy) * W.look[0], W.look[1] + WS.floor, Math.cos(fy) * W.look[0]] : null }; } });
+        okoWork(ch, o.work || (o.work = {}), dt, working); continue; }
+      ch.drive(dt, { plan: (h, a) => { const dx = x0 + (px - x0) * a - n.x, dz = z0 + (pz - z0) * a - n.z, d = Math.hypot(dx, dz); o.near = d < (o.near ? PT.far : PT.near); o.away = o.near ? 0 : (o.away || 0) + h;
+        return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: o.away > PT.back ? 0 : null }; } }); }
     // Marla turns to you in pivot steps (her own root, inside scoutG; src/people.js createStepper), her feet held where they stand
-    if (marla && scoutG) { const dx = px - scoutG.position.x, dz = pz - scoutG.position.z, d = Math.hypot(dx, dz), near = d < 7; if (marla.turn) marla.turn(dt, near ? Math.atan2(dx, dz) - scoutG.rotation.y : null); const ry = scoutG.rotation.y + marla.root.rotation.y, c = Math.cos(-ry), s = Math.sin(-ry); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near); }
+    if (marla && scoutG) { const dx = px - scoutG.position.x, dz = pz - scoutG.position.z, d = Math.hypot(dx, dz), near = d < 7; const m0 = scoutG.userData; const jump = m0.lpx == null || Math.hypot(px - m0.lpx, pz - m0.lpz) > 2, x0 = jump ? px : m0.lpx, z0 = jump ? pz : m0.lpz; m0.lpx = px; m0.lpz = pz;
+      if (marla.turn) marla.turn(dt, (a) => { const qx = x0 + (px - x0) * a - scoutG.position.x, qz = z0 + (pz - z0) * a - scoutG.position.z; m0.near = Math.hypot(qx, qz) < 7; return m0.near ? Math.atan2(qx, qz) - scoutG.rotation.y : null; }); const ry = scoutG.rotation.y + marla.root.rotation.y, c = Math.cos(-ry), s = Math.sin(-ry); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near); }
     for (const w of towers) w.rotation.z += dt * 1.2;
     if (life) life.update(dt);
     // evening in the base: after CONFIG.avians.evening seconds the sun warms and dims over dusk seconds and the birds go to roost
@@ -363,10 +374,9 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     for (const n of Object.values(NPCS)) { const o = npcG[n.id]; if (!o) continue; o.mk.position.y = 3.1 + Math.sin(t * 3 + n.z) * 0.12; }
     // recruits on patrol: the person's own motion decides the pace (eases in and out, slows in a bend, stops and turns on the spot in pivot steps at a sharp corner); the holder moves along their facing
     for (const o of npcs) {
-      const tgt = o.wp[o.i], dx = tgt[0] - o.n.position.x, dz = tgt[1] - o.n.position.z, d = Math.hypot(dx, dz);
-      if (d < 0.6) o.i = (o.i + 1) % o.wp.length;
-      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { face: Math.atan2(dx, dz), go: true, move: true, carry: o.crate.visible }); if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; }
-      else if (d >= 0.6) { o.n.position.x += (dx / d) * 1.2 * dt; o.n.position.z += (dz / d) * 1.2 * dt; o.n.rotation.y = Math.atan2(dx, dz); }
+      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { plan: () => patrolStep(o) }); if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; continue; }
+      const tgt = o.wp[o.i], dx = tgt[0] - o.n.position.x, dz = tgt[1] - o.n.position.z, d = Math.hypot(dx, dz); if (d < 0.6) o.i = (o.i + 1) % o.wp.length;
+      if (d >= 0.6) { o.n.position.x += (dx / d) * 1.2 * dt; o.n.position.z += (dz / d) * 1.2 * dt; o.n.rotation.y = Math.atan2(dx, dz); }
     }
     // on a footbridge (src/baselife.js) a walker stands on its deck
     // (eased over about 1 / CONFIG.people.motion.deckEase s, so stepping onto a deck is not a jump)

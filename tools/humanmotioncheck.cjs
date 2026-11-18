@@ -35,7 +35,7 @@ const LIM = {
   snapStand: 20, snapWalk: 50, walkV: 0.3, // m/s2; ground speed (m/s) above which a person counts as walking
   plantCm: 3, plantDy: 0.015, skate: 0.15, stride: 0.15, slideDeg: 0.1, hipJump: 0.5,
   yawRate: 450, yawAcc: 5700, headRate: 400, headAcc: 10000,
-  fpsCm: 5, fpsDeg: 5, blackCut: 0.98,     // film: screen at least this black = a hidden cut
+  fpsCm: 5, fpsDeg: 5, blackCut: 0.999,    // film: a fully black screen = a hidden cut
   handIdle: 0.25, handAct: 2.5, handIdleDeg: 30, handActDeg: 720, handSnapMm: 2, handFpsMm: 1,
 };
 const BONES = ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'neck_01', 'head', 'clavicle_l', 'clavicle_r', 'upperarm_l', 'upperarm_r', 'lowerarm_l', 'lowerarm_r', 'hand_l', 'hand_r', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r', 'foot_l', 'foot_r'];
@@ -278,8 +278,7 @@ function analyzePerson(tr, dt, labels, film) {
       if (v > lim) popN++; if (v / lim > pop.ratio) pop = { ratio: v / lim, bone: BONES[b], v, lim, cm: d * 100, t: T(i), at: lab(i), aux: at(i, 10) };
       if (i + 1 < n && ok(i + 1)) { const p2 = bp(i + 1, b), d2 = hyp3(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]);
         const prev = i > 1 && ok(i - 1) ? (() => { const q = bp(i - 2, b); return hyp3(p0[0] - q[0], p0[1] - q[1], p0[2] - q[2]); })() : d;
-        // the limit is a * dt^2 at 60 fps; at a lower frame rate a smooth curve's one-sample excess grows with dt^3 (a jump does not), so it scales by dt^3 there (the 60 fps line and the 30-vs-60 line catch jumps)
-        const ex = d - Math.max(prev, d2), walk = vb[i] > LIM.walkV, sl = (walk ? LIM.snapWalk : LIM.snapStand) * dt * dt * Math.max(1, dt * 60);
+        const ex = d - Math.max(prev, d2), walk = vb[i] > LIM.walkV, sl = (walk ? LIM.snapWalk : LIM.snapStand) * dt * dt;
         if (ex > sl) snapN++; if (ex / sl > snap.ratio) snap = { ratio: ex / sl, bone: BONES[b], cm: ex * 100, limCm: sl * 100, t: T(i), at: lab(i), aux: at(i, 10) };
         const a = hyp3(p2[0] - 2 * p1[0] + p0[0], p2[1] - 2 * p1[1] + p0[1], p2[2] - 2 * p1[2] + p0[2]) / (dt * dt); if (a > acc.a) acc = { a, bone: BONES[b], t: T(i), at: lab(i), walking: vb[i] > LIM.walkV }; } }
   }
@@ -404,8 +403,8 @@ function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); 
     ok(h.snap.mm <= LIM.handSnapMm, 'hands one-sample jump over both neighbours: worst ' + f2(h.snap.mm) + ' mm (' + h.snap.hand + W(h.snap) + ', limit ' + LIM.handSnapMm + ' mm)');
     info('hands largest acceleration ' + f0(h.stop.a) + ' m/s2 (' + h.stop.hand + W(h.stop) + ')');
     for (const e of h.perEvent) ok(e.snapMm <= LIM.handSnapMm, 'hands at "' + e.what + '"' + (e.ok ? '' : ' (game refused it)') + ' t ' + f2(e.t) + ' s: largest move ' + f2(e.mmPerSample) + ' mm/sample (before ' + f2(e.mmBefore) + '), one-sample jump ' + f2(e.snapMm) + ' mm');
-    // 30 fps: a one-sample excess of a smooth curve grows with the sample time cubed (8 x at half the frame rate); a real jump does not shrink with it, so the 60 fps line and the
-    // 30-vs-60 path line below are what catch jumps
+    // 30 fps: a perfectly smooth minimum-jerk reach (0.18 m in 0.165 s, a fast hand move) leaves a one-sample excess of 2.7 mm at 60 fps but 18.6 mm at 30 fps (6.9 x, not 4 x:
+    // a smooth curve's excess grows with the sample time cubed), so this line allows 8 x the 60 fps limit; real jumps are caught by the 60 fps line and the 30-vs-60 path line
     if (hb) ok(hb.snap.mm <= LIM.handSnapMm * 8 && hb.idle.v <= LIM.handIdle, 'hands at 30 fps: worst jump ' + f2(hb.snap.mm) + ' mm (limit ' + LIM.handSnapMm * 8 + ' mm at 30 fps)' + W(hb.snap) + ', fastest with no action ' + f2(hb.idle.v) + ' m/s');
     if (hc) ok(hc.mm <= LIM.handFpsMm, 'hands same path at 30 and 60 fps: worst ' + f2(hc.mm) + ' mm (' + hc.hand + ' at ' + f2(hc.t) + ' s), ' + hc.matched + ' samples compared');
   }
