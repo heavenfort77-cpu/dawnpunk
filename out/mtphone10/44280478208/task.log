@@ -1,0 +1,7 @@
+$ mkdir -p mt/phone && node tools/marlateach.cjs phone mt/phone/ > mt/phone/run.txt 2>&1; tail -5 mt/phone/run.txt   (limit 70 min)
+737.3 | 841.9 | keys card (exploring) | ACT | tapped pause
+741.9 | 846.6 | keys card (exploring) | keys | Keys / Left thumb / walk / Right thumb / look; a quick tap fires (uses things in the base) / FIRE / shoot; hold it till the ring glows gold, then let go / Device button / one tap places it / Switch tab / opens all devices; tap one to pick it / SOLAR / solar collector (by day) / EAT / eat (heals) / L
+742.5 | 847.2 | keys card (exploring) | ACT | tapped #pKeys (Keys)
+frames, wall s, game s: [3270,850.5694,745.8195000000013]
+NO PAGE ERRORS
+exit code 0
