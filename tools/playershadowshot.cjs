@@ -26,7 +26,7 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m), info = (m) => con
   const place = (p, x, z, yaw, pitch, fov) => p.evaluate(([x, z, yaw, pitch, fov]) => { const g = window.__game; g.setTown(x, z); g.setYaw(yaw); g.setPitch(pitch); g.cam.fov = fov; g.cam.updateProjectionMatrix(); }, [x, z, yaw, pitch, fov]);
   const shots = [];
   async function shot(p, name) {
-    const f = OUT + name + '_' + tier + '.jpg'; await p.screenshot({ path: f, type: 'jpeg', quality: 88, timeout: 300000 }); shots.push([name, f]); info('wrote ' + f);
+    const f = OUT + name + '_' + tier + '.jpg'; await p.screenshot({ path: f, type: 'jpeg', quality: 90, timeout: 300000 }); shots.push([name, f]); info('wrote ' + f);
     if (B64) { const s = fs.readFileSync(f).toString('base64'); for (let i = 0, k = 0; i < s.length; i += 3000, k++) console.log('PSIMG ' + name + ' ' + k + ' ' + s.slice(i, i + 3000)); console.log('PSIMG ' + name + ' end'); }
     return f;
   }
@@ -46,12 +46,13 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m), info = (m) => con
   const sp = await clearSpot(p, 6); info('clear spot ' + JSON.stringify(sp));
   if (tier === 'high' || MODE === 'body') {
     // 1. looking down while walking (W held), the shadow ahead
-    await place(p, sp.x - sx * 2.5, sp.z - sz * 2.5, along, -0.78, 70); await frames(p, 2);
+    // walk along the road, the shadow falling ahead and a little to the right (start on the far side of the road so the shadow stays on the asphalt)
+    const wy = along + 0.45 * Math.sign(sz || 1) * Math.sign(sx || 1); await place(p, sp.x + 1.5, -3.1 * Math.sign(sz || 1), wy, -0.8, 75); await frames(p, 2);
     await p.keyboard.down('KeyW'); await frames(p, 7); I = await ps(p);
     ok(I.speed > 2 && I.amp > 0.9, 'walking: the body walks with the camera (speed ' + I.speed + ' m/s, stride ' + I.amp + ', phase ' + I.phase + ')');
     await shot(p, 'walk'); I = await ps(p); info('walk shot pose ' + JSON.stringify(I)); await p.keyboard.up('KeyW');
     // 3. standing still, the shadow seen at an angle (the body faces 50 degrees off the shadow line)
-    await place(p, sp.x, sp.z, along + 0.9, -0.62, 70); await frames(p, 14); I = await ps(p);
+    await place(p, sp.x, sp.z, along + 0.6, -0.55, 75); await frames(p, 14); I = await ps(p);
     ok(I.amp < 0.05, 'standing: the stride has eased out (stride ' + I.amp + ', speed ' + I.speed + ')');
     await shot(p, 'still');
     // the same frame drawn twice in one go, with and without the body: the difference is the shadow alone
@@ -60,21 +61,21 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m), info = (m) => con
     ok(cmp && cmp.bright === 0, 'the shadow adds no light anywhere (' + (cmp && cmp.bright) + ' brighter pixels)');
     // standing in a house's shadow: the body's shadow must vanish (it only removes sunlight, so nothing doubles)
     const sh = await p.evaluate((sun) => window.__pshadow.findShade(window.__game.world.g, window.__game.run.houses, sun), sun); info('house-shadow spot ' + JSON.stringify(sh));
-    if (sh) { await place(p, sh.x, sh.z, along + 0.9, -0.62, 70); await frames(p, 4); const c2 = await p.evaluate(() => window.__pshadow.compare()); info('in a house shadow, body shown vs hidden: ' + JSON.stringify(c2));
+    if (sh) { await place(p, sh.x, sh.z, along + 0.6, -0.55, 75); await frames(p, 4); const c2 = await p.evaluate(() => window.__pshadow.compare()); info('in a house shadow, body shown vs hidden: ' + JSON.stringify(c2));
       ok(c2 && c2.dark < 0.05 * cmp.dark && c2.bright === 0, 'in a house\'s shadow the body adds no second shadow (' + (c2 && c2.dark) + ' darker pixels against ' + cmp.dark + ' in the sun)'); }
     else info('no house-shadow spot found; the no-doubling test was not run');
     // 2. a sunlit house wall beside you: find a front wall facing the sun, stand 1.1 m off it, look at your shadow on it
     const wall = await p.evaluate((sun) => window.__pshadow.findWall(window.__game.world.g, window.__game.run.houses, sun), sun);
     info('wall pick ' + JSON.stringify(wall));
     if (wall) {
-      await place(p, wall.x, wall.z, wall.yaw, wall.pitch, 70); await frames(p, 14); await shot(p, 'wall');
+      await place(p, wall.x, wall.z, wall.yaw, wall.pitch, 75); await frames(p, 14); await shot(p, 'wall');
     } else ok(false, 'no sunlit house wall found for the wall view');
     // frame time, same still view, with the shadow
-    await place(p, sp.x, sp.z, along + 0.9, -0.62, 70); await frames(p, 6); const tOn = await frameMs(p, 12); I = await ps(p);
+    await place(p, sp.x, sp.z, along + 0.6, -0.55, 75); await frames(p, 6); const tOn = await frameMs(p, 12); I = await ps(p);
     info('frame time with the shadow (?pshadow=1), still view: mean ' + tOn.mean.toFixed(0) + ' ms, median ' + tOn.median.toFixed(0) + ' ms; shadow passes ' + I.passes + ', CPU time in them ' + I.passMs + ' ms (' + (I.passMs / Math.max(1, I.passes)).toFixed(2) + ' ms each)');
     await p.close();
     const q = await open(0); await frames(q, 4); ok(!(await ps(q)), 'with ?pshadow=0 nothing is built');
-    await place(q, sp.x, sp.z, along + 0.9, -0.62, 70); await frames(q, 6); const tOff = await frameMs(q, 12);
+    await place(q, sp.x, sp.z, along + 0.6, -0.55, 75); await frames(q, 6); const tOff = await frameMs(q, 12);
     info('frame time without the shadow (?pshadow=0), still view: mean ' + tOff.mean.toFixed(0) + ' ms, median ' + tOff.median.toFixed(0) + ' ms');
     info('FRAMECOST ' + arg + ': with ' + tOn.median.toFixed(0) + ' ms, without ' + tOff.median.toFixed(0) + ' ms (median of 12 frames, software renderer, 960x600)');
     await q.close();

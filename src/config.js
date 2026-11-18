@@ -557,7 +557,7 @@ export const CONFIG = {
       // blob: also lay the soft blob under the feet
       blob: false,
       // map: size of the body's shadow map (pixels, square)
-      map: 256,
+      map: 512,
       // box: half size of the shadow box round the body, across the sun's rays (m); it must hold the whole body with the cannon
       box: 1.25,
       // back: how far up the sun's rays from the body's middle the shadow box starts (m)
@@ -566,8 +566,8 @@ export const CONFIG = {
       reach: 14,
       // darkness: share of the sunlight the body takes away (1 = as dark as a house's shadow)
       darkness: 1,
-      // soft: blur of the shadow's edge (m)
-      soft: 0.025,
+      // soft: blur of the shadow's edge (m; 0 = the map's own 1-pixel smoothing, about 5 mm)
+      soft: 0.012,
       // bias: [depth bias, normal bias] of the body's shadow map, against stripes and gaps at the feet
       bias: [-0.0005, 0.02],
     },

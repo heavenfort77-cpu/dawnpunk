@@ -24,9 +24,21 @@ function patchShader() {
   const head = '#if ( NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\tDirectionalLight directionalLight;';
   const tail = 'vDirectionalShadowCoord[ i ] ) : 1.0;\n\t\t#endif\n';
   if (src.split(head).length !== 2 || src.split(tail).length !== 2) return false;
+  // PS's own lookup: one hardware-filtered depth comparison (soft 0) or four in a small square (soft > 0), no noise; outside PS's box (all but a few metres round you) it costs one test
   const pre = 'float pshMul = 1.0;\n#if defined( USE_SHADOWMAP ) && ( NUM_DIR_LIGHTS > 1 ) && ( NUM_DIR_LIGHT_SHADOWS > 1 )\n'
-    + '\tif ( receiveShadow && dot( directionalLights[ 0 ].color, vec3( 1.0 ) ) == 0.0 ) pshMul = getShadow( directionalShadowMap[ 0 ], directionalLightShadows[ 0 ].shadowMapSize, directionalLightShadows[ 0 ].shadowIntensity, directionalLightShadows[ 0 ].shadowBias, directionalLightShadows[ 0 ].shadowRadius, vDirectionalShadowCoord[ 0 ] );\n'
-    + '#endif\n';
+    + '\tif ( receiveShadow && dot( directionalLights[ 0 ].color, vec3( 1.0 ) ) == 0.0 ) {\n'
+    + '\t\t#if defined( SHADOWMAP_TYPE_PCF )\n'
+    + '\t\tvec4 psC = vDirectionalShadowCoord[ 0 ]; psC.xyz /= psC.w;\n'
+    + '\t\t#ifdef USE_REVERSED_DEPTH_BUFFER\n\t\tpsC.z -= directionalLightShadows[ 0 ].shadowBias;\n\t\t#else\n\t\tpsC.z += directionalLightShadows[ 0 ].shadowBias;\n\t\t#endif\n'
+    + '\t\tif ( psC.x >= 0.0 && psC.x <= 1.0 && psC.y >= 0.0 && psC.y <= 1.0 && psC.z <= 1.0 ) {\n'
+    + '\t\t\tfloat psR = directionalLightShadows[ 0 ].shadowRadius / directionalLightShadows[ 0 ].shadowMapSize.x, psS;\n'
+    + '\t\t\tif ( psR > 0.0 ) psS = 0.25 * ( texture( directionalShadowMap[ 0 ], vec3( psC.xy + vec2( -psR, -psR ) * 0.5, psC.z ) ) + texture( directionalShadowMap[ 0 ], vec3( psC.xy + vec2( psR, -psR ) * 0.5, psC.z ) )'
+    + ' + texture( directionalShadowMap[ 0 ], vec3( psC.xy + vec2( -psR, psR ) * 0.5, psC.z ) ) + texture( directionalShadowMap[ 0 ], vec3( psC.xy + vec2( psR, psR ) * 0.5, psC.z ) ) );\n'
+    + '\t\t\telse psS = texture( directionalShadowMap[ 0 ], psC.xyz );\n'
+    + '\t\t\tpshMul = mix( 1.0, psS, directionalLightShadows[ 0 ].shadowIntensity );\n\t\t}\n'
+    + '\t\t#else\n'
+    + '\t\tpshMul = getShadow( directionalShadowMap[ 0 ], directionalLightShadows[ 0 ].shadowMapSize, directionalLightShadows[ 0 ].shadowIntensity, directionalLightShadows[ 0 ].shadowBias, directionalLightShadows[ 0 ].shadowRadius, vDirectionalShadowCoord[ 0 ] );\n'
+    + '\t\t#endif\n\t}\n#endif\n';
   SC.lights_fragment_begin = src.replace(head, pre + head).replace(tail, tail + '\t\tdirectLight.color *= pshMul;\n');
   return true;
 }
@@ -149,14 +161,14 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   api.info = () => ({ on: true, tier, body: !!body, blob: !!blob, active: want, speed: +spd.toFixed(3), amp: +amp.toFixed(3), phase: +phase.toFixed(3), twist: +twist.toFixed(3), sun: sunDir.toArray().map((q) => +q.toFixed(4)), passes, passMs: +passMs.toFixed(1), map: body ? T.map : 0 });
   // test helper for tools/playershadowshot.cjs: a flat, sunlit front wall beside a door, where to stand (stand m off it) and where to look to see your own shadow on it
   api.findWall = (root, houses, sun, stand) => {
-    stand = stand || 1.1; const rc = new THREE.Raycaster(); rc.camera = lastCam; const L = new THREE.Vector3(-sun[0], -sun[1], -sun[2]), o = new THREE.Vector3(), d = new THREE.Vector3(); root.updateMatrixWorld(true);
+    stand = stand || 0.8; const rc = new THREE.Raycaster(); rc.camera = lastCam; const L = new THREE.Vector3(-sun[0], -sun[1], -sun[2]), o = new THREE.Vector3(), d = new THREE.Vector3(); root.updateMatrixWorld(true);
     const hit = (x, y, z, nx, nz) => { o.set(x, y, z); d.set(-nx, 0, -nz); rc.set(o, d); rc.far = 8; for (const h of rc.intersectObject(root, true)) { const m = h.object.material; if (!h.object.visible || !h.face || (m && (m.transparent || m.alphaTest > 0))) continue; return h; } return null; };
     let best = null;
     for (const h of houses) {
       let nx = h.doorX - h.x, nz = h.doorZ - h.z; const nl = Math.hypot(nx, nz) || 1; nx /= nl; nz /= nl; const lit = -(nx * L.x + nz * L.z); if (lit < 0.2) continue;
-      for (const off of [-3.2, -2.4, 2.4, 3.2]) {
-        const sx = h.doorX + nx * 4 - nz * off, sz = h.doorZ + nz * 4 + nx * off, H = [0.4, 1.0, 1.6].map((y) => hit(sx, y, sz, nx, nz)); if (H.some((q) => !q)) continue;
-        const dd = H.map((q) => q.distance); if (Math.max(...dd) - Math.min(...dd) > 0.06) continue;
+      for (const off of [-4, -3.2, -2.4, -1.6, 1.6, 2.4, 3.2, 4]) {
+        const sx = h.doorX + nx * 2 - nz * off, sz = h.doorZ + nz * 2 + nx * off, H = [1.2, 1.6, 2.0].map((y) => hit(sx, y, sz, nx, nz)); if (H.some((q) => !q)) continue;
+        const dd = H.map((q) => q.distance); if (Math.max(...dd) - Math.min(...dd) > 0.06 || dd[1] > 3.2) continue;
         const wx = sx - nx * dd[1], wz = sz - nz * dd[1], px2 = wx + nx * stand, pz2 = wz + nz * stand, head = new THREE.Vector3(px2, 1.65, pz2), t = ((wx - px2) * nx + (wz - pz2) * nz) / (L.x * nx + L.z * nz);
         const sh = head.clone().addScaledVector(L, t), ty = Math.max(0.4, sh.y - 0.45), dx = sh.x - px2, dz = sh.z - pz2, hd = Math.hypot(dx, dz);
         const c = { house: h.i, off, lit: +lit.toFixed(2), x: +px2.toFixed(3), z: +pz2.toFixed(3), yaw: Math.atan2(-dx, -dz), pitch: Math.atan2(ty - 1.6, hd), headOnWall: +sh.y.toFixed(2) };
@@ -179,7 +191,8 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   api.compare = () => {
     if (!lastCam || !body) return null; const cv = renderer.domElement, w = cv.width, h = cv.height, c2 = document.createElement('canvas'); c2.width = w; c2.height = h; const x = c2.getContext('2d', { willReadFrequently: true });
     const grab = (vis) => { body.root.visible = vis; fresh = true; renderer.render(scene, lastCam); x.drawImage(cv, 0, 0); return x.getImageData(0, 0, w, h).data; };
-    const a = grab(true), b = grab(false); body.root.visible = want; fresh = true;
+    // game time stands still between the two draws (swaying grass and drifting clouds read the clock), so only the body differs
+    const pn = performance.now, T0 = pn.call(performance); performance.now = () => T0; let a, b; try { a = grab(true); b = grab(false); } finally { performance.now = pn; } body.root.visible = want; fresh = true;
     let dark = 0, bright = 0, ratio = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1; const L = (d, i) => 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
     for (let i = 0; i < a.length; i += 4) { const la = L(a, i), lb = L(b, i); if (la < lb - 3) { dark++; ratio += la / Math.max(1, lb); const q = i / 4, px2 = q % w, py2 = (q / w) | 0; x0 = Math.min(x0, px2); x1 = Math.max(x1, px2); y0 = Math.min(y0, py2); y1 = Math.max(y1, py2); } else if (la > lb + 3) bright++; }
     return { dark, bright, ratio: dark ? +(ratio / dark).toFixed(3) : 0, box: [x0, y0, x1, y1], n: w * h };
