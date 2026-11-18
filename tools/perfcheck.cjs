@@ -1,5 +1,5 @@
 // Lag check (lag report Nov 18, fix batch Nov 19): draw calls and triangles per frame at four fixed spots, and the bytes the page downloads.
-// Usage: node tools/perfcheck.cjs [high|low|both] [out_dir]     (out_dir given: a 1280x720 picture of each spot is written there as <tier>_<spot>.png)
+// Usage: node tools/perfcheck.cjs [medium|high|low|all|both|comma list, default medium] [out_dir]     (out_dir given: a 1280x720 picture of each spot is written there as <tier>_<spot>.png)
 // Spots (set up with the test hooks on window.__game, as tools/itchshot.cjs does): hub = day 1 in the base just after "click to begin" (fresh save, the start spot);
 // street = the old street by day at the run's start; house = night inside a house with a Gloom crossing the yard toward the opening you face; boss = THE BECKONER's night, seen from the house.
 // Counting is done on the WebGL calls themselves (every drawArrays / drawElements and their instanced forms, all passes: sun shadow map, contact shading, screen, hands),
@@ -9,13 +9,14 @@
 // REAL FRAME RATES (coordinator Nov 19): GPU=1 runs Chromium on the real GPU of a GitHub macOS runner (.github/workflows/perfgpu.yml; tools/gpu_task.sh starts it):
 // at each spot, after the counting, SETTLE seconds of frames are drawn (first-use hitches: shader builds, uploads; their worst frame is printed as 'first'), then
 // SECS seconds are timed: fps, average, 95th percentile and worst frame (ms) of steady play, with game time held still so the picture is the same throughout.
-// PASS / FAIL lines: the targets below, set from the measured numbers after the lag fixes (Nov 19); the low tier (phone) is printed but has no targets (phones are frozen).
+// PASS / FAIL lines: the owner's budget (Nov 19) on the default tier (medium) at every spot; other tiers are printed only. On the default tier it also checks the ?perf=1
+// overlay, the automatic step-down and that GPU memory does not grow across runs (NOEXTRA=1 skips that).
 const { chromium } = require('playwright'); const http = require('http'); const fs = require('fs'); const path = require('path');
-const ARG = process.argv[2] || 'high', OUT = process.argv[3] || '', SEED = +(process.env.SEED || 777), FRAMES = +(process.env.FRAMES || 6), DIST = path.join(__dirname, '..', 'dist');
+const ARG = process.argv[2] || 'medium', OUT = process.argv[3] || '', SEED = +(process.env.SEED || 777), FRAMES = +(process.env.FRAMES || 6), DIST = path.join(__dirname, '..', 'dist');
 const GPU = !!process.env.GPU, SECS = +(process.env.SECS || (GPU ? 8 : 0)), SETTLE = +(process.env.SETTLE || 6);
 const ONLY = process.env.SPOTS ? process.env.SPOTS.split(',') : ['hub', 'street', 'house', 'boss'];
-// targets on the high tier: draw calls per frame (all passes), triangles per frame (all passes), MB downloaded before the hub is ready
-const TARGET = { hub: { calls: 500, tris: 1.0e6 }, street: { calls: 500, tris: 1.0e6 }, house: { calls: 500, tris: 1.0e6 }, boss: { calls: 500, tris: 1.0e6 }, startMB: 20 };
+// targets (owner's budget Nov 19) on the DEFAULT tier (TT, medium): draw calls per frame (all passes), triangles per frame (all passes), MB downloaded before the hub is ready
+const TT = 'medium', TARGET = { hub: { calls: 500, tris: 0.5e6 }, street: { calls: 500, tris: 0.5e6 }, house: { calls: 500, tris: 0.5e6 }, boss: { calls: 500, tris: 0.5e6 }, startMB: 20 };
 if (OUT) fs.mkdirSync(OUT, { recursive: true });
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.jpg': 'image/jpeg', '.png': 'image/png', '.mp3': 'audio/mpeg', '.glb': 'model/gltf-binary', '.json': 'application/json', '.ktx2': 'image/ktx2' };
 let served = [], T0 = Date.now();
@@ -98,7 +99,7 @@ const BREAKDOWN = (spot) => {
       // day 1, a fresh save, the start spot and view
       await p.evaluate(() => window.__game.enterBase()); await waitLoads('hub'); const startMB = MB(sumB()); await waitGame(3, 0.3);
       const r = await measure('hub'); r.startMB = startMB; info(tier + ' downloaded before the hub was ready: ' + startMB + ' MB (' + served.length + ' requests)');
-      if (tier === 'high') out.push(['high: downloaded before the hub is ready ' + startMB + ' MB (target < ' + TARGET.startMB + ')', startMB < TARGET.startMB]);
+      if (tier === TT) out.push([TT + ': downloaded before the hub is ready ' + startMB + ' MB (target < ' + TARGET.startMB + ')', startMB < TARGET.startMB]);
     }
     if (ONLY.includes('street')) {
       await midSave({ day: 5, nights: 3, food: 17, ess: 6, ringOpen: 3, scout: 2, cats: [0, 2, 3] }); await startRun(1); await waitGame(3, 0.5); await measure('street');
@@ -130,12 +131,32 @@ const BREAKDOWN = (spot) => {
     const lo = served.filter((s) => /models\//.test(s.f)).map((s) => s.f.replace('models/', '') + ' @' + Math.round((s.t - T0) / 1000) + 's').join(', ');
     info(tier + ' total downloaded ' + MB(sumB()) + ' MB in ' + served.length + ' requests; models fetched: ' + (lo || 'none'));
     console.log(errs.length ? 'INFO page errors (' + tier + '): ' + [...new Set(errs)].slice(0, 4).join(' | ') : 'INFO no page errors (' + tier + ')');
-    if (tier === 'high') out.push(['high: no page errors' + (errs.length ? ': ' + [...new Set(errs)].slice(0, 2).join(' | ') : ''), errs.length === 0]);
+    if (tier === TT) out.push([TT + ': no page errors' + (errs.length ? ': ' + [...new Set(errs)].slice(0, 2).join(' | ') : ''), errs.length === 0]);
     await ctx.close();
   }
-  for (const r of rows) { if (r.tier !== 'high' || !TARGET[r.spot]) continue; const T = TARGET[r.spot];
-    out.push(['high ' + r.spot + ': ' + r.calls + ' draw calls per frame (target < ' + T.calls + ')', r.calls < T.calls]);
-    out.push(['high ' + r.spot + ': ' + (r.tris / 1e6).toFixed(2) + ' M triangles per frame (target < ' + (T.tris / 1e6).toFixed(2) + ' M)', r.tris < T.tris]); }
+  // EXTRA (the default tier, when it is measured): the ?perf=1 overlay, the automatic step-down (forced) and GPU memory across runs (renderer.info.memory must not grow)
+  if (!process.env.NOEXTRA && rows.some((r) => r.tier === TT)) {
+    const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); await ctx.addInitScript(INIT, { seed: SEED }); const p = await ctx.newPage(); p.setDefaultTimeout(900000); const errs = []; p.on('pageerror', (e) => errs.push(String(e).slice(0, 200)));
+    await p.goto(URL0 + '?quality=' + TT + '&perf=1&autostep=1&seed=' + SEED, { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 });
+    await p.evaluate(() => window.__game.enterBase()); await p.waitForFunction(() => window.__perfHud, null, { timeout: 600000 }).catch(() => null);
+    const hud = await p.evaluate(() => { const e = document.getElementById('perfhud'); return e ? e.textContent.replace(/\n/g, ' | ') : ''; });
+    out.push([TT + ': ?perf=1 overlay shows fps, frame ms, calls, triangles, tier, ratio, steps: "' + hud + '"', /fps/.test(hud) && /worst/.test(hud) && /calls \d+/.test(hud) && /tris/.test(hud) && new RegExp('tier ' + TT + ' \\(address\\)').test(hud) && /ratio/.test(hud) && /steps 0/.test(hud)]);
+    const st = await p.evaluate(() => { const g = window.__game; for (let i = 0; i < 4; i++) g.perfForce(); const q = g.quality(); return { s: g.perfStep(), ratio: q.pixelRatio, lights: q.lights, shadow: q.shadow }; });
+    out.push([TT + ': the step-down (forced 4 times) takes ratio, ao, shadow, lights: ' + JSON.stringify(st), st.s.taken.join(',') === 'ratio,ao,shadow,lights' && st.ratio === 1 && st.lights <= 1]);
+    await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    const mem = []; for (let k = 0; k < 3; k++) { await p.evaluate(() => { const g = window.__game; document.getElementById('selRing').value = '1'; g.startRun(); g.enterHouse(0); g.nightfall(); const s = g.sim; for (let i = 0; i < 400 && !s.gloom.length; i++) s.step(0.05); });
+      for (let f = 0; f < 4; f++) await p.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+      await p.evaluate(() => window.__game.reBase()); for (let f = 0; f < 4; f++) await p.evaluate(() => new Promise((r) => requestAnimationFrame(r))); mem.push(await p.evaluate(() => window.__game.gpu())); }
+    out.push([TT + ': GPU memory back in the base after runs 1, 2, 3 (geometries/textures): ' + mem.map((m) => m.geometries + '/' + m.textures).join(', ') + ' (must not grow from run 2 to run 3)', mem[2].geometries <= mem[1].geometries + 20 && mem[2].textures <= mem[1].textures + 4]);
+    out.push([TT + ': no page errors in the overlay, step and memory run' + (errs.length ? ': ' + errs.slice(0, 2).join(' | ') : ''), errs.length === 0]);
+    await ctx.close();
+  }
+  for (const r of rows) { if (r.tier !== TT || !TARGET[r.spot]) continue; const T = TARGET[r.spot];
+    out.push([TT + ' ' + r.spot + ': ' + r.calls + ' draw calls per frame (target < ' + T.calls + ')', r.calls < T.calls]);
+    out.push([TT + ' ' + r.spot + ': ' + (r.tris / 1e6).toFixed(2) + ' M triangles per frame (target < ' + (T.tris / 1e6).toFixed(2) + ' M)', r.tris < T.tris]); }
+  // owner Nov 19 06:43: the night house and the boss night are the most intense play, so on the default tier their real frame rate (GPU=1) must be at least the hub's
+  { const f = (sp) => (rows.find((r) => r.tier === TT && r.spot === sp) || {}).fps; const hub = f('hub');
+    if (hub) for (const sp of ['house', 'boss']) if (f(sp)) out.push([TT + ' ' + sp + ': ' + f(sp) + ' fps, hub ' + hub + ' fps (the night must not be slower than the hub)', f(sp) >= hub]); }
   console.log('PERFJSON ' + JSON.stringify(rows));
   let bad = 0; for (const [n, ok] of out) { if (!ok) bad++; console.log((ok ? 'PASS ' : 'FAIL ') + n); }
   console.log(bad ? 'PERF CHECK FAILED (' + bad + ')' : 'ALL PERF CHECKS PASS');

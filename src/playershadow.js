@@ -166,7 +166,7 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   api.info = () => ({ on: true, tier, body: !!body, blob: !!blob, active: want, feet: +feet.toFixed(3), hang, blobOn, blobVis: blob ? blob.visible : null, blobAt: blob ? blob.position.toArray().map((q) => +q.toFixed(3)) : null, bodyVis: body ? body.root.visible : null, at: body ? body.root.position.toArray().map((q) => +q.toFixed(3)) : null, sunI: sun ? +sun.intensity.toFixed(3) : 0, psI: PS ? PS.shadow.intensity : 0, speed: +spd.toFixed(3), amp: +amp.toFixed(3), phase: +phase.toFixed(3), twist: +twist.toFixed(3), sun: sunDir.toArray().map((q) => +q.toFixed(4)), passes, passMs: +passMs.toFixed(1), map: body ? T.map : 0 });
   // test helper for tools/playershadowshot.cjs: a flat, sunlit front wall beside a door, where to stand (stand m off it) and where to look to see your own shadow on it
   api.findWall = (root, houses, sun, stand) => {
-    stand = stand || 0.75; const rc = new THREE.Raycaster(); rc.camera = lastCam; const L = new THREE.Vector3(-sun[0], -sun[1], -sun[2]), o = new THREE.Vector3(), d = new THREE.Vector3(); root.updateMatrixWorld(true);
+    stand = stand || 0.75; const rc = new THREE.Raycaster(); rc.layers.enableAll(); rc.camera = lastCam; const L = new THREE.Vector3(-sun[0], -sun[1], -sun[2]), o = new THREE.Vector3(), d = new THREE.Vector3(); root.updateMatrixWorld(true);
     // the first solid surface along the ray; null when leaves or glass hang just in front of it (ivy-covered or a window)
     const hit = (x, y, z, nx, nz) => { o.set(x, y, z); d.set(-nx, 0, -nz); rc.set(o, d); rc.far = 6; let soft = -1; for (const h of rc.intersectObject(root, true)) { const m = h.object.material; if (!h.object.visible || !h.face) continue; if (m && (m.transparent || m.alphaTest > 0)) { soft = h.distance; continue; } return soft >= 0 && h.distance - soft < 0.5 ? null : h; } return null; };
     let best = null;
@@ -186,7 +186,7 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   };
   // test helper: a spot in a house's shadow, where the feet and the ground 3 m further down the rays are both shaded by the house (the body's shadow must vanish there: nothing doubles)
   api.findShade = (root, houses, sun) => {
-    const rc = new THREE.Raycaster(); rc.camera = lastCam; const U = new THREE.Vector3(sun[0], sun[1], sun[2]), hx = -sun[0], hz = -sun[2], hl = Math.hypot(hx, hz) || 1; root.updateMatrixWorld(true);
+    const rc = new THREE.Raycaster(); rc.layers.enableAll(); rc.camera = lastCam; const U = new THREE.Vector3(sun[0], sun[1], sun[2]), hx = -sun[0], hz = -sun[2], hl = Math.hypot(hx, hz) || 1; root.updateMatrixWorld(true);
     const shaded = (x, z) => { rc.set(new THREE.Vector3(x, 0.08, z), U); rc.far = 40; return rc.intersectObject(root, true).some((h) => h.object.visible && h.face && !(h.object.material && (h.object.material.transparent || h.object.material.alphaTest > 0))); };
     for (const h of houses) for (const d of [3, 4, 5]) for (const s of [-1.5, 0, 1.5]) {
       const x = h.x + hx / hl * (h.H + d) - hz / hl * s, z = h.z + hz / hl * (h.H + d) + hx / hl * s;

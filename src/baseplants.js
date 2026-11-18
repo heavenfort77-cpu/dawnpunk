@@ -8,6 +8,7 @@
 //   bush   - a garden bush of overlapping lobes of small leaves, darker inside, stems at the foot (the cat-cover bushes by the garden, desktop)
 // Each placement gets its own turn, size and tint (instanceColor), so beds read as many different plants. Numbers: CONFIG.baseLife.plants.
 import * as THREE from 'three';
+import { CONFIG } from './config.js';
 
 const PI = Math.PI;
 function rng(seed) { let q = (seed >>> 0) || 1; return () => { q = (q * 1664525 + 1013904223) >>> 0; return q / 4294967296; }; }
@@ -81,6 +82,18 @@ export function plantKit(hi, seed) {
     count: () => Object.values(list).reduce((a, l) => a + l.length, 0) + later.length,
     build(parent) { let draws = 0, tris = 0; const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), c = new THREE.Color();
       for (const [g, kind, v, sz] of later) { g.updateMatrixWorld(true); const w = v.applyMatrix4(g.matrixWorld); this.add(kind, w.x, w.y, w.z, sz); } later.length = 0;
+      // LAG FIX Nov 19 (desktop): the plants of each kind are split into square cells (CONFIG.lag.plants.cell m), each a THREE.LOD: the full plant within `near` m, the
+      // phone's lighter plant beyond, so plants behind you are culled and far ones cost less (before: one mesh per kind for the whole base, every plant always drawn in full)
+      const PC = hi && CONFIG.lag && CONFIG.lag.plants;
+      // each plant's random tilt, height and tint are drawn in the same order as before, so every plant looks exactly as it did
+      if (PC) { const cells = new Map(); for (const [kind, L] of Object.entries(list)) for (const it of L) { it.push([r(), r(), r(), r(), r(), r()]); const k = kind + '|' + Math.floor(it[0] / PC.cell) + ',' + Math.floor(it[2] / PC.cell); (cells.get(k) || cells.set(k, { kind, L: [] }).get(k)).L.push(it); }
+        for (const { kind, L } of cells.values()) { let cx = 0, cz = 0; for (const it of L) { cx += it[0]; cz += it[2]; } cx /= L.length; cz /= L.length; const lod = new THREE.LOD(); lod.position.set(cx, 0, cz); lod.userData.life = true;
+          const mk = (geo) => { const im = new THREE.InstancedMesh(geo, plantMat(), L.length), cl = new Float32Array(L.length * 3);
+            L.forEach(([x, y, z, s, ry, tint, tilt, R], i) => { e.set((R[0] - 0.5) * 0.12 + tilt, ry, (R[1] - 0.5) * 0.12, 'YXZ'); q.setFromEuler(e); const sy = s * (0.85 + 0.3 * R[2]); m4.compose(V(x - cx, y, z - cz), q, V(s, sy, s)); im.setMatrixAt(i, m4);
+              c.set(tint === null || tint === undefined ? 0xffffff : tint).offsetHSL((R[3] - 0.5) * 0.04, (R[4] - 0.5) * 0.12, (R[5] - 0.5) * 0.1); cl[3 * i] = c.r; cl[3 * i + 1] = c.g; cl[3 * i + 2] = c.b; });
+            im.instanceColor = new THREE.InstancedBufferAttribute(cl, 3); im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); im.userData.life = true; im.userData.noAO = true; return im; };
+          lod.addLevel(mk(plantGeo(kind, true)), 0); lod.addLevel(mk(plantGeo(kind, false)), PC.near); parent.add(lod); draws++; tris += (plantGeo(kind, true).index.count / 3) * L.length; }
+        return { draws, tris: Math.round(tris) }; }
       for (const [kind, L] of Object.entries(list)) { const geo = plantGeo(kind, hi), im = new THREE.InstancedMesh(geo, plantMat(), L.length), cl = new Float32Array(L.length * 3);
         L.forEach(([x, y, z, s, ry, tint, tilt], i) => { e.set((r() - 0.5) * 0.12 + tilt, ry, (r() - 0.5) * 0.12, 'YXZ'); q.setFromEuler(e); const sy = s * (0.85 + 0.3 * r()); m4.compose(V(x, y, z), q, V(s, sy, s)); im.setMatrixAt(i, m4);
           c.set(tint === null || tint === undefined ? 0xffffff : tint).offsetHSL((r() - 0.5) * 0.04, (r() - 0.5) * 0.12, (r() - 0.5) * 0.1); cl[3 * i] = c.r; cl[3 * i + 1] = c.g; cl[3 * i + 2] = c.b; });

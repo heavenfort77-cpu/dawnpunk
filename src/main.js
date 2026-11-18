@@ -27,6 +27,7 @@ import { createPerson } from './people.js';
 import { createFx } from './fx.js';
 import { createPerfStep } from './perfstep.js';
 import { lodTick } from './lod.js';
+import { createNightCull } from './nightcull.js';
 import { gloomPreload, glbHooks, glbCopy } from './gloomglb.js';
 import { openBook, loadBookFonts, closeBook } from './book.js';
 import { MODELS } from './modeldata.js';
@@ -76,6 +77,8 @@ const KIND_LINE = { lurcher: 'Lurcher. Fast one, Potts. Do not blink.', hauler: 
 // perf: the automatic step-down (made after the renderer's first resize, below); perfRest(): a new scene starts, wait before measuring frames again
 // paused: the picture is drawn once and then held (the page keeps the last frame) until play resumes; a lost WebGL context draws nothing until it is restored
 let holdDraw = false, pauseDrawn = false, ctxLost = false;
+// at night inside a house only what shows through its openings is drawn (src/nightcull.js, CONFIG.lag.nightCull)
+const nightCull = createNightCull();
 let perf = null; const perfRest = () => { if (perf) perf.rest(); };
 // desktop Gloom models (src/gloomglb.js) load per run, not at page start: every kind the ring can send (CONFIG.gloom.kinds minRing), asked for when the run starts;
 // the opening film's kinds load at once for a first visit (no save yet), so the film shows the models
@@ -119,7 +122,7 @@ function wakeDormant(i, how) { const D = CONFIG.dormant, d = run && run.dormant 
 function tickStir(dt) { if (!run || !run.dormant || !dormG) return; const D = CONFIG.dormant, t = performance.now() / 1000; run.dormant.forEach((d, i) => { if (!(d.stir > 0)) return; d.stir = Math.max(0, d.stir - dt); const o = dormM[i]; if (!o) return; const k = d.stir > 0 ? 1 : 0, w = t * D.shakeHz * Math.PI * 2;
   o.rotation.y = d.ry + k * D.shake * Math.sin(w); o.rotation.z = k * D.shake * 0.5 * Math.sin(w * 1.3); for (const m of o.userData.scr || []) m.color.setScalar(k && Math.sin(t * D.flick * Math.PI * 2) > 0 ? D.lit : 0.03); }); }
 function aimedDormant(cs, reach) { if (!run || !run.dormant) return -1; const fx = -Math.sin(yaw), fz = -Math.cos(yaw); let best = cs, bi = -1; run.dormant.forEach((d, i) => { const dx = d.x - run.px, dz = d.z - run.pz, dd = Math.hypot(dx, dz); if (dd < 0.3 || dd > reach) return; const c = (dx * fx + dz * fz) / dd; if (c > best) { best = c; bi = i; } }); return bi; }
-function dropWorld() { if (dormG) { if (world) world.g.remove(dormG); drop(dormG); dormG = null; } if (world) { scene.remove(world.g); world.dispose(); world = null; } }
+function dropWorld() { nightCull.reset(); if (dormG) { if (world) world.g.remove(dormG); drop(dormG); dormG = null; } if (world) { scene.remove(world.g); world.dispose(); world = null; } }
 function buildGrounding() { depthMats(); const D = CONFIG.depth, g = new THREE.Group(), put = (x, z, w, l, ry) => { const s = new THREE.Mesh(flatGeo, shadeMat); s.scale.set(w, 1, l); s.position.set(x, 0.035, z); s.rotation.y = ry; s.renderOrder = 1; s.userData.blob = true; g.add(s); };
   for (const h of run.houses) { const th = -Math.atan2(h.sn, h.cs), R = h.H + D.wallOut; for (const [lx, lz, q] of [[0, R, 0], [0, -R, 0], [R, 0, Math.PI / 2], [-R, 0, Math.PI / 2]]) put(h.x + lx * h.cs - lz * h.sn, h.z + lx * h.sn + lz * h.cs, 2 * h.H * D.wallLen, D.wallW, th + q); }
   for (const cr of run.cars || []) put(cr.x, cr.z, D.car[0], D.car[1], cr.yaw);
@@ -315,6 +318,8 @@ function duskHold(dt, active) { const held = active && (duskDown || keys.KeyN); 
 // your journal under "Found notes" (save.loreFound); each note is found once. At night the paper stays, with no glint and no prompt, so the defence is unchanged.
 let loreN = null, loreOn = false, loreOpen = false, lorePaper = null, loreMs = 0;
 const loreRay = new THREE.Raycaster(), loreV = new THREE.Vector3(), loreD = new THREE.Vector3();
+// (pieces hidden at night by src/nightcull.js sit on layer 1: the ray still sees them)
+loreRay.layers.enableAll();
 function loreCss() {
   if ($('loreCss')) return;
   const s = document.createElement('style'); s.id = 'loreCss';
@@ -1379,7 +1384,7 @@ function frame(now) {
       const gy = sim.gloomY(g);
       m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; if (m.userData.anim) m.userData.anim(performance.now() / 1000, g); else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
     }
-    tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000);
+    tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000); nightCull.tick(world, sim, cam, dormG);
     bossTick(dt, sim, { scene, cam, audio }); scrapTick(dt, { scene }); // the final-night boss (src/bosshi.js): after the camera is set, before the frame is drawn
     if (run && sim.L > 1 && !run.toldStairs && save && (save.nights || 0) < 2 && [...sim.stairs.map((q) => [q.bx, q.bz]), ...sim.stairs.map((q) => [q.tx, q.tz]), ...sim.ladders.map((q) => [q.x, q.z])].some((q) => Math.hypot(q[0] - sim.player.x, q[1] - sim.player.z) < 3)) { run.toldStairs = true; marlaHint('Stairs: the Gloom use them too. The ladder: only you can climb it.'); }
     if (kindQ.length && sim.phase === 'night' && marlaT <= 0.01 && sim.t > CONFIG.gloomLook.kindLineAfter && !paused) marlaHint(kindQ.shift());
