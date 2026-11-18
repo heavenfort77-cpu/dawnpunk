@@ -1,0 +1,4 @@
+$ mkdir -p shots && node tools/splashshot.cjs "$PWD/dist/index.html" shots/s_ readyP   (limit 15 min)
+wrote shots/s__readyP.png phase ready 100%
+readyP NO ERRORS
+exit code 0
