@@ -58,7 +58,16 @@ const J = (o) => JSON.stringify(o);
   const standsOn = async (y, where) => { const I2 = await ps(p), cy = await camY(); const good = Math.abs(I2.feet - y) < 0.02 && Math.abs(cy - 1.6 - y) < 0.1 && (HI ? I2.bodyVis && I2.at[1] <= y + 0.005 && I2.at[1] >= y - 0.05 : I2.blobOn && Math.abs(I2.blobAt[1] - y - C.lift) < 0.005);
     ok(good, where + ': the ' + (HI ? 'body' : 'blob') + ' stands on the floor at ' + y.toFixed(2) + ' m ' + J({ feet: I2.feet, eye: +cy.toFixed(3), at: HI ? I2.at : I2.blobAt, shown: HI ? I2.bodyVis : I2.blobOn })); return I2; };
   I = await standsOn(0, 'base ground');
-  if (HI) { const c = await cmp(p); info('base, body shown vs hidden ' + J(c)); ok(c && c.bright === 0, 'base: the shadow adds no light (' + (c && c.bright) + ' brighter pixels, ' + (c && c.dark) + ' darker)'); }
+  if (HI) {
+    // a few open spots of the base, looking down the sun's rays at the ground ahead (the shadow lies there); the best one must show the body's shadow, none may brighten anything
+    const bs = I.sun, bh = Math.hypot(bs[0], bs[2]) || 1, byaw = Math.atan2(-bs[0] / bh, -bs[2] / bh) + Math.PI, seen = [];
+    for (const [x, z] of [[3, 7], [0, 4], [-4, 6], [6, 3], [2, -4], [-6, -2], [8, 8], [-8, 8]]) { await p.evaluate(([x, z, yw]) => { const g = window.__game; g.setBase(x, z); g.setYaw(yw); g.setPitch(-0.55); }, [x, z, byaw + 0.6]); await settle(p, 6, 300); const c = await cmp(p); seen.push([x, z, c ? c.dark : -1, c ? c.bright : -1]); if (c && c.dark > 0.005 * c.n) break; }
+    info('base spots [x, z, darker, brighter] ' + J(seen) + ' sun ' + J(bs));
+    const bestB = seen.reduce((m, q) => (q[2] > m[2] ? q : m), seen[0]);
+    ok(bestB[2] > 0.005 * 256000 && seen.every((q) => q[3] === 0), 'base by day: the body casts a visible shadow on the ground (' + bestB[2] + ' darker pixels at ' + bestB[0] + ',' + bestB[1] + ') and adds no light anywhere');
+    if (bestB[2] > 0) { await p.evaluate(([x, z]) => window.__game.setBase(x, z), bestB); await settle(p, 4, 300); await shot(p, 'base'); }
+    await p.evaluate(() => { const g = window.__game; g.setBase(3, 7); g.setPitch(0); }); await settle(p, 4, 300);
+  }
   else { const c = await cmp(p); ok(c && c.bright === 0, 'base: the blob adds no light (' + (c && c.bright) + ' brighter pixels, ' + (c && c.dark) + ' darker)'); }
   // a footbridge: walk the deck's spots near the bridge's point until the game puts the view over the deck
   let deck = null;
@@ -85,7 +94,7 @@ const J = (o) => JSON.stringify(o);
     ok(c1 && c1.bright === 0, 'street by day: the shadow only darkens (' + (c1 && c1.bright) + ' brighter pixels)');
     await shot(p, 'street');
     // walking: the body walks with the view and its shadow is still there at the new spot
-    const at0 = I.at; await p.evaluate(() => window.__game.setYaw(window.__game.yaw - 0.6)); await p.keyboard.down('KeyW'); for (let k = 0; k < 60; k++) { await frames(p, 2); const q = await ps(p); if (Math.hypot(q.at[0] - at0[0], q.at[2] - at0[2]) > 1.5) break; } const Iw = await ps(p); const camW = await p.evaluate(() => window.__game.cam.position.toArray()); await p.keyboard.up('KeyW');
+    const at0 = I.at; await p.evaluate(() => window.__game.setYaw(window.__game.yaw - 0.6)); await p.keyboard.down('KeyW'); for (let k = 0; k < 60; k++) { await frames(p, 2); const q = await ps(p); if (Math.hypot(q.at[0] - at0[0], q.at[2] - at0[2]) > 1.5) break; } const [Iw, camW] = await p.evaluate(() => [window.__pshadow.info(), window.__game.cam.position.toArray()]); await p.keyboard.up('KeyW');
     const moved = Math.hypot(Iw.at[0] - at0[0], Iw.at[2] - at0[2]), off = Math.hypot(Iw.at[0] - camW[0], Iw.at[2] - camW[2]);
     ok(Iw.speed > 2 && Iw.amp > 0.9 && moved > 1 && off <= C.eyeFwd + 0.02, 'walking: the body moves with you (' + moved.toFixed(2) + ' m, ' + off.toFixed(3) + ' m behind the eye, speed ' + Iw.speed + ' m/s, stride ' + Iw.amp + ')');
     await settle(p, 12); const c2 = await cmp(p); I = await ps(p);
