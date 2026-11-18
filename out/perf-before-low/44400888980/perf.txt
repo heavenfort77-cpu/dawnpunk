@@ -1,0 +1,23 @@
+INFO dist sizes MB: index.html 12.5, index_single.html 84.1, solardg-itch.zip 52.5, models/ 41.1, tex/ 7.2, music/ 3.1, voice/ 2.3
+INFO low: page up 1 s, 15.6 MB so far
+INFO hub loaded 5 s 16.1 MB so far
+PERF low hub: calls 812 (screen 812), triangles 0.26 M (screen 0.26 M), frame 668 ms (software GPU), downloaded 16.1 MB, cam 3.0,1.6,7.0 yaw 0.00
+INFO low downloaded before the hub was ready: 16.1 MB (5 requests)
+INFO base loaded 25 s 16.1 MB so far
+INFO run loaded 32 s 16.2 MB so far
+PERF low street: calls 357 (screen 357), triangles 0.13 M (screen 0.13 M), frame 541 ms (software GPU), downloaded 16.2 MB, cam 0.0,1.6,0.0 yaw 0.00
+INFO base loaded 45 s 16.2 MB so far
+INFO run loaded 51 s 16.2 MB so far
+INFO night loaded 63 s 16.2 MB so far
+INFO night: first Gloom {"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0}}
+INFO night gloom loaded 71 s 16.2 MB so far
+INFO Gloom present: walker,ticks,walker,walker,walker,ticks
+PERF low house: calls 860 (screen 860), triangles 0.10 M (screen 0.10 M), frame 846 ms (software GPU), downloaded 16.2 MB, cam -1.9,1.6,-5.2 yaw 1.57
+INFO base loaded 85 s 16.2 MB so far
+INFO run loaded 90 s 16.2 MB so far
+INFO boss view {"x":-3.543984156606088,"z":7.508194474288627,"dd":17.995876745199016} {"model":"none","boss":true}
+PERF low boss: calls 268 (screen 268), triangles 0.11 M (screen 0.11 M), frame 778 ms (software GPU), downloaded 16.3 MB, cam -3.5,1.6,7.5 yaw 2.16
+INFO low total downloaded 16.3 MB in 14 requests; models fetched: bram_scan_lo.glb @1s
+INFO no page errors (low)
+PERFJSON [{"tier":"low","spot":"hub","calls":812,"tris":256424,"sCalls":812,"sTris":256424,"ms":668,"mb":16.1,"cam":"3.0,1.6,7.0 yaw 0.00","startMB":16.1},{"tier":"low","spot":"street","calls":357,"tris":126621,"sCalls":357,"sTris":126621,"ms":541,"mb":16.2,"cam":"0.0,1.6,0.0 yaw 0.00"},{"tier":"low","spot":"house","calls":860,"tris":98257,"sCalls":860,"sTris":98257,"ms":846,"mb":16.2,"cam":"-1.9,1.6,-5.2 yaw 1.57"},{"tier":"low","spot":"boss","calls":268,"tris":106045,"sCalls":268,"sTris":106045,"ms":778,"mb":16.3,"cam":"-3.5,1.6,7.5 yaw 2.16"}]
+ALL PERF CHECKS PASS
