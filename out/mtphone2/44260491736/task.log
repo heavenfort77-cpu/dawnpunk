@@ -1,0 +1,7 @@
+$ mkdir -p mt/phone && node tools/marlateach.cjs phone mt/phone/ > mt/phone/run.txt 2>&1; tail -5 mt/phone/run.txt   (limit 60 min)
+447.2 | 745.7 | base day 2: Marla, ring choice | NOTE | ring picker: 1 (10 km) · loot x1 · Gloom x1 | 2 (20 km) · loot x1.5 · Gloom x1.04 - win ring 1 first [locked] | 3 (30 km) · loot x2 · Gloom x1.1 - win ring 2 first [locked] | 4 (40 km) · loot x3 · Gloom x1.22 - win ring 3 first [locked] | 5 (50 km) · loot x4 · Gloom x1.36 · the goal - win ring 4 fir
+454.4 | 755.3 | base day 2: Marla, ring choice | ACT | tapped #sback (Stay at the base)
+458.4 | 760.8 | keys card (exploring) | ACT | tapped pause
+frames, wall s, game s: [1974,766.4707000000001,462.4157999999999]
+NO PAGE ERRORS
+exit code 0
