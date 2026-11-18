@@ -9,8 +9,8 @@
 //   film:   the opening (&film=1) from 44 s (dawn over the base) to its end (Marla at your door when you wake).
 // Every sample records each bone's WORLD position (20 bones), the root's world position and facing, the head's world turn. Pass 2 runs the same script at 30 fps; its paths are compared.
 // Limits (physics; numbers in LIM below):
-//   pop    = a bone moving faster in one sample than a body can: 1.0 m/s + 2.5 x the person's ground speed (a swing foot peaks at ~2.5 x walking speed, Winter 1990;
-//            1.0 m/s covers a standing gesture or pivot step). snap = the extra jump of one sample over both neighbours (a pose change with no in-between): a 20 m/s2 (standing)
+//   pop    = a bone moving faster in one sample than a body can: 1.0 m/s + 2.5 x the person's own walking speed (CONFIG.people.gait; a swing foot peaks at ~2.5 x walking
+//            speed, Winter 1990, and a stepping foot in a turn on the spot is no faster). snap = the extra jump of one sample over both neighbours (a pose change with no in-between): a 20 m/s2 (standing)
 //            or 50 m/s2 (walking) body part cannot add more than a*dt^2 in one sample (0.56 cm / 1.4 cm at 60 fps).
 //   feet   = a planted foot (the lower foot, within 1.5 cm of its floor) may drift at most 3 cm per plant (heel-to-toe roll); walking: planted-foot speed under 15% of body speed,
 //            stride length / stride time within 15% of the ground speed (else the feet skate or moonwalk).
@@ -194,8 +194,8 @@ function filmPrep(o) {
   window.__HM.offAll(); const g = window.__game, HM = window.__HM, C = (typeof g.cfg === 'function' ? g.cfg() : g.cfg).opening, P = C.parts, t0 = o.from, fade = document.getElementById('cineFade');
   let lastPk = null; const trackAll = () => { const pk = g.bview.peek && g.bview.peek(); if (!pk || !pk.chars) return; lastPk = pk;
     if (pk.scoutG && g.marla.root.parent === pk.scoutG) HM.track('marla_film', g.marla.root, { kind: 'woman', who: 'Marla (film)' });
-    for (const id of ['bram', 'pip', 'oko']) { const ch = pk.chars[id]; if (ch && ch.ready && ch.root.parent) HM.track(id + '_film', ch.root, { kind: ch.kind, who: id[0].toUpperCase() + id.slice(1) + ' (film)' }); }
-    for (const r of pk.npcs || []) if (r.ch && r.ch.ready && r.ch.root.parent === r.n) HM.track('rec_' + r.p.role + '_film', r.ch.root, { kind: r.ch.kind, who: r.p.name + ' (' + r.p.role + ', film)', role: r.p.role }); };
+    for (const id of ['bram', 'pip', 'oko']) { const ch = pk.chars[id]; if (ch && ch.ready && ch.root.parent) HM.track(id + '_film', ch.root, { kind: ch.kind, who: id[0].toUpperCase() + id.slice(1) + ' (film)', gait: ch.probe && ch.probe() }); }
+    for (const r of pk.npcs || []) if (r.ch && r.ch.ready && r.ch.root.parent === r.n) HM.track('rec_' + r.p.role + '_film', r.ch.root, { kind: r.ch.kind, who: r.p.name + ' (' + r.p.role + ', film)', role: r.p.role, carry: !!(r.crate && r.crate.visible), gait: r.ch.probe && r.ch.probe() }); };
   const shots = o.frames ? [P[3] + 2.5, P[3] + 4.5, P[3] + 6.5, P[3] + 8.5] : []; let si = 0, lab = 0;
   let nKeep = 0; const keepNow = () => Object.values(HM.traces).filter((x) => x.key.endsWith('_film') && x.root.parent).map((x) => x.root);
   window.__seg = { lateHide: true, scene: () => g.bview.group.parent || HM.scene(), keep: () => { const k = keepNow(); nKeep = k.length; return k; }, rehide: () => keepNow().length !== nKeep, caps: shots.map((x) => x - t0),
@@ -259,19 +259,19 @@ function analyzePerson(tr, dt, labels) {
   let pop = { ratio: 0 }, snap = { ratio: 0 }, acc = { a: 0 }, popN = 0, snapN = 0;
   for (let b = 0; b < BONES.length; b++) {
     if (isNaN(at(0, 12 + b * 3))) continue;
-    for (let i = 1; i < n; i++) { if (!ok(i)) continue; const p1 = bp(i, b), p0 = bp(i - 1, b), d = hyp3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]), v = d / dt, lim = LIM.popBase + LIM.popK * vb[i];
-      if (v > lim) popN++; if (v / lim > pop.ratio) pop = { ratio: v / lim, bone: BONES[b], v, lim, cm: d * 100, t: T(i), at: lab(i) };
+    for (let i = 1; i < n; i++) { if (!ok(i)) continue; const p1 = bp(i, b), p0 = bp(i - 1, b), d = hyp3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]), v = d / dt, lim = LIM.popBase + LIM.popK * Math.max(gs, vb[i]);
+      if (v > lim) popN++; if (v / lim > pop.ratio) pop = { ratio: v / lim, bone: BONES[b], v, lim, cm: d * 100, t: T(i), at: lab(i), aux: at(i, 10) };
       if (i + 1 < n && ok(i + 1)) { const p2 = bp(i + 1, b), d2 = hyp3(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]);
         const prev = i > 1 && ok(i - 1) ? (() => { const q = bp(i - 2, b); return hyp3(p0[0] - q[0], p0[1] - q[1], p0[2] - q[2]); })() : d;
         const ex = d - Math.max(prev, d2), walk = vb[i] > LIM.walkV, sl = (walk ? LIM.snapWalk : LIM.snapStand) * dt * dt;
-        if (ex > sl) snapN++; if (ex / sl > snap.ratio) snap = { ratio: ex / sl, bone: BONES[b], cm: ex * 100, limCm: sl * 100, t: T(i), at: lab(i) };
+        if (ex > sl) snapN++; if (ex / sl > snap.ratio) snap = { ratio: ex / sl, bone: BONES[b], cm: ex * 100, limCm: sl * 100, t: T(i), at: lab(i), aux: at(i, 10) };
         const a = hyp3(p2[0] - 2 * p1[0] + p0[0], p2[1] - 2 * p1[1] + p0[1], p2[2] - 2 * p1[2] + p0[2]) / (dt * dt); if (a > acc.a) acc = { a, bone: BONES[b], t: T(i), at: lab(i), walking: vb[i] > LIM.walkV }; } }
   }
   r.pop = Object.assign(pop, { count: popN }); r.snap = Object.assign(snap, { count: snapN }); r.acc = acc;
   // body facing: rate and acceleration
   let yr = { v: 0 }, ya = { v: 0 }, prevR = null;
   for (let i = 1; i < n; i++) { if (!ok(i)) { prevR = null; continue; } let d = at(i, 5) - at(i - 1, 5); d = Math.atan2(Math.sin(d), Math.cos(d)); const rate = d / dt * D;
-    if (Math.abs(rate) > yr.v) yr = { v: Math.abs(rate), t: T(i), at: lab(i) }; if (prevR !== null) { const a = Math.abs(rate - prevR) / dt; if (a > ya.v) ya = { v: a, t: T(i), at: lab(i), from: prevR, to: rate }; } prevR = rate; }
+    if (Math.abs(rate) > yr.v) yr = { v: Math.abs(rate), t: T(i), at: lab(i) }; if (prevR !== null) { const a = Math.abs(rate - prevR) / dt; if (a > ya.v) ya = { v: a, t: T(i), at: lab(i), from: prevR, to: rate, aux: at(i, 10) }; } prevR = rate; }
   r.yaw = { rate: yr, acc: ya };
   // head: world angular velocity from quaternions
   let hr = { v: 0 }, ha = { v: 0 }, pw = null;
@@ -280,7 +280,7 @@ function analyzePerson(tr, dt, labels) {
     const [ax, ay, az, aw] = [-qa[0], -qa[1], -qa[2], qa[3]], [bx, by, bz, bw] = qb;
     let x = bw * ax + bx * aw + by * az - bz * ay, y = bw * ay - bx * az + by * aw + bz * ax, z = bw * az + bx * ay - by * ax + bz * aw, w = bw * aw - bx * ax - by * ay - bz * az; if (w < 0) { x = -x; y = -y; z = -z; w = -w; }
     const s = Math.hypot(x, y, z), ang = 2 * Math.atan2(s, w), om = s > 1e-9 ? [x / s * ang / dt, y / s * ang / dt, z / s * ang / dt] : [0, 0, 0], mag = ang / dt * D;
-    if (mag > hr.v) hr = { v: mag, t: T(i), at: lab(i) }; if (pw) { const a = hyp3(om[0] - pw[0], om[1] - pw[1], om[2] - pw[2]) / dt * D; if (a > ha.v) ha = { v: a, t: T(i), at: lab(i) }; } pw = om; }
+    if (mag > hr.v) hr = { v: mag, t: T(i), at: lab(i) }; if (pw) { const a = hyp3(om[0] - pw[0], om[1] - pw[1], om[2] - pw[2]) / dt * D; if (a > ha.v) ha = { v: a, t: T(i), at: lab(i), aux: at(i, 10) }; } pw = om; }
   r.head = { rate: hr, acc: ha };
   // feet: planted = the lower foot (or level), within LIM.plantDy of its own floor (lowest point within 0.6 s)
   const W = Math.round(0.6 / dt), plants = [];
@@ -350,7 +350,7 @@ function compareHands(a, b) { if (!a || !b) return null; const idx = new Map(); 
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--js-flags=--max-old-space-size=3072'] });
   let fail = 0; const lines = [], ok = (c, m) => { lines.push((c ? 'PASS ' : 'FAIL ') + m); if (!c) fail++; }, info = (m) => lines.push('INFO ' + m);
   const f1 = (x) => (x == null || isNaN(x) ? '-' : (+x).toFixed(1)), f2 = (x) => (x == null || isNaN(x) ? '-' : (+x).toFixed(2)), f0 = (x) => (x == null || isNaN(x) ? '-' : String(Math.round(+x)));
-  const W = (o) => (o && o.t != null ? ' at ' + f2(o.t) + ' s (' + o.at + ')' : '');
+  const W = (o) => (o && o.t != null ? ' at ' + f2(o.t) + ' s (' + o.at + (/^film:/.test(o.at) && o.aux != null ? ', screen black ' + Math.round(100 * o.aux) + '%' : '') + ')' : '');
   const RA = await pass(b, 1 / 60, true);
   let RB = null; if (!NO30) { try { RB = await pass(b, 1 / 30, false); } catch (e) { info('30 fps pass failed: ' + String(e).slice(0, 200)); } }
   await b.close();

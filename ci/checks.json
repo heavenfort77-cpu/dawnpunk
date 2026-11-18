@@ -32,6 +32,7 @@
     { "name": "bookcheck", "script": "tools/bookcheck.cjs", "args": ["{dist}/index_single.html"], "tier": "phone", "quality": "low", "timeout": 30 },
     { "name": "rotcheck", "script": "tools/rotcheck.cjs", "args": [], "tier": "phone", "quality": "auto", "timeout": 15 },
     { "name": "gloomhitcheck_phone", "script": "tools/gloomhitcheck.cjs", "args": ["low"], "tier": "phone", "quality": "low", "timeout": 35 },
+    { "name": "humanmotioncheck_phone", "script": "tools/humanmotioncheck.cjs", "args": ["low", "{dist}/index_single.html"], "tier": "phone", "quality": "low", "timeout": 60, "note": "people and hands motion (pops, foot slide, turns, 30 vs 60 fps); its contact strip runs locally" },
 
     { "name": "hudcheck_desktop", "script": "tools/_high_hudcheck.cjs", "args": [], "note": "no picture prefix: the optional high-tier screenshot timed out at 30 s on the runner (first CI run)", "tier": "desktop", "quality": "high", "timeout": 35 },
     { "name": "gloomcheck", "script": "tools/_high_gloomcheck.cjs", "args": [], "tier": "desktop", "quality": "high", "timeout": 35 },
@@ -41,6 +42,7 @@
     { "name": "bosscheck", "script": "tools/bosscheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 160, "note": "a ring-5 night to dawn on the software renderer at desktop tier; did not finish in 70 min on the runner (CI Nov 18); prints its lines only at the end" },
     { "name": "openingcheck", "script": "tools/openingcheck.cjs", "args": ["high", "{out}/open_", "{dist}/index_single.html", "1280x720"], "tier": "desktop", "quality": "high", "timeout": 100 },
     { "name": "gloomhitcheck_desktop", "script": "tools/gloomhitcheck.cjs", "args": ["high"], "tier": "desktop", "quality": "high", "timeout": 70 },
+    { "name": "humanmotioncheck_desktop", "script": "tools/humanmotioncheck.cjs", "args": ["high", "{dist}/index_single.html", "--b64"], "tier": "desktop", "quality": "high", "timeout": 120, "note": "people and hands motion on the desktop GLB people; --b64 prints its contact-strip frames into the job log (IMG lines) for tools/humanmotionsheet.py" },
     { "name": "qualitycheck", "script": "tools/qualitycheck.cjs", "args": [], "tier": "desktop", "quality": "both", "timeout": 35 },
     { "name": "playershadowshot", "script": "tools/playershadowshot.cjs", "args": ["high", "{out}/ps_", "b64"], "tier": "desktop", "quality": "high", "timeout": 40, "note": "Stage 1 player-shadow SAMPLE (?pshadow=1): three desktop pictures printed into the job log as base64 (PSIMG lines), frame time with and without" },
     { "name": "marlasoak", "script": "tools/marlasoak.cjs", "args": [], "tier": "desktop", "quality": "high", "timeout": 25, "pass": "NO ERRORS\\s*$", "fail": "(?<!NO )ERRORS\\b" }
