@@ -26,7 +26,7 @@ function paintTex(base, s, A) {
   for (const ax of [0.21, 0.79]) for (let k = 0; k < 10; k++) { const a = Math.PI * (0.1 + 0.8 * r()); rust(ax * 1024 + Math.cos(a) * 80, 200 - Math.sin(a) * 70, 8 + r() * 14, 5 + r() * 8, 0.7); } // wheel-arch rims
   for (let k = 0; k < 14; k++) { const px = 300 + r() * 420; rust(px, 225 + r() * 12, 10 + r() * 20, 4 + r() * 6, 0.6); x.fillStyle = 'rgba(110,60,30,0.35)'; x.fillRect(px, 140 + r() * 60, 1, 30 + r() * 40); } // door bottoms, rust runs
   for (let k = 0; k < 60; k++) { x.strokeStyle = `rgba(230,230,225,${0.08 + 0.1 * r()})`; x.lineWidth = 0.6; x.beginPath(); const px = r() * 1024, py = r() * 200; x.moveTo(px, py); x.lineTo(px + (r() - 0.5) * 40, py + (r() - 0.5) * 6); x.stroke(); } // scratches
-  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 
 // glass: dirty with a crack web, so it reads as old glass catching the sky

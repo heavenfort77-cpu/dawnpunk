@@ -21,7 +21,7 @@ export function densityOn() {
 // ---------------------------------------------------------------- pictures painted once per page
 const pics = {};
 function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
-function texOf(c, srgb) { const t = new THREE.CanvasTexture(c); if (srgb !== false) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }
+function texOf(c, srgb) { const t = new THREE.CanvasTexture(c); if (srgb !== false) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
 // a soft blob of colour (radial fade)
 function blob(x, cx, cy, r, col, a) { const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, 'rgba(' + col + ',' + a + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); x.fillStyle = g; x.fillRect(cx - r, cy - r, 2 * r, 2 * r); }
 

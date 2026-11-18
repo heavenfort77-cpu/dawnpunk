@@ -46,7 +46,7 @@ function sheetGeo(w, n, dp) {
 function pvTex() {
   const c = document.createElement('canvas'); c.width = 192; c.height = 320; const x = c.getContext('2d'); x.fillStyle = '#c8ccd0'; x.fillRect(0, 0, 192, 320);
   for (let i = 0; i < 6; i++) for (let j = 0; j < 10; j++) { const px = 3 + i * 31.5, py = 3 + j * 31.6, gr = x.createLinearGradient(px, py, px + 30, py + 30); gr.addColorStop(0, '#1b2c55'); gr.addColorStop(1, '#14213f'); x.fillStyle = gr; x.fillRect(px, py, 29.5, 29.6); x.fillStyle = 'rgba(190,200,215,0.55)'; for (const k of [9, 20]) x.fillRect(px + k, py, 1.2, 29.6); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 
 // one set of materials and shared shapes per built world (the world frees them with itself). Merged parts take the house's tint through world.js tintM; instanced parts carry their own colour.

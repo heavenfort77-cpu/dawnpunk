@@ -381,8 +381,9 @@ export const CONFIG = {
     word: ['#f0c66a', '#c4722a88', 104, 11], line: ['#cdbb8c', '#b9a06a', '#8a7a52'] },
   quality: {
     // LAG FIX Nov 19 (owner approved): pixelRatio 2 -> 1.25 (the automatic step-down, CONFIG.lag.step, can take it to 1); sun shadow maps 4096 -> 2048 with shadowSoft 2.5 -> 1.25,
-    // the same blur width in metres as before; lights (machine screens that throw real light) 6 -> 3, the three nearest machines, always in the scene so no shader is rebuilt at night
-    high: { pixelRatio: 1.25, smooth: true, shadowMap: 2048, baseShadowMap: 2048, shadowSoft: 1.25, aniso: 16, reliefAniso: 16, hiTex: true, lights: 3, grassMore: 420, leafMore: 2, skyDetail: 6, round: 2, roundMax: 64, machineTris: 60000,
+    // the same blur width in metres as before; lights (machine screens that throw real light) 6 -> 3, the three nearest machines, always in the scene so no shader is rebuilt at night;
+    // aniso / reliefAniso 16 -> 4 (owner's rule Nov 19: anisotropy 4 at most; the hard-coded 8s in the builders are 4 too)
+    high: { pixelRatio: 1.25, smooth: true, shadowMap: 2048, baseShadowMap: 2048, shadowSoft: 1.25, aniso: 4, reliefAniso: 4, hiTex: true, lights: 3, grassMore: 420, leafMore: 2, skyDetail: 6, round: 2, roundMax: 64, machineTris: 60000,
       // fx: the desktop picture pass (src/fx.js). ao: strength of the contact shading, aoRadius: how far it reaches (m), aoSamples: quality (LAG FIX Nov 19: 16 -> 8, at half size)
       // keepOut: stencil number of pixels the contact shading leaves alone (Marla's hair, CONFIG.marlaHi.keepOut; keep both the same; 0 = off)
       // aoScale: size of the contact shading pass as a share of the screen (0.5 = half width and height, a quarter of the pixels; the shading is soft, so it is scaled up smoothly);

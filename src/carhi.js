@@ -44,7 +44,7 @@ function burntTex(c) {
   for (let k = 0; k < 220; k++) bl(r() * 512, 60 + r() * 60, 10 + r() * 34, '14,12,10', 0.3 + 0.3 * r());
   for (const ax of [(1.35 + 2.4) / 4.8 * 512, (-1.35 + 2.4) / 4.8 * 512]) for (let k = 0; k < 40; k++) bl(ax + (r() - 0.5) * 120, 200 + (r() - 0.5) * 70, 10 + r() * 26, '16,14,12', 0.4);
   for (let k = 0; k < 3000; k++) { x.fillStyle = r() < 0.5 ? 'rgba(30,20,14,0.5)' : 'rgba(170,100,50,0.4)'; x.fillRect(r() * 512, r() * 256, 1 + r() * 2, 1 + r() * 2); }
-  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
 }
 // build one car into cg. o: { L2 half length, top (waist height), cab (cabin corner points), r (the car's own random), CC (its wreck state), burnt, tex (the car's own paint picture, the same one the phone car wears), M (world materials) }. Returns { lean, roll } from missing wheels.
 export function carHi(cg, c, o) {

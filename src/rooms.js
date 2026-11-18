@@ -54,7 +54,7 @@ export function blueprintTex() {
   x.setLineDash([6, 5]); x.lineWidth = 1.5; x.beginPath(); x.moveTo(300, 90); x.lineTo(300, 300); x.moveTo(320, 320); x.lineTo(470, 320); x.stroke(); x.setLineDash([]);
   x.fillStyle = 'rgba(240,248,255,0.9)'; x.font = 'italic 18px Georgia, serif'; x.fillText('blade v3 - thinner root?', 40, 40); x.fillText('panel frame 4x5', 330, 70); x.font = '14px Georgia, serif'; x.fillText('1.20 m', 370, 338); x.fillText('Oko', 450, 370);
   x.strokeStyle = 'rgba(240,248,255,0.5)'; x.lineWidth = 4; x.strokeRect(6, 6, 500, 372);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; pics.bp = t; return t;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; pics.bp = t; return t;
 }
 // a pencil sketch on cream paper (a hand, a gear, notes)
 export function sketchTex() {
@@ -64,7 +64,7 @@ export function sketchTex() {
   for (let k = 0; k < 12; k++) { const a = k * PI / 6; x.beginPath(); x.moveTo(128 + Math.cos(a) * 50, 120 + Math.sin(a) * 50); x.lineTo(128 + Math.cos(a) * 62, 120 + Math.sin(a) * 62); x.stroke(); }
   for (let k = 0; k < 7; k++) { x.beginPath(); const y = 210 + k * 14; x.moveTo(24, y); for (let i = 0; i < 20; i++) x.lineTo(24 + i * 10, y + (r() - 0.5) * 3); x.stroke(); }
   for (let k = 0; k < 40; k++) { x.strokeStyle = 'rgba(60,55,50,' + 0.2 * r() + ')'; x.beginPath(); const a = r() * 2 * PI, d = 30 + r() * 50; x.moveTo(128 + Math.cos(a) * d, 120 + Math.sin(a) * d); x.lineTo(128 + Math.cos(a) * (d + 8), 120 + Math.sin(a) * (d + 8)); x.stroke(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; pics.sk = t; return t;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; pics.sk = t; return t;
 }
 
 // ---------------------------------------------------------------- shared helpers for both dressings

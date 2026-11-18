@@ -28,7 +28,7 @@ function load(kind) {
   const fail = (e) => { glbState[kind] = 'failed'; console.warn('gloom model ' + kind + ' not loaded', e); };
   fetch(url).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => { o.userData.keep = true; if (!o.isMesh) return; o.geometry.userData.shared = true; const m = o.material; m.userData.shared = true; m.userData.relief = true; m.userData.pbr = true;
-      for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap']) if (m[k]) { m[k].userData.shared = true; m[k].anisotropy = 8; } });
+      for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap']) if (m[k]) { m[k].userData.shared = true; m[k].anisotropy = 4; } });
     TPL[kind] = sc; glbState[kind] = 'ready'; lodPrepare(sc, 'gloom', false); if (glbHooks.ready) try { glbHooks.ready(kind, sc); } catch (e) { /* warm-up only */ } }, fail)).catch(fail);
 }
 // LAG FIX Nov 19 (lag report finding 9): no model is fetched at page start any more. main.js asks for the kinds a run can meet when the run starts (its day on the street
