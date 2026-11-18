@@ -344,7 +344,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     if (d < M.wpReach) { o.i = (o.i + 1) % o.wp.length; tgt = o.wp[o.i]; dx = tgt[0] - o.n.position.x; dz = tgt[1] - o.n.position.z; d = Math.hypot(dx, dz); }
     const nx = o.wp[(o.i + 1) % o.wp.length], ex = nx[0] - tgt[0], ez = nx[1] - tgt[1], el = Math.hypot(ex, ez) || 1, c = d > 1e-6 ? (dx * ex + dz * ez) / (d * el) : 1;
     const keep = Math.max(0.12, Math.min(1, (c - Wk.stopCos) / (M.cornerCos - Wk.stopCos))), near = Math.max(0, Math.min(1, 1 - (d - M.wpReach) / M.cornerDist));
-    if (life) o.n.position.y += (life.deckY(o.n.position.x, o.n.position.z) - o.n.position.y) * (1 - Math.exp(-M.slice * M.deckEase)); // (a footbridge deck, eased, each slice)
+    // a footbridge deck: the body rises or sinks to it on a critically damped spring (M.deckHz), each slice, so it never jumps or bobs
+    if (life) { const w = 2 * Math.PI * M.deckHz, h = M.slice; o.vy = (o.vy || 0) + (w * w * (life.deckY(o.n.position.x, o.n.position.z) - o.n.position.y) - 2 * w * (o.vy || 0)) * h; o.n.position.y += o.vy * h; }
     return { face: Math.atan2(dx, dz), go: true, move: true, carry: o.crate.visible, slow: 1 - (1 - keep) * near }; }
   function update(dt, px, pz, camY) {
     sizeLabels(px, pz);
