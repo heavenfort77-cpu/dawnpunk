@@ -8,7 +8,9 @@ const path = require('path');
   const page = process.argv[2] || path.resolve(__dirname, '../dist/index_single.html'), tier = process.argv[3] === 'high' ? 'high' : 'low';
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] }); const out = [], errs = [];
   const add = (n, ok) => { out.push([n, !!ok]); console.log((ok ? 'PASS ' : 'FAIL ') + n); };
-  const open = async (opts) => { const ctx = await b.newContext(opts); const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e))); await p.addInitScript(() => { window.__dtMax = 0.5; window.__gt = 0; let l = 0; const f = (now) => { if (l) window.__gt += Math.min(window.__dtMax || 0.1, (now - l) / 1000); l = now; requestAnimationFrame(f); }; requestAnimationFrame(f); });
+  const open = async (opts) => { const ctx = await b.newContext(opts); const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e))); await p.addInitScript(() => { window.__dtMax = 0.5; window.__gt = 0; let l = 0, fs = 0; const f = (now) => { if (l) { const r = (now - l) / 1000; window.__gt += Math.min(window.__dtMax || 0.1, r); fs = fs ? fs * 0.7 + r * 0.3 : r; } l = now; requestAnimationFrame(f); }; requestAnimationFrame(f);
+      // a clip plays at game speed: on a runner slower than __dtMax per frame, buffer sources (her clips) play slower by game dt / real frame time, so a clip lasts as many frames as it would at full speed (rate 1 on a normal machine)
+      const st = AudioBufferSourceNode.prototype.start; AudioBufferSourceNode.prototype.start = function (...a) { if (fs) this.playbackRate.value = Math.max(0.02, Math.min(1, (window.__dtMax || 0.1) / fs)); return st.apply(this, a); }; });
     await p.goto('file://' + page + '?quality=' + tier + '&seed=777', { timeout: 300000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 240000 });
     await p.evaluate(() => localStorage.clear()); return { ctx, p }; };
   const mv = (p) => p.evaluate(() => window.__game.marlaVoice());
@@ -54,8 +56,10 @@ const path = require('path');
   { const { ctx, p } = await open({ ...devices['Pixel 7 landscape'] });
     await p.evaluate(() => { const g = window.__game; g.enterBase(); g.save.nights = 0; }); await gwait(p, 1500); const b0 = await mv(p); await say(p, HEAVY); await gwait(p, 2500); const b1 = await mv(p);
     add('phone base: no clip plays (count ' + b0.n + ' -> ' + b1.n + ')', b1.n === b0.n);
-    await night(p, 0); await p.waitForFunction(() => window.__game.drillInfo() && document.getElementById('marla').textContent === 'One machine. Tap FIRE, Potts.', null, { timeout: 30000 }).catch(() => {}); await gwait(p, 2500);
-    const d1 = await mv(p), dt = await p.evaluate(() => document.getElementById('marla').textContent);
+    // the order's text is read when it first shows (the drill repeats it shorter after CONFIG.drill.idle REAL seconds, which a slow runner reaches inside the 2.5 s of game time); no clip may start in that time
+    const ord = () => p.evaluate(() => (window.__game.drillInfo() ? document.getElementById('marla').textContent : ''));
+    await night(p, 0); let dt = ''; { const t0 = Date.now(), g0 = await gt(p); while (Date.now() - t0 < WALL && (await gt(p)) - g0 < 30) { dt = await ord(); if (dt === 'One machine. Tap FIRE, Potts.') break; await p.waitForTimeout(150); } } await gwait(p, 2500);
+    const d1 = await mv(p);
     add('phone night 1 (desktop only, owner 08:05): the drill order shows ("' + dt + '") and no clip plays (count ' + b1.n + ' -> ' + d1.n + ', allowed ' + d1.allowed + ')', dt === 'One machine. Tap FIRE, Potts.' && d1.n === b1.n && d1.allowed === false && !d1.playing);
     await p.evaluate(() => document.getElementById('bPause').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))); await gwait(p, 800);
     const bv = await p.evaluate(() => [getComputedStyle(document.getElementById('pause')).display, getComputedStyle(document.getElementById('bVoice')).display]);

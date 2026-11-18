@@ -107,7 +107,7 @@ export function createPerson(cfg, key) {
   // returns { speed (m/s, along the body's facing), yaw (the body's facing), moved } so a caller that does not pass move can move the holder
   // The motion runs in fixed slices of CONFIG.people.motion.slice s (a frame of 1/30 or 1/60 s is a whole number of slices), so 30 and 60 frames a second give the same motion.
   const M = P.motion, lock = [0, 1].map(() => ({ on: false, w: 0, rel: 9, T: new THREE.Vector3(), last: new THREE.Vector3(), ground: null, q0: 0, sw: false }));
-  st.acc = 0; st.feetV = 0; st.plant = [true, true]; st.hipX = 0; st.drop = 0; st.off = [0, 0]; st.swingQ = [-1, -1]; st.heel = [0, 0]; st.A = 0; st.v = 0;
+  st.acc = 0; st.feetV = 0; st.plant = [true, true]; st.hipX = 0; st.drop = 0; st.off = [0, 0]; st.swingQ = [-1, -1]; st.stepU = -1; st.heel = [0, 0]; st.A = 0; st.v = 0;
   // a pivot step turns the body about the foot that stays down (not about the body's middle, which dragged that foot round), then the body settles back over
   // the middle in M.recenter s while it steps or walks; footAt = each foot's spot in the body's own frame (x, z), measured on the model once it loads
   const hinge = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(1, 0, 0)], knee = [{ s: 1 }, { s: 1 }];
@@ -142,7 +142,7 @@ export function createPerson(cfg, key) {
     else { st.feetV = 0; const e = st.hips.x - st.feet, goal = delayed(2 * T.lead) - st.feet; if (Math.abs(e) > T.stepStart || (Math.abs(e) > T.minStep && Math.abs(st.hips.v) < 0.3)) { const len = G.step * (1 + G.vary * (rnd() * 2 - 1)), tl = len * (1 - 2 * M.stepLead), cap = Math.min(T.maxStep, M.stepAcc * tl * tl / 6); let amt = clamp(e + st.hips.v * G.step * T.predict, -cap, cap); if (Math.abs(amt) > Math.abs(goal) && Math.sign(goal) === Math.sign(amt)) amt = goal; st.stepSide = amt > 0 ? 1 : -1; if (st.lastSide === st.stepSide) st.stepSide = -st.stepSide; st.lastSide = st.stepSide; st.step = { from: st.feet, by: amt, t: 0, len }; } }
     // a pivot step: the foot lifts first and turns only while it is off the ground (the middle 1 - 2 x M.stepLead of the step), then sets down
     if (st.step) { const s = st.step, ld = M.stepLead, was = st.feet; s.t += dt; const u = clamp(s.t / s.len, 0, 1), k = clamp((u - ld) / (1 - 2 * ld), 0, 1); st.feet = s.from + s.by * sstep(k); st.feetV = s.by * 6 * k * (1 - k) / (s.len * (1 - 2 * ld));
-      pivot(was, st.feet, st.stepSide === 1 ? 1 : 0); lift = Math.sin(Math.PI * u); liftSide = st.stepSide; if (u >= 1) { st.step = null; st.feetV = 0; } }
+      pivot(was, st.feet, st.stepSide === 1 ? 1 : 0); lift = Math.sin(Math.PI * u); liftSide = st.stepSide; st.stepU = u; if (u >= 1) { st.step = null; st.feetV = 0; } } else st.stepU = -1;
     if (st.step || v > M.plantV) { const kk = Math.exp(-dt / M.recenter); st.off[0] *= kk; st.off[1] *= kk; }
     if (!st.step && gw <= 0.2 && Math.abs(st.hips.x - st.feet) < T.minStep * 0.5) st.lastSide = 0;
     const hipOff = sat(st.hips.x - st.feet, T.twist), chestOff = sat(st.chest.x - (st.feet + hipOff), T.chestTwist), headOff = sat(st.head.x - (st.feet + hipOff + chestOff), T.headMax);
@@ -233,7 +233,8 @@ export function createPerson(cfg, key) {
       if (!planted || lk.w <= 0) lk.slip = false;
       if (planted && !lk.on && !lk.slip) { if (lk.w > 0) lk.T.copy(lk.last); else lk.T.copy(fk); lk.on = true; lk.w = 1; lk.ground = Math.min(lk.T.y, fk.y); }
       else if (!planted && lk.on) { lk.on = false; lk.rel = 0; }
-      if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = 1 - sstep(lk.rel / M.lockRelease); }
+      // a pivot step lets its foot go only once it is off the ground (eased from 0.1 to 0.6 of the step), so it does not drag along the floor first
+      if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = st.stepU >= 0 && !planted ? Math.min(lk.w, 1 - sstep((st.stepU - 0.1) / 0.5)) : 1 - sstep(lk.rel / M.lockRelease); }
       if (lk.w <= 0) { lk.last.copy(fk); legReach(th, ca, ft, fk, hinge[i], knee[i]); continue; }
       // a foot put down above the ground (a walk that stopped mid-step) settles onto it
       if (lk.on && lk.T.y > lk.ground) lk.T.y = lk.ground + (lk.T.y - lk.ground) * Math.exp(-dt * 12);
@@ -278,7 +279,7 @@ export function createStepper(cfg, root, bones, kind) {
   const P = cfg.people, M = P.motion, T = P.turn, G = P.gait[kind || 'woman'];
   const LG = [['thigh_l', 'calf_l', 'foot_l'], ['thigh_r', 'calf_r', 'foot_r']], restQ = {}, hinge = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(1, 0, 0)], knee = [{ s: 1 }, { s: 1 }], footAt = [[0.1, 0], [-0.1, 0]];
   const lock = [0, 1].map(() => ({ on: false, w: 0, rel: 9, T: new THREE.Vector3(), last: new THREE.Vector3() })), fk = new THREE.Vector3(), tg = new THREE.Vector3(), scn0 = new THREE.Vector3();
-  let scn = null, yaw = null, step = null, lastSide = 0, acc = 0, lift = 0, liftSide = 0; const off = [0, 0];
+  let scn = null, yaw = null, step = null, lastSide = 0, acc = 0, lift = 0, liftSide = 0, stepU = -1; const off = [0, 0];
   const rot = (a, x, z) => [x * Math.cos(a) + z * Math.sin(a), -x * Math.sin(a) + z * Math.cos(a)];
   function init(sc) { scn = sc; scn0.copy(sc.position); root.updateWorldMatrix(true, true); const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), v = new THREE.Vector3(), qS = sc.getWorldQuaternion(new THREE.Quaternion());
     for (let i = 0; i < 2; i++) { const [a, b, c] = LG[i]; if (!bones[a] || !bones[b] || !bones[c]) return false; for (const k of LG[i]) restQ[k] = bones[k].quaternion.clone();
@@ -294,7 +295,7 @@ export function createStepper(cfg, root, bones, kind) {
       lift = 0; liftSide = 0;
       if (step) { const s = step, ld = M.stepLead, was = yaw; s.t += h; const u = clamp(s.t / s.len, 0, 1), k = clamp((u - ld) / (1 - 2 * ld), 0, 1); yaw = s.from + s.by * sstep(k);
         const f = footAt[s.side === 1 ? 1 : 0], p0 = rot(was, f[0], f[1]), p1 = rot(yaw, f[0], f[1]); off[0] += p0[0] - p1[0]; off[1] += p0[1] - p1[1];
-        const kk = Math.exp(-h / M.recenter); off[0] *= kk; off[1] *= kk; lift = Math.sin(Math.PI * u); liftSide = s.side; if (u >= 1) step = null; } }
+        const kk = Math.exp(-h / M.recenter); off[0] *= kk; off[1] *= kk; lift = Math.sin(Math.PI * u); liftSide = s.side; stepU = u; if (u >= 1) step = null; } else stepU = -1; }
     root.rotation.y = yaw; const q = rot(-yaw, off[0], off[1]); scn.position.set(scn0.x + q[0], scn0.y, scn0.z + q[1]);
   }
   const _q = new THREE.Quaternion();
@@ -308,7 +309,7 @@ export function createStepper(cfg, root, bones, kind) {
       ft.getWorldPosition(fk); const planted = up <= 0;
       if (planted && !lk.on) { if (lk.w > 0) lk.T.copy(lk.last); else lk.T.copy(fk); lk.on = true; lk.w = 1; }
       else if (!planted && lk.on) { lk.on = false; lk.rel = 0; }
-      if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = 1 - sstep(lk.rel / M.lockRelease); }
+      if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = stepU >= 0 && !planted ? Math.min(lk.w, 1 - sstep((stepU - 0.1) / 0.5)) : 1 - sstep(lk.rel / M.lockRelease); }
       if (lk.w > 0 && Math.hypot(lk.T.x - fk.x, lk.T.z - fk.z) > M.lockSlip) { lk.on = false; lk.w = 0; }
       if (lk.w > 0) tg.lerpVectors(fk, lk.T, lk.w); else tg.copy(fk); lk.last.copy(tg); legReach(th, ca, ft, tg, hinge[i], knee[i]);
     }

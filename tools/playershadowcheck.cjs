@@ -110,8 +110,14 @@ const J = (o) => JSON.stringify(o);
     P.floor = f; P.climb = null; P.x = best[0]; P.z = best[1]; P.stairCd = 1; P.ladderCd = 1; window.__game.setPitch(-1.0); return best; }, f);
   for (const f of [0, 1]) { const at = await solid(f); await settle(p, 10); await standsOn(f * C.FH, 'house floor ' + (f + 1) + ' at ' + J(at.slice(0, 2)));
     const c = await cmp(p); ok(c && c.bright === 0, 'house floor ' + (f + 1) + ': the shadow adds no light (' + (c && c.bright) + ' brighter, ' + (c && c.dark) + ' darker pixels)'); if (f === 1) await shot(p, 'floor2'); }
-  // every frame of a move: what the game says (floor, ladder) against what the shadow shows
-  const watch = (n, ms) => p.evaluate(([n, ms]) => new Promise((r) => { const out = [], t0 = performance.now(); const f = () => { const g = window.__game, P = g.sim.player, I = window.__pshadow.info(); out.push({ floor: P.floor, climb: !!P.climb, eye: g.cam.position.y, feet: I.feet, hang: I.hang, blobOn: I.blobOn, blobY: I.blobAt ? I.blobAt[1] : null, atY: I.at ? I.at[1] : null, bodyVis: I.bodyVis }); if ((out.length >= n && performance.now() - t0 >= ms) || out.length >= 600) r(out); else requestAnimationFrame(f); }; requestAnimationFrame(f); }), [n, ms]);
+  // every frame of a move: what the game says (floor, ladder) against what the shadow shows. The player is put on the spot inside the same call, so the first frames of the move are seen.
+  const watch = (n, ms, f, where) => p.evaluate(([n, ms, f, where]) => new Promise((r) => {
+    const s = window.__game.sim, P = s.player, st = s.stairs[0], l = s.ladders[0]; P.floor = f; P.climb = null; P.stairCd = 0; P.ladderCd = 0;
+    if (where === 'stairUp') { P.x = st.bx; P.z = st.bz; } else if (where === 'stairDown') { P.x = st.tx; P.z = st.tz; } else if (where === 'gap') { P.stairCd = 5; P.x = (st.bx + st.tx) / 2 - 0.4; P.z = st.bz + 0.1; } else if (where === 'ladder') { P.stairCd = 5; P.x = l.x; P.z = l.z; }
+    const from = { x: +P.x.toFixed(2), z: +P.z.toFixed(2) }, out = [], t0 = performance.now();
+    const fr = () => { const g = window.__game, I = window.__pshadow.info(); out.push({ floor: P.floor, climb: !!P.climb, eye: g.cam.position.y, feet: I.feet, hang: I.hang, blobOn: I.blobOn, blobY: I.blobAt ? I.blobAt[1] : null, atY: I.at ? I.at[1] : null, bodyVis: I.bodyVis });
+      if ((out.length >= n && performance.now() - t0 >= ms) || out.length >= 600) r({ from, fr: out }); else requestAnimationFrame(fr); };
+    requestAnimationFrame(fr); }), [n, ms, f, where]);
   const judge = (fr, name, endFloor, needClimb) => {
     const bad = []; let climbN = 0, hidden = 0;
     for (const [i, q] of fr.entries()) {
@@ -122,14 +128,12 @@ const J = (o) => JSON.stringify(o);
       if (!HI && !q.blobOn) hidden++;
     }
     const last = fr[fr.length - 1];
-    ok(!bad.length, name + ': ' + fr.length + ' frames, the ' + (HI ? 'body' : 'blob') + ' follows the floor the game has you on' + (HI ? '' : ' (hidden while the view settles in ' + hidden + ' frames)') + (bad.length ? ' | ' + bad.slice(0, 3).join(' | ') : ''));
+    ok(!bad.length, name + ': ' + fr.length + ' frames, the ' + (HI ? 'body' : 'blob') + ' follows the floor the game has you on' + (HI ? '' : ' (hidden in ' + hidden + ' frames while the view settles or climbs)') + (bad.length ? ' | ' + bad.slice(0, 3).join(' | ') : ''));
     ok(last.floor === endFloor && !last.climb && (HI ? last.bodyVis : last.blobOn) && (!needClimb || climbN > 0), name + ': ends on floor ' + (last.floor + 1) + ' (want ' + (endFloor + 1) + ')' + (needClimb ? ', ' + climbN + ' frames on the ladder' : '') + ', shadow shown ' + J(last));
   };
-  const put = (f, where) => p.evaluate(([f, where]) => { const s = window.__game.sim, P = s.player, st = s.stairs[0], l = s.ladders[0]; P.floor = f; P.climb = null; P.stairCd = 0; P.ladderCd = 0;
-    if (where === 'stairUp') { P.x = st.bx; P.z = st.bz; } else if (where === 'stairDown') { P.x = st.tx; P.z = st.tz; } else if (where === 'gap') { P.stairCd = 5; P.x = (st.bx + st.tx) / 2 - 0.4; P.z = st.bz + 0.1; } else if (where === 'ladder') { P.stairCd = 5; P.x = l.x; P.z = l.z; } return { x: P.x, z: P.z }; }, [f, where]);
   if (L >= 2) {
     const moves = [['stairs up', 0, 'stairUp', 1, false, 20, 1500], ['stairs down', 1, 'stairDown', 0, false, 20, 1500], ['the stair gap upstairs (drop)', 1, 'gap', 0, false, 20, 1500], ['ladder climb', 0, 'ladder', 1, true, 30, 2600]];
-    for (const [name, f, where, end, climb, n, ms] of moves) { const at = await put(f, where); const fr = await watch(n, ms); info(name + ' from ' + J(at) + ': eye ' + fr.map((q) => q.eye.toFixed(2)).join(' ')); judge(fr, name, end, climb); await frames(p, 6); }
+    for (const [name, f, where, end, climb, n, ms] of moves) { const { from: at, fr } = await watch(n, ms, f, where); info(name + ' from ' + J(at) + ': eye ' + fr.map((q) => q.eye.toFixed(2)).join(' ')); judge(fr, name, end, climb); await frames(p, 6); }
   }
 
   // ---- 5. night
