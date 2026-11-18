@@ -1,0 +1,15 @@
+hm/dump/bram_60.f32 1392480
+hm/dump/bram_film_60.f32 241920
+hm/dump/labels60.json 498
+hm/dump/marla_60.f32 1392480
+hm/dump/marla_film_60.f32 241920
+hm/dump/oko_60.f32 1392480
+hm/dump/oko_film_60.f32 241920
+hm/dump/pip_60.f32 1392480
+hm/dump/pip_film_60.f32 241920
+hm/dump/rec_gatherer_60.f32 1392480
+hm/dump/rec_gatherer_film_60.f32 241920
+hm/dump/rec_hunter_60.f32 1392480
+hm/dump/rec_hunter_film_60.f32 241920
+hm/dump/rec_researcher_60.f32 1392480
+hm/dump/rec_researcher_film_60.f32 241920
