@@ -128,21 +128,23 @@ const J = (o) => JSON.stringify(o);
       if ((out.length >= n && performance.now() - t0 >= ms) || out.length >= 600) r({ from, fr: out }); else requestAnimationFrame(fr); };
     requestAnimationFrame(fr); }), [n, ms, f, where]);
   const judge = (fr, name, endFloor, needClimb) => {
-    const bad = []; let climbN = 0, hidden = 0;
+    const bad = []; let climbN = 0, hidden = 0, moving = 0;
     for (const [i, q] of fr.entries()) {
       if (q.climb) { climbN++; if (!q.hang || q.blobOn) bad.push(i + ': on the ladder the blob must hide ' + J(q)); if (HI && Math.abs(q.atY - (q.eye - 1.6)) > 0.05) bad.push(i + ': on the ladder the body hangs at the view ' + J(q)); continue; }
+      if (Math.abs(q.eye - 1.6 - q.feet) > C.settle) moving++;
       if (Math.abs(q.feet - q.floor * C.FH) > 0.01) bad.push(i + ': feet off the floor ' + J(q));
       if (HI && (q.atY > q.feet + 0.005 || q.atY < q.feet - 0.05)) bad.push(i + ': body not on the floor ' + J(q));
       if (q.blobOn && (Math.abs(q.eye - 1.6 - q.feet) > C.settle + 0.01 || Math.abs(q.blobY - q.feet - C.lift) > 0.005)) bad.push(i + ': blob shown off its floor ' + J(q));
       if (!HI && !q.blobOn) hidden++;
     }
     const last = fr[fr.length - 1];
-    ok(!bad.length, name + ': ' + fr.length + ' frames, the ' + (HI ? 'body' : 'blob') + ' follows the floor the game has you on' + (HI ? '' : ' (hidden in ' + hidden + ' frames while the view settles or climbs)') + (bad.length ? ' | ' + bad.slice(0, 3).join(' | ') : ''));
-    ok(last.floor === endFloor && !last.climb && (HI ? last.bodyVis : last.blobOn) && (!needClimb || climbN > 0), name + ': ends on floor ' + (last.floor + 1) + ' (want ' + (endFloor + 1) + ')' + (needClimb ? ', ' + climbN + ' frames on the ladder' : '') + ', shadow shown ' + J(last));
+    ok(!bad.length, name + ': ' + fr.length + ' frames, the ' + (HI ? 'body' : 'blob') + ' follows the floor the game has you on' + ' (the view still rising or sinking in ' + moving + ' frames' + (HI ? '' : ', blob hidden in ' + hidden) + ')' + (bad.length ? ' | ' + bad.slice(0, 3).join(' | ') : ''));
+    ok(last.floor === endFloor && !last.climb && (HI ? last.bodyVis : last.blobOn) && (needClimb ? climbN > 0 : moving > 0), name + ': ends on floor ' + (last.floor + 1) + ' (want ' + (endFloor + 1) + ')' + (needClimb ? ', ' + climbN + ' frames on the ladder' : ', the move between floors was seen') + ', shadow shown ' + J(last));
   };
   if (L >= 2) {
     const moves = [['stairs up', 0, 'stairUp', 1, false, 20, 1500], ['stairs down', 1, 'stairDown', 0, false, 20, 1500], ['the stair gap upstairs (drop)', 1, 'gap', 0, false, 20, 1500], ['ladder climb', 0, 'ladder', 1, true, 30, 2600]];
-    for (const [name, f, where, end, climb, n, ms] of moves) { const { from: at, fr } = await watch(n, ms, f, where); info(name + ' from ' + J(at) + ': eye ' + fr.map((q) => q.eye.toFixed(2)).join(' ')); judge(fr, name, end, climb); await frames(p, 6); }
+    // each move starts from standing settled on its floor, so the view really has to rise or sink
+    for (const [name, f, where, end, climb, n, ms] of moves) { await solid(f); await settle(p, 10); const { from: at, fr } = await watch(n, ms, f, where); info(name + ' from ' + J(at) + ': eye ' + fr.map((q) => q.eye.toFixed(2)).join(' ')); judge(fr, name, end, climb); await frames(p, 6); }
   }
 
   // ---- 5. night
