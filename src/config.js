@@ -914,8 +914,8 @@ export const CONFIG = {
   nightLook: {
     // desktop and laptop (high tier)
     high: { exposure: 0.95, fill: 0.4, sky: 0x04060c, lamp: 0.5, vig: 0.85 },
-    // phones (low tier)
-    low: { exposure: 0.95, fill: 0.45, sky: 0x05070e, lamp: 0.55, vig: 0.7 },
+    // phones (low tier). Owner approved a lighter phone night on Nov 18 (docs/sample_phone_night_lighter.jpg): was exposure 0.95, fill 0.45, lamp 0.55, vig 0.7
+    low: { exposure: 1.0, fill: 0.75, sky: 0x05070e, lamp: 0.85, vig: 0.45 },
   },
   base: {
     growth: { max: 5, r: 8.8, clear: 2.6, height: 2.0, leaf: 1.9, leaves: 5, flowers: 14 }, // the base grows: one solar sapling + flower bed per ring opened (+1 when the last ring is held), on a circle of radius r
