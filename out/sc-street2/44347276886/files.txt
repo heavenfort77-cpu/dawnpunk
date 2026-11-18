@@ -1,0 +1,8 @@
+shots/street_0.png 333674
+shots/street_1.png 364012
+shots/street_2.png 347719
+shots/street_3.png 356647
+shots/street_4.png 382818
+shots/street_5.png 386352
+shots/street_6.png 369031
+shots/street_7.png 378765

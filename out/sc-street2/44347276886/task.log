@@ -1,0 +1,39 @@
+$ mkdir -p shots && SCALE=0.5 VIEWS='[[-17,-2.5,-21.2,-8.3,0.35],[-17,-2.5,-21.2,-8.3,-0.35],[-7.5,-4.6,-11.4,-9.8,0.35],[-7.5,-4.6,-11.4,-9.8,-0.35],[14,-4.8,18,-10.2,0.35],[14,-4.8,18,-10.2,-0.35],[10.5,4.8,14.1,10.1,0.35],[10.5,4.8,14.1,10.1,-0.35]]' node tools/itchshot.cjs street shots   (limit 90 min)
+INFO page up 8 s
+INFO base loaded 23 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 81 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":1,"cat":2,"houses":[{"i":0,"n":16,"L":2,"door":["43.3","-6.0"],"row":-1},{"i":1,"n":14,"L":2,"door":["-4.0","-6.5"],"row":-1},{"i":2,"n":12,"L":2,"door":["-44.8","6.9"],"row":1},{"i":3,"n":11,"L":2,"door":["51.1","7.1"],"row":1},{"i":4,"n":10,"L":2,"door":["-51.0","-7.4"],"row":-1},{"i":5,"n":9,"L":2,"door":["2.3","7.6"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 11h 20m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 10h 50m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 10h 10m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 9h 30m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 9h 00m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 8h 20m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 7h 50m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 7h 10m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 6h 30m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 6h 00m" hs=""
+INFO looted house 0 {"n":4,"food":4,"ess":2}
+INFO looted house 1 {"n":2,"food":10,"ess":2}
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 4h 30m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 4h 00m" hs=""
+INFO sleepers [{"i":0,"kind":"stilt","x":14.13647524267435,"z":10.076746499165893,"awake":0},{"i":1,"kind":"lurcher","x":17.997025337070227,"z":-10.164966720389202,"awake":0},{"i":2,"kind":"walker","x":-21.209875881671906,"z":-8.305622163694352,"awake":0},{"i":3,"kind":"lantern","x":-11.388143997639418,"z":-9.846349070547149,"awake":0}]
+INFO wrote shots/street_0.png (641 s) cam -17.00,1.60,-2.50 yaw 0.977 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+CATVIEW street_0: none
+INFO wrote shots/street_1.png (728 s) cam -17.00,1.60,-2.50 yaw 0.277 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+CATVIEW street_1: none
+INFO wrote shots/street_2.png (825 s) cam -7.50,1.60,-4.60 yaw 0.994 | HUD marla="Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight." csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+CATVIEW street_2: none
+INFO wrote shots/street_3.png (909 s) cam -7.50,1.60,-4.60 yaw 0.294 | HUD marla="Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight." csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+CATVIEW street_3: none
+INFO wrote shots/street_4.png (986 s) cam 14.00,1.60,-4.80 yaw -0.288 | HUD marla="Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight." csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+CATVIEW street_4: none
+INFO wrote shots/street_5.png (1067 s) cam 14.00,1.60,-4.80 yaw -0.988 | HUD marla="Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight." csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+CATVIEW street_5: none
+INFO wrote shots/street_6.png (1162 s) cam 10.50,1.60,4.80 yaw -2.195 | HUD marla="Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight." csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+CATVIEW street_6: none
+INFO wrote shots/street_7.png (1256 s) cam 10.50,1.60,4.80 yaw -2.895 | HUD marla="Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight." csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+CATVIEW street_7: none
+NO PAGE ERRORS
+done 1261 s
+exit code 0
