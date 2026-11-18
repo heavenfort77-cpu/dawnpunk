@@ -1,0 +1,1 @@
+$ mkdir -p mt/desk && node tools/marlateach.cjs desk mt/desk/ > mt/desk/run.txt 2>&1; tail -5 mt/desk/run.txt   (limit 120 min)

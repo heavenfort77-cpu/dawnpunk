@@ -1,0 +1,5 @@
+17.2 STAGE start
+27.1 SNAP start_screen {"count":"","time":"","bars":" | ","buttons":[]}
+48.0 ACT clicked #enter (the begin button)
+68.8 STAGE film
+550.0 SNAP film_1 {"count":"","time":"","bars":" | ","buttons":[]}
