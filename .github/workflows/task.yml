@@ -1,0 +1,116 @@
+# One-off task on a GitHub runner (pictures, sounds, measurements): build the game, run one shell command, and commit its outputs and log
+# to the branch ci-out under out/<name>/<run id>/. Started by tools/ci_task.sh (or the Actions tab). Never writes to main.
+name: task
+run-name: "task ${{ inputs.name }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Short id (letters, digits, . _ -); outputs land in out/<name>/<run id>/ on branch ci-out"
+        type: string
+        required: true
+      cmd:
+        description: "Shell command line, run from the repo root after npm ci, node build.mjs and the Playwright install"
+        type: string
+        required: true
+      out:
+        description: "Comma list of output paths or globs (relative to the repo root; ** allowed)"
+        type: string
+        default: ""
+      timeout:
+        description: "Minutes the command may run"
+        type: string
+        default: "30"
+
+permissions:
+  contents: write
+
+env:
+  PW_VERSION: "1.63.0"
+
+jobs:
+  task:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      TASK_NAME: ${{ inputs.name }}
+      TASK_CMD: ${{ inputs.cmd }}
+      TASK_OUT: ${{ inputs.out }}
+      TASK_MIN: ${{ inputs.timeout }}
+    steps:
+      - name: Check inputs
+        run: |
+          [[ "$TASK_NAME" =~ ^[A-Za-z0-9._-]{1,60}$ ]] || { echo "bad name: $TASK_NAME"; exit 1; }
+          [[ "$TASK_MIN" =~ ^[0-9]{1,3}$ ]] && [ "$TASK_MIN" -ge 1 ] && [ "$TASK_MIN" -le 330 ] || { echo "timeout must be 1-330 minutes"; exit 1; }
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm install --no-save --no-audit --no-fund playwright@${{ env.PW_VERSION }}
+      - id: pwcache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PW_VERSION }}-shell
+      - if: steps.pwcache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps --only-shell chromium
+      - if: steps.pwcache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: node build.mjs
+      - name: Run the command
+        id: cmd
+        run: |
+          set +e
+          echo "\$ $TASK_CMD   (limit $TASK_MIN min)" | tee task.log
+          timeout --kill-after=30 "${TASK_MIN}m" bash -c "$TASK_CMD" 2>&1 | tee -a task.log
+          rc=${PIPESTATUS[0]}
+          [ "$rc" = 124 ] && echo "TIMED OUT after $TASK_MIN min" | tee -a task.log
+          echo "exit code $rc" | tee -a task.log
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+      - name: Commit the outputs to branch ci-out
+        if: always()
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -uo pipefail
+          shopt -s globstar nullglob dotglob
+          STAGE="$RUNNER_TEMP/stage/out/$TASK_NAME/$RUN_ID"; mkdir -p "$STAGE"
+          [ -f task.log ] && tail -n 2000 task.log > "$STAGE/task.log" || echo "the command did not run" > "$STAGE/task.log"
+          : > "$STAGE/files.txt"
+          IFS=',' read -ra GLOBS <<< "$TASK_OUT"
+          for g in "${GLOBS[@]}"; do
+            g="$(echo "$g" | xargs)"; [ -n "$g" ] || continue
+            case "$g" in /*|*..*) echo "skipped (outside the repo): $g" >> "$STAGE/files.txt"; continue;; esac
+            for f in $g; do
+              [ -f "$f" ] || continue
+              sz=$(stat -c %s "$f")
+              if [ "$sz" -gt $((95 * 1024 * 1024)) ]; then echo "skipped (over 95 MB): $f $sz" >> "$STAGE/files.txt"; continue; fi
+              mkdir -p "$STAGE/$(dirname "$f")"; cp "$f" "$STAGE/$f"; echo "$f $sz" >> "$STAGE/files.txt"
+            done
+          done
+          echo "outputs:"; cat "$STAGE/files.txt"
+          git config --global user.name vendatta77
+          git config --global user.email heavenfort77-cpu@users.noreply.github.com
+          # a fresh worktree on ci-out each try (tasks finishing together just retry on the new tip); main is never touched
+          for try in 1 2 3 4 5 6; do
+            rm -rf "$RUNNER_TEMP/wt"; git worktree prune
+            if git fetch -q --depth 1 origin +refs/heads/ci-out:refs/remotes/origin/ci-out 2>/dev/null; then
+              git worktree add -q --detach "$RUNNER_TEMP/wt" origin/ci-out
+            else
+              git worktree add -q --detach "$RUNNER_TEMP/wt" HEAD && git -C "$RUNNER_TEMP/wt" checkout -q --orphan ci-out-new && git -C "$RUNNER_TEMP/wt" rm -rq --cached . && git -C "$RUNNER_TEMP/wt" clean -fdxq
+              printf 'Outputs of task runs (workflow task.yml): out/<name>/<run id>/. Not the game; never merged into main.\n' > "$RUNNER_TEMP/wt/README.md"
+            fi
+            cp -r "$RUNNER_TEMP/stage/out" "$RUNNER_TEMP/wt/"
+            git -C "$RUNNER_TEMP/wt" add -A
+            git -C "$RUNNER_TEMP/wt" commit -q -m "task $TASK_NAME, run $RUN_ID (exit ${{ steps.cmd.outputs.rc || 'none' }})" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+          Claude-Session: https://claude.ai/code/session_015w2gCDznStxNTccUCge5DW"
+            if git -C "$RUNNER_TEMP/wt" push -q origin HEAD:refs/heads/ci-out; then echo "pushed to ci-out: out/$TASK_NAME/$RUN_ID"; break; fi
+            [ "$try" = 6 ] && { echo "push to ci-out failed"; exit 1; }
+            sleep $((RANDOM % 10 + 3))
+          done
+      - name: Command result
+        if: always()
+        run: '[ "${{ steps.cmd.outputs.rc }}" = "0" ] || { echo "the command exited with ${{ steps.cmd.outputs.rc }}"; exit 1; }'

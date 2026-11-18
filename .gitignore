@@ -3,6 +3,8 @@ node_modules/
 dist/
 ci-logs/
 ci-out/
+ci_out/
+shots/
 # pictures written by checks and tools
 /*.png
 tools/**/*.png
