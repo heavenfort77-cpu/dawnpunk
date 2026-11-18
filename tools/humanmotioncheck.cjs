@@ -300,8 +300,15 @@ function analyzePerson(tr, dt, labels, film) {
     if (mag > hr.v) hr = { v: mag, t: T(i), at: lab(i) }; if (pw) { const a = hyp3(om[0] - pw[0], om[1] - pw[1], om[2] - pw[2]) / dt * D; if (a > ha.v) ha = { v: a, t: T(i), at: lab(i), aux: at(i, 10) }; } pw = om; }
   r.head = { rate: hr, acc: ha };
   // feet: planted = the lower foot (or level), within LIM.plantDy of its own floor (lowest point within 0.6 s)
-  const W = Math.round(0.6 / dt), plants = [];
-  for (const [fb, ob] of [[18, 19], [19, 18]]) { if (isNaN(at(0, 12 + fb * 3))) continue; const y = (i) => at(i, 13 + fb * 3), yo = (i) => at(i, 13 + ob * 3);
+  // heights are taken above the ground under each foot: the body's own height (root y) where it passed nearest that spot within 0.6 s, so a footbridge ramp's
+  // slope does not make the uphill foot look lifted (on flat ground this is the old rule: the same height off both feet)
+  const W = Math.round(0.6 / dt), plants = [], cont = (k) => Math.abs(T(k) - T(k - 1) - dt) < dt * 0.5;
+  const gnd = (fb) => { const g = new Float64Array(n); for (let i = 0; i < n; i++) { const fx = at(i, 12 + fb * 3), fz = at(i, 14 + fb * 3); let best = Infinity, gy = at(i, 3);
+    for (let j = i; j >= Math.max(0, i - W); j--) { const d = (at(j, 2) - fx) ** 2 + (at(j, 4) - fz) ** 2; if (d < best) { best = d; gy = at(j, 3); } if (j > 0 && !cont(j)) break; }
+    for (let j = i + 1; j <= Math.min(n - 1, i + W) && cont(j); j++) { const d = (at(j, 2) - fx) ** 2 + (at(j, 4) - fz) ** 2; if (d < best) { best = d; gy = at(j, 3); } }
+    g[i] = gy; } return g; };
+  const GF = { 18: gnd(18), 19: gnd(19) };
+  for (const [fb, ob] of [[18, 19], [19, 18]]) { if (isNaN(at(0, 12 + fb * 3))) continue; const y = (i) => at(i, 13 + fb * 3) - GF[fb][i], yo = (i) => at(i, 13 + ob * 3) - GF[ob][i];
     let cur = null; for (let i = 0; i < n; i++) { let fl = Infinity; for (let j = Math.max(0, i - W); j <= Math.min(n - 1, i + W); j++) fl = Math.min(fl, y(j)); const pl = y(i) - fl <= LIM.plantDy && y(i) <= yo(i) + 0.01 && (i === 0 || ok(i) || !cur);
       if (pl && cur && ok(i)) { const a = bp(i, fb), q = bp(i - 1, fb), d = Math.hypot(a[0] - q[0], a[2] - q[2]); cur.path += d; cur.vb += vb[i]; cur.m++; const dx = at(i, 2) - at(i - 1, 2), dz = at(i, 4) - at(i - 1, 4), L = Math.hypot(dx, dz); if (L > 1e-6) cur.along += ((a[0] - q[0]) * dx + (a[2] - q[2]) * dz) / L; cur.max = Math.max(cur.max, d); cur.i1 = i; }
       else if (pl && !cur) cur = { foot: BONES[fb], i0: i, i1: i, path: 0, vb: 0, m: 0, along: 0, max: 0 };
