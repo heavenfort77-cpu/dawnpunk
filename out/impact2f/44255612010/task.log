@@ -1,0 +1,51 @@
+$ sudo apt-get update -qq >/dev/null && sudo apt-get install -y -qq ffmpeg python3-numpy python3-scipy >/dev/null && mkdir -p impact_out && node tools/impactsfx_render.cjs impact_out && /usr/bin/python3 tools/impactsfx_measure.py impact_out && ffmpeg -v error -y -i impact_out/sample.wav -c:a libmp3lame -b:a 192k impact_out/sample_impact_sfx.mp3   (limit 25 min)
+
+Running kernel seems to be up-to-date.
+
+Restarting services...
+
+Service restarts being deferred:
+ systemctl restart hosted-compute-agent.service
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+layers {"target":{"hit":{"strikeGain":-26,"weightGain":-31,"slapGain":-30,"splashGain":-33,"sprayGain":-35,"rattleGain":-35},"head":{"crackGain":-28,"glassGain":-30,"fizzGain":-29},"charged":{"steamGain":-31,"sizzleGain":-37},"destroyed":{"strikeGain":-24,"rumbleGain":-28,"crunchGain":-31,"settleGain":-36,"staticGain":-34,"sparkGain":-35},"shot":{"jetGain":-28,"pushGain":-31,"dropGain":-35,"valveGain":-31}},"after":{"hit.ALL":-27.072469966206757,"hit.strikeGain":-29.23391437008091,"hit.weightGain":-33.48501125779642,"hit.slapGain":-33.414891719972665,"hit.splashGain":-36.60434875791919,"hit.sprayGain":-39.75249799346369,"hit.rattleGain":-41.47297530298969,"head.ALL":-25.531321433669262,"head.crackGain":-30.948386656588045,"head.glassGain":-33.76022842034763,"head.fizzGain":-33.027300475906635,"charged.ALL":-25.38438015549595,"charged.steamGain":-34.73404264465066,"charged.sizzleGain":-40.388411452024734,"destroyed.ALL":-26.01157256101567,"destroyed.strikeGain":-27.040366369136127,"destroyed.rumbleGain":-32.80717706439239,"destroyed.crunchGain":-35.186189959860656,"destroyed.settleGain":-41.05319052108621,"destroyed.staticGain":-37.52034583324785,"destroyed.sparkGain":-37.85513461182237,"shot.ALL":-27.743079222611197,"shot.jetGain":-31.449501736114016,"shot.pushGain":-32.79585695658719,"shot.dropGain":-38.119271197940456,"shot.valveGain":-34.323892855015536}}
+rendered 32.14 s; sample peak 0.501 ; solo 23
+sound                       peak     rms   max50  vband50   ring  low%  mid%   hi% centHz  hp250  >2k%
+charged1                    -7.8   -30.1   -21.4    -29.4   0.47    64    15    21   1957  -25.8    24
+charged1_phone             -11.9   -34.0   -26.1    -31.4   0.31    52    37    11   1133  -29.7    17
+charged2                    -8.4   -31.3   -22.3    -27.3   0.51    43    31    26   2452  -24.9    31
+destroyed1                  -7.7   -34.7   -24.2    -32.7   1.10    71    16    13   1260  -30.4    16
+destroyed1_phone           -11.7   -36.0   -24.9    -31.5   1.07    76    21     3    443  -29.3     6
+destroyed2                 -10.8   -37.3   -26.7    -34.0   1.23    63    16    21   2049  -31.5    24
+head1                       -6.2   -31.1   -24.0    -29.1   0.33    12    32    56   4644  -24.6    69
+head1_phone                -11.4   -32.5   -24.8    -29.4   0.28    30    36    34   2355  -26.2    47
+head2                       -6.8   -32.4   -25.7    -33.2   0.33    20    23    57   4788  -26.7    68
+head3                       -7.8   -31.8   -25.0    -31.8   0.32    26    26    48   4136  -26.5    60
+hit1                       -11.0   -33.9   -27.3    -30.3   0.21    19    51    30   3016  -28.1    37
+hit1_phone                 -11.0   -31.8   -25.5    -30.8   0.20    65    27     8    812  -28.6    14
+hit2                       -10.1   -32.0   -25.6    -30.2   0.22    46    34    20   2059  -27.9    27
+hit3                        -9.8   -32.7   -26.4    -30.2   0.22    34    41    24   2509  -27.9    32
+hit_outdoors                -8.5   -33.0   -27.7    -32.7   0.21    29    31    41   3476  -29.3    48
+hit_seq6m                   -9.5   -30.5   -24.2    -29.3   0.20    48    33    19   1619  -27.2    24
+ref_sfxBreak_machine0m      -5.4   -21.0   -14.0    -20.6   0.26    71    29     0    377  -20.2     2
+ref_sfxHit                 -21.5   -32.1   -30.5    -36.3   0.06    75    23     2    517  -34.3     4
+ref_sfxShot                -20.3   -35.0   -31.1    -31.2   0.09     3    97     0    535  -31.2     0
+shot1                      -12.4   -32.9   -27.0    -30.6   0.19    10    45    46   3931  -27.4    51
+shot1_phone                -13.1   -35.0   -29.3    -31.1   0.16    13    68    18   1527  -29.9    21
+shot2                      -12.9   -34.2   -28.2    -31.3   0.18    11    50    39   3345  -28.7    43
+shot3                      -14.6   -35.8   -30.1    -36.1   0.19     6    29    65   5276  -30.4    73
+marla x0.9                  peak     rms   med50   max50  vbmed50  vband50
+day_another_awake           -1.9   -17.5   -20.3   -10.8    -25.1    -11.7
+day_leave_it                -2.3   -17.3   -21.3   -12.0    -24.5    -12.8
+drill_eat_again             -2.4   -19.0   -22.4   -14.6    -31.7    -15.1
+hint_h_2                    -1.6   -17.8   -19.2   -12.4    -24.1    -13.2
+inbound_2_behind            -2.1   -17.3   -26.0    -7.5    -30.9     -7.7
+low_2                       -2.2   -18.1   -18.8   -13.3    -25.8    -14.0
+music x0.35 ivy_on_the_glass         peak -9.1  50ms p50 -24.3 p95 -20.2 max -18.3 | vband p50 -28.9 p95 -24.0 | hp250 p50 -28.0 p95 -23.4 | >2k 4% low<300 67%
+music x0.35 the_green_perimeter      peak -9.1  50ms p50 -24.3 p95 -20.3 max -18.3 | vband p50 -30.8 p95 -25.6 | hp250 p50 -30.1 p95 -24.7 | >2k 3% low<300 78%
+music x0.35 where_the_roots_breathe  peak -9.1  50ms p50 -24.7 p95 -19.7 max -17.2 | vband p50 -27.5 p95 -21.4 | hp250 p50 -26.9 p95 -21.2 | >2k 4% low<300 42%
+exit code 0
