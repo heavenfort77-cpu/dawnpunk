@@ -2,7 +2,8 @@
 // Usage: node tools/impactsfx_render.cjs <out dir> [--tune]
 //   --tune: first measures every layer alone (loudest 50 ms window, 3 seeds, 0 m, indoors), sets each layer's gain so it meets TARGET below
 //           (rounded to 3 significant digits), writes that tuned copy as <out>/impactsfx.js and renders with it; without --tune it renders src/impactsfx.js as it is.
-// Writes: <out>/sample.wav (the owner's sample: each sound 3 or 2 times with 0.5 s gaps, then a fight sequence), <out>/solo/*.wav (each sound alone, plus the
+// Writes: <out>/sample.wav (the owner's sample: each sound 3 or 2 times with 0.5 s gaps, then a fight sequence, then that sequence with the phone setting),
+// <out>/solo/*.wav (each sound alone, variation 1 of each with the phone setting (<kind>1_phone), plus the
 // current game's sfxHit / sfxShot / sfxBreak copied from src/main.js), <out>/marks.json (timestamps), <out>/layers.json (layer levels before and after tuning).
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -48,19 +49,22 @@ window.go = async () => {
   const order = [['hit', 3, 'body hit on a Gloom'], ['head', 3, 'head shot'], ['charged', 2, 'charged shot hit'], ['destroyed', 2, 'Gloom destroyed'], ['shot', 3, 'cannon shot']];
   res.sample = await render(60, (a, d) => { let t = 0.3;
     for (const [k, n, label] of order) for (let i = 0; i < n; i++) { const e = impactPlay(a, d, k, t, { po: near, rnd: mulberry(1000 + k.length * 31 + i * 7) }); res.marks.push({ label: label + ' ' + (i + 1), kind: k, t0: t, t1: e }); t = e + 0.5; }
-    t += 0.5; const s0 = t, r = mulberry(77), sh = (x) => impactPlay(a, d, 'shot', x, { rnd: r }), land = 0.09, far = { pan: -0.35, dist: 9 }, ev = [];
-    const at = (what, x) => { ev.push([what, x]); };
-    sh(t); at('shot', t); impactPlay(a, d, 'hit', t + land, { po: seq, rnd: r }); at('body hit', t + land); t += 0.75;
-    sh(t); at('shot', t); impactPlay(a, d, 'hit', t + land, { po: seq, rnd: r }); at('body hit', t + land); t += 0.6;
-    sh(t); at('shot', t); impactPlay(a, d, 'head', t + land, { po: seq, rnd: r }); at('head shot', t + land); t += 1.1;
-    sh(t); at('charged shot', t); impactPlay(a, d, 'charged', t + land, { po: seq, rnd: r }); at('charged hit 6 m', t + land); impactPlay(a, d, 'charged', t + land + 0.045, { po: far, rnd: r }); at('charged hit 9 m left', t + land + 0.045); t += 1.2;
-    sh(t); at('shot', t); const e = impactPlay(a, d, 'destroyed', t + land, { po: seq, rnd: r }); at('Gloom destroyed', t + land);
-    res.marks.push({ label: 'fight sequence inside a house (target 6 m ahead, pan 0.2 right)', kind: 'seq', t0: s0, t1: e, events: ev });
+    // the fight sequence, then the same sequence with the phone setting (phone noise share, fewer crackle grains, phone lowpass)
+    const fight = (t, phone, label) => { const s0 = t, r = mulberry(77), sh = (x) => impactPlay(a, d, 'shot', x, { rnd: r, phone }), land = 0.09, far = { pan: -0.35, dist: 9 }, ev = [];
+      const at = (what, x) => { ev.push([what, x]); };
+      sh(t); at('shot', t); impactPlay(a, d, 'hit', t + land, { po: seq, rnd: r, phone }); at('body hit', t + land); t += 0.75;
+      sh(t); at('shot', t); impactPlay(a, d, 'hit', t + land, { po: seq, rnd: r, phone }); at('body hit', t + land); t += 0.6;
+      sh(t); at('shot', t); impactPlay(a, d, 'head', t + land, { po: seq, rnd: r, phone }); at('head shot', t + land); t += 1.1;
+      sh(t); at('charged shot', t); impactPlay(a, d, 'charged', t + land, { po: seq, rnd: r, phone }); at('charged hit 6 m', t + land); impactPlay(a, d, 'charged', t + land + 0.045, { po: far, rnd: r, phone }); at('charged hit 9 m left', t + land + 0.045); t += 1.2;
+      sh(t); at('shot', t); const e = impactPlay(a, d, 'destroyed', t + land, { po: seq, rnd: r, phone }); at('Gloom destroyed', t + land);
+      res.marks.push({ label, kind: 'seq', t0: s0, t1: e, events: ev }); return e; };
+    let e = fight(t + 0.5, false, 'fight sequence inside a house (target 6 m ahead, pan 0.2 right)');
+    e = fight(e + 1.0, true, 'the same fight sequence with the phone setting');
     return e + 0.5; });
   for (const [k, n] of order) for (let i = 0; i < n; i++) res.solo[k + (i + 1)] = await render(2, (a, d) => impactPlay(a, d, k, 0.01, { po: near, rnd: mulberry(1000 + k.length * 31 + i * 7) }));
   res.solo.hit_seq6m = await render(2, (a, d) => impactPlay(a, d, 'hit', 0.01, { po: seq, rnd: mulberry(5) }));
   res.solo.hit_outdoors = await render(2, (a, d) => impactPlay(a, d, 'hit', 0.01, { po: near, rnd: mulberry(1000 + 3 * 31), outdoors: true }));
-  res.solo.hit_phone = await render(2, (a, d) => impactPlay(a, d, 'hit', 0.01, { po: near, rnd: mulberry(1000 + 3 * 31), phone: true }));
+  for (const [k] of order) res.solo[k + '1_phone'] = await render(2, (a, d) => impactPlay(a, d, k, 0.01, { po: near, rnd: mulberry(1000 + k.length * 31), phone: true }));
   res.solo.ref_sfxHit = await render(1, (a, d) => refHit(a, d, 0.01, 0));
   res.solo.ref_sfxShot = await render(1, (a, d) => refShot(a, d, 0.01));
   res.solo.ref_sfxBreak_machine0m = await render(1, (a, d) => refBreak(a, d, 0.01, near, true));
