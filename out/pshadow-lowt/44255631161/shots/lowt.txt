@@ -1,0 +1,6 @@
+INFO timing low pshadow=1: median 283.4 ms, mean 306.9 ms
+INFO timing low pshadow=0: median 250.1 ms, mean 265.3 ms
+INFO timing low pshadow=1: median 283.3 ms, mean 281.9 ms
+INFO timing low pshadow=0: median 250.0 ms, mean 255.5 ms
+INFO FRAMECOST low interleaved: with 283.3 ms (283, 283), without 250.1 ms (250, 250), difference 13.3%
+PASS no page errors
