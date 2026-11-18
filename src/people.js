@@ -302,9 +302,9 @@ export function createPerson(cfg, key) {
   }
   // the gait numbers and live turn state, for tools/animcheck.cjs
   const probe = () => ({ kind, cycle: G.cycle, speed: G.speed, now: st.speed.x, phase: st.phase, step: !!st.step, yaw: { head: st.head.x, chest: st.chest.x, hips: st.hips.x, feet: st.feet }, legLen, plant: st.plant.slice(), lockW: [lock[0].w, lock[1].w], lockOn: [lock[0].on, lock[1].on], off: st.off.slice(), swingQ: st.swingQ.slice(), kneeS: [knee[0].s, knee[1].s], heel: st.heel.slice(), stepU: st.stepU, halt: st.halt });
-  // restart(): the person starts over as if just made (its random stream from the start, standing, feet let go, facing the holder's way), for a rebuilt base,
+  // restart(): the person starts over as if just made (its random stream from the start, the rest pose, feet let go, facing the holder's way), for a rebuilt base,
   // so what it does next does not depend on what it did before (the same at 30 and 60 frames a second)
-  const restart = () => { rs = rs0; for (const k of Object.keys(st)) delete st[k]; Object.assign(st, start()); st.shift.len = I.shift[0] + rnd() * (I.shift[1] - I.shift[0]); base();
+  const restart = () => { rs = rs0; for (const k of Object.keys(st)) delete st[k]; Object.assign(st, start()); st.shift.len = I.shift[0] + rnd() * (I.shift[1] - I.shift[0]); base(); for (const k of BONES) { const q = pose[k]; q[0] = q[1] = q[2] = 0; }
     for (const lk of lock) { lk.on = false; lk.w = 0; lk.rel = 9; lk.sw = false; lk.slip = false; lk.skip = false; } root.rotation.y = 0; };
   return { root, kind, restart, get ready() { return ready; }, whenReady(f) { if (ready) f(); else wait.push(f); }, drive, probe, get scan() { return !!scan; } };
 }
