@@ -7,12 +7,13 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MODELS } from './modeldata.js';
 import { QUALITY } from './quality.js';
 import { hiMat, hiLights } from './marlahi.js';
+import { createStepper } from './people.js';
 
 // `key` picks the model in src/modeldata.js: 'marla', or a villager ('bram', 'oko', 'pip'). Villagers have a neutral face only.
 export function createMarla(cfg, key = 'marla') {
   const root = new THREE.Group(); root.userData.keep = true; let ready = false, bones = {}, faces = [], mood = 0, moodTo = 0, look = 0, t = 0, onReady = null;
   // desktop closed smile (owner approved Nov 16 23:29): hiModel = the desktop model loaded (it carries expr_smileClosed and expr_smileClosedSym); smile = its eased weight, 0..1 of CONFIG.marlaHi.smile.strength
-  let hiModel = false, smile = 0;
+  let hiModel = false, smile = 0, stepper = null, lookV = 0, lookAcc = 0;
   const bin = Uint8Array.from(atob(MODELS[key]), (c) => c.charCodeAt(0)).buffer;
   const HI = QUALITY === 'high' && cfg.marlaHi && cfg.marlaHi.files[key];      // desktops and laptops: her own high model and materials (src/marlahi.js); phones: the packed light model
   const go = (buf, isHi) => new GLTFLoader().parse(buf, '', (gltf) => {
@@ -38,6 +39,8 @@ export function createMarla(cfg, key = 'marla') {
   return {
     root, get ready() { return ready; }, whenReady(f) { if (ready) f(); else onReady = f; },
     talk(on) { moodTo = on ? 1 : 0; },
+    // turning: want = the facing she should take (rad, her holder's frame) or null; she gets there in pivot steps with her feet held (src/people.js createStepper)
+    turn(dt, want) { if (!ready) return; if (!stepper) stepper = createStepper(cfg, root, bones, 'woman'); stepper.turn(dt, want); },
     // walking: legs and arms swing in step (amt 0 = stand still, 1 = full stride at `pace` steps per second)
     walk(dt, speed) {
       if (!ready) return; const W = cfg.marla.walk, A = W.stride, T = (legLen * 2 * A) / (W.stance * Math.max(0.1, speed)); step = (step + dt / T) % 1; // the step time comes from the leg length and the ground speed, so a planted foot does not slide
@@ -53,8 +56,10 @@ export function createMarla(cfg, key = 'marla') {
       if (hiModel && SM && SM.on) { const up = moodTo > 0; smile = up ? Math.min(1, smile + dt / Math.max(0.01, SM.easeIn)) : Math.max(0, smile - dt / Math.max(0.01, SM.easeOut)); const w = smile * smile * (3 - 2 * smile) * SM.strength, sy = Math.min(1, Math.max(0, SM.sym || 0)); setFace('smileClosed', w * (1 - sy)); setFace('smileClosedSym', w * sy); setFace('smile', 0); setFace('grin', 0); setFace('puzzled', 0); }
       else if (hiModel) { setFace('smile', 0); setFace('grin', 0); setFace('puzzled', 0); }
       else if (cfg.marla.expressions) { setFace('smile', mood * 0.9); setFace('grin', 0); setFace('puzzled', near && !moodTo ? 0.35 : 0); }
-      const want = near ? Math.max(-0.9, Math.min(0.9, Math.atan2(dx, dz))) : 0; look += (want - look) * Math.min(1, dt * 3);
+      // the head turns to you on a critically damped spring (CONFIG.marla.lookHz), stepped in fixed slices so it is the same at any frame rate
+      const want = near ? Math.max(-0.9, Math.min(0.9, Math.atan2(dx, dz))) : 0, w = 2 * Math.PI * cfg.marla.lookHz; lookAcc += dt; while (lookAcc >= 1 / 120) { lookAcc -= 1 / 120; lookV += (w * w * (want - look) - 2 * w * lookV) / 120; look += lookV / 120; }
       const h = bones.head, n = bones.neck_01, sp = bones.spine_02 || bones.spine_01; if (h) h.rotation.y = look * 0.6; if (n) n.rotation.y = look * 0.4; if (sp) sp.rotation.x = Math.sin(t * 1.4) * 0.012; // head follows you; a slow breath
+      if (stepper) stepper.legs(dt);
     }
   };
 }

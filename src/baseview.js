@@ -352,7 +352,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
         const fy = WS.ry + (working ? turn : 0); ch.drive(dt, o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: fy, gaze: working ? [Math.sin(fy) * W.look[0], W.look[1] + WS.floor, Math.cos(fy) * W.look[0]] : null }); okoWork(ch, o.work || (o.work = {}), dt, working); continue; }
       o.near = d < (o.near ? PT.far : PT.near); o.away = o.near ? 0 : (o.away || 0) + dt;
       ch.drive(dt, o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: o.away > PT.back ? 0 : null }); }
-    if (marla && scoutG) { const dx = px - scoutG.position.x, dz = pz - scoutG.position.z, d = Math.hypot(dx, dz), near = d < 7; if (near) { const want = Math.atan2(dx, dz); let dy = want - scoutG.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); if (Math.abs(dy) > 0.8) scoutG.rotation.y += dy * Math.min(1, dt * 2.5); } const c = Math.cos(-scoutG.rotation.y), s = Math.sin(-scoutG.rotation.y); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near); }
+    // Marla turns to you in pivot steps (her own root, inside scoutG; src/people.js createStepper), her feet held where they stand
+    if (marla && scoutG) { const dx = px - scoutG.position.x, dz = pz - scoutG.position.z, d = Math.hypot(dx, dz), near = d < 7; if (marla.turn) marla.turn(dt, near ? Math.atan2(dx, dz) - scoutG.rotation.y : null); const ry = scoutG.rotation.y + marla.root.rotation.y, c = Math.cos(-ry), s = Math.sin(-ry); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near); }
     for (const w of towers) w.rotation.z += dt * 1.2;
     if (life) life.update(dt);
     // evening in the base: after CONFIG.avians.evening seconds the sun warms and dims over dusk seconds and the birds go to roost
@@ -364,11 +365,12 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     for (const o of npcs) {
       const tgt = o.wp[o.i], dx = tgt[0] - o.n.position.x, dz = tgt[1] - o.n.position.z, d = Math.hypot(dx, dz);
       if (d < 0.6) o.i = (o.i + 1) % o.wp.length;
-      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { face: Math.atan2(dx, dz), go: true, carry: o.crate.visible }); o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; }
+      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { face: Math.atan2(dx, dz), go: true, move: true, carry: o.crate.visible }); if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; }
       else if (d >= 0.6) { o.n.position.x += (dx / d) * 1.2 * dt; o.n.position.z += (dz / d) * 1.2 * dt; o.n.rotation.y = Math.atan2(dx, dz); }
     }
     // on a footbridge (src/baselife.js) a walker stands on its deck
-    if (life) for (const o of npcs) o.n.position.y = life.deckY(o.n.position.x, o.n.position.z);
+    // (eased over about 1 / CONFIG.people.motion.deckEase s, so stepping onto a deck is not a jump)
+    if (life) { const k = 1 - Math.exp(-dt * cfg.people.motion.deckEase); for (const o of npcs) { const y = life.deckY(o.n.position.x, o.n.position.z); o.n.position.y += (y - o.n.position.y) * k; } }
     for (const o of hiddenCats) if (o.cg.visible) o.cg.userData.arm.rotation.z = Math.sin(t * 4 + o.c.id) * 0.6;
     for (const h of homeCats) if (h.cg) h.cg.userData.arm.rotation.z = Math.sin(t * 3) * 0.6;
     const cam = new THREE.Vector3(px, camY, pz);

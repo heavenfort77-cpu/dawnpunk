@@ -194,12 +194,12 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
     }
     return null;
   };
-  // test helper: draw the frame twice in one go (no game time passes), with and without the body, and count the pixels its shadow darkens and brightens
+  // test helper: draw the frame twice in one go (no game time passes), with and without the body (phones: the blob), and count the pixels its shadow darkens and brightens
   api.compare = () => {
-    if (!lastCam || !body) return null; const cv = renderer.domElement, w = cv.width, h = cv.height, c2 = document.createElement('canvas'); c2.width = w; c2.height = h; const x = c2.getContext('2d', { willReadFrequently: true });
-    const grab = (vis) => { body.root.visible = vis; fresh = true; renderer.render(scene, lastCam); x.drawImage(cv, 0, 0); return x.getImageData(0, 0, w, h).data; };
+    const tgt = body ? body.root : blob; if (!lastCam || !tgt) return null; const cv = renderer.domElement, w = cv.width, h = cv.height, c2 = document.createElement('canvas'); c2.width = w; c2.height = h; const x = c2.getContext('2d', { willReadFrequently: true });
+    const grab = (vis) => { tgt.visible = vis; fresh = true; renderer.render(scene, lastCam); x.drawImage(cv, 0, 0); return x.getImageData(0, 0, w, h).data; };
     // game time stands still between the two draws (swaying grass and drifting clouds read the clock), so only the body differs
-    const pn = performance.now, T0 = pn.call(performance); performance.now = () => T0; let a, b; try { a = grab(true); b = grab(false); } finally { performance.now = pn; } body.root.visible = want; fresh = true;
+    const pn = performance.now, T0 = pn.call(performance); performance.now = () => T0; let a, b; try { a = grab(true); b = grab(false); } finally { performance.now = pn; } tgt.visible = body ? want : blobOn; fresh = true;
     let dark = 0, bright = 0, ratio = 0, x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1; const L = (d, i) => 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
     for (let i = 0; i < a.length; i += 4) { const la = L(a, i), lb = L(b, i); if (la < lb - 3) { dark++; ratio += la / Math.max(1, lb); const q = i / 4, px2 = q % w, py2 = (q / w) | 0; x0 = Math.min(x0, px2); x1 = Math.max(x1, px2); y0 = Math.min(y0, py2); y1 = Math.max(y1, py2); } else if (la > lb + 3) bright++; }
     return { dark, bright, ratio: dark ? +(ratio / dark).toFixed(3) : 0, box: [x0, y0, x1, y1], n: w * h };

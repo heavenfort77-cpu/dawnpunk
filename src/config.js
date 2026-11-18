@@ -137,7 +137,7 @@ export const CONFIG = {
       woman: { cycle: 1.0, speed: 1.15, stance: 0.6, knee: 0.8, kneeStance: 0.1, arm: 0.32, elbow: 0.3, elbowSwing: 0.12, armOut: 0.04, track: 0.035, sway: 0.028, roll: 0.06, twist: 0.06, drop: 0.5, lean: 0.02, step: 0.29, vary: 0.04 },
       child: { cycle: 0.65, speed: 0.95, stance: 0.58, knee: 0.9, kneeStance: 0.12, arm: 0.1, elbow: 0.35, elbowSwing: 0.05, armOut: 0.22, track: -0.07, sway: 0.035, roll: 0.06, twist: 0.05, drop: 0.6, lean: -0.03, step: 0.23, vary: 0.05, waddle: 0.07, headBob: 0.04, headHz: 2.6, headDamp: 0.25 },
     },
-    turn: { lead: 0.15, follow: [0.12, 0.2, 0.26], stepStart: 0.4, predict: 0.8, minStep: 0.14, maxStep: 1.15, twist: 0.6, chestTwist: 0.45, headMax: 1.1, stepLift: 0.22, stepSway: 0.02, near: 6, far: 7, back: 2.5, maxSpeed: [7, 5.5, 4.5] },
+    turn: { lead: 0.15, follow: [0.12, 0.2, 0.26], stepStart: 0.4, predict: 0.8, minStep: 0.14, maxStep: 1.15, twist: 0.6, chestTwist: 0.45, headMax: 1.1, stepLift: 0.4, stepSway: 0.02, near: 6, far: 7, back: 2.5, maxSpeed: [7, 5.5, 4.5] },
     idle: { shift: [3.5, 6.5], move: 1.4, slow: 7.5, slowShare: 0.35, hip: 0.025, roll: 0.03, knee: 0.14, breath: 4.2, chest: 0.012, look: 0.07 },
     settle: { armHz: 1.7, armDamp: 0.45, foreHz: 2.0, foreDamp: 0.3, handHz: 2.6, handDamp: 0.3, inertia: 0.35, headHz: 2.0, headDamp: 0.5, leanHz: 1.3, leanDamp: 0.55 },
     walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.85 },
@@ -154,8 +154,10 @@ export const CONFIG = {
     // landAhead: a walking foot lands this share of the ground the body covers during its stance ahead of the hip (the rest is behind it at toe-off)
     // heelRise: at full stride the heel lifts this many m over the end of a foot's stance (heel off, so the leg leaves the ground bent); walkCrouch: m the pelvis is lowered walking
     // reachMax: a held foot further from the hip than this share of the leg's length is let go like a lifted one (the knee never snaps from straight)
+    // deckEase: a walker stepping onto or off a footbridge deck (src/baselife.js) rises or sinks to it at this rate (1/s), not in one frame
+    // stepTurn: Marla (src/marla.js) steps round once the way she should face is more than this many rad from where she faces (the base people use turn.stepStart)
     // stepLead: a pivot step's foot lifts for this share of the step before the body turns, and sets down for the same share after; recenter: after pivoting on one foot the body settles back over its middle in about this many s (while stepping or walking)
-    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, walkLock: true, landAhead: 0.42, heelRise: 0.1, walkCrouch: 0.09, reachMax: 1.03 },
+    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.25, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, walkLock: true, landAhead: 0.42, heelRise: 0.1, walkCrouch: 0.09, reachMax: 1.03, stepTurn: 0.35, deckEase: 10 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
@@ -163,7 +165,8 @@ export const CONFIG = {
       ao: { skin: 0.6, hair: 0.35, cloth: 0.6, mouth: 0.8 }, amb: 0.55, ambHair: 0.9, keepOut: 1, key: { col: 0xfff0e0, power: 6, reach: 4, cone: 0.4, at: [-0.6, 1.6, 1.3], headY: 1.5, shadow: 512, swap: 0.5, talk: 4, faceCos: 0.8 } },
   },
   // expressions: false = her face stays neutral on every device (owner, Nov 16: neutral only for now; the smile / grin / puzzled shapes were made for her old face and do not move the desktop scan face)
-  marla: { expressions: false, walk: { stride: 0.42, stance: 0.6, knee: 0.9, arm: 0.7, elbow: 0.25, bob: 0.025 }, // how people walk: stride = leg swing each way in radians, stance = share of the step with the foot on the ground, knee = bend while the foot is in the air, arm = arm swing against the legs, bob = body dip in m
+  // marla.lookHz: how fast her head turns to you (a critically damped spring, turns per second of its natural swing)
+  marla: { lookHz: 0.6, expressions: false, walk: { stride: 0.42, stance: 0.6, knee: 0.9, arm: 0.7, elbow: 0.25, bob: 0.025 }, // how people walk: stride = leg swing each way in radians, stance = share of the step with the foot on the ground, knee = bend while the foot is in the air, arm = arm swing against the legs, bob = body dip in m
     guide: { x: 2.8, z: 2.4, open: 1.3, rearm: 2.6, wait: 0.6, hintAt: 3, clearDoor: 2.6 }, // wait: you must stand still this long beside her before the swap opens (walking past does not open it); hintAt: her prompt shows only this close; clearDoor: she never stands within this many m (sideways) of a house's door path // by day she stands at this spot on the street; walking within `open` m opens the device swap, and it can open again after you step `rearm` m away
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 } }, // Marla's model in the base (src/marla.js): how far the arms come down from the build pose, in radians
   // The Gloom's look (src/gloomkit.js has each machine's own numbers in GLOOMKIT). machines: false brings back the hooded Gloom. 

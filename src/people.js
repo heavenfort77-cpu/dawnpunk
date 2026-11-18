@@ -264,3 +264,48 @@ export function createPerson(cfg, key) {
   const probe = () => ({ kind, cycle: G.cycle, speed: G.speed, now: st.speed.x, phase: st.phase, step: !!st.step, yaw: { head: st.head.x, chest: st.chest.x, hips: st.hips.x, feet: st.feet }, legLen, plant: st.plant.slice(), lockW: [lock[0].w, lock[1].w], lockOn: [lock[0].on, lock[1].on], off: st.off.slice(), swingQ: st.swingQ.slice(), kneeS: [knee[0].s, knee[1].s] });
   return { root, kind, get ready() { return ready; }, whenReady(f) { if (ready) f(); else wait.push(f); }, drive, probe, get scan() { return !!scan; } };
 }
+
+// Pivot steps for a person whose facing someone else's code decides (Marla, src/marla.js): her body turns in steps, one foot lifts and turns while the other stays down
+// (the body turns about that foot), and the feet are held where they stand, as the base people's. turn(dt, want): want = the facing she should take (rad, her
+// holder's frame) or null; legs(dt) after her pose for the frame is set. Someone else setting root.rotation.y (a new spot) starts it over from there.
+export function createStepper(cfg, root, bones, kind) {
+  const P = cfg.people, M = P.motion, T = P.turn, G = P.gait[kind || 'woman'];
+  const LG = [['thigh_l', 'calf_l', 'foot_l'], ['thigh_r', 'calf_r', 'foot_r']], restQ = {}, hinge = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(1, 0, 0)], knee = [{ s: 1 }, { s: 1 }], footAt = [[0.1, 0], [-0.1, 0]];
+  const lock = [0, 1].map(() => ({ on: false, w: 0, rel: 9, T: new THREE.Vector3(), last: new THREE.Vector3() })), fk = new THREE.Vector3(), tg = new THREE.Vector3(), scn0 = new THREE.Vector3();
+  let scn = null, yaw = null, step = null, lastSide = 0, acc = 0, lift = 0, liftSide = 0; const off = [0, 0];
+  const rot = (a, x, z) => [x * Math.cos(a) + z * Math.sin(a), -x * Math.sin(a) + z * Math.cos(a)];
+  function init(sc) { scn = sc; scn0.copy(sc.position); root.updateWorldMatrix(true, true); const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), v = new THREE.Vector3(), qS = sc.getWorldQuaternion(new THREE.Quaternion());
+    for (let i = 0; i < 2; i++) { const [a, b, c] = LG[i]; if (!bones[a] || !bones[b] || !bones[c]) return false; for (const k of LG[i]) restQ[k] = bones[k].quaternion.clone();
+      bones[c].getWorldPosition(v).applyMatrix4(inv); footAt[i] = [v.x, v.z]; hinge[i].copy(XA).applyQuaternion(qS).applyQuaternion(bones[a].getWorldQuaternion(new THREE.Quaternion()).invert()); }
+    return true; }
+  function turn(dt, want) {
+    if (!scn) { const sc = bones.pelvis && bones.pelvis.parent; let top = sc; while (top && top.parent && top.parent !== root) top = top.parent; if (!top || !init(top)) return; }
+    if (yaw === null || Math.abs(root.rotation.y - yaw) > 1e-6) { yaw = root.rotation.y; step = null; off[0] = off[1] = 0; for (const lk of lock) { lk.on = false; lk.w = 0; } acc = 0; }
+    acc += Math.max(0, dt); let n = Math.floor(acc / M.slice + 1e-6); acc -= n * M.slice; if (n > M.maxSlices) { n = M.maxSlices; acc = 0; }
+    for (let i = 0; i < n; i++) { const h = M.slice;
+      if (!step && want != null) { const e = wrap(want - yaw); if (Math.abs(e) > M.stepTurn) { const len = G.step, tl = len * (1 - 2 * M.stepLead), cap = Math.min(T.maxStep, M.stepAcc * tl * tl / 6), amt = clamp(e, -cap, cap);
+        let side = amt > 0 ? 1 : -1; if (lastSide === side) side = -side; lastSide = side; step = { from: yaw, by: amt, t: 0, len, side }; } else if (Math.abs(e) < T.minStep * 0.5) lastSide = 0; }
+      lift = 0; liftSide = 0;
+      if (step) { const s = step, ld = M.stepLead, was = yaw; s.t += h; const u = clamp(s.t / s.len, 0, 1), k = clamp((u - ld) / (1 - 2 * ld), 0, 1); yaw = s.from + s.by * sstep(k);
+        const f = footAt[s.side === 1 ? 1 : 0], p0 = rot(was, f[0], f[1]), p1 = rot(yaw, f[0], f[1]); off[0] += p0[0] - p1[0]; off[1] += p0[1] - p1[1];
+        const kk = Math.exp(-h / M.recenter); off[0] *= kk; off[1] *= kk; lift = Math.sin(Math.PI * u); liftSide = s.side; if (u >= 1) step = null; } }
+    root.rotation.y = yaw; const q = rot(-yaw, off[0], off[1]); scn.position.set(scn0.x + q[0], scn0.y, scn0.z + q[1]);
+  }
+  const _q = new THREE.Quaternion();
+  function legs(dt) {
+    if (!scn) return;
+    for (const k of Object.keys(restQ)) bones[k].quaternion.copy(restQ[k]);
+    scn.updateWorldMatrix(true, true);
+    for (let i = 0; i < 2; i++) { const [a, b, c] = LG[i], th = bones[a], ca = bones[b], ft = bones[c], lk = lock[i], up = liftSide === (i === 0 ? 1 : -1) ? lift : 0;
+      // the stepping leg: thigh forward and knee bent by T.stepLift (as src/people.js), about the knee's own hinge
+      if (up > 0) { th.getWorldQuaternion(_q); turnWorld(th, new THREE.Quaternion().setFromAxisAngle(hinge[i].clone().applyQuaternion(_q).normalize(), -up * T.stepLift)); ca.getWorldQuaternion(_q); turnWorld(ca, new THREE.Quaternion().setFromAxisAngle(hinge[i].clone().applyQuaternion(th.getWorldQuaternion(new THREE.Quaternion())).normalize(), up * T.stepLift * 2)); }
+      ft.getWorldPosition(fk); const planted = up <= 0;
+      if (planted && !lk.on) { if (lk.w > 0) lk.T.copy(lk.last); else lk.T.copy(fk); lk.on = true; lk.w = 1; }
+      else if (!planted && lk.on) { lk.on = false; lk.rel = 0; }
+      if (!lk.on && lk.w > 0) { lk.rel += dt; lk.w = 1 - sstep(lk.rel / M.lockRelease); }
+      if (lk.w > 0 && Math.hypot(lk.T.x - fk.x, lk.T.z - fk.z) > M.lockSlip) { lk.on = false; lk.w = 0; }
+      if (lk.w > 0) tg.lerpVectors(fk, lk.T, lk.w); else tg.copy(fk); lk.last.copy(tg); legReach(th, ca, ft, tg, hinge[i], knee[i]);
+    }
+  }
+  return { turn, legs, get yaw() { return yaw; }, get stepping() { return !!step; } };
+}
