@@ -1,0 +1,8 @@
+$ mkdir -p shots && node tools/playershadowshot.cjs low shots/ps_ timing rev > shots/lowt.txt 2>&1; cat shots/lowt.txt   (limit 30 min)
+INFO timing low pshadow=0: median 316.6 ms, mean 311.1 ms
+INFO timing low pshadow=1: median 333.2 ms, mean 325.0 ms
+INFO timing low pshadow=0: median 300.1 ms, mean 305.5 ms
+INFO timing low pshadow=1: median 316.7 ms, mean 322.2 ms
+INFO FRAMECOST low interleaved: with 325.0 ms (333, 317), without 308.3 ms (317, 300), difference 5.4%
+PASS no page errors
+exit code 0
