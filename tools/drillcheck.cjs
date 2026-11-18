@@ -7,7 +7,7 @@ const { chromium, devices } = require('playwright');
   const page = process.argv[2] || require('path').resolve(__dirname, '../dist/index.html');
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const out = [], errs = []; const add = (n, ok) => out.push([n, !!ok]);
   const open = async (opts) => { const ctx = await b.newContext(opts); const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e))); await p.addInitScript(() => { window.__dtMax = 0.5; });
-    await p.goto('file://' + page + '?quality=low&seed=777', { timeout: 240000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 180000 }); return { ctx, p }; };
+    await p.goto('file://' + page + '?quality=' + (process.argv[3] === 'high' ? 'high' : 'low') + '&seed=777', { timeout: 240000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 180000 }); return { ctx, p }; };
   const night = async (p, nights) => { await p.evaluate((n) => { const g = window.__game; g.enterBase(); g.save.nights = n; document.getElementById('selRing').value = '0'; g.startRun(0); g.enterHouse(0); }, nights); await p.waitForTimeout(1500); await p.evaluate(() => window.__game.endDay()); await p.waitForTimeout(1500); };
   const step = (p) => p.evaluate(() => { const d = window.__game.drillInfo(); return d ? d.step : null; });
   const waitStep = async (p, want, ms = 20000) => { const t0 = Date.now(); let s; while (Date.now() - t0 < ms) { s = await step(p); if (s === want) return s; await p.waitForTimeout(400); } return s; };
