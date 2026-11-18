@@ -584,8 +584,8 @@ export const CONFIG = {
       dark: 0.42,
       // soft: share of the radius that fades out to the edge
       soft: 0.75,
-      // lift: height above the floor (m), against flicker with the ground
-      lift: 0.015,
+      // lift: height above the floor (m), over the road (0.03 m), house floors (0.05 m) and debris (0.08 m) that lie above the ground
+      lift: 0.1,
     },
     body: {
       // hip / shoulder / headY: heights of the hip joint, the shoulder joint and the middle of the head (m); the eye is at 1.6 m (the camera), the crown at about 1.75 m

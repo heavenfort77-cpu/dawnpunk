@@ -90,11 +90,11 @@ const ok = (c, m) => console.log((c ? 'PASS ' : 'FAIL ') + m), info = (m) => con
     await q.close();
   } else {
     // phone: standing, looking down at the blob
-    await place(p, sp.x, sp.z, along + 0.9, -0.95, 75); await frames(p, 6); await shot(p, 'blob'); I = await ps(p);
+    await place(p, sp.x, sp.z, along + 0.9, -1.2, 75); await frames(p, 6); await shot(p, 'blob'); I = await ps(p);
     ok(I.active, 'blob shown in the street ' + JSON.stringify(I));
     const tOn = await frameMs(p, 20); await p.close();
     const q = await open(0); await frames(q, 4); ok(!(await ps(q)), 'with ?pshadow=0 nothing is built');
-    await place(q, sp.x, sp.z, along + 0.9, -0.95, 75); await frames(q, 6); const tOff = await frameMs(q, 20);
+    await place(q, sp.x, sp.z, along + 0.9, -1.2, 75); await frames(q, 6); const tOff = await frameMs(q, 20);
     info('FRAMECOST low: with ' + tOn.median.toFixed(1) + ' ms, without ' + tOff.median.toFixed(1) + ' ms (median of 20 frames, software renderer, 844x390)');
     await q.close();
   }
