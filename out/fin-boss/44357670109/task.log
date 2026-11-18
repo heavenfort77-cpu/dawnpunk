@@ -1,0 +1,31 @@
+$ mkdir -p shots && MOMENTS=1 BV='[["body",0.5,0.8,0,1,-0.2],["beckon",0.8,0.9,0.5,1,-0.22],["body",0.5,0.75,0,1,-0.32]]' CLEAN=boss_00,boss_01 node tools/itchshot.cjs boss shots; node tools/itchshot.cjs film shots   (limit 150 min)
+INFO page up 26 s
+INFO base loaded 98 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 236 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":4,"cat":2,"houses":[{"i":0,"n":22,"L":3,"door":["43.5","-6.3"],"row":-1},{"i":1,"n":20,"L":3,"door":["-4.3","-6.6"],"row":-1},{"i":2,"n":18,"L":2,"door":["-42.7","5.6"],"row":1},{"i":3,"n":17,"L":2,"door":["53.2","5.8"],"row":1},{"i":4,"n":16,"L":2,"door":["-52.7","-6.0"],"row":-1},{"i":5,"n":15,"L":2,"door":["4.5","6.2"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO boss {"model":"ready","built":"glb","boss":true}
+INFO moment summon glow true
+INFO look ["body",0.5,0.8,0,1,-0.2] {"x":-7.867573529881826,"z":2.330679108503398,"dd":21.358646288769553,"type":"window"}
+INFO wrote shots/boss_00.png (1600 s) cam -7.87,4.80,2.33 yaw 2.279 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 10m" hs=""
+CATVIEW boss_00: none
+INFO wrote shots/boss_00_clean.png
+INFO look ["beckon",0.8,0.9,0.5,1,-0.22] {"x":-7.261600278944296,"z":2.488989513844495,"dd":19.015944924634162,"type":"window"}
+INFO wrote shots/boss_01.png (2122 s) cam -7.26,4.80,2.49 yaw 2.136 | HUD marla="One on the stairs, coming up! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 10m" hs=""
+CATVIEW boss_01: none
+INFO wrote shots/boss_01_clean.png
+INFO look ["body",0.5,0.75,0,1,-0.32] {"x":-7.867573529881826,"z":2.330679108503398,"dd":21.358646288769553,"type":"window"}
+INFO wrote shots/boss_02.png (2644 s) cam -7.87,4.80,2.33 yaw 2.159 | HUD marla="Use the panels. That is their job." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 00m" hs=""
+CATVIEW boss_02: none
+NO PAGE ERRORS
+done 2676 s
+INFO page up 24 s
+INFO film loaded 129 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":84},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO film {"state":"intro","cine":"MARLA: Up, Potts. Sun is wasting.\nSkip"}
+INFO wrote shots/film_52_5.png (667 s) cam 0.00,1.70,-10.60 yaw 0.000 | HUD marla="" csay="" msg="" bprompt="" bstat="" time="" hs=""
+CATVIEW film_52_5: none
+INFO film {"state":"intro","cine":"MARLA: Up, Potts. Sun is wasting.\nSkip"}
+INFO wrote shots/film_54.png (1189 s) cam 0.00,1.70,-10.60 yaw 0.000 | HUD marla="" csay="" msg="" bprompt="" bstat="" time="" hs=""
+CATVIEW film_54: none
+NO PAGE ERRORS
+done 1206 s
+exit code 0

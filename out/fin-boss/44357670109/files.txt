@@ -1,0 +1,7 @@
+shots/boss_00.png 1690714
+shots/boss_00_clean.png 1922635
+shots/boss_01.png 1636718
+shots/boss_01_clean.png 1860600
+shots/boss_02.png 1767420
+shots/film_52_5.png 1873643
+shots/film_54.png 1873023
