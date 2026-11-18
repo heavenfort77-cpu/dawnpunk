@@ -143,7 +143,8 @@ function baseRun(o) {
   for (let i = 1; i <= N; i++) {
     const [sg, u] = segAt(t); if (sg !== cur) { cur = sg; if (sg[3]) sg[3](); } P = sg[2](u);
     // the player's path between frames is known here: the base gets it (posAt), so 30 and 60 fps decide on the same positions
-    const tp = t - dt; g.bview.update(dt, P[0], P[1], 1.6, (a) => { const [s2, u2] = segAt(Math.max(0, tp + a * dt)); return s2[2](u2); }); t = i * dt; HM.sample(t, HM.lab(sg[1]), nearAux);
+    // (the positions during the frame being stepped: from this frame's start t to its end t + dt, the same game times at any frame rate)
+    g.bview.update(dt, P[0], P[1], 1.6, (a) => { const [s2, u2] = segAt(t + a * dt); return s2[2](u2); }); t = i * dt; HM.sample(t, HM.lab(sg[1]), nearAux);
     while (si < shots.length && shots[si].t <= t + 1e-9) { const sh = shots[si++], tr = HM.traces[sh.key]; if (!tr || !tr.root.parent) continue; const w = wpos(tr.root);
       if (sh.side) { const a = w[2] + Math.PI / 2; HM.baseShot(tr.info.who + ' walking', [w[0] + Math.sin(a) * 2.5, 1.0, w[1] + Math.cos(a) * 2.5], [w[0], 0.8, w[1]]); }
       else if (sh.fixed.cam) { const s = sh.fixed; HM.baseShot(tr.info.who + ' at the bench, turning to you', [s.cam[0], 1.35, s.cam[1]], [s.look[0], 0.95, s.look[1]]); }

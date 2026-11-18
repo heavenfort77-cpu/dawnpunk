@@ -42,7 +42,7 @@ export const CONFIG = {
     shapePad: 0.05,
     charge: { time: 0.8, dmg: 3, cost: 3, width: 1.4 } }, // hold FIRE this long (s), then let go: damage x, battery x, and the jet is this much wider; it goes through every Gloom on its line                 // headshot damage x2; bots hit covered Gloom this fraction as often (they cannot aim over cover)
   devices: {
-    collector: { cost: 0, hp: 30, chargePerSec: 0.15, max: 3 },  // daytime only: free, charges the battery while the sun is up; dead at night but Gloom still smash it
+    collector: { text: 'fills your Sun while the sun is up. Daylight only.', name: 'Solar collector', cost: 0, hp: 30, chargePerSec: 0.15, max: 3 },  // daytime only: free, charges the battery while the sun is up; dead at night but Gloom still smash it
     turbine: { text: 'makes Sun all night; place it first. At most 2 Sun makers.', name: 'Turbine', cost: 12, hp: 30, energyPerSec: 0.9, max: 2, group: 'power' },
     lance: { text: 'shoots the nearest Gloom it can see through an opening or inside.', name: 'Lance', cost: 8, hp: 30, shooter: true, dmg: 5, rate: 1.2, range: 9, shotCost: 0.5, max: 6 },
     panel: { text: 'a shield across an opening; Gloom must break it to get in. Shoot heads over it.', name: 'Panel', cost: 6, hp: 50, wall: true },
@@ -135,8 +135,9 @@ export const CONFIG = {
     gait: {
       man: { cycle: 1.05, speed: 1.25, stance: 0.6, knee: 0.85, kneeStance: 0.12, arm: 0.75, elbow: 0.22, elbowSwing: 0.25, armOut: 0.05, track: 0.0, sway: 0.016, roll: 0.035, twist: 0.07, drop: 0.55, lean: 0.04, step: 0.5, vary: 0.04 },
       woman: { cycle: 1.0, speed: 1.15, stance: 0.6, knee: 0.8, kneeStance: 0.1, arm: 0.32, elbow: 0.3, elbowSwing: 0.12, armOut: 0.04, track: 0.035, sway: 0.028, roll: 0.06, twist: 0.06, drop: 0.5, lean: 0.02, step: 0.48, vary: 0.04 },
-      child: { cycle: 0.65, speed: 0.95, stance: 0.58, knee: 0.9, kneeStance: 0.12, arm: 0.1, elbow: 0.35, elbowSwing: 0.05, armOut: 0.22, track: -0.07, sway: 0.035, roll: 0.06, twist: 0.05, drop: 0.6, lean: -0.03, step: 0.36, vary: 0.05, waddle: 0.07, headBob: 0.04, headHz: 2.6, headDamp: 0.25 },
+      child: { cycle: 0.65, speed: 0.95, stance: 0.58, knee: 0.9, kneeStance: 0.12, arm: 0.1, elbow: 0.35, elbowSwing: 0.05, armOut: 0.22, track: -0.07, sway: 0.035, roll: 0.06, twist: 0.05, drop: 0.6, lean: -0.03, step: 0.36, stepLift: 0.41, vary: 0.05, waddle: 0.07, headBob: 0.04, headHz: 2.6, headDamp: 0.25 },
     },
+    // (gait.child.stepLift: a child lifts its foot higher in a pivot step than turn.stepLift, its legs being short)
     turn: { lead: 0.15, follow: [0.16, 0.2, 0.26], stepStart: 0.4, predict: 0.8, minStep: 0.14, maxStep: 1.15, twist: 0.6, chestTwist: 0.45, headMax: 1.1, stepLift: 0.34, stepSway: 0.02, near: 6, far: 7, back: 2.5, maxSpeed: [5.5, 5.5, 4.5] },
     idle: { shift: [3.5, 6.5], move: 1.4, slow: 7.5, slowShare: 0.35, hip: 0.025, roll: 0.03, knee: 0.14, breath: 4.2, chest: 0.012, look: 0.07 },
     settle: { armHz: 1.7, armDamp: 0.45, foreHz: 2.0, foreDamp: 0.3, handHz: 2.6, handDamp: 0.3, inertia: 0.35, headHz: 2.0, headDamp: 0.5, leanHz: 1.3, leanDamp: 0.55 },
@@ -146,7 +147,7 @@ export const CONFIG = {
     // turnAcc: walking, the body's turn rate changes by at most this many rad/s each second (30 = 1720 deg/s2; no snapped turns at a corner)
     // stepAcc: a pivot step turns the body with at most this angular acceleration (rad/s2; 80 = 4580 deg/s2, under the ~100 rad/s2 legs can give a turn); stepRate: and at most this turn speed
     // (rad/s; 7 = 400 deg/s; marlaRate for Marla, whose head also turns to you meanwhile: 5.5 = 315 deg/s); bigger turns take more steps
-    // swingRamp: the swing foot speeds up and slows down over this share of its swing each (0.1: its top speed is 1.11 x its mean; 0.5 would be 2 x)
+    // swingRamp: the swing foot speeds up and slows down over this share of its swing each (0.15: its top speed is 1.18 x its mean; 0.5 would be 2 x)
     // lockRelease: a foot that lifts is let go of its spot over this many seconds; lockSlip: a foot more than this many m from where the leg puts it is let go the same way
     // plantV: above this ground speed (m/s) the feet stand by the walk's own stance phases (below it, standing: both feet, or the one not stepping)
     // heelOff: walking at full stride, the knee bends this many rad as the heel lifts over the last heelOffAt share of a foot's time on the ground (then the swing starts from it)
@@ -163,7 +164,7 @@ export const CONFIG = {
     // decideEvery: a pivot step may start only every this many slices (1 = any slice; 4 = only every 1/30 s of game time; 4 measured worse at 30 vs 60 fps in the browser)
     // stepTurn: Marla (src/marla.js) steps round once the way she should face is more than this many rad from where she faces (the base people use turn.stepStart)
     // stepLead: a pivot step's foot lifts for this share of the step before the body turns, and sets down for the same share after; recenter: after pivoting on one foot the body settles back over its middle in about this many s (while stepping or walking)
-    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.1, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.03, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckHz: 0.9, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
+    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.03, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckHz: 0.6, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
@@ -576,7 +577,36 @@ export const CONFIG = {
   // wearTint: how far the far rings pull the walls toward the grey-green extTintFar (0 = none). fill: the light bounced up from the ground onto walls in shadow, fillDay: its extra strength by day. lamp: brightness of the ceiling lamps, lampReach: their reach in house half-widths.
   world: { sun: 2.0, wallTile: 2.6, tufts: 520, trees: 16, bushes: 34, extTint: 0xf2ecde, extTintFar: 0xa8ad98, wearTint: 0.45, intTint: 0xe2dccc, floorTint: 0xd0b898, fill: 0xa8b090, fillDay: 1.3, lamp: 14, lampReach: 3.2 }, // the settlement's look (src/world.js): sun strength, texture size on walls in metres, how much overgrowth, wall and floor tints (far rings are darker and greener)
   // first day: the first solar collector must go up inside the first house before you can leave it or start the night; the day clock waits meanwhile (save.solarDone)
-  firstSolar: { block: 'Set up your first solar collector first: face a window or door and tap Solar (key Q).', marla: 'Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.' },
+  // fresh-player review Nov 18: each line names the real control, D = desktop (key Q), P = phone (the SOLAR button). Her line has no voice clip (the old clip said "tap Solar")
+  firstSolar: {
+    // the flash when you try to leave the house or start the night before it is up
+    blockD: 'Set up your first solar collector first: face a window or door and press Q.',
+    blockP: 'Set up your first solar collector first: face a window or door and tap SOLAR.',
+    // Marla's order
+    marlaD: 'Potts. Collector first. Face a window and press Q. The clock waits for you, I do not.',
+    marlaP: 'Potts. Collector first. Face a window and tap SOLAR. The clock waits for you, I do not.',
+    // seconds her order stays up
+    secs: 6,
+    // seconds between repeats while the collector is still not up (it was every 4 s)
+    repeat: 15,
+    // the text line on the phone's collector button (it read "free", the cost, with no word Solar)
+    btnP: 'SOLAR',
+  },
+  // STARTING THE NIGHT (fresh-player review Nov 18): one instruction everywhere, in the button's own words (#bDusk, desktop key N). D = desktop, P = phone. None has a voice clip
+  nightStart: {
+    // the button's text while it is not held
+    btn: 'HOLD: start night',
+    // Marla's line on it: once a run (runs 1-2), in the first house or on the street, whichever comes first. Sun is never full by dusk, so it does not ask for that
+    lineD: 'Daylight fills your Sun. Done early? Hold N to start night.',
+    lineP: 'Daylight fills your Sun. Done early? Hold "start night".',
+    // game seconds after the dusk bell before her next line (the bell line stays up 5 s; dusk is CONFIG.day.bell s after the bell)
+    afterBell: 6,
+    // that line, in a house
+    houseD: 'Staying here? Hold N to start night. At dark: Turbine first.',
+    houseP: 'Staying here? Hold "start night". At dark: Turbine first.',
+    // and on the street
+    street: 'Get in a house, Potts. Dark takes you to the nearest one.',
+  },
   // hands motion (tools/humanmotioncheck.cjs): recoilAttack = share of recoilTime the recoil kick takes to reach full (eased, then eased back); recoilKick = m the cannon hand goes back; restartFade = s a placing or pick-up
   // started again mid-way cross-fades from where the hand is; bobEase = how fast (1/s) the walking bob fades in and out when you start or stop walking
   hands: { fov: 60, bob: 0.008, throwTime: 0.75, throwShow: 0.26, throwRelease: 0.62, throwFly: 0.3, landGrow: 0.15, tokenAt: [0.02, 0.07, -0.06], throwKeys: [[0, 0, 0, 0, 0, 0, 0], [0.22, -0.05, -0.17, 0.13, 0.55, 0.1, 0.3], [0.44, 0.03, 0.04, 0.04, 0.2, 0.0, 0.0], [0.64, 0.10, 0.07, -0.13, -0.5, -0.2, -0.3], [0.8, 0.12, 0.03, -0.11, -0.62, -0.25, -0.25], [1, 0, 0, 0, 0, 0, 0]], grabTime: 0.35, recoilTime: 0.24, recoilAttack: 0.5, recoilKick: 0.04, restartFade: 0.3, bobEase: 6, crease: 0.9, left: { pos: [-0.21, -0.215, -0.52], rot: [0.80, -0.38, 0.42] }, right: { pos: [0.16, -0.20, -0.44], rot: [0.14, 0.10, 0.0] }, gunScale: 0.85, skin: 0xd9a88a, sleeve: 0x8a8468, leather: 0x5a4632, brass: 0xb08a3c, glass: 0x9fd8ff, glow: 0xffc24a }, // first-person hands (real meshes from src/handsdata.js): left open hand with the solar bracer (throws devices, picks up crates), right hand on the water cannon; pos/rot place each hand in front of the eye; the ring glows with the battery
@@ -929,6 +959,16 @@ export const CONFIG = {
     device: 'lance',
     // the eat step: if health is above this share of full, a scratch takes it down to it so eating means something
     eatHp: 0.6,
+    // TAMED LESSON MACHINE (fresh-player review Nov 18: every unaided first-timer died inside the lesson). Until the shoot step is done the machine walks at this share of its speed
+    shootSpeed: 0.5,
+    // and halts this far (m) from you, facing you, without striking (arm's length is CONFIG.gloom.reach 1 m): it looms, it does not hit
+    shootStop: 2.6,
+    // the later lesson steps (place, switch, charge, eat): the machine's speed share
+    laterSpeed: 0.8,
+    // and its damage to you as a share of normal (a Walker then hits for 8 x this about once a second), so it still hurts
+    laterDmg: 0.4,
+    // while the lesson runs your health never falls under this (it is never raised by it), so the lesson cannot kill you; under eatHp x 100, so the eat step still means something
+    hpFloor: 25,
     // steps in order: id (the action that ends it), the Gloom kind that comes for it, Marla's line on desktop and on a phone (44 characters or fewer, Potts),
     // her shorter repeat, the desktop key chip, and the phone button that pulses (sel = the picked device, switch = the switch tab)
     // fresh-player fix (owner Nov 18): subD / subP = the plain second line under her order (desktop names the key, phone names the button); mark = the drill machine gets the pulsing ring (or an edge arrow) during this step

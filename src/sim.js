@@ -317,7 +317,7 @@ export function createSim(opts = {}) {
   const kindOf = (id) => { const ok = KN.filter((k) => (KINDS[k].minRing || 0) <= ring), tot = ok.reduce((a, k) => a + KINDS[k].share, 0); let r = ((((id + 1) * 2654435761) ^ ((opts.seed || 1) * 40503)) >>> 0) % 10000 / 10000 * tot; for (const k of ok) { r -= KINDS[k].share; if (r < 0) return k; } return ok[0]; };
   function moveToward(g, tx, tz, dt) {
     const dx = tx - g.x, dz = tz - g.z, d = Math.hypot(dx, dz); if (d < 1e-6) return 0;
-    const st = Math.min(d, cfg.gloom.speed * KD(g).speed * (g.hurry ? HURRY : 1) * (g.slowT > 0 ? cfg.devices.mist.slow : 1) * dt); g.x += (dx / d) * st; g.z += (dz / d) * st; g.face = Math.atan2(-dx, -dz);
+    const st = Math.min(d, cfg.gloom.speed * KD(g).speed * (g.hurry ? HURRY : 1) * (g.slowT > 0 ? cfg.devices.mist.slow : 1) * (g.tm ? g.tm.speed : 1) * dt); g.x += (dx / d) * st; g.z += (dz / d) * st; g.face = Math.atan2(-dx, -dz);
     if (s.furn.length && Math.abs(g.x) < H && Math.abs(g.z) < H && !g.climb) furnPush(g, g.floor, 0.35, st * 0.9);
     return d - st;
   }
@@ -370,7 +370,7 @@ export function createSim(opts = {}) {
     }
     s.t += dt;
     if (s.boss && s.boss.step(dt)) return; // the boss's dawn power-down or its collapse: the night holds still until the end screen
-    const p = s.player;
+    const p = s.player, hp0 = p.hp;
     p.cd = Math.max(0, p.cd - dt); p.eatCd = Math.max(0, p.eatCd - dt); p.stairCd = Math.max(0, p.stairCd - dt); p.ladderCd = Math.max(0, p.ladderCd - dt);
     if (p.climb) { p.climb.t -= dt; if (p.climb.t <= 0) { p.floor = p.climb.to; p.x = p.climb.ax; p.z = p.climb.az; p.climb = null; p.ladderCd = cfg.ladderCd; s.log.push({ e: 'floor' }); } } else playerTravel();
     // spawn
@@ -387,6 +387,8 @@ export function createSim(opts = {}) {
     { const L = KINDS.lantern, ls = L && L.hurry ? s.gloom.filter((q) => q.kind === 'lantern') : []; for (const q of s.gloom) q.hurry = ls.some((l) => l !== q && Math.hypot(l.x - q.x, l.z - q.z) <= L.hurryR); }
     for (const g of s.gloom.slice()) {
       g.cd = Math.max(0, g.cd - dt); g.slowT = Math.max(0, (g.slowT || 0) - dt);
+      // s.tame (set by the night-1 lesson in main.js): null, or { speed, stop, dmg } for this machine: its speed x, the distance (m) it halts short of you (0 = none), its damage to you x
+      g.tm = s.tame ? s.tame(g) : null;
       const b = breaches[g.bp];
       const delay = () => (cfg.breachDelay[b.type] + cfg.breachDelay.upper * b.floor) * (b.smashed && cfg.boss ? cfg.boss.slam.openDelay : 1); // an opening smashed by the boss's slam is climbed faster
       if (g.phase === 'approach') {
@@ -396,7 +398,7 @@ export function createSim(opts = {}) {
       } else if (g.phase === 'block') {
         if (!b.panel || b.panel.hp <= 0) { g.phase = 'cross'; g.timer = g.dl = delay(); }
         else if (g.cd <= 0) { g.cd = cfg.gloom.cooldown; const ov = KD(g).over; // a Stilt held at a panel reaches over it for a player who stands close behind
-          if (ov && p.floor === b.floor && !p.climb && Math.hypot(p.x - b.inX, p.z - b.inZ) <= ov) { p.hp -= dmg * KD(g).dmg; s.log.push({ e: 'hurt', over: true }); } else hurtDevice(b.panel, dmg * KD(g).wall); }
+          if (ov && p.floor === b.floor && !p.climb && Math.hypot(p.x - b.inX, p.z - b.inZ) <= ov) { p.hp -= dmg * KD(g).dmg * (g.tm ? g.tm.dmg : 1); s.log.push({ e: 'hurt', over: true }); } else hurtDevice(b.panel, dmg * KD(g).wall); }
       } else if (g.phase === 'cross') {
         g.timer -= dt; g.prog = g.dl > 0 ? Math.max(0, Math.min(1, 1 - g.timer / g.dl)) : 1; // visible climb through the opening
         g.x = b.outX + (b.inX - b.outX) * g.prog; g.z = b.outZ + (b.inZ - b.outZ) * g.prog;
@@ -413,8 +415,10 @@ export function createSim(opts = {}) {
         let tgt = p, td = dist(g, p) + FP * Math.abs(g.floor - p.floor);
         for (const dv of s.devices) { const dc = cfg.devices[dv.kind]; if (dc.noTarget) continue; const dd = dist(g, dv) + FP * Math.abs(g.floor - dv.floor) - (dc.pull || 0); if (dd < td) { td = dd; tgt = dv; } }
         if (tgt.floor === g.floor) {
-          if (dist(g, tgt) > cfg.gloom.reach * KD(g).reach) moveToward(g, tgt.x, tgt.z, dt);
-          else if (g.cd <= 0) { g.cd = cfg.gloom.cooldown; if (tgt === p) { p.hp -= dmg * KD(g).dmg; s.log.push({ e: 'hurt' }); } else hurtDevice(tgt, dmg * KD(g).wall); }
+          // a tamed lesson machine halts this far short of you (g.tm.stop), facing you, and does not strike
+          if (g.tm && g.tm.stop > 0 && tgt === p && dist(g, p) <= g.tm.stop) g.face = Math.atan2(g.x - p.x, g.z - p.z);
+          else if (dist(g, tgt) > cfg.gloom.reach * KD(g).reach) moveToward(g, tgt.x, tgt.z, dt);
+          else if (g.cd <= 0) { g.cd = cfg.gloom.cooldown; if (tgt === p) { p.hp -= dmg * KD(g).dmg * (g.tm ? g.tm.dmg : 1); s.log.push({ e: 'hurt' }); } else hurtDevice(tgt, dmg * KD(g).wall); }
         } else {
           // different floor: use the stairs (never the ladder)
           const up = tgt.floor > g.floor, st = stairs.find((q) => q.f === (up ? g.floor : g.floor - 1));
@@ -451,6 +455,8 @@ export function createSim(opts = {}) {
     if (p.energy <= 0.0001) s.zeroEnergyTime += dt;
     s.energySum += p.energy; s.steps++;
     pickups();
+    // s.hpFloor (set by the night-1 lesson in main.js): health this step cannot fall under (never above what it was), so the lesson cannot kill you
+    if (s.hpFloor) { const f = Math.min(s.hpFloor(), hp0); if (f > 0 && p.hp < f) p.hp = f; }
     if (p.hp <= 0) { p.hp = 0; finish(false); }
     // s.holdDawn (set by the night-1 lesson in main.js) keeps the night going while the lesson holds the waves back, so killing the lesson's one machine is not dawn
     else if ((s.t >= cfg.night.duration && !s.boss) || (day && s.spawned >= spawns.length && s.gloom.length === 0 && !(s.boss && s.boss.alive()) && !(s.holdDawn && s.holdDawn()))) finish(true); // with the day phase, dawn comes as soon as the last Gloom is gone (the boss ends its own night: src/boss.js)

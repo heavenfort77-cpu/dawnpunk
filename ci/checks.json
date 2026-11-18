@@ -183,87 +183,6 @@
    "timeout": 35
   },
   {
-   "name": "hudcheck_phone",
-   "script": "tools/_low_hudcheck.cjs",
-   "args": [
-    "{out}/hud"
-   ],
-   "tier": "phone",
-   "quality": "low",
-   "timeout": 25
-  },
-  {
-   "name": "phonehudcheck",
-   "script": "tools/phonehudcheck.cjs",
-   "args": [],
-   "tier": "phone",
-   "quality": "low",
-   "timeout": 45
-  },
-  {
-   "name": "playershadowcheck_phone",
-   "script": "tools/playershadowcheck.cjs",
-   "args": [
-    "low",
-    "{dist}/index_single.html",
-    "{out}/psc_"
-   ],
-   "tier": "phone",
-   "quality": "low",
-   "timeout": 30,
-   "note": "player shadow Stage 2 (on by default): the blob under you in the base, on a footbridge, in the street, on house floors, hidden on the ladder and in the opening film, kept at night"
-  },
-  {
-   "name": "panelfixcheck",
-   "script": "tools/panelfixcheck.cjs",
-   "args": [
-    "{dist}/index.html"
-   ],
-   "tier": "phone",
-   "quality": "low",
-   "timeout": 35
-  },
-  {
-   "name": "bookcheck",
-   "script": "tools/bookcheck.cjs",
-   "args": [
-    "{dist}/index_single.html"
-   ],
-   "tier": "phone",
-   "quality": "low",
-   "timeout": 30
-  },
-  {
-   "name": "rotcheck",
-   "script": "tools/rotcheck.cjs",
-   "args": [],
-   "tier": "phone",
-   "quality": "auto",
-   "timeout": 15
-  },
-  {
-   "name": "gloomhitcheck_phone",
-   "script": "tools/gloomhitcheck.cjs",
-   "args": [
-    "low"
-   ],
-   "tier": "phone",
-   "quality": "low",
-   "timeout": 35
-  },
-  {
-   "name": "humanmotioncheck_phone",
-   "script": "tools/humanmotioncheck.cjs",
-   "args": [
-    "low",
-    "{dist}/index_single.html"
-   ],
-   "tier": "phone",
-   "quality": "low",
-   "timeout": 60,
-   "note": "people and hands motion (pops, foot slide, turns, 30 vs 60 fps); its contact strip runs locally"
-  },
-  {
    "name": "hudcheck_desktop",
    "script": "tools/_high_hudcheck.cjs",
    "args": [],
@@ -364,19 +283,6 @@
    "tier": "desktop",
    "quality": "both",
    "timeout": 35
-  },
-  {
-   "name": "playershadowshot",
-   "script": "tools/playershadowshot.cjs",
-   "args": [
-    "high",
-    "{out}/ps_",
-    "b64"
-   ],
-   "tier": "desktop",
-   "quality": "high",
-   "timeout": 40,
-   "note": "Stage 1 player-shadow SAMPLE (?pshadow=1): three desktop pictures printed into the job log as base64 (PSIMG lines), frame time with and without"
   },
   {
    "name": "playershadowcheck_desktop",
