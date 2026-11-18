@@ -30,6 +30,25 @@ const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s 
     wrap('drawArrays', (gl, a) => tri(gl, a[0], a[2])); wrap('drawElements', (gl, a) => tri(gl, a[0], a[1]));
     wrap('drawArraysInstanced', (gl, a) => tri(gl, a[0], a[2], a[3])); wrap('drawElementsInstanced', (gl, a) => tri(gl, a[0], a[1], a[4])); wrap('drawRangeElements', (gl, a) => tri(gl, a[0], a[3])); } };
 
+// BREAK=1 in the environment: what the triangles and draws are made of at each spot (objects in view, grouped by their named ancestors, object type and material), for finding the costs
+const BREAKDOWN = (spot) => {
+  const g = window.__game, cam = g.cam; let sc = null; for (const c of [g.world && g.world.g, g.dormant, g.bview.group, g.marla && g.marla.root]) { let s = c; while (s && s.parent) s = s.parent; if (s && s.isScene) { sc = s; break; } } if (!sc) return 'BREAK ' + spot + ': no scene';
+  cam.updateMatrixWorld(); const P = cam.projectionMatrix.elements, V = cam.matrixWorldInverse.elements, M = new Array(16);
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { let s = 0; for (let k = 0; k < 4; k++) s += P[k * 4 + j] * V[i * 4 + k]; M[i * 4 + j] = s; }
+  const me = M, pl = [[me[3] - me[0], me[7] - me[4], me[11] - me[8], me[15] - me[12]], [me[3] + me[0], me[7] + me[4], me[11] + me[8], me[15] + me[12]], [me[3] + me[1], me[7] + me[5], me[11] + me[9], me[15] + me[13]], [me[3] - me[1], me[7] - me[5], me[11] - me[9], me[15] - me[13]], [me[3] - me[2], me[7] - me[6], me[11] - me[10], me[15] - me[14]], [me[3] + me[2], me[7] + me[6], me[11] + me[10], me[15] + me[14]]].map((q) => { const l = Math.hypot(q[0], q[1], q[2]); return q.map((v) => v / l); });
+  const inView = (o) => { if (!o.frustumCulled) return true; let bs = o.boundingSphere; if (!bs && o.geometry) { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); bs = o.geometry.boundingSphere; } if (o.isInstancedMesh && !o.boundingSphere) { o.computeBoundingSphere(); bs = o.boundingSphere; } if (!bs) return true;
+    const e = o.matrixWorld.elements, cx = e[0] * bs.center.x + e[4] * bs.center.y + e[8] * bs.center.z + e[12], cy = e[1] * bs.center.x + e[5] * bs.center.y + e[9] * bs.center.z + e[13], cz = e[2] * bs.center.x + e[6] * bs.center.y + e[10] * bs.center.z + e[14], sr = bs.radius * Math.max(Math.hypot(e[0], e[1], e[2]), Math.hypot(e[4], e[5], e[6]), Math.hypot(e[8], e[9], e[10]));
+    for (const q of pl) if (q[0] * cx + q[1] * cy + q[2] * cz + q[3] < -sr) return false; return true; };
+  const groups = new Map(); let tv = 0, dv = 0, ts = 0, ds = 0, tAll = 0, dAll = 0, nLights = 0;
+  const walk = (o, path, vis) => { if (!o.visible) return; if (o.isLight) nLights++; const nm = o.name || (o.userData && (o.userData.hiInst || o.userData.kind || o.userData.part)) || ''; const p2 = nm ? (path ? path + '/' : '') + String(nm).slice(0, 18) : path;
+    if ((o.isMesh || o.isPoints || o.isLine) && o.geometry) { const ge = o.geometry, n = ge.index ? ge.index.count : (ge.attributes.position ? ge.attributes.position.count : 0), dr = Math.min(n, ge.drawRange.count === Infinity ? n : ge.drawRange.count), mats = Array.isArray(o.material) ? o.material.length : 1;
+      const t = Math.floor(dr / 3) * (o.isInstancedMesh ? o.count : 1) * (o.isMesh ? 1 : 0), iv = inView(o); tAll += t; dAll += mats; if (o.castShadow) { ts += t; ds += mats; }
+      if (iv) { tv += t; dv += mats; const key = p2.split('/').slice(-3).join('/') + ' | ' + o.type + ' ' + (Array.isArray(o.material) ? 'multi' : o.material.type) + (o.castShadow ? ' cs' : '') + (o.frustumCulled ? '' : ' NOCULL'); const q = groups.get(key) || { t: 0, d: 0, n: 0 }; q.t += t; q.d += mats; q.n++; groups.set(key, q); } }
+    for (const c of o.children) walk(c, p2, vis); };
+  walk(sc, '', true);
+  const top = (f, n) => [...groups.entries()].sort((a, b) => f(b[1]) - f(a[1])).slice(0, n).map(([k, q]) => '  ' + (q.t / 1000).toFixed(1) + 'k tris ' + q.d + ' draws ' + q.n + ' obj  ' + k).join('\n');
+  return 'BREAK ' + spot + ': in view ' + dv + ' draws ' + (tv / 1e6).toFixed(2) + ' M tris; whole scene ' + dAll + ' draws ' + (tAll / 1e6).toFixed(2) + ' M tris; shadow casters ' + ds + ' draws ' + (ts / 1e6).toFixed(2) + ' M tris; lights ' + nLights + '\n BY TRIANGLES\n' + top((q) => q.t, 35) + '\n BY DRAWS\n' + top((q) => q.d, 35);
+};
 (async () => {
   await new Promise((ok) => srv.listen(0, '127.0.0.1', ok)); const URL0 = 'http://127.0.0.1:' + srv.address().port + '/index.html';
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const out = [], rows = [];
@@ -50,6 +69,7 @@ const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s 
       const c0 = await p.evaluate(() => ({ ...window.__pc, t: performance.now() })); await frames(FRAMES); const c1 = await p.evaluate(() => ({ ...window.__pc, t: performance.now() }));
       const r = { tier, spot, calls: Math.round((c1.calls - c0.calls) / FRAMES), tris: Math.round((c1.tris - c0.tris) / FRAMES), sCalls: Math.round((c1.sCalls - c0.sCalls) / FRAMES), sTris: Math.round((c1.sTris - c0.sTris) / FRAMES), ms: Math.round((c1.t - c0.t) / FRAMES), mb: MB(sumB()) };
       r.cam = await p.evaluate(() => { const c = window.__game.cam; return [c.position.x, c.position.y, c.position.z].map((v) => v.toFixed(1)).join(',') + ' yaw ' + window.__game.yaw.toFixed(2); });
+      if (process.env.BREAK) console.log(await p.evaluate(BREAKDOWN, spot));
       rows.push(r); console.log('PERF ' + tier + ' ' + spot + ': calls ' + r.calls + ' (screen ' + r.sCalls + '), triangles ' + (r.tris / 1e6).toFixed(2) + ' M (screen ' + (r.sTris / 1e6).toFixed(2) + ' M), frame ' + r.ms + ' ms (software GPU), downloaded ' + r.mb + ' MB, cam ' + r.cam);
       if (OUT) { const f = path.join(OUT, tier + '_' + spot + '.png'); await p.screenshot({ path: f, timeout: 900000 }); info('wrote ' + f); }
       await p.evaluate(() => { window.__dtMax = 0.3; });
