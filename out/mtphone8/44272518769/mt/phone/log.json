@@ -1,0 +1,7264 @@
+{
+ "mode": "phone",
+ "page": "/home/runner/work/dawnpunk/dawnpunk/dist/index.html?quality=low&film=1",
+ "fps": [
+  4510,
+  2225.8365,
+  1096.583
+ ],
+ "errs": [],
+ "log": [
+  {
+   "gt": 2.4,
+   "wt": 2.8,
+   "st": "start",
+   "k": "SNAP",
+   "t": "start_screen {\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"menu\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[]}"
+  },
+  {
+   "gt": 3.5,
+   "wt": 8,
+   "st": "start",
+   "k": "ACT",
+   "t": "tapped #enter (the begin button)"
+  },
+  {
+   "gt": 4,
+   "wt": 8.8,
+   "st": "start",
+   "k": "cineCap",
+   "t": "The night the grid failed, the machines came looking for power."
+  },
+  {
+   "gt": 4,
+   "wt": 8.8,
+   "st": "start",
+   "k": "QUIET",
+   "t": "3.1 s with no guiding line on screen (from 0.9)"
+  },
+  {
+   "gt": 17.8,
+   "wt": 30.8,
+   "st": "film",
+   "k": "SNAP",
+   "t": "film_1 {\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"intro\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":120},\"buttons\":[]}"
+  },
+  {
+   "gt": 23.5,
+   "wt": 40.2,
+   "st": "film",
+   "k": "cineCap",
+   "t": "They found us."
+  },
+  {
+   "gt": 23.5,
+   "wt": 40.2,
+   "st": "film",
+   "k": "QUIET",
+   "t": "13.0 s with no guiding line on screen (from 10.5)"
+  },
+  {
+   "gt": 35.5,
+   "wt": 68.2,
+   "st": "film",
+   "k": "cineCap",
+   "t": "We left the grid to them, and grew our own light."
+  },
+  {
+   "gt": 35.5,
+   "wt": 68.2,
+   "st": "film",
+   "k": "QUIET",
+   "t": "5.2 s with no guiding line on screen (from 30.3)"
+  },
+  {
+   "gt": 42.5,
+   "wt": 88,
+   "st": "film",
+   "k": "cineCap",
+   "t": "By day they sleep. We let them."
+  },
+  {
+   "gt": 50.3,
+   "wt": 103.5,
+   "st": "film",
+   "k": "cineCap",
+   "t": "Every panel-tender gets a guide. You got Marla."
+  },
+  {
+   "gt": 54.3,
+   "wt": 109.1,
+   "st": "film",
+   "k": "cineCap",
+   "t": "MARLA: Up, Potts. Sun is wasting."
+  },
+  {
+   "gt": 57.5,
+   "wt": 116.2,
+   "st": "film",
+   "k": "SNAP",
+   "t": "film_2 {\"cineCap\":\"MARLA: Up, Potts. Sun is wasting.\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"intro\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[]}"
+  },
+  {
+   "gt": 60.8,
+   "wt": 123.5,
+   "st": "film",
+   "k": "bstat",
+   "t": "Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food"
+  },
+  {
+   "gt": 60.8,
+   "wt": 123.5,
+   "st": "film",
+   "k": "jobCard",
+   "t": "Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it"
+  },
+  {
+   "gt": 61.6,
+   "wt": 125.4,
+   "st": "film",
+   "k": "NOTE",
+   "t": "watched the opening film for 56.3 game s"
+  },
+  {
+   "gt": 65.8,
+   "wt": 136.2,
+   "st": "base day 1: waking",
+   "k": "SNAP",
+   "t": "base_wake {\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"jobCard\":\"Your job: panel-tender / Keep the panels and devices working. / Bring food and essentials back from the old settlement. / Hold a house against the Gloom until dawn. / Work with your guide: Marla the Scout. / Got it\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE[pulse]\"]}"
+  },
+  {
+   "gt": 66.8,
+   "wt": 138.7,
+   "st": "base day 1: waking",
+   "k": "bprompt",
+   "t": "USE: talk to Marla, the Scout"
+  },
+  {
+   "gt": 67.1,
+   "wt": 139.4,
+   "st": "base day 1: waking",
+   "k": "NOTE",
+   "t": "the job card closed by itself before 8 real seconds of reading"
+  },
+  {
+   "gt": 71.6,
+   "wt": 150.9,
+   "st": "base day 1: waking",
+   "k": "SNAP",
+   "t": "base_after_card {\"bprompt\":\"USE: talk to Marla, the Scout\",\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE[pulse]\"]}"
+  },
+  {
+   "gt": 72.6,
+   "wt": 153.4,
+   "st": "base day 1: waking",
+   "k": "NOTE",
+   "t": "waking at -0.6,-9.3; Marla stands 2.5 m away; prompt: \"USE: talk to Marla, the Scout\""
+  },
+  {
+   "gt": 74.1,
+   "wt": 157.4,
+   "st": "base day 1: talk to Marla",
+   "k": "NOTE",
+   "t": "prompt at Marla: \"USE: talk to Marla, the Scout\""
+  },
+  {
+   "gt": 75.6,
+   "wt": 161.1,
+   "st": "base day 1: talk to Marla",
+   "k": "scout",
+   "t": "Marla, the Scout / \"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run"
+  },
+  {
+   "gt": 76.3,
+   "wt": 163,
+   "st": "base day 1: talk to Marla",
+   "k": "ACT",
+   "t": "tapped USE (Marla)"
+  },
+  {
+   "gt": 83.6,
+   "wt": 181.6,
+   "st": "base day 1: Marla dialog",
+   "k": "SNAP",
+   "t": "marla_dialog_day1 {\"bstat\":\"Day 1 · Food 10 · Essentials 0 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (1 of 5 open) · Next recruit: 10/30 food\",\"scout\":\"Marla, the Scout / \\\"You're the new panel-tender. Panels, supplies, Gloom. I'm your guide. Keep up, Potts.\\\" / Ride out: go loot the old street, then hold a house tonight. / Ride out / Look around first / Set up the run\",\"count\":\"\",\"time\":\"\",\"game\":{\"state\":\"base\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":null},\"buttons\":[\"bPause:||\",\"bFire:USE\"]}"
+  },
+  {
+   "gt": 91.3,
+   "wt": 203.4,
+   "st": "base day 1: Marla dialog",
+   "k": "bprompt",
+   "t": "Stand by Marla to change your devices"
+  },
+  {
+   "gt": 92.3,
+   "wt": 204.7,
+   "st": "base day 1: Marla dialog",
+   "k": "marla",
+   "t": "Six houses, Potts. Walk into a door to loot it."
+  },
+  {
+   "gt": 92.3,
+   "wt": 204.8,
+   "st": "base day 1: Marla dialog",
+   "k": "ACT",
+   "t": "tapped #go (Ride out)"
+  },
+  {
+   "gt": 96.3,
+   "wt": 209.6,
+   "st": "street by day",
+   "k": "bprompt",
+   "t": "Stand by Marla to change your devices"
+  },
+  {
+   "gt": 97.3,
+   "wt": 210.6,
+   "st": "street by day",
+   "k": "marla",
+   "t": "Green bar over a door: loot inside. Red: empty."
+  },
+  {
+   "gt": 97.6,
+   "wt": 210.9,
+   "st": "street by day",
+   "k": "SNAP",
+   "t": "street_start {\"marla\":\"Green bar over a door: loot inside. Red: empty.\",\"count\":\"Houses 0/6 | Food 2 | Essentials 0 | Sun 11 | Walk speed 100%\",\"time\":\"Daylight left 11h 30m\",\"game\":{\"state\":\"play\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":114},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\"]}"
+  },
+  {
+   "gt": 102.3,
+   "wt": 216.1,
+   "st": "street by day",
+   "k": "bprompt",
+   "t": "Stand by Marla to change your devices"
+  },
+  {
+   "gt": 102.8,
+   "wt": 216.6,
+   "st": "street by day",
+   "k": "ACT",
+   "t": "a sleeping machine stands 25 m away (warden): walking toward it to see what the game says"
+  },
+  {
+   "gt": 109.8,
+   "wt": 226.2,
+   "st": "street by day",
+   "k": "bprompt",
+   "t": "Walk in the door: 5 food, 2 essentials inside · 7 openings to guard · 1 floor"
+  },
+  {
+   "gt": 115.8,
+   "wt": 235.1,
+   "st": "street by day",
+   "k": "bprompt",
+   "t": "Walk to a house door"
+  },
+  {
+   "gt": 116.3,
+   "wt": 235.8,
+   "st": "street by day",
+   "k": "marla",
+   "t": "That bar is your Sun. Your hand drinks it in."
+  },
+  {
+   "gt": 120.3,
+   "wt": 240.6,
+   "st": "street by day",
+   "k": "SHORTCUT",
+   "t": "could not reach a sleeping machine in 8 game s; teleported"
+  },
+  {
+   "gt": 121.1,
+   "wt": 241.8,
+   "st": "street by day",
+   "k": "marla",
+   "t": "Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight."
+  },
+  {
+   "gt": 125.8,
+   "wt": 250.2,
+   "st": "street by day",
+   "k": "aim",
+   "t": "Warden (asleep until dark): rare and very tough, from ring 3 on. Put everything on it."
+  },
+  {
+   "gt": 126.3,
+   "wt": 251,
+   "st": "street by day",
+   "k": "SNAP",
+   "t": "street_sleeper {\"aim\":\"Warden (asleep until dark): rare and very tough, from ring 3 on. Put everything on it.\",\"count\":\"Houses 0/6 | Food 2 | Essentials 0 | Sun 17 | Walk speed 100%\",\"time\":\"Daylight left 8h 30m\",\"game\":{\"state\":\"play\",\"hp\":null,\"sun\":null,\"food\":null,\"machines\":null,\"drill\":null,\"dayLeft\":85},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\"]}"
+  },
+  {
+   "gt": 127.3,
+   "wt": 252.8,
+   "st": "street by day: to house 1",
+   "k": "ACT",
+   "t": "walking to the nearest unvisited door (house 5, 17 m)"
+  },
+  {
+   "gt": 130.6,
+   "wt": 258.5,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk to a house door"
+  },
+  {
+   "gt": 131.3,
+   "wt": 259.5,
+   "st": "street by day: to house 1",
+   "k": "marla",
+   "t": "Something waves in a house with 14 openings."
+  },
+  {
+   "gt": 136.1,
+   "wt": 266.3,
+   "st": "street by day: to house 1",
+   "k": "marla",
+   "t": "At dusk you defend the house you are in."
+  },
+  {
+   "gt": 141.1,
+   "wt": 273.3,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk to a house door"
+  },
+  {
+   "gt": 147.6,
+   "wt": 281,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk in the door: 10 food, 4 essentials inside · 8 openings to guard · 1 floor"
+  },
+  {
+   "gt": 152.1,
+   "wt": 288,
+   "st": "street by day: to house 1",
+   "k": "SHORTCUT",
+   "t": "walking to house 5 (in front of its door) was blocked (straight-line steering; 13.0 m left); teleported next to it"
+  },
+  {
+   "gt": 156.6,
+   "wt": 294.5,
+   "st": "street by day: to house 1",
+   "k": "bprompt",
+   "t": "Walk in the door: 5 food, 2 essentials inside · 7 openings to guard · 1 floor"
+  },
+  {
+   "gt": 161.1,
+   "wt": 300.8,
+   "st": "street by day: to house 1",
+   "k": "marla",
+   "t": "Hold START NIGHT only when your Sun is full, Potts."
+  },
+  {
+   "gt": 162.1,
+   "wt": 301.9,
+   "st": "street by day: to house 1",
+   "k": "HP",
+   "t": "health 100 (day; 0 machines inside or near, nearest none)"
+  },
+  {
+   "gt": 166.8,
+   "wt": 310.7,
+   "st": "street by day: to house 1",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 170.6,
+   "wt": 316.7,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 174.6,
+   "wt": 322.5,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 174.8,
+   "wt": 322.9,
+   "st": "house 1 by day",
+   "k": "SNAP",
+   "t": "house1_inside {\"marla\":\"Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.\",\"count\":\"Crates left 4 | Food 2 | Essentials 0 | Sun 27 | Walk speed 100% | Floor 1 of 1\",\"time\":\"Daylight left 5h 00m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":27,\"food\":2,\"machines\":0,\"drill\":null,\"dayLeft\":49},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\",\"b0:free 0/3[pulse]\",\"b1:at night 0/2[sel]\",\"bSwitch:⇄\",\"bEat:EAT 2 home\",\"bFire:FIRE\"]}"
+  },
+  {
+   "gt": 179.1,
+   "wt": 329.1,
+   "st": "house 1 by day",
+   "k": "ACT",
+   "t": "house 1: going to the nearest window to place a collector"
+  },
+  {
+   "gt": 190.8,
+   "wt": 347.8,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 194.1,
+   "wt": 352.9,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Loot is heavy: the more you carry, the slower you walk (Walk speed, top right)."
+  },
+  {
+   "gt": 194.8,
+   "wt": 354,
+   "st": "house 1 by day",
+   "k": "SHORTCUT",
+   "t": "could not reach the nearest window in 8 game s; teleported"
+  },
+  {
+   "gt": 199.1,
+   "wt": 360.9,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not."
+  },
+  {
+   "gt": 201.1,
+   "wt": 364.3,
+   "st": "house 1 by day",
+   "k": "ACT",
+   "t": "tapped SOLAR (#b0)"
+  },
+  {
+   "gt": 203.1,
+   "wt": 367.7,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Walk into the capsules to take them. Green food, blue essentials."
+  },
+  {
+   "gt": 203.3,
+   "wt": 368.1,
+   "st": "house 1 by day",
+   "k": "NOTE",
+   "t": "house 1: collectors 0 -> 1; lines: [\"marla: Potts. Collector first. Face a window and tap Solar. The clock waits for you, I do not.\",\"marla: Walk into the capsules to take them. Green food, blue essentials.\"]"
+  },
+  {
+   "gt": 205.3,
+   "wt": 371.5,
+   "st": "house 1 by day",
+   "k": "SNAP",
+   "t": "house_1_solar {\"marla\":\"Walk into the capsules to take them. Green food, blue essentials.\",\"count\":\"Crates left 3 | Food 2 | Essentials 2 | Sun 34 | Walk speed 98% | Floor 1 of 1\",\"time\":\"Daylight left 4h 30m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":34,\"food\":2,\"machines\":0,\"drill\":null,\"dayLeft\":44},\"buttons\":[\"bPause:||\",\"bDusk:HOLD: start night\",\"b0:free 1/3\",\"b1:at night 0/2[sel]\",\"bSwitch:⇄\",\"bEat:EAT 2 home\",\"bFire:FIRE\"]}"
+  },
+  {
+   "gt": 205.8,
+   "wt": 372.3,
+   "st": "house 1 by day",
+   "k": "ACT",
+   "t": "house 1: 3 capsules on this floor, 0 on another floor (the stairs were not used)"
+  },
+  {
+   "gt": 208.1,
+   "wt": 376.1,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "LEAVE at the door for the next house."
+  },
+  {
+   "gt": 213.1,
+   "wt": 383.8,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "SOLAR by a door or window, in the house you will sleep in."
+  },
+  {
+   "gt": 218.3,
+   "wt": 391.3,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "HOLD DUSK to start the night early. Or wait for the bell."
+  },
+  {
+   "gt": 221.8,
+   "wt": 395.6,
+   "st": "house 1 by day",
+   "k": "SHORTCUT",
+   "t": "could not reach a capsule in 8 game s; teleported"
+  },
+  {
+   "gt": 222.8,
+   "wt": 396.9,
+   "st": "house 1 by day",
+   "k": "msg",
+   "t": "+2 food"
+  },
+  {
+   "gt": 229.1,
+   "wt": 405.2,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "The bell, Potts! 2 hours of light left. Pick your house!"
+  },
+  {
+   "gt": 229.1,
+   "wt": 405.2,
+   "st": "house 1 by day",
+   "k": "QUIET",
+   "t": "4.8 s with no guiding line on screen (from 224.3)"
+  },
+  {
+   "gt": 233.6,
+   "wt": 411.5,
+   "st": "house 1 by day",
+   "k": "SHORTCUT",
+   "t": "could not reach a capsule in 8 game s; teleported"
+  },
+  {
+   "gt": 242.1,
+   "wt": 424.6,
+   "st": "house 1 by day",
+   "k": "msg",
+   "t": "+2 food"
+  },
+  {
+   "gt": 242.1,
+   "wt": 424.6,
+   "st": "house 1 by day",
+   "k": "QUIET",
+   "t": "8.3 s with no guiding line on screen (from 233.8)"
+  },
+  {
+   "gt": 249.1,
+   "wt": 434.1,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "Sun is down, Potts. Turbine first, then lances, then panels."
+  },
+  {
+   "gt": 249.1,
+   "wt": 434.1,
+   "st": "house 1 by day",
+   "k": "QUIET",
+   "t": "5.5 s with no guiding line on screen (from 243.6)"
+  },
+  {
+   "gt": 251.1,
+   "wt": 437.5,
+   "st": "house 1 by day",
+   "k": "marla",
+   "t": "One machine. Tap FIRE, Potts."
+  },
+  {
+   "gt": 251.1,
+   "wt": 437.5,
+   "st": "house 1 by day",
+   "k": "dsub",
+   "t": "Aim at the ringed machine and tap FIRE."
+  },
+  {
+   "gt": 251.3,
+   "wt": 437.9,
+   "st": "house 1 by day",
+   "k": "SHORTCUT",
+   "t": "could not reach a capsule in 8 game s; teleported"
+  },
+  {
+   "gt": 252.6,
+   "wt": 439.9,
+   "st": "house 1 by day",
+   "k": "NOTE",
+   "t": "day ended: the game moved to \"night\""
+  },
+  {
+   "gt": 256.3,
+   "wt": 446,
+   "st": "night 1 drill",
+   "k": "SNAP",
+   "t": "dusk {\"marla\":\"One machine. Tap FIRE, Potts.\",\"dsub\":\"Aim at the ringed machine and tap FIRE.\",\"count\":\"Food 7 | Essentials 2 | Sun 49 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":100,\"sun\":49,\"food\":7,\"machines\":1,\"drill\":\"shoot\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 7 home\",\"bFire:FIRE hold: charged[pulse]\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 257.8,
+   "wt": 448.6,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "drill step: none -> shoot (the last one took 1.0 game s)"
+  },
+  {
+   "gt": 258.6,
+   "wt": 450,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 100 -> 92 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 260.1,
+   "wt": 452.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 92 -> 84 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 261.1,
+   "wt": 454.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 84 -> 76 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 261.3,
+   "wt": 455.1,
+   "st": "night 1 drill",
+   "k": "SNAP",
+   "t": "drill_shoot {\"marla\":\"One machine. Tap FIRE, Potts.\",\"dsub\":\"Aim at the ringed machine and tap FIRE.\",\"count\":\"Food 7 | Essentials 2 | Sun 49 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":76,\"sun\":49,\"food\":7,\"machines\":1,\"drill\":\"shoot\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 7 home\",\"bFire:FIRE hold: charged[pulse]\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 262.1,
+   "wt": 456.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 76 -> 68 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 262.1,
+   "wt": 456.5,
+   "st": "night 1 drill",
+   "k": "DBG",
+   "t": "aim check {\"yaw\":4.07,\"d\":0.9,\"see\":true,\"floor\":[0,0]}"
+  },
+  {
+   "gt": 263.1,
+   "wt": 458.3,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "Shoot. It. Now."
+  },
+  {
+   "gt": 263.1,
+   "wt": 458.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 68 -> 60 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 264.3,
+   "wt": 460.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 60 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 266.1,
+   "wt": 464.3,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "Device in its path. Tap the device."
+  },
+  {
+   "gt": 266.1,
+   "wt": 464.3,
+   "st": "night 1 drill",
+   "k": "dsub",
+   "t": "Tap the glowing device to place it where they walk in."
+  },
+  {
+   "gt": 266.1,
+   "wt": 464.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 16.3 m)"
+  },
+  {
+   "gt": 266.8,
+   "wt": 465.6,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped FIRE"
+  },
+  {
+   "gt": 269.1,
+   "wt": 469.9,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "drill step: shoot -> place (the last one took 11.3 game s)"
+  },
+  {
+   "gt": 272.6,
+   "wt": 476.1,
+   "st": "night 1 drill",
+   "k": "SNAP",
+   "t": "drill_place {\"marla\":\"Device in its path. Tap the device.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 7 | Essentials 2 | Sun 48 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":44,\"sun\":48,\"food\":7,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[pulse][sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 7 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 277.3,
+   "wt": 484.7,
+   "st": "night 1 drill",
+   "k": "marla",
+   "t": "Device. Path. Today, Potts."
+  },
+  {
+   "gt": 278.1,
+   "wt": 486.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 278.1,
+   "wt": 486.2,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 278.6,
+   "wt": 487.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 279.8,
+   "wt": 489.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 279.8,
+   "wt": 489.8,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 1)"
+  },
+  {
+   "gt": 280.3,
+   "wt": 490.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 280.8,
+   "wt": 491.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 282.1,
+   "wt": 494.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 283.1,
+   "wt": 496.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 284.3,
+   "wt": 499.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 284.3,
+   "wt": 499.2,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 2)"
+  },
+  {
+   "gt": 284.6,
+   "wt": 499.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 285.8,
+   "wt": 502.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 286.6,
+   "wt": 504.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 286.6,
+   "wt": 504.1,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 287.6,
+   "wt": 506.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 287.6,
+   "wt": 506.3,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 3)"
+  },
+  {
+   "gt": 288.1,
+   "wt": 507.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 288.6,
+   "wt": 508.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 289.6,
+   "wt": 510.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 290.8,
+   "wt": 513.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 291.8,
+   "wt": 515.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 291.8,
+   "wt": 515.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 4)"
+  },
+  {
+   "gt": 292.6,
+   "wt": 517.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 292.6,
+   "wt": 517.3,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 293.1,
+   "wt": 518.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 294.1,
+   "wt": 520.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 295.3,
+   "wt": 523.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 296.3,
+   "wt": 525.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 296.3,
+   "wt": 525.5,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 5)"
+  },
+  {
+   "gt": 296.8,
+   "wt": 526.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 297.8,
+   "wt": 529,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 298.3,
+   "wt": 530.2,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 298.8,
+   "wt": 531.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 299.8,
+   "wt": 533.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 300.6,
+   "wt": 535.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 300.6,
+   "wt": 535.1,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 6)"
+  },
+  {
+   "gt": 300.8,
+   "wt": 535.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 301.8,
+   "wt": 537.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 302.8,
+   "wt": 540.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 304.3,
+   "wt": 543.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 304.3,
+   "wt": 543.3,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 7)"
+  },
+  {
+   "gt": 304.3,
+   "wt": 543.3,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 304.8,
+   "wt": 544.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 305.3,
+   "wt": 545.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 306.1,
+   "wt": 547.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 307.3,
+   "wt": 550,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 308.3,
+   "wt": 552.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 308.3,
+   "wt": 552.1,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 8)"
+  },
+  {
+   "gt": 308.8,
+   "wt": 553.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 309.6,
+   "wt": 554.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 310.3,
+   "wt": 556.6,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 310.8,
+   "wt": 557.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 311.6,
+   "wt": 559.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 312.8,
+   "wt": 562.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 312.8,
+   "wt": 562.1,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 9)"
+  },
+  {
+   "gt": 313.3,
+   "wt": 563.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 313.8,
+   "wt": 564.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 315.6,
+   "wt": 568.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 316.3,
+   "wt": 569.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 316.3,
+   "wt": 569.9,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 317.3,
+   "wt": 572.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 317.3,
+   "wt": 572.1,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 10)"
+  },
+  {
+   "gt": 317.8,
+   "wt": 573.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 318.3,
+   "wt": 574.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 319.3,
+   "wt": 576.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 320.8,
+   "wt": 579.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 320.8,
+   "wt": 579.8,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 11)"
+  },
+  {
+   "gt": 321.6,
+   "wt": 581.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 322.3,
+   "wt": 583.1,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 322.6,
+   "wt": 583.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 324.1,
+   "wt": 586.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 325.1,
+   "wt": 589.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 325.1,
+   "wt": 589.4,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 12)"
+  },
+  {
+   "gt": 325.3,
+   "wt": 589.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 326.3,
+   "wt": 592.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 327.6,
+   "wt": 594.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 328.3,
+   "wt": 596.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 328.3,
+   "wt": 596.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 329.3,
+   "wt": 598.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 329.3,
+   "wt": 598.7,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 13)"
+  },
+  {
+   "gt": 329.8,
+   "wt": 599.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 330.3,
+   "wt": 600.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 331.8,
+   "wt": 604.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 332.6,
+   "wt": 605.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 333.6,
+   "wt": 607.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 333.6,
+   "wt": 607.9,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 14)"
+  },
+  {
+   "gt": 334.3,
+   "wt": 609.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 334.3,
+   "wt": 609.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 334.8,
+   "wt": 610.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 335.8,
+   "wt": 612.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 337.3,
+   "wt": 616.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 337.3,
+   "wt": 616.1,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 15)"
+  },
+  {
+   "gt": 337.8,
+   "wt": 617.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 338.3,
+   "wt": 618.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 339.6,
+   "wt": 621,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 340.1,
+   "wt": 622.1,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 340.6,
+   "wt": 623.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 341.6,
+   "wt": 625.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 341.6,
+   "wt": 625.3,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 16)"
+  },
+  {
+   "gt": 342.1,
+   "wt": 626.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 342.6,
+   "wt": 627.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 343.6,
+   "wt": 629.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 344.6,
+   "wt": 631.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 346.1,
+   "wt": 635.1,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 346.1,
+   "wt": 635.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 346.1,
+   "wt": 635.1,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 17)"
+  },
+  {
+   "gt": 346.6,
+   "wt": 636.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 347.1,
+   "wt": 637.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 348.1,
+   "wt": 639.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 349.1,
+   "wt": 641.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 350.1,
+   "wt": 643.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 350.1,
+   "wt": 643.8,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 18)"
+  },
+  {
+   "gt": 350.6,
+   "wt": 644.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 351.3,
+   "wt": 646.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 352.1,
+   "wt": 648.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 352.3,
+   "wt": 649,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 353.8,
+   "wt": 652.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 353.8,
+   "wt": 652.3,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 19)"
+  },
+  {
+   "gt": 354.3,
+   "wt": 653.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 354.8,
+   "wt": 654.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 355.6,
+   "wt": 656.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 357.3,
+   "wt": 659.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 358.1,
+   "wt": 661.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 358.1,
+   "wt": 661.5,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 20)"
+  },
+  {
+   "gt": 358.1,
+   "wt": 661.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 358.6,
+   "wt": 662.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 359.1,
+   "wt": 663.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 360.1,
+   "wt": 665.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 361.3,
+   "wt": 668.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 362.3,
+   "wt": 670.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 362.3,
+   "wt": 670.7,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 21)"
+  },
+  {
+   "gt": 363.1,
+   "wt": 672.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 363.8,
+   "wt": 674,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 363.8,
+   "wt": 674,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 364.8,
+   "wt": 676.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 365.8,
+   "wt": 678.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 366.8,
+   "wt": 680.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 366.8,
+   "wt": 680.5,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 22)"
+  },
+  {
+   "gt": 367.3,
+   "wt": 681.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 367.8,
+   "wt": 682.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 369.1,
+   "wt": 685.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 369.6,
+   "wt": 686.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 370.1,
+   "wt": 687.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 370.1,
+   "wt": 687.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 23)"
+  },
+  {
+   "gt": 370.6,
+   "wt": 688.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 371.1,
+   "wt": 689.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 372.1,
+   "wt": 691.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 373.6,
+   "wt": 695.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 374.8,
+   "wt": 697.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 374.8,
+   "wt": 697.9,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 24)"
+  },
+  {
+   "gt": 375.6,
+   "wt": 699.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 375.6,
+   "wt": 699.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 376.6,
+   "wt": 701.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 377.8,
+   "wt": 704.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 378.8,
+   "wt": 706.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 378.8,
+   "wt": 706.7,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 25)"
+  },
+  {
+   "gt": 379.3,
+   "wt": 707.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 379.8,
+   "wt": 709,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 381.6,
+   "wt": 712.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 381.6,
+   "wt": 712.8,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 382.1,
+   "wt": 713.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 383.1,
+   "wt": 716.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 383.1,
+   "wt": 716.1,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 26)"
+  },
+  {
+   "gt": 383.6,
+   "wt": 717.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 384.6,
+   "wt": 719.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 385.6,
+   "wt": 721.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 386.8,
+   "wt": 724.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 386.8,
+   "wt": 724.3,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 27)"
+  },
+  {
+   "gt": 387.6,
+   "wt": 725.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 387.6,
+   "wt": 725.9,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 388.6,
+   "wt": 728.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 389.8,
+   "wt": 730.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 390.8,
+   "wt": 733,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 390.8,
+   "wt": 733,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 28)"
+  },
+  {
+   "gt": 391.3,
+   "wt": 734.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 392.8,
+   "wt": 737.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 393.6,
+   "wt": 739,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 393.6,
+   "wt": 739,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 394.1,
+   "wt": 740.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 395.6,
+   "wt": 743.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 395.6,
+   "wt": 743.3,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 29)"
+  },
+  {
+   "gt": 396.1,
+   "wt": 744.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 396.6,
+   "wt": 745.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 397.6,
+   "wt": 747.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 398.8,
+   "wt": 750.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 399.6,
+   "wt": 752,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 399.6,
+   "wt": 752,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 30)"
+  },
+  {
+   "gt": 399.6,
+   "wt": 752,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 400.1,
+   "wt": 753.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 401.1,
+   "wt": 755.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 402.1,
+   "wt": 757.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 403.1,
+   "wt": 759.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 403.1,
+   "wt": 759.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 31)"
+  },
+  {
+   "gt": 403.6,
+   "wt": 760.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 404.1,
+   "wt": 761.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 405.6,
+   "wt": 765,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 405.6,
+   "wt": 765,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 406.6,
+   "wt": 767.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 407.6,
+   "wt": 769.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 407.6,
+   "wt": 769.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 32)"
+  },
+  {
+   "gt": 408.1,
+   "wt": 770.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 408.6,
+   "wt": 771.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 409.6,
+   "wt": 773.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 410.8,
+   "wt": 776.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 411.6,
+   "wt": 778.3,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 412.1,
+   "wt": 779.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 412.1,
+   "wt": 779.4,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 33)"
+  },
+  {
+   "gt": 412.6,
+   "wt": 780.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 413.1,
+   "wt": 781.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 414.1,
+   "wt": 783.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 415.1,
+   "wt": 785.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 416.1,
+   "wt": 788,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 416.1,
+   "wt": 788,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 34)"
+  },
+  {
+   "gt": 416.8,
+   "wt": 789.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 417.6,
+   "wt": 791.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 417.6,
+   "wt": 791.3,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 418.6,
+   "wt": 793.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 419.6,
+   "wt": 795.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 419.6,
+   "wt": 795.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 35)"
+  },
+  {
+   "gt": 420.1,
+   "wt": 796.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 420.6,
+   "wt": 797.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 421.8,
+   "wt": 800.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 422.8,
+   "wt": 802.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 423.6,
+   "wt": 804.3,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 424.1,
+   "wt": 805.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 424.1,
+   "wt": 805.4,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 36)"
+  },
+  {
+   "gt": 424.3,
+   "wt": 805.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 425.3,
+   "wt": 808.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 426.3,
+   "wt": 810.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 427.3,
+   "wt": 812.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 428.8,
+   "wt": 815.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 428.8,
+   "wt": 815.7,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 37)"
+  },
+  {
+   "gt": 429.6,
+   "wt": 817.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 429.6,
+   "wt": 817.3,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 430.6,
+   "wt": 819.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 431.6,
+   "wt": 821.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 432.6,
+   "wt": 823.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 432.6,
+   "wt": 823.8,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 38)"
+  },
+  {
+   "gt": 433.1,
+   "wt": 824.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 434.1,
+   "wt": 827.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 435.6,
+   "wt": 830.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 435.6,
+   "wt": 830.6,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 436.1,
+   "wt": 831.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 436.1,
+   "wt": 831.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 39)"
+  },
+  {
+   "gt": 436.6,
+   "wt": 832.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 437.1,
+   "wt": 833.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 438.1,
+   "wt": 836,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 439.6,
+   "wt": 839.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 440.8,
+   "wt": 841.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 440.8,
+   "wt": 841.9,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 40)"
+  },
+  {
+   "gt": 441.6,
+   "wt": 843.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 441.6,
+   "wt": 843.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 442.6,
+   "wt": 845.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 443.6,
+   "wt": 847.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 445.1,
+   "wt": 851.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 445.1,
+   "wt": 851.1,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 41)"
+  },
+  {
+   "gt": 445.6,
+   "wt": 852.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 446.1,
+   "wt": 853.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 447.6,
+   "wt": 856.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 447.6,
+   "wt": 856.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 448.1,
+   "wt": 857.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 449.1,
+   "wt": 859.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 449.1,
+   "wt": 859.8,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 42)"
+  },
+  {
+   "gt": 449.6,
+   "wt": 860.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 450.6,
+   "wt": 863,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 451.6,
+   "wt": 865.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 452.8,
+   "wt": 868,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 452.8,
+   "wt": 868,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 43)"
+  },
+  {
+   "gt": 453.6,
+   "wt": 869.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 453.6,
+   "wt": 869.6,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 454.8,
+   "wt": 872.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 455.8,
+   "wt": 874.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 456.8,
+   "wt": 876.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 456.8,
+   "wt": 876.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 44)"
+  },
+  {
+   "gt": 457.3,
+   "wt": 877.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 458.8,
+   "wt": 881,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 459.1,
+   "wt": 881.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 459.3,
+   "wt": 882,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 460.1,
+   "wt": 883.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 461.3,
+   "wt": 886.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 461.3,
+   "wt": 886.5,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 45)"
+  },
+  {
+   "gt": 461.8,
+   "wt": 887.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 462.3,
+   "wt": 888.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 464.3,
+   "wt": 893.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 465.1,
+   "wt": 894.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 465.1,
+   "wt": 894.8,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 465.6,
+   "wt": 895.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 465.6,
+   "wt": 895.9,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 46)"
+  },
+  {
+   "gt": 466.1,
+   "wt": 896.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 467.1,
+   "wt": 899.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 467.8,
+   "wt": 900.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 469.1,
+   "wt": 903.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 469.1,
+   "wt": 903.5,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 47)"
+  },
+  {
+   "gt": 470.1,
+   "wt": 905.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 470.8,
+   "wt": 907.2,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 471.3,
+   "wt": 908.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 472.3,
+   "wt": 910.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 473.3,
+   "wt": 912.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 473.3,
+   "wt": 912.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 48)"
+  },
+  {
+   "gt": 473.8,
+   "wt": 913.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 474.8,
+   "wt": 915.9,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 476.1,
+   "wt": 918.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 476.8,
+   "wt": 920.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 476.8,
+   "wt": 920.2,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 477.8,
+   "wt": 922.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 477.8,
+   "wt": 922.4,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 49)"
+  },
+  {
+   "gt": 478.3,
+   "wt": 923.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 479.1,
+   "wt": 925.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 480.1,
+   "wt": 927.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 481.1,
+   "wt": 929.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 482.1,
+   "wt": 931.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 482.1,
+   "wt": 931.6,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 50)"
+  },
+  {
+   "gt": 482.8,
+   "wt": 933.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 482.8,
+   "wt": 933.2,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 483.3,
+   "wt": 934.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 484.3,
+   "wt": 936.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 485.6,
+   "wt": 939.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 485.6,
+   "wt": 939.2,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 51)"
+  },
+  {
+   "gt": 486.1,
+   "wt": 940.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 486.6,
+   "wt": 941.3,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 487.8,
+   "wt": 944.1,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 488.8,
+   "wt": 946.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 488.8,
+   "wt": 946.2,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 489.8,
+   "wt": 948.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 489.8,
+   "wt": 948.7,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 52)"
+  },
+  {
+   "gt": 490.1,
+   "wt": 949.2,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 491.1,
+   "wt": 951.4,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 492.1,
+   "wt": 953.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 493.1,
+   "wt": 955.7,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 494.8,
+   "wt": 959.5,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 494.8,
+   "wt": 959.5,
+   "st": "night 1 drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 53)"
+  },
+  {
+   "gt": 494.8,
+   "wt": 959.5,
+   "st": "night 1 drill",
+   "k": "ACT",
+   "t": "tapped the glowing device #b2"
+  },
+  {
+   "gt": 495.3,
+   "wt": 960.6,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 20 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 496.8,
+   "wt": 963.8,
+   "st": "night 1 drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 497.3,
+   "wt": 964.9,
+   "st": "night 1 drill",
+   "k": "NOTE",
+   "t": "drill steps [step, game s it took]: [[\"none\",1],[\"shoot\",11.3]]"
+  },
+  {
+   "gt": 497.8,
+   "wt": 966,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 498.8,
+   "wt": 968.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 498.8,
+   "wt": 968.2,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 54)"
+  },
+  {
+   "gt": 499.3,
+   "wt": 969.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 499.6,
+   "wt": 969.8,
+   "st": "night 1 after the drill",
+   "k": "SNAP",
+   "t": "after_drill {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 7 | Essentials 2 | Sun 48 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":48,\"sun\":48,\"food\":7,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[pulse][sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 7 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 499.8,
+   "wt": 970.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 500.8,
+   "wt": 972.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 502.3,
+   "wt": 975.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 502.8,
+   "wt": 976.9,
+   "st": "night 1 after the drill",
+   "k": "ACT",
+   "t": "health under 40%: ate (as taught)"
+  },
+  {
+   "gt": 503.3,
+   "wt": 977.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 504.6,
+   "wt": 980.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 505.3,
+   "wt": 982.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 505.3,
+   "wt": 982.3,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 55)"
+  },
+  {
+   "gt": 505.8,
+   "wt": 983.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 506.3,
+   "wt": 984.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 507.8,
+   "wt": 987.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 508.6,
+   "wt": 989.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 509.6,
+   "wt": 991.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 509.6,
+   "wt": 991.6,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 56)"
+  },
+  {
+   "gt": 510.1,
+   "wt": 992.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 510.8,
+   "wt": 994.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 60 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 512.1,
+   "wt": 997,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 60 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 524.6,
+   "wt": 1020.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 526.1,
+   "wt": 1023.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 526.6,
+   "wt": 1024.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 527.6,
+   "wt": 1026.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 527.6,
+   "wt": 1026.7,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 57)"
+  },
+  {
+   "gt": 528.3,
+   "wt": 1028.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 70 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 529.1,
+   "wt": 1029.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 70 -> 62 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 530.6,
+   "wt": 1032.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 62 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 531.1,
+   "wt": 1033.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 532.3,
+   "wt": 1036.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 533.1,
+   "wt": 1038.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 534.3,
+   "wt": 1040.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 534.3,
+   "wt": 1040.9,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 58)"
+  },
+  {
+   "gt": 534.8,
+   "wt": 1042,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 535.3,
+   "wt": 1043.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 548.1,
+   "wt": 1067.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 549.3,
+   "wt": 1070.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 550.1,
+   "wt": 1071.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 550.1,
+   "wt": 1071.8,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 59)"
+  },
+  {
+   "gt": 550.6,
+   "wt": 1072.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 551.1,
+   "wt": 1073.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 552.3,
+   "wt": 1076.6,
+   "st": "night 1 after the drill",
+   "k": "SNAP",
+   "t": "night_50s {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 4 | Essentials 2 | Sun 39 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":42,\"sun\":39,\"food\":4,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[pulse][sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 4 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 552.6,
+   "wt": 1077.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 553.3,
+   "wt": 1078.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 554.6,
+   "wt": 1081.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 555.8,
+   "wt": 1083.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 556.8,
+   "wt": 1086,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 556.8,
+   "wt": 1086,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 60)"
+  },
+  {
+   "gt": 557.3,
+   "wt": 1087.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 558.1,
+   "wt": 1088.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 559.3,
+   "wt": 1091.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 560.1,
+   "wt": 1093.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 561.1,
+   "wt": 1095.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 561.1,
+   "wt": 1095.6,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 61)"
+  },
+  {
+   "gt": 561.6,
+   "wt": 1096.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 562.3,
+   "wt": 1098.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 62 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 563.6,
+   "wt": 1101.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 62 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 576.3,
+   "wt": 1125.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 577.6,
+   "wt": 1127.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 578.8,
+   "wt": 1130.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 16.6 m)"
+  },
+  {
+   "gt": 581.8,
+   "wt": 1135.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 50 (night; 1 machines inside or near, nearest walker 12.4 m)"
+  },
+  {
+   "gt": 590.8,
+   "wt": 1152.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 592.1,
+   "wt": 1155.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 592.8,
+   "wt": 1156.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 593.8,
+   "wt": 1158.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 593.8,
+   "wt": 1158.8,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 62)"
+  },
+  {
+   "gt": 594.3,
+   "wt": 1159.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 595.1,
+   "wt": 1161.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 60 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 595.8,
+   "wt": 1163,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 60 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 597.1,
+   "wt": 1165.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 598.6,
+   "wt": 1168.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 599.6,
+   "wt": 1171.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 600.3,
+   "wt": 1172.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 600.3,
+   "wt": 1172.9,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 63)"
+  },
+  {
+   "gt": 600.8,
+   "wt": 1174,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 601.3,
+   "wt": 1175.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 605.8,
+   "wt": 1184.3,
+   "st": "night 1 after the drill",
+   "k": "SNAP",
+   "t": "night_104s {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 0 | Essentials 2 | Sun 30 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":42,\"sun\":30,\"food\":0,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[pulse][sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 0 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 614.6,
+   "wt": 1201.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 615.8,
+   "wt": 1204.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 616.6,
+   "wt": 1205.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 616.6,
+   "wt": 1205.8,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 64)"
+  },
+  {
+   "gt": 617.3,
+   "wt": 1207.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 617.8,
+   "wt": 1208.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 619.1,
+   "wt": 1211.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 619.8,
+   "wt": 1212.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 619.8,
+   "wt": 1212.8,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 65)"
+  },
+  {
+   "gt": 620.6,
+   "wt": 1214.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 621.1,
+   "wt": 1215.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 633.3,
+   "wt": 1238.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 634.6,
+   "wt": 1241,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 635.8,
+   "wt": 1243.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 635.8,
+   "wt": 1243.6,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 66)"
+  },
+  {
+   "gt": 636.3,
+   "wt": 1244.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 636.8,
+   "wt": 1245.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 637.8,
+   "wt": 1247.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 639.1,
+   "wt": 1250.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 640.3,
+   "wt": 1253.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 640.3,
+   "wt": 1253.5,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 67)"
+  },
+  {
+   "gt": 641.1,
+   "wt": 1255.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 642.1,
+   "wt": 1257.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 658.6,
+   "wt": 1289.1,
+   "st": "night 1 after the drill",
+   "k": "SNAP",
+   "t": "night_157s {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 0 | Essentials 2 | Sun 20 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":34,\"sun\":20,\"food\":0,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:12 Sun 0/2\",\"b2:8 Sun 0/6[pulse][sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 0 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 664.3,
+   "wt": 1300.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 665.6,
+   "wt": 1303,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 665.6,
+   "wt": 1303,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 68)"
+  },
+  {
+   "gt": 666.1,
+   "wt": 1304.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 690.8,
+   "wt": 1350,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 692.1,
+   "wt": 1352.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 692.1,
+   "wt": 1352.7,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 69)"
+  },
+  {
+   "gt": 692.8,
+   "wt": 1354.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 693.8,
+   "wt": 1356.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 695.3,
+   "wt": 1359.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 695.8,
+   "wt": 1360.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 695.8,
+   "wt": 1360.6,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 70)"
+  },
+  {
+   "gt": 696.6,
+   "wt": 1362.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 697.1,
+   "wt": 1363.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 709.6,
+   "wt": 1387.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 709.8,
+   "wt": 1388.2,
+   "st": "night 1 after the drill",
+   "k": "SNAP",
+   "t": "night_208s {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 0 | Essentials 2 | Sun 9 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":36,\"sun\":9,\"food\":0,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:need 12 0/2\",\"b2:8 Sun 0/6[pulse][sel]\",\"b3:6 Sun\",\"bSwitch:⇄\",\"bEat:EAT 0 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 710.6,
+   "wt": 1389.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 711.6,
+   "wt": 1391.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 711.6,
+   "wt": 1391.8,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 71)"
+  },
+  {
+   "gt": 712.3,
+   "wt": 1393.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 712.8,
+   "wt": 1394.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 714.1,
+   "wt": 1397.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 726.3,
+   "wt": 1419.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 727.6,
+   "wt": 1422.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 727.6,
+   "wt": 1422.1,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 72)"
+  },
+  {
+   "gt": 728.3,
+   "wt": 1423.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 728.6,
+   "wt": 1424.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 729.6,
+   "wt": 1426.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 731.3,
+   "wt": 1430,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 731.3,
+   "wt": 1430,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 73)"
+  },
+  {
+   "gt": 732.1,
+   "wt": 1431.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 733.3,
+   "wt": 1434.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 734.1,
+   "wt": 1436.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 735.3,
+   "wt": 1438.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 735.3,
+   "wt": 1438.9,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 74)"
+  },
+  {
+   "gt": 735.8,
+   "wt": 1440,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 760.3,
+   "wt": 1484.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 761.8,
+   "wt": 1488.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 762.6,
+   "wt": 1489.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 763.8,
+   "wt": 1492.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 763.8,
+   "wt": 1492.2,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 75)"
+  },
+  {
+   "gt": 764.1,
+   "wt": 1492.7,
+   "st": "night 1 after the drill",
+   "k": "SNAP",
+   "t": "night_262s {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 0 | Essentials 2 | Sun 1 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":50,\"sun\":1,\"food\":0,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:need 12 0/2\",\"b2:need 8 0/6[pulse][sel]\",\"b3:need 6\",\"bSwitch:⇄\",\"bEat:EAT 0 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 764.3,
+   "wt": 1493.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 764.8,
+   "wt": 1494.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 765.8,
+   "wt": 1496.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 767.1,
+   "wt": 1498.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 768.3,
+   "wt": 1501.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 768.3,
+   "wt": 1501.6,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 76)"
+  },
+  {
+   "gt": 769.1,
+   "wt": 1503.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 770.3,
+   "wt": 1506,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 771.3,
+   "wt": 1508.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 771.3,
+   "wt": 1508.2,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 77)"
+  },
+  {
+   "gt": 772.3,
+   "wt": 1510.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 773.1,
+   "wt": 1512.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 773.8,
+   "wt": 1513.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 774.8,
+   "wt": 1515.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 776.3,
+   "wt": 1519.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 776.3,
+   "wt": 1519.2,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 78)"
+  },
+  {
+   "gt": 776.8,
+   "wt": 1520.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 778.8,
+   "wt": 1524.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 779.6,
+   "wt": 1526.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 780.1,
+   "wt": 1527.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 780.1,
+   "wt": 1527.5,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 79)"
+  },
+  {
+   "gt": 780.6,
+   "wt": 1528.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 782.1,
+   "wt": 1531.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 782.8,
+   "wt": 1533.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 783.8,
+   "wt": 1535.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 785.3,
+   "wt": 1539,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 785.3,
+   "wt": 1539,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 80)"
+  },
+  {
+   "gt": 786.1,
+   "wt": 1540.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 787.1,
+   "wt": 1542.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 788.6,
+   "wt": 1546.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 788.6,
+   "wt": 1546.2,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 81)"
+  },
+  {
+   "gt": 789.3,
+   "wt": 1548,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 790.3,
+   "wt": 1550.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 791.1,
+   "wt": 1552,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 792.6,
+   "wt": 1555.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 792.6,
+   "wt": 1555.3,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 82)"
+  },
+  {
+   "gt": 793.1,
+   "wt": 1556.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 793.3,
+   "wt": 1557,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 795.1,
+   "wt": 1560.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 795.8,
+   "wt": 1562.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 796.6,
+   "wt": 1564.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 796.6,
+   "wt": 1564.1,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 83)"
+  },
+  {
+   "gt": 797.1,
+   "wt": 1565.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 798.3,
+   "wt": 1568,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 799.1,
+   "wt": 1569.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 800.1,
+   "wt": 1571.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 801.6,
+   "wt": 1575.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 801.6,
+   "wt": 1575.2,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 84)"
+  },
+  {
+   "gt": 802.3,
+   "wt": 1576.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 803.3,
+   "wt": 1579,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 804.8,
+   "wt": 1582.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 804.8,
+   "wt": 1582.3,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 85)"
+  },
+  {
+   "gt": 805.6,
+   "wt": 1584,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 806.6,
+   "wt": 1586.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 807.8,
+   "wt": 1589,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 808.8,
+   "wt": 1591.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 808.8,
+   "wt": 1591.2,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 86)"
+  },
+  {
+   "gt": 809.3,
+   "wt": 1592.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 809.8,
+   "wt": 1593.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 811.3,
+   "wt": 1596.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 812.3,
+   "wt": 1598.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 813.3,
+   "wt": 1601.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 813.3,
+   "wt": 1601.1,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 87)"
+  },
+  {
+   "gt": 814.3,
+   "wt": 1603.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 815.6,
+   "wt": 1606.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 816.8,
+   "wt": 1609.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 817.3,
+   "wt": 1610.3,
+   "st": "night 1 after the drill",
+   "k": "SNAP",
+   "t": "night_315s {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 0 | Essentials 2 | Sun 1 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":26,\"sun\":1,\"food\":0,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:need 12 0/2\",\"b2:need 8 0/6[pulse][sel]\",\"b3:need 6\",\"bSwitch:⇄\",\"bEat:EAT 0 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 817.8,
+   "wt": 1611.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 817.8,
+   "wt": 1611.4,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 88)"
+  },
+  {
+   "gt": 818.3,
+   "wt": 1612.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 818.8,
+   "wt": 1613.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 819.8,
+   "wt": 1615.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 821.1,
+   "wt": 1618.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 821.1,
+   "wt": 1618.5,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 89)"
+  },
+  {
+   "gt": 821.6,
+   "wt": 1619.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 822.1,
+   "wt": 1620.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 823.1,
+   "wt": 1623,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 824.3,
+   "wt": 1625.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 825.3,
+   "wt": 1627.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 825.3,
+   "wt": 1627.9,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 90)"
+  },
+  {
+   "gt": 826.3,
+   "wt": 1630.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 827.6,
+   "wt": 1632.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 828.6,
+   "wt": 1635,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 829.6,
+   "wt": 1637.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 829.6,
+   "wt": 1637.1,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 91)"
+  },
+  {
+   "gt": 830.3,
+   "wt": 1638.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 830.8,
+   "wt": 1639.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 832.1,
+   "wt": 1642.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 833.6,
+   "wt": 1645.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 834.1,
+   "wt": 1647,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 834.1,
+   "wt": 1647,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 92)"
+  },
+  {
+   "gt": 834.3,
+   "wt": 1647.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 835.3,
+   "wt": 1649.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 836.8,
+   "wt": 1653,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 837.3,
+   "wt": 1654.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 837.3,
+   "wt": 1654.1,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 93)"
+  },
+  {
+   "gt": 837.6,
+   "wt": 1654.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 838.6,
+   "wt": 1656.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 840.1,
+   "wt": 1660.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 840.8,
+   "wt": 1661.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 841.8,
+   "wt": 1663.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 841.8,
+   "wt": 1663.9,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 94)"
+  },
+  {
+   "gt": 842.6,
+   "wt": 1665.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 843.3,
+   "wt": 1667.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 844.3,
+   "wt": 1669.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 845.1,
+   "wt": 1671.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 846.6,
+   "wt": 1674.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 846.6,
+   "wt": 1674.6,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 95)"
+  },
+  {
+   "gt": 847.1,
+   "wt": 1675.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 847.6,
+   "wt": 1676.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 849.1,
+   "wt": 1680.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 849.8,
+   "wt": 1681.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 850.8,
+   "wt": 1683.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 850.8,
+   "wt": 1683.9,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 96)"
+  },
+  {
+   "gt": 851.1,
+   "wt": 1684.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 851.6,
+   "wt": 1685.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 853.1,
+   "wt": 1688.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 854.1,
+   "wt": 1691,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 854.1,
+   "wt": 1691,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 97)"
+  },
+  {
+   "gt": 854.6,
+   "wt": 1692.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 855.6,
+   "wt": 1694.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 856.3,
+   "wt": 1695.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 857.3,
+   "wt": 1698.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 858.8,
+   "wt": 1701.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 858.8,
+   "wt": 1701.4,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 98)"
+  },
+  {
+   "gt": 859.6,
+   "wt": 1703,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 860.6,
+   "wt": 1705.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 862.1,
+   "wt": 1708.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 862.8,
+   "wt": 1710.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 862.8,
+   "wt": 1710.1,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 99)"
+  },
+  {
+   "gt": 863.3,
+   "wt": 1711.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 863.8,
+   "wt": 1712.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 865.3,
+   "wt": 1715.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 866.1,
+   "wt": 1717.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 867.1,
+   "wt": 1719.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 867.1,
+   "wt": 1719.5,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 100)"
+  },
+  {
+   "gt": 867.6,
+   "wt": 1720.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 868.1,
+   "wt": 1721.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 868.3,
+   "wt": 1722.2,
+   "st": "night 1 after the drill",
+   "k": "SNAP",
+   "t": "night_366s {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 0 | Essentials 2 | Sun 1 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":40,\"sun\":1,\"food\":0,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:need 12 0/2\",\"b2:need 8 0/6[pulse][sel]\",\"b3:need 6\",\"bSwitch:⇄\",\"bEat:EAT 0 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 869.3,
+   "wt": 1724.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 870.6,
+   "wt": 1727.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 870.6,
+   "wt": 1727.3,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 101)"
+  },
+  {
+   "gt": 871.6,
+   "wt": 1729.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 872.8,
+   "wt": 1732.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 874.6,
+   "wt": 1736.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 875.1,
+   "wt": 1737.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 875.1,
+   "wt": 1737.3,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 102)"
+  },
+  {
+   "gt": 875.6,
+   "wt": 1738.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 876.1,
+   "wt": 1739.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 877.1,
+   "wt": 1741.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 878.3,
+   "wt": 1744.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 879.3,
+   "wt": 1746.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 879.3,
+   "wt": 1746.6,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 103)"
+  },
+  {
+   "gt": 880.1,
+   "wt": 1748.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 881.1,
+   "wt": 1750.5,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 881.6,
+   "wt": 1751.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 882.6,
+   "wt": 1753.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 883.6,
+   "wt": 1756,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 883.6,
+   "wt": 1756,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 104)"
+  },
+  {
+   "gt": 884.3,
+   "wt": 1757.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 884.8,
+   "wt": 1758.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 885.8,
+   "wt": 1760.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 886.8,
+   "wt": 1763.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 886.8,
+   "wt": 1763.1,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 105)"
+  },
+  {
+   "gt": 887.6,
+   "wt": 1764.8,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 888.1,
+   "wt": 1765.9,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 889.1,
+   "wt": 1768.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 890.1,
+   "wt": 1770.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 891.3,
+   "wt": 1773,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 891.3,
+   "wt": 1773,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 106)"
+  },
+  {
+   "gt": 891.8,
+   "wt": 1774.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 892.3,
+   "wt": 1775.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 894.1,
+   "wt": 1779,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 894.8,
+   "wt": 1780.7,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 896.3,
+   "wt": 1784,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 896.3,
+   "wt": 1784,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 107)"
+  },
+  {
+   "gt": 897.1,
+   "wt": 1785.6,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 20 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 898.1,
+   "wt": 1788,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 899.6,
+   "wt": 1791.4,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 900.3,
+   "wt": 1793.1,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 900.3,
+   "wt": 1793.1,
+   "st": "night 1 after the drill",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 108)"
+  },
+  {
+   "gt": 900.8,
+   "wt": 1794.2,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 901.1,
+   "wt": 1794.7,
+   "st": "night 1 after the drill",
+   "k": "NOTE",
+   "t": "night after the drill: 90 shots, 7 meals; health top-ups in all (shortcut): 108"
+  },
+  {
+   "gt": 901.3,
+   "wt": 1795.3,
+   "st": "night 1 after the drill",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 902.3,
+   "wt": 1797.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 903.3,
+   "wt": 1799.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 903.3,
+   "wt": 1799.6,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 109)"
+  },
+  {
+   "gt": 903.8,
+   "wt": 1800.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 904.6,
+   "wt": 1802.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 905.6,
+   "wt": 1804.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 906.6,
+   "wt": 1806.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 908.1,
+   "wt": 1810,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 908.1,
+   "wt": 1810,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 110)"
+  },
+  {
+   "gt": 908.6,
+   "wt": 1811.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 909.1,
+   "wt": 1812.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 910.3,
+   "wt": 1814.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 911.3,
+   "wt": 1817.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 912.3,
+   "wt": 1819.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 912.3,
+   "wt": 1819.3,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 111)"
+  },
+  {
+   "gt": 912.8,
+   "wt": 1820.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 913.3,
+   "wt": 1821.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 914.3,
+   "wt": 1823.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 915.8,
+   "wt": 1827,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 916.6,
+   "wt": 1828.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 916.6,
+   "wt": 1828.6,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 112)"
+  },
+  {
+   "gt": 917.1,
+   "wt": 1829.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 917.6,
+   "wt": 1830.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 918.8,
+   "wt": 1833.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 919.8,
+   "wt": 1835.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 919.8,
+   "wt": 1835.7,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 113)"
+  },
+  {
+   "gt": 920.3,
+   "wt": 1836.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 921.3,
+   "wt": 1839,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 922.3,
+   "wt": 1841.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 923.3,
+   "wt": 1843.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 924.3,
+   "wt": 1845.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 924.3,
+   "wt": 1845.6,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 114)"
+  },
+  {
+   "gt": 924.8,
+   "wt": 1846.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 925.3,
+   "wt": 1848.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 926.8,
+   "wt": 1851.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 927.8,
+   "wt": 1853.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 928.8,
+   "wt": 1855.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 928.8,
+   "wt": 1855.8,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 115)"
+  },
+  {
+   "gt": 929.3,
+   "wt": 1856.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 929.8,
+   "wt": 1858,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 930.8,
+   "wt": 1860.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 932.3,
+   "wt": 1863.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 933.3,
+   "wt": 1865.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 933.3,
+   "wt": 1865.7,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 116)"
+  },
+  {
+   "gt": 933.8,
+   "wt": 1866.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 934.3,
+   "wt": 1867.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 935.3,
+   "wt": 1870.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 936.3,
+   "wt": 1872.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 936.3,
+   "wt": 1872.2,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 117)"
+  },
+  {
+   "gt": 936.8,
+   "wt": 1873.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 937.8,
+   "wt": 1875.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 938.8,
+   "wt": 1877.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 939.8,
+   "wt": 1879.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 940.8,
+   "wt": 1882.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 940.8,
+   "wt": 1882.1,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 118)"
+  },
+  {
+   "gt": 941.1,
+   "wt": 1882.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 941.8,
+   "wt": 1884.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 943.3,
+   "wt": 1887.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 944.3,
+   "wt": 1889.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 945.3,
+   "wt": 1892.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 945.3,
+   "wt": 1892.1,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 119)"
+  },
+  {
+   "gt": 945.8,
+   "wt": 1893.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 946.3,
+   "wt": 1894.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 947.3,
+   "wt": 1896.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 948.8,
+   "wt": 1899.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 949.8,
+   "wt": 1901.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 949.8,
+   "wt": 1901.9,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 120)"
+  },
+  {
+   "gt": 950.3,
+   "wt": 1903,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 950.8,
+   "wt": 1904.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 951.8,
+   "wt": 1906.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 952.8,
+   "wt": 1908.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 952.8,
+   "wt": 1908.8,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 121)"
+  },
+  {
+   "gt": 953.3,
+   "wt": 1909.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 954.3,
+   "wt": 1912.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 955.3,
+   "wt": 1914.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 956.3,
+   "wt": 1916.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 957.6,
+   "wt": 1919.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 957.6,
+   "wt": 1919.3,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 122)"
+  },
+  {
+   "gt": 958.1,
+   "wt": 1920.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 958.6,
+   "wt": 1921.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 959.6,
+   "wt": 1923.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 960.6,
+   "wt": 1925.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 961.6,
+   "wt": 1928.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 961.6,
+   "wt": 1928.1,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 123)"
+  },
+  {
+   "gt": 961.8,
+   "wt": 1928.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 962.8,
+   "wt": 1930.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 963.8,
+   "wt": 1933.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 965.1,
+   "wt": 1935.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 966.1,
+   "wt": 1938.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 966.1,
+   "wt": 1938.1,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 124)"
+  },
+  {
+   "gt": 966.6,
+   "wt": 1939.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 967.1,
+   "wt": 1940.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 968.3,
+   "wt": 1943,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 969.3,
+   "wt": 1945.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 969.3,
+   "wt": 1945.3,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 125)"
+  },
+  {
+   "gt": 969.6,
+   "wt": 1945.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 970.8,
+   "wt": 1948.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 971.8,
+   "wt": 1950.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 972.8,
+   "wt": 1953,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 973.8,
+   "wt": 1955.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 973.8,
+   "wt": 1955.2,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 126)"
+  },
+  {
+   "gt": 974.3,
+   "wt": 1956.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 974.8,
+   "wt": 1957.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 976.3,
+   "wt": 1960.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 977.3,
+   "wt": 1962.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 978.3,
+   "wt": 1965,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 978.3,
+   "wt": 1965,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 127)"
+  },
+  {
+   "gt": 978.6,
+   "wt": 1965.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 979.6,
+   "wt": 1968,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 980.6,
+   "wt": 1970.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 981.6,
+   "wt": 1972.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 982.6,
+   "wt": 1974.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 982.6,
+   "wt": 1974.6,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 128)"
+  },
+  {
+   "gt": 983.1,
+   "wt": 1975.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 983.6,
+   "wt": 1976.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 985.1,
+   "wt": 1980.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 986.1,
+   "wt": 1982.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 986.1,
+   "wt": 1982.3,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 129)"
+  },
+  {
+   "gt": 986.6,
+   "wt": 1983.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 987.1,
+   "wt": 1984.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 988.1,
+   "wt": 1986.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 989.1,
+   "wt": 1988.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 990.3,
+   "wt": 1991.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 990.3,
+   "wt": 1991.5,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 130)"
+  },
+  {
+   "gt": 990.6,
+   "wt": 1992.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 991.6,
+   "wt": 1994.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 992.6,
+   "wt": 1996.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 993.8,
+   "wt": 1999.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 994.8,
+   "wt": 2001.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 994.8,
+   "wt": 2001.4,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 131)"
+  },
+  {
+   "gt": 995.3,
+   "wt": 2002.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 995.8,
+   "wt": 2003.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 996.8,
+   "wt": 2005.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 998.3,
+   "wt": 2009,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 999.3,
+   "wt": 2011.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 999.3,
+   "wt": 2011.2,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 132)"
+  },
+  {
+   "gt": 999.8,
+   "wt": 2012.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1000.3,
+   "wt": 2013.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1001.6,
+   "wt": 2016.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1002.3,
+   "wt": 2017.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1002.3,
+   "wt": 2017.8,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 133)"
+  },
+  {
+   "gt": 1002.8,
+   "wt": 2018.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1003.8,
+   "wt": 2021,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1004.6,
+   "wt": 2022.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1005.6,
+   "wt": 2024.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1006.8,
+   "wt": 2027.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1006.8,
+   "wt": 2027.8,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 134)"
+  },
+  {
+   "gt": 1007.3,
+   "wt": 2029,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1007.8,
+   "wt": 2030.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1009.3,
+   "wt": 2033.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1010.3,
+   "wt": 2035.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1011.3,
+   "wt": 2037.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1011.3,
+   "wt": 2037.8,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 135)"
+  },
+  {
+   "gt": 1011.6,
+   "wt": 2038.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1012.3,
+   "wt": 2040,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1013.3,
+   "wt": 2042.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1014.8,
+   "wt": 2045.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1015.8,
+   "wt": 2047.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1015.8,
+   "wt": 2047.6,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 136)"
+  },
+  {
+   "gt": 1016.3,
+   "wt": 2048.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1016.8,
+   "wt": 2049.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1017.8,
+   "wt": 2052,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1018.8,
+   "wt": 2054.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1018.8,
+   "wt": 2054.2,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 137)"
+  },
+  {
+   "gt": 1019.1,
+   "wt": 2054.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1020.3,
+   "wt": 2057.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1021.3,
+   "wt": 2059.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1022.1,
+   "wt": 2061.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1023.6,
+   "wt": 2064.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1023.6,
+   "wt": 2064.7,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 138)"
+  },
+  {
+   "gt": 1024.1,
+   "wt": 2065.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1024.6,
+   "wt": 2066.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1025.6,
+   "wt": 2069.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1026.1,
+   "wt": 2070.2,
+   "st": "dawn: night result",
+   "k": "SNAP",
+   "t": "night_result {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 0 | Essentials 2 | Sun 1 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":36,\"sun\":1,\"food\":0,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:need 12 0/2\",\"b2:need 8 0/6[pulse][sel]\",\"b3:need 6\",\"bSwitch:⇄\",\"bEat:EAT 0 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  },
+  {
+   "gt": 1026.6,
+   "wt": 2071.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1027.6,
+   "wt": 2073.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1027.6,
+   "wt": 2073.5,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 139)"
+  },
+  {
+   "gt": 1028.1,
+   "wt": 2074.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1028.8,
+   "wt": 2076.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1029.8,
+   "wt": 2078.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1031.3,
+   "wt": 2081.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1032.1,
+   "wt": 2083.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1032.1,
+   "wt": 2083.3,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 140)"
+  },
+  {
+   "gt": 1032.6,
+   "wt": 2084.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1033.3,
+   "wt": 2086.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1034.3,
+   "wt": 2088.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1035.3,
+   "wt": 2090.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1035.3,
+   "wt": 2090.8,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 141)"
+  },
+  {
+   "gt": 1035.8,
+   "wt": 2091.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1036.8,
+   "wt": 2094.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1037.8,
+   "wt": 2096.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1038.8,
+   "wt": 2098.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1040.1,
+   "wt": 2101.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1040.1,
+   "wt": 2101.3,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 142)"
+  },
+  {
+   "gt": 1040.6,
+   "wt": 2102.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1041.1,
+   "wt": 2103.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1042.1,
+   "wt": 2105.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1043.1,
+   "wt": 2107.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1044.1,
+   "wt": 2110.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1044.1,
+   "wt": 2110.1,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 143)"
+  },
+  {
+   "gt": 1044.6,
+   "wt": 2111.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1045.3,
+   "wt": 2112.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1046.3,
+   "wt": 2115.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1047.6,
+   "wt": 2117.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1048.6,
+   "wt": 2120,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1048.6,
+   "wt": 2120,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 144)"
+  },
+  {
+   "gt": 1049.1,
+   "wt": 2121.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1049.6,
+   "wt": 2122.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1050.8,
+   "wt": 2125,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1051.8,
+   "wt": 2127.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1051.8,
+   "wt": 2127.2,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 145)"
+  },
+  {
+   "gt": 1052.3,
+   "wt": 2128.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1053.3,
+   "wt": 2130.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1054.1,
+   "wt": 2132.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1055.1,
+   "wt": 2134.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1056.6,
+   "wt": 2137.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1056.6,
+   "wt": 2137.6,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 146)"
+  },
+  {
+   "gt": 1057.1,
+   "wt": 2138.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1057.6,
+   "wt": 2139.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1058.6,
+   "wt": 2142,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1059.6,
+   "wt": 2144.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1060.6,
+   "wt": 2146.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1060.6,
+   "wt": 2146.5,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 147)"
+  },
+  {
+   "gt": 1061.1,
+   "wt": 2147.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1062.1,
+   "wt": 2150,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1062.8,
+   "wt": 2151.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1064.3,
+   "wt": 2154.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1065.3,
+   "wt": 2157.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1065.3,
+   "wt": 2157.1,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 148)"
+  },
+  {
+   "gt": 1065.8,
+   "wt": 2158.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1066.3,
+   "wt": 2159.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1067.3,
+   "wt": 2161.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1068.6,
+   "wt": 2164.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1068.6,
+   "wt": 2164.2,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 149)"
+  },
+  {
+   "gt": 1069.1,
+   "wt": 2165.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1069.6,
+   "wt": 2166.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1070.8,
+   "wt": 2169.1,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1071.8,
+   "wt": 2171.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1072.8,
+   "wt": 2173.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1072.8,
+   "wt": 2173.5,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 150)"
+  },
+  {
+   "gt": 1073.3,
+   "wt": 2174.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1073.8,
+   "wt": 2175.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1075.1,
+   "wt": 2178.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1076.1,
+   "wt": 2180.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1077.1,
+   "wt": 2182.9,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1077.1,
+   "wt": 2182.9,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 151)"
+  },
+  {
+   "gt": 1077.6,
+   "wt": 2184,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1078.6,
+   "wt": 2186.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1079.6,
+   "wt": 2188.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1080.6,
+   "wt": 2190.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 34 -> 26 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1081.8,
+   "wt": 2193.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 26 -> 18 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1081.8,
+   "wt": 2193.2,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 152)"
+  },
+  {
+   "gt": 1082.3,
+   "wt": 2194.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 18 -> 48 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1082.8,
+   "wt": 2195.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 48 -> 40 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1084.1,
+   "wt": 2198.2,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 40 -> 32 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1085.1,
+   "wt": 2200.3,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 32 -> 24 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1085.1,
+   "wt": 2200.3,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 153)"
+  },
+  {
+   "gt": 1085.6,
+   "wt": 2201.4,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 24 -> 54 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1086.1,
+   "wt": 2202.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 54 -> 46 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1087.1,
+   "wt": 2204.7,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 46 -> 38 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1088.1,
+   "wt": 2207,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 38 -> 30 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1089.6,
+   "wt": 2210.5,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 30 -> 22 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1089.6,
+   "wt": 2210.5,
+   "st": "dawn: night result",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 154)"
+  },
+  {
+   "gt": 1090.1,
+   "wt": 2211.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 22 -> 52 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1090.6,
+   "wt": 2212.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 52 -> 44 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1091.6,
+   "wt": 2214.8,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 44 -> 36 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1092.8,
+   "wt": 2217.6,
+   "st": "dawn: night result",
+   "k": "HP",
+   "t": "health 36 -> 28 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1093.8,
+   "wt": 2219.7,
+   "st": "base day 2",
+   "k": "HP",
+   "t": "health 28 -> 20 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1093.8,
+   "wt": 2219.7,
+   "st": "base day 2",
+   "k": "SHORTCUT",
+   "t": "health under 25 during the lesson: +30 health so the play goes on (top-up 155)"
+  },
+  {
+   "gt": 1094.3,
+   "wt": 2220.8,
+   "st": "base day 2",
+   "k": "HP",
+   "t": "health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1094.8,
+   "wt": 2221.9,
+   "st": "base day 2",
+   "k": "HP",
+   "t": "health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1096.1,
+   "wt": 2224.7,
+   "st": "base day 2",
+   "k": "HP",
+   "t": "health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)"
+  },
+  {
+   "gt": 1096.1,
+   "wt": 2224.7,
+   "st": "base day 2",
+   "k": "SNAP",
+   "t": "driver_error {\"marla\":\"Device. Path. Today, Potts.\",\"dsub\":\"Tap the glowing device to place it where they walk in.\",\"count\":\"Food 0 | Essentials 2 | Sun 1 | Floor 1 of 1\",\"time\":\"Dawn in 12h 00m\",\"game\":{\"state\":\"play\",\"hp\":34,\"sun\":1,\"food\":0,\"machines\":1,\"drill\":\"place\",\"dayLeft\":0},\"buttons\":[\"bPause:||\",\"b1:need 12 0/2\",\"b2:need 8 0/6[pulse][sel]\",\"b3:need 6\",\"bSwitch:⇄\",\"bEat:EAT 0 home\",\"bFire:FIRE hold: charged\",\"bSkip:Skip drill\"]}"
+  }
+ ]
+}

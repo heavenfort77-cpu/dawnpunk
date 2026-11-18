@@ -1,0 +1,7 @@
+$ mkdir -p mt/phone && node tools/marlateach.cjs phone mt/phone/ > mt/phone/run.txt 2>&1; tail -5 mt/phone/run.txt   (limit 60 min)
+1094.3 | 2220.8 | base day 2 | HP | health 20 -> 50 (night; 1 machines inside or near, nearest walker 0.9 m)
+1094.8 | 2221.9 | base day 2 | HP | health 50 -> 42 (night; 1 machines inside or near, nearest walker 0.9 m)
+1096.1 | 2224.7 | base day 2 | HP | health 42 -> 34 (night; 1 machines inside or near, nearest walker 0.9 m)
+frames, wall s, game s: [4510,2225.8365,1096.583]
+NO PAGE ERRORS
+exit code 0
