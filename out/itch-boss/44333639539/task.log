@@ -1,0 +1,25 @@
+$ mkdir -p shots && node tools/itchshot.cjs boss shots   (limit 45 min)
+INFO page up 27 s
+INFO base loaded 47 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":37},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run loaded 124 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":103},"marla":true,"glb":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"ready","lantern":"ready","warden":"ready"}}
+INFO run {"ring":4,"cat":2,"houses":[{"i":0,"n":22,"L":3,"door":["43.5","-6.3"],"row":-1},{"i":1,"n":20,"L":3,"door":["-4.3","-6.6"],"row":-1},{"i":2,"n":18,"L":2,"door":["-42.7","5.6"],"row":1},{"i":3,"n":17,"L":2,"door":["53.2","5.8"],"row":1},{"i":4,"n":16,"L":2,"door":["-52.7","-6.0"],"row":-1},{"i":5,"n":15,"L":2,"door":["4.5","6.2"],"row":1}],"dormant":[["stilt","14.1","10.1"],["lurcher","18.0","-10.2"],["walker","-21.2","-8.3"],["lantern","-11.4","-9.8"]]}
+INFO boss {"model":"ready","built":"glb","boss":true}
+INFO look {"x":-3.460843947434373,"z":7.452627347146012,"dd":18.095876745199014,"type":"door"}
+INFO wrote shots/boss_0.png (576 s) cam -3.46,1.60,7.45 yaw 2.160 | HUD marla="Sun is down, Potts. Turbine first, then lances, then panels." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 50m" hs=""
+CATVIEW boss_0: none
+INFO wrote shots/boss_0_clean.png
+INFO look {"x":-3.7934047841212326,"z":7.6748958557164695,"dd":17.695876745199016,"type":"door"}
+INFO wrote shots/boss_1.png (966 s) cam -3.79,1.60,7.67 yaw 2.160 | HUD marla="More of them on your right. Lucky you." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 30m" hs=""
+CATVIEW boss_1: none
+INFO wrote shots/boss_1_clean.png
+INFO look {"x":-3.369566255457798,"z":7.61270059039334,"dd":16.233862808877472,"type":"door"}
+INFO wrote shots/boss_2.png (1520 s) cam -3.37,1.60,7.61 yaw 2.018 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs=""
+CATVIEW boss_2: none
+INFO wrote shots/boss_2_clean.png
+INFO look {"x":-3.211423319919228,"z":7.285925965718168,"dd":18.395876745199015,"type":"door"}
+INFO wrote shots/boss_3.png (1918 s) cam -3.21,1.60,7.29 yaw 2.160 | HUD marla="One on the stairs, coming down! Shoot!" csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 10m" hs=""
+CATVIEW boss_3: none
+INFO wrote shots/boss_3_clean.png
+NO PAGE ERRORS
+done 2050 s
+exit code 0
