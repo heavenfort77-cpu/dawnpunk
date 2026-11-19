@@ -14,11 +14,12 @@ const path = require('path');
   await p.evaluate(() => { localStorage.clear(); window.__dtMax = 0.5; }); await p.click('#enter'); await p.waitForTimeout(3000);
   await p.evaluate(() => { const g = window.__game; g.cfg.lore.chance = 1; g.startRun(); }); await p.waitForTimeout(3000);
   // the first house (of six) that has its note on a furniture top, else the first with any note
+  // (R3) the house number is kept as 'house': the note's own 'i' (its note number) used to overwrite it, so the check went back into the wrong house
   // (H) every wait is for a game condition (in the house with its note decided, the night begun) or a number of drawn frames, never a fixed time
   const pick = await p.evaluate(async () => { const g = window.__game, wait = (ms) => new Promise((r) => setTimeout(r, ms)); const until = async (f) => { const t0 = performance.now(); while (!f() && performance.now() - t0 < 120000) await new Promise((r) => setTimeout(r, 50)); }, frames = (n) => new Promise((r) => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), inHouse = (g, i) => () => g.state === 'play' && g.sim && g.run.inside === i && g.run.lore && (i in g.run.lore) && (g.run.lore[i] < 0 || !!g.lore.note() || !!(g.run.loreSpots && (i in g.run.loreSpots))); let any = null;
-    for (let i = 0; i < 6; i++) { g.enterHouse(i); await until(inHouse(g, i)); const n = g.lore.note(); if (n && n.top) return { i, ...n }; if (n && !any) any = { i, ...n }; g.leaveHouse(); }
-    if (any) { g.enterHouse(any.i); await until(inHouse(g, any.i)); } return any; });
-  ok('a street house holds a note (chance 1)', pick, pick ? 'house ' + pick.i + ', note ' + pick.i + ' ' + (pick.top ? 'on a furniture top' : 'on a pinboard') : '');
+    for (let i = 0; i < 6; i++) { g.enterHouse(i); await until(inHouse(g, i)); const n = g.lore.note(); if (n && n.top) return { ...n, house: i }; if (n && !any) any = { ...n, house: i }; g.leaveHouse(); }
+    if (any) { g.enterHouse(any.house); await until(inHouse(g, any.house)); } return any; });
+  ok('a street house holds a note (chance 1)', pick, pick ? 'house ' + pick.house + ', note ' + pick.i + ' ' + (pick.top ? 'on a furniture top' : 'on a pinboard') : '');
   if (!pick) { await b.close(); process.exit(1); }
   console.log('INFO placing the note took ' + (await p.evaluate(() => window.__game.lore.ms())).toFixed(0) + ' ms (rays on the house)');
   // stand 1.1 m from it toward the middle of the room and look at it
@@ -46,8 +47,9 @@ const path = require('path');
   const again = await p.evaluate(async () => { const g = window.__game, i = g.run.inside, wait = (ms) => new Promise((r) => setTimeout(r, ms)); const until = async (f) => { const t0 = performance.now(); while (!f() && performance.now() - t0 < 120000) await new Promise((r) => setTimeout(r, 50)); }, frames = (n) => new Promise((r) => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), inHouse = (g, i) => () => g.state === 'play' && g.sim && g.run.inside === i && g.run.lore && (i in g.run.lore) && (g.run.lore[i] < 0 || !!g.lore.note() || !!(g.run.loreSpots && (i in g.run.loreSpots))); g.leaveHouse(); g.enterHouse(i); await until(inHouse(g, i)); return g.lore.note(); });
   ok('going back into that house, the note is not there again', !again);
   // at night: another house's note has no prompt
+  // (R3) every house of the run is tried, not only the first six (with some seeds only one of the first six has a place for a note)
   const night = await p.evaluate(async () => { const g = window.__game, wait = (ms) => new Promise((r) => setTimeout(r, ms)); const until = async (f) => { const t0 = performance.now(); while (!f() && performance.now() - t0 < 120000) await new Promise((r) => setTimeout(r, 50)); }, frames = (n) => new Promise((r) => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), inHouse = (g, i) => () => g.state === 'play' && g.sim && g.run.inside === i && g.run.lore && (i in g.run.lore) && (g.run.lore[i] < 0 || !!g.lore.note() || !!(g.run.loreSpots && (i in g.run.loreSpots)));
-    for (let i = 0; i < 6; i++) { if (i === g.run.inside) continue; g.leaveHouse(); g.enterHouse(i); await until(inHouse(g, i)); const n = g.lore.note(); if (!n) continue;
+    for (let i = 0; i < g.run.houses.length; i++) { if (i === g.run.inside) continue; g.leaveHouse(); g.enterHouse(i); await until(inHouse(g, i)); const n = g.lore.note(); if (!n) continue;
       const s = g.sim, d = Math.hypot(n.x, n.z) || 1, px = n.x - (n.x / d) * 1.1, pz = n.z - (n.z / d) * 1.1; s.player.x = px; s.player.z = pz; g.setYaw(Math.atan2(-(n.x - px), -(n.z - pz))); await frames(30); const dayOn = g.lore.note().prompt;
       g.endDay(); await until(() => g.sim && g.sim.phase === 'night'); await frames(30); return { dayOn, phase: g.sim.phase, nightOn: g.lore.note() ? g.lore.note().prompt : null }; } return null; });
   ok('at night a note shows no prompt (day only)', night && night.dayOn && night.phase === 'night' && night.nightOn === false, JSON.stringify(night));

@@ -1197,7 +1197,15 @@ export const CONFIG = {
     titleBase: 1.5,
     // slice: the base prepared at the title in time slices: ms of build parts a frame (a part is not cut), then draws pieces drawn off-screen a frame (src/main.js baseSlice)
     // film: the same for the film's start under its black (nothing shows, so a bigger share of each frame), ms of parts or piece draws a frame
-    slice: { ms: 4, draws: 40, film: 40 },
+    // slice.card (R3): the card's all-pieces pass (every piece shown and not culled, with the shadow maps) is drawn in parts of cardDraws pieces, at most card ms of
+    // them a frame (src/main.js sceneCard), so no frame under the card holds the whole pass
+    slice: { ms: 4, draws: 40, film: 40, card: 40, cardDraws: 40 },
+    // filmCompileCap (R3): the film's black waits at most this many s for its shaders to finish building in the background before its pieces are drawn (it was the
+    // card's maxWait, 12 s: on the Mac test GPU the build took longer, and the first draw then waited for the rest of it in one held frame of 19-22 s)
+    filmCompileCap: 90,
+    // filmModelWait (R3): the film's black waits at most this many s for the film's desktop Gloom models and sharp textures, now asked for when the film starts
+    // (not with the page), so the film shows the same machines and pictures as before
+    filmModelWait: 60,
     // mergeBase: the base's still pieces drawn as one mesh per material and cell m of ground (src/baseview.js mergeStill); hidePad: extra m kept clear round the film's hidden plant
     mergeBase: { on: true, cell: 16, hidePad: 1.5 },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind

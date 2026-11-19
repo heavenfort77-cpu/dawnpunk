@@ -190,7 +190,7 @@
    ],
    "tier": "logic",
    "quality": "low",
-   "timeout": 20,
+   "timeout": 25,
    "note": "batch H premortem A, C, D, G, H, I, J, K, L (owner 13:10): kept base reset, context loss, tier change, itch zip over http, old save, soak, resize, check audit, sound"
   },
   {

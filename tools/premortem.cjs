@@ -1,7 +1,7 @@
 // Premortem: the ways a long play session or an odd device could break Dawnpunk that the other checks do not try.
 // Usage: node tools/premortem.cjs [distDir]      (default: dist next to tools/).
-// Environment: TESTS=a,b runs only those tests, TIER is the page's tier (default low), SEED (default 777), TOTAL_CAP is the seconds all tests may take together (default 900:
-// the CI job stops at 20 minutes). Each test has its own cap (CAPS below), cut to what is left of TOTAL_CAP; each test's elapsed seconds and cap are printed (TIME line).
+// Environment: TESTS=a,b runs only those tests, TIER is the page's tier (default low), SEED (default 777), TOTAL_CAP is the seconds all tests may take together (default 1200:
+// the CI job stops at 25 minutes). Each test has its own cap (CAPS below), cut to what is left of TOTAL_CAP; each test's elapsed seconds and cap are printed (TIME line).
 // Prints one 'PASS <name>' or 'FAIL <name>: <reason>' per test ('SKIP <name>: <why>' counts as neither), INFO lines along the way,
 // then 'PREMORTEM <n> PASS, <m> FAIL, <k> CAPHIT'; exit 1 on any FAIL, else 2 on any CAPHIT, else 0.
 // CAPHIT <name> is a TEST issue, not a game FAIL: the test ran out of its own cap (or the total cap) before it finished. Each test prints
@@ -22,13 +22,14 @@
 const { chromium } = require('playwright'); const http = require('http'); const fs = require('fs'); const path = require('path'); const os = require('os');
 const { execFileSync } = require('child_process');
 const DIST = path.resolve(process.argv[2] || path.join(__dirname, '..', 'dist')), TOOLS = __dirname;
-const SEED = +(process.env.SEED || 777), TIER = process.env.TIER || 'low', TOTAL_CAP = +(process.env.TOTAL_CAP || 900);
+const SEED = +(process.env.SEED || 777), TIER = process.env.TIER || 'low', TOTAL_CAP = +(process.env.TOTAL_CAP || 1200);
 const ONLY = process.env.TESTS ? process.env.TESTS.split(',').map((s) => s.trim()) : null;
 // gpu() growth allowed between like visits; soak growth (heap and gpu, owner's 10%). The base_reuse people tolerances are not set here: they are measured
 // in the run (3x the larger of the noise floor and NOISE_MIN, see base_reuse)
 const TOL = { flat: 0.05, soak: 0.10 }, NOISE_MIN = 0.001;
-// seconds per test on a software GPU; the 9 together (885 s) fit in TOTAL_CAP
-const CAPS = { base_reuse: 150, context_loss: 100, tier_change: 140, zip_serve: 120, old_save: 60, soak: 170, resize: 80, audio_resume: 55, wallclock_audit: 10 };
+// seconds per test on a software GPU; the 9 together (1105 s) fit in TOTAL_CAP
+// (R3) tier_change: its first step (medium: load, base, night) took 120 s in suite 44478553660 (07:26:13 -> 07:28:13); three steps, the cap is 3 x 120 s
+const CAPS = { base_reuse: 150, context_loss: 100, tier_change: 360, zip_serve: 120, old_save: 60, soak: 170, resize: 80, audio_resume: 55, wallclock_audit: 10 };
 // the software-GL flags of guidecheck/perfcheck, plus gc() and exact heap numbers for the soak, and sound allowed without a click for audio_resume
 const ARGS = ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--expose-gc', '--enable-precise-memory-info', '--autoplay-policy=no-user-gesture-required'];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.glb': 'model/gltf-binary', '.ktx2': 'image/ktx2', '.wasm': 'application/wasm', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
@@ -184,12 +185,18 @@ async function open(t, o) {
 }
 const errsSince = (t, k, label, list) => { const e = (list || t.errs).slice(k); if (e.length) t.fail(label + ': ' + e.length + ' error(s), first: ' + e[0]); };
 
+// OWNER DECISION 16:22 (Nov 19): people whose idle animation continues across base visits; base_reuse does not compare their pose (place still strict)
+const IDLE_GOES_ON = ['bram', 'oko', 'pip', 'marla'];
 async function base_reuse(t) {
   const p = await open(t), visits = []; let noise = null, tol = null;
+  // (R3, owner: the control before calling the drift a test issue) PM_KEEPBASE=0 runs the same test with the kept base off (every visit builds the base again)
+  if (process.env.PM_KEEPBASE === '0') { await p.evaluate(() => { window.__game.cfg.lag.keepBase = false; }); t.info('control: CONFIG.lag.keepBase off'); }
   const visit = async (how, label) => {
     const k = t.errs.length;
     // game time held nearly still in the base (as perfcheck's measuring), so people stand where a visit puts them
-    await p.evaluate(() => { window.__dtMax = 0.0005; });
+    // (R3, control 1e-9 vs 0.0005 locally: the recruits' 3.6-5.1 mm went to 0.0000) 0.0005 s a frame was not a hold: a walking recruit moved about 0.5 mm a frame,
+    // and visit 1 ran a different number of frames than visits 2 and 3; the step is now 1e-9 s a frame (PM_DTMAX overrides it)
+    await p.evaluate((d) => { window.__dtMax = d; }, +(process.env.PM_DTMAX || 1e-9));
     await toBase(p, how); if (!await peopleReady(p)) t.info(label + ': people still changing after 15 s');
     const pl = await people(p), g = await gpu(p);
     // noise floor (visit 1 only): basePeople() read again 1 s later with game time still held; the difference is what a still base drifts by
@@ -202,7 +209,9 @@ async function base_reuse(t) {
     await p.evaluate(() => { delete window.__dtMax; });
     errsSince(t, k, label); visits.push({ people: pl, g }); t.info(label + ': ' + pl.length + ' people, gpu ' + JSON.stringify(g));
   };
-  await visit('hook', 'visit 1');
+  // (R3) PM_VISIT1=enter: visit 1 goes home the player's way (Enter at the title, under the home card), as visits 2 and 3 do (the end screen's Back), instead of
+  // the enterBase hook
+  await visit(process.env.PM_VISIT1 === 'enter' ? 'enter' : 'hook', 'visit 1');
   // each later visit gets visit 1's save back (put back after the night is banked, before going home), so the same people are compared
   const snap = await p.evaluate(() => JSON.stringify(window.__game.save));
   for (const n of [2, 3]) {
@@ -219,7 +228,11 @@ async function base_reuse(t) {
     if (c.missing.length) t.fail(lb + ': people missing: ' + c.missing.join(', '));
     if (c.extra.length) t.fail(lb + ': people not there on visit 1: ' + c.extra.join(', '));
     if (c.wp > tol.pos) t.fail(lb + ': ' + c.wpId + ' stands ' + c.wp.toFixed(4) + ' m from visit 1 (tolerance ' + tol.pos.toFixed(4) + ' = 3x noise ' + noise.pos.toFixed(4) + ', at least 3x ' + NOISE_MIN + ')');
-    if (c.wq > tol.pose) t.fail(lb + ': ' + c.wqId + ' pose checksum differs by ' + c.wq.toFixed(4) + ' (tolerance ' + tol.pose.toFixed(4) + ' = 3x noise ' + noise.pose.toFixed(4) + ', at least 3x ' + NOISE_MIN + ')');
+    // OWNER DECISION 16:22 (Nov 19): the villagers (src/base.js NPCS: bram, oko, pip) and Marla keep their idle animation going across base visits (no restart), so
+    // their pose may differ; their place and every other reset item stay strict, and every other person's pose too
+    const strict = c.rows.filter((q) => !IDLE_GOES_ON.includes(String(q.id))), sq = strict.reduce((a, q) => (q.dq > a.dq ? q : a), { dq: 0, id: '' });
+    t.info(lb + ': pose not compared for ' + IDLE_GOES_ON.join(', ') + ' (owner 16:22); worst pose of the others ' + sq.dq.toFixed(4) + (sq.id ? ' (' + sq.id + ')' : ''));
+    if (sq.dq > tol.pose) t.fail(lb + ': ' + sq.id + ' pose checksum differs by ' + sq.dq.toFixed(4) + ' (tolerance ' + tol.pose.toFixed(4) + ' = 3x noise ' + noise.pose.toFixed(4) + ', at least 3x ' + NOISE_MIN + ')');
   }
   const a = visits[1].g, b = visits[2].g;
   for (const k of ['geometries', 'textures']) if (grew(a[k], b[k], TOL.flat, 2)) t.fail('gpu ' + k + ' grew after visit 2: ' + a[k] + ' -> ' + b[k]);
@@ -275,10 +288,14 @@ async function tier_change(t) {
 }
 
 async function zip_serve(t) {
-  const zips = fs.readdirSync(DIST).filter((f) => /\.zip$/i.test(f)).map((f) => path.join(DIST, f)).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
-  if (!zips.length) return 'skip:no zip';
-  const zip = zips[0], dir = fs.mkdtempSync(path.join(os.tmpdir(), 'premortem-zip-'));
-  t.info('zip ' + path.basename(zip) + ' (newest of ' + zips.length + ')');
+  // (R3: 'no zip' in suite 44478553660: the CI's dist artifact leaves out dist/solardg-itch.zip, .github/workflows/checks.yml) the build's own zip
+  // dist/solardg-itch.zip is used; when it is not there, it is made from dist with the build's own list (build.mjs: index.html physics.js music tex models voice)
+  let zip = path.join(DIST, 'solardg-itch.zip'); const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'premortem-zip-'));
+  if (fs.existsSync(zip)) t.info('zip ' + path.basename(zip) + ' (the build\'s)');
+  else { const list = ['index.html', 'physics.js', 'music', 'tex', 'models', 'voice'].filter((f) => fs.existsSync(path.join(DIST, f))); if (!list.includes('index.html')) { t.fail('no dist/index.html to zip'); return; }
+    zip = path.join(dir + '-src', 'solardg-itch.zip'); fs.mkdirSync(path.dirname(zip), { recursive: true });
+    try { execFileSync('zip', ['-q', '-r', zip, ...list], { cwd: DIST, stdio: 'pipe' }); } catch (e) { execFileSync('python3', ['-I', '-c', 'import sys,os,zipfile\nz=zipfile.ZipFile(sys.argv[1],"w",zipfile.ZIP_DEFLATED)\nfor a in sys.argv[2:]:\n  if os.path.isdir(a):\n    for r,d,fs in os.walk(a):\n      for f in fs: z.write(os.path.join(r,f))\n  else: z.write(a)\nz.close()', zip, ...list], { cwd: DIST, stdio: 'pipe' }); }
+    t.info('zip made from dist with the build\'s list (' + list.join(' ') + '): ' + (fs.statSync(zip).size / 1048576).toFixed(1) + ' MB'); }
   try {
     try { execFileSync('unzip', ['-q', '-o', zip, '-d', dir], { stdio: 'pipe' }); } catch (e) { execFileSync('python3', ['-I', '-m', 'zipfile', '-e', zip, dir], { stdio: 'pipe' }); }
     let root = fs.existsSync(path.join(dir, 'index.html')) ? dir : null;

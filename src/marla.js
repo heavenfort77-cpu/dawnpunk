@@ -4,6 +4,8 @@
 import { GRITTY, GRIT } from './look.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+// (R3) the model files are stored with lossless EXT_meshopt_compression (build.mjs, tools/meshopt_glb.mjs): the loader decodes them with three.js's decoder
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { MODELS, liteModel } from './modeldata.js';
 import { QUALITY } from './quality.js';
 import { hiMat, hiLights } from './marlahi.js';
@@ -18,7 +20,7 @@ export function createMarla(cfg, key = 'marla') {
   // LAG FIX Nov 19 (owner 11:40): the light model (a file, src/modeldata.js) is fetched only when it is used (phones, or the desktop model failing), not decoded at every start
   const lite = () => liteModel(key).then((b) => go(b, false)).catch((e) => console.error(key + ' light model failed to load', e));
   const HI = QUALITY === 'high' && cfg.marlaHi && cfg.marlaHi.files[key];      // desktops and laptops: her own high model and materials (src/marlahi.js); phones: the packed light model
-  const go = (buf, isHi) => new GLTFLoader().parse(buf, '', (gltf) => {
+  const go = (buf, isHi) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => {
       o.userData.keep = true; if (o.isBone) bones[o.name] = o;
       if (o.isMesh) { o.frustumCulled = false; o.castShadow = true; o.receiveShadow = true; const conv = (m) => { if (isHi) return hiMat(m, o, cfg.marlaHi); const cut = m.alphaTest > 0 || m.transparent; const skin = /skin|face|head|body|hand|lip|eye/i.test(m.name || ''), col = m.color.clone(); if (GRITTY && !skin) { const h = {}; col.getHSL(h); col.setHSL(h.h, h.s * GRIT.clothSat, h.l * GRIT.clothLight); } const n = GRITTY ? new THREE.MeshPhongMaterial({ map: m.map || null, color: col, shininess: skin ? GRIT.skinShine : GRIT.clothShine, specular: skin ? 0x2a211d : 0x0c0c0c, alphaTest: cut ? Math.max(m.alphaTest, 0.4) : 0, side: cut ? THREE.DoubleSide : THREE.FrontSide }) : new THREE.MeshLambertMaterial({ map: m.map || null, color: m.color, alphaTest: cut ? Math.max(m.alphaTest, 0.4) : 0, side: cut ? THREE.DoubleSide : THREE.FrontSide }); n.name = m.name; n.userData.keep = true; m.dispose(); return n; }; // same simple lighting as the rest of the game

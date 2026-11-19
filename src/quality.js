@@ -35,16 +35,23 @@ export const hiState = { asked: 0, ok: 0, failed: 0, used: 0 };
 // every texture of one name shares one source, so the GPU holds each sharp picture once however many materials use it
 function upgrade(t, name) { if (!hiImg[name] || (t.userData.hi && t.source === hiSrc[name])) return; t.source = hiSrc[name]; t.userData.hi = true; t.needsUpdate = true; hiState.used++; }
 function readable(img) { try { const c = document.createElement('canvas'); c.width = c.height = 1; const x = c.getContext('2d'); x.drawImage(img, 0, 0, 1, 1); x.getImageData(0, 0, 1, 1); return true; } catch (e) { return false; } }
-if (Q.hiTex && typeof Image !== 'undefined') {
-  for (const name in TEXHI) {
-    hiState.asked++; const img = new Image();
-    img.onload = () => { if (!readable(img)) { hiState.failed++; delete waiting[name]; return; } hiImg[name] = img; hiSrc[name] = new THREE.Source(img); hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
-    img.onerror = () => { hiState.failed++; delete waiting[name]; };
-    img.src = TEXHI[name];
-  }
+// (R3, owner 14:10: under 20 MB before the base) each sharp picture is asked for when a texture of its name is first made (texTrack), not all with the page: the
+// street's pictures then load when the street is built (under the film's black or the ride card, which wait for them: hiPending), not before the base
+const askedHi = {};
+function askHi(name) {
+  if (askedHi[name] || !Q.hiTex || typeof Image === 'undefined' || !TEXHI[name]) return; askedHi[name] = true;
+  hiState.asked++; const img = new Image();
+  img.onload = () => { if (!readable(img)) { hiState.failed++; delete waiting[name]; return; } hiImg[name] = img; hiSrc[name] = new THREE.Source(img); hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
+  img.onerror = () => { hiState.failed++; delete waiting[name]; };
+  img.src = TEXHI[name];
 }
+// every sharp picture asked for at once: at the film's start, the ride card and the player's first click or key in the base (so the street and the houses have
+// them before they are shown, as when they all came with the page)
+export function askAllHi() { for (const name in TEXHI) askHi(name); }
+// sharp pictures asked for and not yet arrived (or failed)
+export const hiPending = () => hiState.asked - hiState.ok - hiState.failed;
 // follow a texture made from TEX[name] (also clones, which share its picture): it gets the high-tier picture if and when there is one
-export function texTrack(t, name) { if (!Q.hiTex || !TEXHI[name]) return t; if (hiImg[name]) upgrade(t, name); else (waiting[name] = waiting[name] || []).push(t); return t; }
+export function texTrack(t, name) { if (!Q.hiTex || !TEXHI[name]) return t; askHi(name); if (hiImg[name]) upgrade(t, name); else (waiting[name] = waiting[name] || []).push(t); return t; }
 // a texture for TEX[name]: the packed picture now, the high-tier file once it has arrived (the packed picture never overwrites it)
 export function texLoad(name) { const t = loader.load(TEX[name], () => { if (t.userData.hi && hiSrc[name]) { hiSrc[name].data = hiImg[name]; t.source = hiSrc[name]; t.needsUpdate = true; } }); return texTrack(t, name); }
 // round parts: segment count for the tier

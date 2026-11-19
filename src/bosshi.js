@@ -4,6 +4,8 @@
 // main.js calls bossTick(dt, sim, ctx) every frame of a run; it builds the boss on a boss night and drops it otherwise. Nothing here changes the game's rules.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+// (R3) the model files are stored with lossless EXT_meshopt_compression (build.mjs, tools/meshopt_glb.mjs): the loader decodes them with three.js's decoder
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
@@ -249,7 +251,7 @@ function loadModel() {
   if (bossState.model !== 'none') return; bossState.model = 'loading';
   if (!MODEL.startsWith('data:') && location.protocol === 'file:') { bossState.model = 'failed'; return; }
   const fail = (e) => { bossState.model = 'failed'; console.warn('boss model not loaded', e); };
-  fetch(MODEL).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (g) => { tpl = g.scene; bossState.model = 'ready'; tpl.traverse((o) => { if (o.isMesh) o.geometry.userData.shared = true; });
+  fetch(MODEL).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, '', (g) => { tpl = g.scene; bossState.model = 'ready'; tpl.traverse((o) => { if (o.isMesh) o.geometry.userData.shared = true; });
     // LAG FIX Nov 19: the parts drawn as one skinned mesh per material (src/glbmerge.js; the lens parts keep their own glow materials), before the far copies are made
     mergeGlb(tpl, (o) => o.material.name !== 'gloom_lens', CONFIG.lag.glbMerge.bossPad); lodPrepare(tpl, 'boss', false); if (bossHooks.ready) try { bossHooks.ready(tpl); } catch (e) { /* warm-up only */ } }, fail)).catch(fail);
 }

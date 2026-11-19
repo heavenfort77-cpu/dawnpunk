@@ -29,6 +29,8 @@ const ONLY = process.env.SPOTS ? process.env.SPOTS.split(/[,+]/) : ['hub', 'stre
 const COMBAT = { combat: { ring: 2, n: +(process.env.COMBAT_N || 18) }, bosscombat: { ring: 4, n: +(process.env.BOSS_N || 24), boss: true } }, CSECS = +(process.env.CSECS || 20);
 // combat gates: fps at least, 95th percentile frame at most (ms), worst frame at most (ms); on the default tier, and the fps gate on low too
 const CGATE = { fps: 60, p95: 25, worst: 100 };
+// (R3, owner) the card time budget: every card (and every frame held under a card or the film's black) at most this many ms, per tier; tiers not listed: report only
+const CARDMS = { medium: 3000, high: 4000 };
 // targets (owner's budget Nov 19) on the DEFAULT tier (TT, medium): draw calls per frame (all passes), triangles per frame (all passes), MB downloaded before the hub is ready
 const TT = 'medium', TARGET = { hub: { calls: 500, tris: 0.5e6 }, street: { calls: 500, tris: 0.5e6 }, house: { calls: 500, tris: 0.5e6 }, boss: { calls: 500, tris: 0.5e6 }, startMB: 20 };
 if (OUT) fs.mkdirSync(OUT, { recursive: true });
@@ -91,8 +93,10 @@ const BREAKDOWN = (spot) => {
     // (owner 14:10, coordinator 14:16) the download BEFORE THE BASE on a fresh page with nothing run before it (the flow spots load much more first): a first visit
     // (title, Enter, the base up under its card, the people's models in) and a returning player (a save, title, Enter); the 20 MB goal is gated on these, default tier.
     // 'title usable' MB is logged with the flow below.
+    // (R3) the returning player's page keeps its save through the reload (window.name keepSave, as the 'enter' spot does): the init script clears the storage of
+    // every other page load, so this line measured a second first visit before
     if (!process.env.NOBASEMB) { let sv0 = null; for (const who of ['first visit', 'returning player']) { const cx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); await cx.addInitScript(INIT, { seed: SEED }); const q = await cx.newPage(); q.setDefaultTimeout(900000);
-        try { const u = URL0 + '?quality=' + tier + '&seed=' + SEED + (GPU ? '&cards=1' : ''); if (who === 'returning player') { await q.goto(u); await q.evaluate((sv) => { localStorage.setItem('solardg.save', sv); }, sv0); }
+        try { const u = URL0 + '?quality=' + tier + '&seed=' + SEED + (GPU ? '&cards=1' : ''); if (who === 'returning player') { if (!sv0) throw new Error('no save from the first visit'); await q.goto(u); await q.evaluate((sv) => { window.name = 'keepSave'; localStorage.setItem('solardg.save', sv); }, sv0); }
           served = []; await (who === 'returning player' ? q.reload() : q.goto(u)); await q.waitForFunction(() => window.__splash && window.__splash.phase === 'ready', null, { timeout: 900000 }); const titleMB = MB(sumB());
           await q.click('#enter'); await q.waitForFunction(() => window.__game.state === 'base' && !window.__game.cardOn() && window.__game.standInsShown && window.__game.standInsShown() === 0, null, { timeout: 900000, polling: 250 });
           const mb = MB(sumB()), big = served.filter((x) => x.n > 0.2 * 1024 * 1024).map((x) => x.f + ' ' + MB(x.n)).join(', '); info(tier + ' ' + who + ': downloaded before the base ' + mb + ' MB (title usable ' + titleMB + ' MB, ' + served.length + ' requests); files over 0.2 MB: ' + big);
@@ -166,7 +170,7 @@ const BREAKDOWN = (spot) => {
       try { await flow('title', 8); } catch (e) { err(e); }
       // (owner 13:10) the film timed from its click (its sliced preparation under the black counts as held; the first visible frame is reported); PROFILE: its first 4 s
       try { let stopP = null; if (process.env.PROFILE) { const cdp = await p.context().newCDPSession(p); await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 }); await cdp.send('Profiler.start'); stopP = (async () => { await new Promise((r) => setTimeout(r, 4000)); const { profile } = await cdp.send('Profiler.stop'); showProf(profile, 'film start'); await cdp.detach(); })(); }
-        const ff = await flow('film', 25, 'watch'); if (stopP) await stopP; const fp = await p.evaluate(() => (window.__game.filmPrepInfo ? window.__game.filmPrepInfo() : null)); info('flow ' + tier + ' film preparation under the black: ' + JSON.stringify(fp) + ' (longest prep frame of work, whole prep ms)');
+        const ff = await flow('film', 25, 'watch'); if (GPU && CARDMS[tier]) out.push([tier + ' film: longest held frame (under its black) ' + ff.heldWorst + ' ms (card budget <= ' + CARDMS[tier] + ')', ff.heldWorst <= CARDMS[tier]]); if (stopP) await stopP; const fp = await p.evaluate(() => (window.__game.filmPrepInfo ? window.__game.filmPrepInfo() : null)); info('flow ' + tier + ' film preparation under the black: ' + JSON.stringify(fp) + ' (longest prep frame of work, whole prep ms)');
         if (GPU && tier === TT) out.push([TT + ' film: first visible frame ' + ff.firstVis + ' ms (target < 100)', ff.firstVis !== null && ff.firstVis < 100]);
         await p.evaluate(() => { const b = document.getElementById('cineSkip'); if (b) b.click(); }); await p.waitForTimeout(500); } catch (e) { err(e); }
       // night 1 with the drill on (a fresh save's first night from the base)
@@ -221,6 +225,7 @@ const BREAKDOWN = (spot) => {
           const d = ts.slice(1).map((t, i) => t - ts[i]).sort((x, y) => x - y), avg = d.reduce((x, y) => x + y, 0) / Math.max(1, d.length); res({ n: d.length, fps: +(1000 / avg).toFixed(1), p95: +(d[Math.floor(d.length * 0.95)] || 0).toFixed(1), worst: +(d[d.length - 1] || 0).toFixed(1), cardMs: Math.round(cardMs), card: window.__game.cardInfo ? window.__game.cardInfo() : null }); } };
           requestAnimationFrame(st); document.getElementById('enter').click(); }));
         if (process.env.PROFILE && cdpE) { const { profile } = await cdpE.send('Profiler.stop'); showProf(profile, 'enter (click to the end of the timing)'); await cdpE.detach(); }
+        try { await p.evaluate((c) => { window.__enterCards = c; }, (f.card && f.card.proofs) || []); } catch (e2) { /* page gone */ }
         console.log('FPS ' + tier + ' enter (returning player, Enter to the base, frames after the card): ' + f.fps + ' fps, p95 ' + f.p95 + ' ms, worst ' + f.worst + ' ms (' + f.n + ' frames); card ' + f.cardMs + ' ms ' + JSON.stringify(f.card));
         if (GPU && tier === TT) out.push([TT + ' enter (whole run): worst frame after the card ' + f.worst + ' ms (target <= ' + CGATE.worst + ')', f.worst <= CGATE.worst]); try { const L2 = await p2.evaluate(() => (window.__ledger || []).map((q) => ({ ...q, c: (window.__longFrames || []).find((x) => x.t === q.t) || null }))); await p.evaluate((L2) => { window.__ledgerEnter = L2; }, L2); } catch (e2) { /* page gone */ } await p2.close(); } catch (e) { err(e); }
     }
@@ -352,7 +357,12 @@ const BREAKDOWN = (spot) => {
     // (owner 14:25) the warm-up gate: no shader program built during play after any card, across the whole run; and the cards' proof counts
     { const pp = await p.evaluate(() => (window.__game.playPrograms ? window.__game.playPrograms() : null)), cp = await p.evaluate(() => (window.__game.cardInfo ? window.__game.cardInfo().proofs : null));
       info(tier + ' shader programs built during play: ' + JSON.stringify(pp).slice(0, 3000) + ' | cards (kind, renders, calls, programs): ' + JSON.stringify((cp || []).map((q) => [q.kind, q.renders, q.calls, q.programs])));
-      if (GPU && tier === TT && pp) out.push([TT + ': shader programs built during play after the cards ' + pp.n + ' (target 0)', pp.n === 0]); }
+      if (GPU && tier === TT && pp) out.push([TT + ': shader programs built during play after the cards ' + pp.n + ' (target 0)', pp.n === 0]);
+      // (R3, owner) the card time budget: each card's time (its proof's ms) and what it did (uploads, programs, its steps); medium <= 3 s, high <= 4 s, per card
+      const ce = await p.evaluate(() => window.__enterCards || []), all = [...(cp || []).filter((q) => !q.bot).map((q) => ['flow', q]), ...ce.filter((q) => !q.bot).map((q) => ['enter', q])];
+      for (const [pg, q] of all) console.log('INFO ' + tier + ' card ' + pg + ' ' + q.kind + ': ' + q.ms + ' ms, programs ' + q.programs + ', texture uploads ' + q.uploads + ' (' + q.uploadMs + ' ms), buffer uploads ' + q.buffers + ' (' + q.bufferMs + ' ms), all-pieces parts ' + JSON.stringify(q.allParts) + ', steps ' + JSON.stringify(q.steps));
+      if (GPU && CARDMS[tier] && all.length) { const w = all.reduce((a, x) => (x[1].ms > a[1].ms ? x : a)); out.push([tier + ': card time, longest of ' + all.length + ' cards ' + w[1].ms + ' ms (' + w[0] + ' ' + w[1].kind + '; budget <= ' + CARDMS[tier] + ' per card)', all.every((x) => x[1].ms <= CARDMS[tier])]); }
+      { const u = await p.evaluate(() => (window.__game.uploads ? window.__game.uploads() : null)); if (u) info(tier + ' GPU uploads in the run: textures ' + u.n + ' (' + u.ms + ' ms), buffers ' + u.bn + ' (' + u.bms + ' ms); texture uploads over 20 ms (ms, call, source, size, state, under a card, file): ' + JSON.stringify(u.big).slice(0, 2500)); } }
     // (owner 14:25) the long-frame ledger of this tier: every page of the run, each frame over 100 ms with its spot, held or not, and the game's catcher entry
     { const L = []; for (const pg of ctx.pages()) { try { L.push(...await pg.evaluate(() => (window.__ledger || []).map((q) => ({ ...q, c: (window.__longFrames || []).find((x) => x.t === q.t) || null })).concat(window.__ledgerEnter || []))); } catch (e) { /* page gone */ } }
       const vis = L.filter((q) => !q.held), tot = (a) => a.reduce((x, q) => x + q.gap, 0), bySpot = {}; for (const q of vis) { const b = bySpot[q.spot] || (bySpot[q.spot] = { n: 0, ms: 0, worst: 0 }); b.n++; b.ms += q.gap; b.worst = Math.max(b.worst, q.gap); }
