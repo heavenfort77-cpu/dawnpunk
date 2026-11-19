@@ -850,6 +850,25 @@ function leaveHouse() { if (!run || !sim || state !== 'play' || paused) return; 
 function nightfall(byHold) { if (!run) return; perfRest(); if (byHold && mustSolar()) { flash(solarBlock(), 1); return; } if (!sim) { const h = facedHouse() || RUN.nearest(run, run.px, run.pz); run.caught = !byHold; enterHouse(byHold ? h.i : RUN.nearest(run, run.px, run.pz).i, true); } sim.endDay(); }
 // the house whose door you are looking at (within range and a narrow angle), else null
 function facedHouse() { const T = CONFIG.town, fx = -Math.sin(yaw), fz = -Math.cos(yaw); let best = null, ba = T.faceAngle; for (const h of run.houses) { const dx = h.doorX - run.px, dz = h.doorZ - run.pz, d = Math.hypot(dx, dz); if (d > T.infoRange || d < 0.01) continue; const a = Math.acos(Math.max(-1, Math.min(1, (dx * fx + dz * fz) / d))); if (a < ba) { ba = a; best = h; } } return best; }
+// (R4 worker 6) NIGHT SET IN THE BACKGROUND: the ride card's night shaders (the night's machine lights on, Marla's and the street's spot and point lights off, Marla
+// off the scene, the warm-up copies shown, stand-in lamps for each lamp count) are built on the day street a few pieces a frame: the light set is changed, compileAsync
+// is called on a few of the scene's pieces (its own JS at most CONFIG.lag.nightBg.ms a frame; the GPU links them on its compiler threads), and everything is put back
+// before the frame is drawn, so nothing on screen changes. Programs made here count in the warm-up gate like any other built outside a card (NBG.built shows how
+// many); OFF by default (CONFIG.lag.nightBg.on): it needs the lead's decision on how the gate counts background compiles
+// (window.__forceKhr: a local check without the extension runs the same path)
+const KHR_PAR = (() => { try { return !!window.__forceKhr || !!renderer.getContext().getExtension('KHR_parallel_shader_compile'); } catch (e) { return false; } })();
+const NBG = { q: [], on: false, inSlice: false, built: 0, ms: 0, slices: 0 };
+function nightBgStart(lamps) { NBG.q = lamps.map((n) => ({ n, list: null, i: 0 })); NBG.on = NBG.q.length > 0; }
+// by day only: on the street, and in a house by day (the night is spent in a house, so its pieces are built for the night's lights too); a new place starts its list again
+function nightBgSlice() { if (!NBG.on || LCARD.on || state !== 'play' || !run || (sim && sim.phase !== 'day') || paused || document.hidden || !glights.length) return;
+  const t0 = performance.now(), job = NBG.q[0], mp = marla.root.parent, tmp = [], spots = [], gv = glights.map((l) => l.visible), wv = warmG.visible, where = sim ? 'house' : 'street';
+  if (!job.list || job.where !== where) { job.where = where; job.i = 0; job.list = scene.children.filter((c) => !c.isLight && c !== marla.root); }
+  NBG.inSlice = true; if (mp) mp.remove(marla.root); for (const l of glights) l.visible = true; warmG.visible = true;
+  scene.traverse((o) => { if ((o.isSpotLight || (o.isPointLight && !glights.includes(o))) && o.visible) { o.visible = false; spots.push(o); } });
+  for (let k = 0; k < job.n; k++) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
+  try { while (job.i < job.list.length && performance.now() - t0 < CONFIG.lag.nightBg.ms) { const c = job.list[job.i++]; if (c.parent === scene) renderer.compileAsync(c, cam, scene).catch(() => {}); } }
+  finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } for (const o of spots) o.visible = true; glights.forEach((l, i) => { l.visible = gv[i]; }); warmG.visible = wv; if (mp) mp.add(marla.root); NBG.inSlice = false; }
+  if (job.i >= job.list.length) NBG.q.shift(); if (!NBG.q.length) NBG.on = false; NBG.slices++; NBG.ms += performance.now() - t0; }
 function townFrame(dt) {
   const T = CONFIG.town, G = CONFIG.marla.guide;
   { const dx = run.px - G.x, dz = run.pz - G.z, d = Math.hypot(dx, dz), near = d < 9; // she turns to watch you, and blocks the way like anything else
@@ -1559,7 +1578,7 @@ const PLAYP = { last: -1, n: 0, at: [], old: 0, k0: undefined };
 // program list; before Card 32 the programs freed at the skip (releaseProgram) hid the ones built there. It now counts every program BUILT outside a card / the film's
 // black / the title, at the moment it is built (each push into the list)
 const playHeld = () => LCARD.on || !!FILM.it || !!(intro && intro.hold) || state === 'menu' || state === 'end';
-{ const PA = renderer.info.programs, push2 = PA.push; PA.push = function (...a) { if (PLAYP.last >= 0 && !playHeld()) { PLAYP.n += a.length; if (PLAYP.at.length < 30) PLAYP.at.push([state, Math.round(performance.now()), a.length, PROGLOG ? (window.__progLog || []).slice(-1).map((q) => q.mat + ' @ ' + q.owner + ' {' + q.geo + (q.tgt ? ' target' : '') + '}') : null]); } return push2.apply(this, a); }; }
+{ const PA = renderer.info.programs, push2 = PA.push; PA.push = function (...a) { if (NBG.inSlice) NBG.built += a.length; if (PLAYP.last >= 0 && !playHeld()) { PLAYP.n += a.length; if (PLAYP.at.length < 30) PLAYP.at.push([state, Math.round(performance.now()), a.length, PROGLOG ? (window.__progLog || []).slice(-1).map((q) => q.mat + ' @ ' + q.owner + ' {' + q.geo + (q.tgt ? ' target' : '') + '}') : null]); } return push2.apply(this, a); }; }
 // (lead 21:15) the old count (the list's growth outside the held times) is kept beside it as PLAYP.old, printed next to the new one
 function playProgs() { const k = nProg(); if (PLAYP.k0 !== undefined && k > PLAYP.k0 && !playHeld()) PLAYP.old += k - PLAYP.k0; PLAYP.k0 = k; PLAYP.last = 0; }
 // (R3) the run-end screen's frames (Card 8, accepted: the runner's pacing) are not kept: 214 of them pushed the film's entries out of the 400-entry ring
@@ -1633,6 +1652,10 @@ async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
   // (owner 12:35) the card's time per step (LCARD.steps: [step, ms]), for perfcheck
   let tm = performance.now(); const mark = (k) => { const n = performance.now(); LCARD.steps.push([k, Math.round(n - tm)]); tm = n; }; LCARD.steps = []; LCARD.allParts = null; LCARD.lampCounts = null; LCARD.kind = kind;
+  // (R4 worker 6, Card 40: drill 157-269 ms at 7.8-8.1 s; PROFILE 44532874070: 226 ms 'RendererRasterWorker' in the GPU process at 8.07 s, the only page writes then
+  // #cross class x-gloom and #aim) the crosshair's Gloom state (two drop-shadow filters) is drawn the first time under the card, not in play: shown for the card's
+  // frames under the opaque card, put back at its end
+  const crW = $('cross'), crS = crW.getAttribute('style'), crK = crossK; if (CONFIG.lag.crossWarm) { crW.classList.add('x-gloom'); crW.style.setProperty('visibility', 'visible', 'important'); crW.style.setProperty('display', 'block', 'important'); }
   // (H, owner 13:04: the home card's draws were no-ops: draw() returns while holdDraw is set, and the held title menu left it set) the card's own draws always draw
   holdDraw = false; pauseDrawn = false; const pf0 = [RSTAT.renders, RSTAT.calls, nProg(), UPL.n, UPL.ms, UPL.bn, UPL.bms, GPUQ.waits, GPUQ.ms]; GPUQ.worst = 0;
   LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
@@ -1670,7 +1693,10 @@ async function sceneCard(kind) {
       const mpN = CONFIG.lag.nightNoMarla ? marla.root.parent : null; if (mpN) mpN.remove(marla.root);
       const most = Math.max(1, ...run.houses.map((h) => h.L || 1)), lamps = HL_ON ? [0] : CONFIG.lag.lampsUsed ? [...new Set(run.houses.map((h) => h.L || 1))].sort((a, b) => a - b) : [...Array(most + 1).keys()], tmp = []; LCARD.lampCounts = lamps.slice(); const spots = [];
       scene.traverse((o) => { if ((o.isSpotLight || (o.isPointLight && !glights.includes(o))) && o.visible) { o.visible = false; spots.push(o); } });
-      try { for (const n of lamps) { while (tmp.length > n) { const lp = tmp.pop(); scene.remove(lp); lp.dispose(); } while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
+      // (R4 worker 6, first ride card 23.3 s, night shaders 2445 ms in 44530215200; KHR_parallel_shader_compile present) with CONFIG.lag.nightBg the night set is
+      // built on the day street in the background instead (nightBgSlice: SPREAD), the card only queues it
+      const NB = CONFIG.lag.nightBg && CONFIG.lag.nightBg.on && KHR_PAR; if (NB) nightBgStart(lamps);
+      try { if (!NB) for (const n of lamps) { while (tmp.length > n) { const lp = tmp.pop(); scene.remove(lp); lp.dispose(); } while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
           fill(0.7 + 0.2 * tmp.length / most); await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
       finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } for (const o of spots) o.visible = true; if (mpN) mpN.add(marla.root); for (const l of glights) l.visible = false; warmG.visible = false; warmG.matrixWorldAutoUpdate = false; } }
     // (H round 2, warm-up gate: 8-23 shader programs built on entering a house by day, no card there) a house by day: the day's lights with one ceiling lamp per floor
@@ -1728,6 +1754,7 @@ async function sceneCard(kind) {
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
   LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ id, kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, allParts: LCARD.allParts || null, lamps: LCARD.lampCounts || null, gpu: [GPUQ.waits - pf0[7], Math.round(GPUQ.ms - pf0[8]), Math.round(GPUQ.worst)], bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
+  if (CONFIG.lag.crossWarm) { if (crS === null) crW.removeAttribute('style'); else crW.setAttribute('style', crS); crossK = '#'; setCross(crK); }
   fill(1); if (id === LCARD.n) { LCARD.on = false; LCARD.endT = Math.round(performance.now()); $('lcard').style.display = 'none'; perfRest(); }
 }
 // the automatic step-down on the desktop tier (src/perfstep.js, CONFIG.lag.step); phones never run it
@@ -1741,7 +1768,7 @@ let last = performance.now(), acc = 0, hurtT = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   // a loading card is up (sceneCard): the game is held still and nothing is drawn under it
-  lfStart(now); playProgs(); baseSlice(); filmSlice();
+  lfStart(now); playProgs(); baseSlice(); filmSlice(); nightBgSlice();
   if (LCARD.on) { last = now; return; }
   // window.__dtMax is set only by the slow headless checks (software renderer, under 1 frame a second) so game time keeps up; players never set it.
   const rawMs = now - last, dt = Math.min(window.__dtMax || CONFIG.lag.dtMax, rawMs / 1000); last = now; const holdNow = paused || state === 'end' || (state === 'menu' && MENU_EL.style.display !== 'none'); holdDraw = (holdNow && pauseDrawn) || ctxLost; pauseDrawn = holdNow; perfHud(rawMs); perf.tick(rawMs, (state === 'base' || state === 'play') && !paused);
@@ -1984,6 +2011,7 @@ window.__game.cardOn = () => LCARD.on; window.__game.cardStep = () => (LCARD.on 
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);
 window.__game.impactPrerender = () => IMP.prerender();
 // the last card's work time (ms) and any error it swallowed (tools/perfcheck.cjs prints them)
+window.__game.nightBg = () => ({ on: NBG.on, left: NBG.q.length, built: NBG.built, slices: NBG.slices, ms: Math.round(NBG.ms), khr: KHR_PAR });
 window.__game.cardInfo = () => ({ twoPass: LCARD.twoPass || null, proof: LCARD.proofs[LCARD.proofs.length - 1] || null, proofs: LCARD.proofs, title: { phase: TB.phase, calls: TB.calls || 0, ms: TB.ms || 0, worstPart: bview.bgWorst, postMs: TB.postMs || null, slow: TB.slow || null }, ms: LCARD.ms, endT: LCARD.endT || 0, settle: LCARD.settle || null, steps: LCARD.steps || null, buildMs: LCARD.buildMs || null, err: window.__cardErr || '' });
 // the shader programs built so far (tools/perfcheck.cjs: which ones are first built after the night card); name and a short key each
 // (owner 12:35) which pieces use a given program id (perfcheck names the program built during a fight)

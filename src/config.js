@@ -1127,6 +1127,12 @@ export const CONFIG = {
     keepPrograms: { on: true, max: 1200 },
     // nightNoMarla (R4 worker 5): the ride card builds the night's shaders with Marla off the scene (she is never in a house at night)
     nightNoMarla: true,
+    // nightBg (R4 worker 6): the night's shaders (night lights, each lamp count) are built in the background on the day street (compileAsync, at most ms of its
+    // own JS a frame, KHR_parallel_shader_compile present on the Mac), not under the ride card; the night card builds what is left
+    // OFF (worker 6): its programs are built on the day street, outside a card, so the warm-up gate counts them; on only with the lead's decision on that gate
+    nightBg: { on: false, ms: 6 },
+    // crossWarm (R4 worker 6, Card 40): the crosshair's Gloom state is drawn first under each loading card (its drop-shadow filters cost 226 ms of GPU raster the first time)
+    crossWarm: true,
     // bossFreeze (R4 worker 5): the desktop boss model's still parts leave the per-frame matrix pass (src/bosshi.js buildGlb)
     bossFreeze: true,
     // skipCard (R4 worker 5): the film skipped before its base part shows the home card while the base's first frames are made

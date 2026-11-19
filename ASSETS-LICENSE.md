@@ -15,6 +15,7 @@ You may build and play the game from this repository for yourself. You may not r
 | Part | Used for | Licence |
 |---|---|---|
 | [three.js](https://github.com/mrdoob/three.js) | 3D engine (npm package, bundled into the build) | MIT |
+| [meshoptimizer](https://github.com/zeux/meshoptimizer) decoder by Arseny Kapoulkine (shipped with three.js as `meshopt_decoder.module.js`) | decodes the compressed 3D models at load (bundled into the build) | MIT |
 | [cannon-es](https://github.com/pmndrs/cannon-es) | desktop physics (npm package, bundled into `dist/physics.js`) | MIT |
 | [Caveat](https://github.com/googlefonts/caveat) font, (c) 2014 The Caveat Project Authors | journal handwriting (embedded in `src/bookfonts.js`) | SIL Open Font License 1.1, `licenses/OFL-Caveat.txt` |
 | [Kalam](https://github.com/itfoundry/kalam) font, (c) 2014 Indian Type Foundry | journal handwriting (embedded in `src/bookfonts.js`) | SIL Open Font License 1.1, `licenses/OFL-Kalam.txt` |
