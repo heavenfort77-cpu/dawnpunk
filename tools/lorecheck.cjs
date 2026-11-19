@@ -52,7 +52,10 @@ const path = require('path');
     for (let i = 0; i < g.run.houses.length; i++) { if (i === g.run.inside) continue; g.leaveHouse(); g.enterHouse(i); await until(inHouse(g, i)); const n = g.lore.note(); if (!n) continue;
       const s = g.sim, d = Math.hypot(n.x, n.z) || 1, px = n.x - (n.x / d) * 1.1, pz = n.z - (n.z / d) * 1.1; s.player.x = px; s.player.z = pz; g.setYaw(Math.atan2(-(n.x - px), -(n.z - pz))); await frames(30); const dayOn = g.lore.note().prompt;
       g.endDay(); await until(() => g.sim && g.sim.phase === 'night'); await frames(30); return { dayOn, phase: g.sim.phase, nightOn: g.lore.note() ? g.lore.note().prompt : null }; } return null; });
-  ok('at night a note shows no prompt (day only)', night && night.dayOn && night.phase === 'night' && night.nightOn === false, JSON.stringify(night));
+  // OWNER DECISION 16:29 (Nov 19): a note does not have to be there every run (the game is right); when no other house of this run has a note place, the night step
+  // is skipped and says so (with seeds 12 and 7 only one house of six has one)
+  if (night === null) console.log('SKIP at night a note shows no prompt (day only): no other house of this run has a note place (owner 16:29)');
+  else ok('at night a note shows no prompt (day only)', night.dayOn && night.phase === 'night' && night.nightOn === false, JSON.stringify(night));
   // back home: the journal lists it under Found notes
   await p.evaluate(() => window.__game.reBase()); await p.waitForTimeout(2500);
   const readAll = () => p.evaluate(() => { let t = ''; for (let i = 0; i < 40; i++) { t += [...document.querySelectorAll('#qb .bk__page.is-on')].map((q) => q.innerText).join('\n') + '\n'; const nx = document.querySelector('#qb .bk__next'); if (!nx || nx.classList.contains('is-off')) break; nx.click(); } return t; });
