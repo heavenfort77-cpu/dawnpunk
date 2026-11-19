@@ -831,7 +831,7 @@ function enterBase(intro) { perfRest();
   if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   sky.mesh.visible = false; scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95);
   $('marla').textContent = ''; $('hs').textContent = ''; marlaT = 0; hsT = 0; $('bLeave').style.display = 'none'; $('time').style.color = '';
-  (bview.build(save), applyRelief(bview.group), noSmallCasters(bview.group), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); bp = { x: 3, z: 7 }; yaw = 0; pitch = 0; camY = 1.6;
+  (bview.build(save), applyRelief(bview.group), noSmallCasters(bview.group), bview.mergeStill(), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); bp = { x: 3, z: 7 }; yaw = 0; pitch = 0; camY = 1.6;
   $('menu').style.display = 'none'; $('end').style.display = 'none'; $('scout').style.display = 'none'; $('qb').style.display = 'none';
   $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE';
   flash(intro || ('Dawn, day ' + save.day + '. Find Marla the Scout to go out on a collection run (last seen ' + B.scoutPos(save).hint + ').' + (save.day === 1 ? ' They say a lucky cat hides somewhere in the base.' : '')), 2);
@@ -1000,7 +1000,7 @@ $('watch').onclick = () => { if (paused) setPause(false); audio(); musicUnlock()
 // a first-time player (no save yet) gets the opening from "Enter the base" too (coordinator Nov 17); ?film=0 in the address skips that for the scripted checks
 // the scripted checks always open the page with ?quality=..., so a ?quality address also skips it unless ?film=1 asks for it (openingcheck); the player's own Graphics switch (gfxGo) adds film=1 so a real player keeps the film and card
 const NOFILM = (() => { try { const q = new URLSearchParams(location.search); return q.get('film') === '0' || (q.has('quality') && q.get('film') !== '1'); } catch (e) { return false; } })();
-$('enter').onclick = () => { audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = B.loadSave(CONFIG, storage); carry = save.carry || null; persist(); if (!had && !NOFILM) { startIntro(); return; } enterBase(); };
+$('enter').onclick = () => { audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = !had && preSave ? preSave : B.loadSave(CONFIG, storage); preSave = null; carry = save.carry || null; persist(); if (!had && !NOFILM) { startIntro(); return; } enterBase(); };
 let resetArm = -1e9; // was 0: a first tap in the first 3 s after the page loaded counted as the second (erasing) tap
 $('reset').onclick = () => { if (performance.now() - resetArm > 3000) { resetArm = performance.now(); $('reset').textContent = 'Tap again to erase your save'; return; } save = B.newSave(CONFIG); B.makeQuests(CONFIG, save); carry = null; persist(); $('reset').textContent = 'New game'; if (paused) setPause(false); audio(); musicUnlock(); startIntro(); }; // a new game plays the opening first (skippable); it lands in the base with Marla at your door
 $('go').onclick = () => { audio(); startRun(); };
@@ -1275,6 +1275,7 @@ function musicUnlock() { if (mus.ready) return; mus.ready = true; try { mus.on =
 // ---- START FLOW (owner Nov 17 23:33 / 23:36; CONFIG.splash): the V logo, the DAWNPUNK title card, then the loading page with REAL progress (each stage is counted from actual
 // loads: the three.js loading manager for models and textures, the handwriting fonts, the music files, a shader compile of the scene), then the begin button #enter.
 // The scripted checks (?quality= in the address) skip the logo and title time unless &splash=1. window.__loadMs = milliseconds from navigation to the begin button.
+let preSave = null;
 const SPLASH = (() => {
   const S = CONFIG.splash, el = $('spl'), q = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })(), quick = q.has('quality') && q.get('splash') !== '1';
   const t0 = performance.now(), st = { scripts: [1, 1], assets: [0, 0], fonts: [0, 1], music: [0, 0], warm: [0, 1] }, began = {}, label = { scripts: 'Scripts', assets: 'Models and textures', fonts: 'Handwriting fonts', music: 'Music', warm: 'First scene (shaders)' };
@@ -1296,7 +1297,11 @@ const SPLASH = (() => {
   const frac = () => { const W = S.weights; let a = 0, b = 0; for (const k in W) { const [d, t] = st[k], f = t > 0 ? Math.min(1, d / t) : (k === 'assets' && (began.assetsDone || performance.now() - t0 > 1500) ? 1 : 0); a += W[k] * f; b += W[k]; } return a / b; };
   const tick = () => { const now = performance.now(), age = (now - t0) / 1000;
     for (const k in st) if (st[k][0] < st[k][1] && age > S.stageCap) st[k][0] = st[k][1];
-    if (!began.warm && (began.assetsDone || st.assets[1] === 0 || age > S.stageCap) && st.fonts[0] >= 1) { began.warm = true; requestAnimationFrame(() => { try { renderer.compile(scene, cam); renderer.render(scene, cam); } catch (e) { /* nothing to warm */ } st.warm = [1, 1]; }); }
+    // (owner 11:40) the base is built here, hidden, under the loading page (a first visit: for the new save made here, kept in preSave and used on Enter, Marla at the door
+    // as the film leaves her) (its shaders built with the warm-up), and shown again on Enter (src/baseview.js
+    // keeps it: CONFIG.lag.keepBase); the title is then drawn once more without it
+    if (!began.warm && (began.assetsDone || st.assets[1] === 0 || age > S.stageCap) && st.fonts[0] >= 1) { began.warm = true; requestAnimationFrame(() => { let pre = false; try { if (CONFIG.lag.keepBase && !BOTRUN()) { const sv = B.loadSave(CONFIG, storage); if (sv && firstVisit && sv.day === 1 && !sv.nights) sv.scoutSpot = 4; preSave = firstVisit ? sv : null; if (sv) { bview.build(sv); applyRelief(bview.group); noSmallCasters(bview.group); bview.mergeStill(); pre = true; } } } catch (e) { /* built on Enter instead */ }
+      try { renderer.compile(scene, cam); renderer.render(scene, cam); } catch (e) { /* nothing to warm */ } if (pre) bview.dispose(); pauseDrawn = false; st.warm = [1, 1]; }); }
     // (owner 11:40) the bar, the percent and the stage line are written only when they change
     const f = frac(); setText('spct', Math.floor(100 * f) + '%'); sty($('sfill'), 'width', (100 * f).toFixed(1) + '%');
     const cur = Object.keys(S.weights).find((k) => st[k][1] > 0 ? st[k][0] < st[k][1] : false) || (f < 1 ? 'assets' : ''); setText('sstage', f >= 1 ? 'Ready' : 'Loading: ' + label[cur] + (cur === 'assets' && st.assets[1] ? ' (' + st.assets[0] + ' of ' + st.assets[1] + ')' : cur === 'music' ? ' (' + st.music[0] + ' of ' + st.music[1] + ')' : ''));

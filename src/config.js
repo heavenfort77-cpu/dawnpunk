@@ -1175,6 +1175,10 @@ export const CONFIG = {
     bodyIdleHz: 10,
     // farStep: a base villager out of view and farther than dist m (Oko: also while you are outside the workshop) steps her motion hz times a second, time added up
     farStep: { dist: 15, hz: 5 },
+    // keepBase: the base is built once and kept while you are out; a visit with nothing changed that the build reads from the save shows it again (src/baseview.js)
+    keepBase: true,
+    // mergeBase: the base's still pieces drawn as one mesh per material and cell m of ground (src/baseview.js mergeStill); hidePad: extra m kept clear round the film's hidden plant
+    mergeBase: { on: true, cell: 16, hidePad: 1.5 },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind
     gloomPool: 10,
     // freezeWorld: the still street's matrices are worked out only when it is moved or added to, not every frame (src/main.js freezeWorld)

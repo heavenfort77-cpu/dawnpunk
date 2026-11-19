@@ -18,17 +18,19 @@ const sigOf = (g) => Object.keys(g.attributes).sort().map((k) => k + g.attribute
 
 // root: a built machine; probe(i): poses it in the i-th test state (CONFIG.lag.mergeGloom.probes of them). Returns the number of meshes drawn in place of the pieces.
 // still: the pieces are known never to move (a house's floor decals): no probe poses, and see-through pieces are merged whatever the Gloom setting says
-export function mergeStatic(root, probe, still) {
-  const C = still ? { on: true, probes: 0, transparent: true } : CONFIG.lag.mergeGloom; if (!C || !C.on) return 0;
+// opt (the base, owner 11:27): { transparent: merge see-through pieces too, skip(o): leave this piece alone, cell: also group by this many metres of world ground
+// (so the merged meshes are still culled out of view piece by piece) }
+export function mergeStatic(root, probe, still, opt) {
+  const C = still ? { on: true, probes: 0, transparent: opt ? !!opt.transparent : true } : CONFIG.lag.mergeGloom; if (!C || !C.on) return 0; const wv = new THREE.Vector3();
   try {
     const leaves = [];
     root.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || o.children.length || !o.geometry || Array.isArray(o.material) || o.userData.blob || o.userData.mergedDraw || o.userData.hitOnly) return;
-      const m = o.material; if (!m || (m.transparent && !C.transparent) || m.blending !== THREE.NormalBlending || o.morphTargetInfluences) return; leaves.push(o); });
+      const m = o.material; if (!m || (m.transparent && !C.transparent) || m.blending !== THREE.NormalBlending || o.morphTargetInfluences || (opt && opt.skip && opt.skip(o))) return; leaves.push(o); });
     if (leaves.length < 2) return 0;
     const k0 = leaves.map(keyOf), moving = new Set();
     for (let i = 0; i < C.probes; i++) { probe(i); leaves.forEach((o, j) => { if (!moving.has(o) && keyOf(o) !== k0[j]) moving.add(o); }); }
     const groups = new Map();
-    for (const o of leaves) { if (moving.has(o) || !o.visible) continue; const k = o.parent.uuid + '|' + o.material.uuid + '|' + o.castShadow + o.receiveShadow + o.frustumCulled + o.renderOrder + '|' + sigOf(o.geometry);
+    for (const o of leaves) { if (moving.has(o) || !o.visible) continue; const k = o.parent.uuid + '|' + o.material.uuid + '|' + o.castShadow + o.receiveShadow + o.frustumCulled + o.renderOrder + '|' + sigOf(o.geometry) + (opt && opt.cell ? '|' + (o.getWorldPosition(wv), Math.floor(wv.x / opt.cell) + ',' + Math.floor(wv.z / opt.cell)) : '');
       const l = groups.get(k) || []; l.push(o); groups.set(k, l); }
     let made = 0;
     for (const l of groups.values()) { if (l.length < 2) continue;
