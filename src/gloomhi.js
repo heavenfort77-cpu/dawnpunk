@@ -281,6 +281,9 @@ export function hiBuilders(E) {
 
   // ---------------------------------------------------------------- 1. Walker: the municipal service machine
   // 1a. From the Blender model (src/gloomglb.js) when it is switched on (quality.high.gloom.models.walker) and loaded: same nodes, pivots, rams, display and night pose as the builder below.
+  // a model copy with this machine's paint shade; reroll() (LAG FIX Nov 19, the Gloom pool in src/main.js) gives a reused machine a new shade from the same spread
+  const tinted = (kind, base, sh) => { const sc = glbCopy(kind, new THREE.Color(sh.r / base.r, sh.g / base.g, sh.b / base.b).multiplyScalar(H.models.tint)), DP = W.paints;
+    sc.userData.reroll = () => { const s2 = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light); sc.userData.tintU.value.set(s2.r / base.r, s2.g / base.g, s2.b / base.b).multiplyScalar(H.models.tint); }; return sc; };
   const DOWNG = new THREE.Vector3(0, -1, 0), UPG = new THREE.Vector3(0, 1, 0);
   const ramGlb = (cm, rm2) => { const Cg = rm2.parent, A = cm.position.clone(), B = rm2.position.clone(), d = new THREE.Vector3(), qi = new THREE.Quaternion();
     const aim = () => { d.copy(B).applyQuaternion(Cg.quaternion).add(Cg.position).sub(A).normalize(); cm.quaternion.setFromUnitVectors(DOWNG, d); rm2.quaternion.setFromUnitVectors(UPG, d.negate().applyQuaternion(qi.copy(Cg.quaternion).invert())); };
@@ -288,7 +291,7 @@ export function hiBuilders(E) {
     aim(); };
   function walkerGlb(b, K, face) {
     const S = W.shape, hipY = S.hip, thigh = S.thigh, shin = S.shin, DP = W.paints, base = new THREE.Color(DP.walker), sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light);
-    const sc = glbCopy('walker', new THREE.Color(sh.r / base.r, sh.g / base.g, sh.b / base.b).multiplyScalar(H.models.tint)); b.add(sc);
+    const sc = tinted('walker', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), pelvis = n('pelvis'), torso = n('torso'), head = n('head');
     const legs = [0, 1].map((i) => ({ hip: n('hip' + i), knee: n('knee' + i), fwd: 1 })), arms = [0, 1].map((i) => { const a = n('arm' + i); a.userData.fore = n('fore' + i); return a; });
     const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
@@ -355,7 +358,7 @@ export function hiBuilders(E) {
     const g = new THREE.ShapeGeometry(s, 6), p = g.attributes.position, uv = g.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / w + 0.5, p.getY(i) / h + 0.5); return g; };
   function lurcherGlb(b, K, face) {
     const DP = W.paints, base = new THREE.Color(DP.lurcher), sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light);
-    const sc = glbCopy('lurcher', new THREE.Color(sh.r / base.r, sh.g / base.g, sh.b / base.b).multiplyScalar(H.models.tint)); b.add(sc);
+    const sc = tinted('lurcher', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), pelvis = n('pelvis'), torso = n('torso'), head = n('head');
     const legs = [0, 1].map((i) => ({ hip: n('hip' + i), knee: n('knee' + i), fwd: -1 })), arms = [0, 1].map((i) => { const a = n('arm' + i); a.userData.fore = n('fore' + i); a.rotation.x = 0.6; return a; });
     torso.rotation.x = -0.5;
@@ -398,7 +401,7 @@ export function hiBuilders(E) {
   function haulerGlb(b, K, face) {
     const PELY = 0.84;
     const DP = W.paints, base = new THREE.Color(DP.hauler), sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light);
-    const sc = glbCopy('hauler', new THREE.Color(sh.r / base.r, sh.g / base.g, sh.b / base.b).multiplyScalar(H.models.tint)); b.add(sc);
+    const sc = tinted('hauler', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), pelvis = n('pelvis'), torso = n('torso'), head = n('head');
     const legs = [0, 1].map((i) => ({ hip: n('hip' + i), knee: n('knee' + i), fwd: 1 })), arms = [0, 1].map((i) => { const a = n('arm' + i); a.userData.fore = n('fore' + i); a.rotation.x = 0.15; return a; });
     const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
@@ -438,7 +441,7 @@ export function hiBuilders(E) {
   // arm0 = the working arm 'up' with fore0, arm1 = the stump 'off'), pivots, rams and night code as the builder below.
   function stiltGlb(b, K, face) {
     const DP = W.paints, base = new THREE.Color(DP.stilt), sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light);
-    const sc = glbCopy('stilt', new THREE.Color(sh.r / base.r, sh.g / base.g, sh.b / base.b).multiplyScalar(H.models.tint)); b.add(sc);
+    const sc = tinted('stilt', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), pelvis = n('pelvis'), torso = n('torso'), head = n('head'), up = n('arm0'), fa = n('fore0'), off = n('arm1');
     const legs = [0, 1].map((i) => ({ hip: n('hip' + i), knee: n('knee' + i), fwd: 1 })), arms = [up, off]; up.userData.fore = fa;
     const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
@@ -478,7 +481,7 @@ export function hiBuilders(E) {
   // pivots, rams and night code as the builder below; the leg mounts are turned here like the builder's (rotation.y = a, x = 0.35); the glowing globe and its halo are the builder's.
   function lanternGlb(b, K, face) {
     const DP = W.paints, base = new THREE.Color(DP.lantern), sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light);
-    const sc = glbCopy('lantern', new THREE.Color(sh.r / base.r, sh.g / base.g, sh.b / base.b).multiplyScalar(H.models.tint)); b.add(sc);
+    const sc = tinted('lantern', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), hub = n('hub'), armG = n('arm0'), pend = n('pend'), head = n('head'), arms = [armG];
     const legs = [0, 1, 2].map((k) => { const m = n('mount' + k); m.rotation.y = k * 2.094 + 0.5; m.rotation.x = 0.35; return { hip: n('hip' + k), knee: n('knee' + k), fwd: 1 }; });
     const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
@@ -524,7 +527,7 @@ export function hiBuilders(E) {
   function ticksGlb(b, K, face) {
     const all = [], DP = W.paints, base = new THREE.Color(DP.ticks), D = E.displayTex('ticks', K, W); face.map = D.tex;
     [[0, -0.28, 1], [-0.5, 0.32, 0.86], [0.48, 0.26, 1.1]].forEach(([x, z, s]) => { const t = grp(x, 0, z, b); t.scale.setScalar(s);
-      const sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light), sc = glbCopy('ticks', new THREE.Color(sh.r / base.r, sh.g / base.g, sh.b / base.b).multiplyScalar(H.models.tint)); t.add(sc);
+      const sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light), sc = tinted('ticks', base, sh); t.add(sc);
       const body = sc.getObjectByName('body'), sg = sc.getObjectByName('sg'), sa = sc.getObjectByName('screen'); sg.rotation.x = -0.35;
       const w = 0.2, h = 0.13, z0 = sa.position.z, scr = new THREE.Mesh(roundScreen(w, h, 0.03), face); scr.position.set(sa.position.x, sa.position.y, z0 + H.recess); scr.rotation.y = PI; sg.add(scr);
       const hl = E.halo(sg, sa.position.x, sa.position.y, z0 - 0.06, Math.max(w, h) * H.halo[0], K.screen); hl.material = hl.material.clone(); hl.material.opacity = 0; scr.onBeforeRender = () => { hl.material.opacity = H.halo[1] * Math.min(1, face.color.r); };
@@ -561,7 +564,7 @@ export function hiBuilders(E) {
   // pivots, rams and night code as the builder below; the left screen (g1) is live, the right one (g2) dead, like the builder's.
   function wardenGlb(b, K, face) {
     const DP = W.paints, base = new THREE.Color(DP.warden), sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light);
-    const sc = glbCopy('warden', new THREE.Color(sh.r / base.r, sh.g / base.g, sh.b / base.b).multiplyScalar(H.models.tint)); b.add(sc);
+    const sc = tinted('warden', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), torso = n('torso'), g1 = n('g1'), g2 = n('g2');
     const arms = [0, 1].map((i) => { const a = n('arm' + i); a.userData.fore = n('fore' + i); return a; });
     const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }

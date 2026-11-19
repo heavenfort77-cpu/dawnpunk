@@ -26,7 +26,7 @@ import { createMarla } from './marla.js';
 import { createPerson } from './people.js';
 import { createFx } from './fx.js';
 import { createPerfStep } from './perfstep.js';
-import { lodTick, lodFull } from './lod.js';
+import { lodTick, lodFull, lodCopy } from './lod.js';
 import { createNightCull } from './nightcull.js';
 import { mergeStatic, HIT_LAYER } from './mergestatic.js';
 import { gloomPreload, glbHooks, glbCopy } from './gloomglb.js';
@@ -102,9 +102,13 @@ const glights = []; for (let i = 0; i < Q.lights; i++) { const l = new THREE.Poi
 const gl_v = new THREE.Vector3();
 // LAG FIX Nov 19 (owner: no zero-intensity lights, light count fixed during play): the machine lights are in the scene only at night (and in the film); the change
 // happens under the night card (sceneCard), which builds the shaders for it, so the light count never changes in the middle of play
-function tickGloomLights(on) { GK.nightGlow(on ? 1 : 0); if (!glights.length) return; if (glights[0].visible !== on) for (const l of glights) l.visible = on; const list = on ? [...gMesh.values()].filter((m) => m.userData.lamp).map((m) => [m.position.distanceToSquared(cam.position), m]).sort((a, b) => a[0] - b[0]) : [];
-  const use = Math.max(0, glights.length - sky.strain);
-  glights.forEach((l, i) => { const q = i < use ? list[i] : null; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); if (!m.matrixWorldAutoUpdate) m.updateWorldMatrix(false, false); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
+const GLD = [], GLM = [];
+// a device's spinning blade and turning barrel, found once (was getObjectByName per device per frame)
+const DEVREF = new WeakMap();
+function tickGloomLights(on) { GK.nightGlow(on ? 1 : 0); if (!glights.length) return; if (glights[0].visible !== on) for (const l of glights) l.visible = on; const use = Math.max(0, glights.length - sky.strain);
+  // the `use` nearest machines with a lamp, in the same order a stable sort by distance gives (LAG FIX Nov 19: a scan into reused arrays, not a new sorted list a frame)
+  let n = 0; if (on) for (const m of gMesh.values()) { if (!m.userData.lamp) continue; const d = m.position.distanceToSquared(cam.position); let k = Math.min(n, use); while (k > 0 && GLD[k - 1] > d) k--; if (k >= use) continue; for (let j = Math.min(n, use - 1); j > k; j--) { GLD[j] = GLD[j - 1]; GLM[j] = GLM[j - 1]; } GLD[k] = d; GLM[k] = m; if (n < use) n++; }
+  glights.forEach((l, i) => { const m = i < n ? GLM[i] : null; if (!m) { l.intensity = 0; return; } gl_v.copy(m.userData.lamp); if (!m.matrixWorldAutoUpdate) m.updateWorldMatrix(false, false); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
 let dormM = [];
 function needDormant() {
   if (dormG || !world || !CONFIG.gloomLook.machines || GLOOM_Q === 'hood') return; dormG = new THREE.Group(); world.g.add(dormG);
@@ -119,7 +123,7 @@ function tickDormant(night) { if (!dormG) return; dormG.visible = !night; dormG.
 // light sleepers: by day a dormant machine wakes if you pass close with a heavy pack, lurches after you, can hit once, then powers down in the sun
 function sleeperMesh(i, awake) { const d = run.dormant[i], old = dormM[i]; if (old) { dormG.remove(old); drop(old); } const o = GK.gloomMachine(d.kind, { dormant: !awake }); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.userData.awake = !!awake; o.traverse((q) => { if (q.isMesh && !q.material.transparent) q.castShadow = true; }); dormG.add(o); dormM[i] = o; renderer.shadowMap.needsUpdate = true; }
 function tickSleepers(dt) { const S = CONFIG.sleepers; if (!S.on || !run || sim || !dormG || state !== 'play') return; const heavy = RUN.speedMult(run) <= S.pace, t = performance.now() / 1000;
-  hurtT = Math.max(0, hurtT - dt); $('hurt').style.opacity = hurtT * 2.5;
+  hurtT = Math.max(0, hurtT - dt); sty($('hurt'), 'opacity', String(hurtT * 2.5));
   run.dormant.forEach((d, i) => { const dx = run.px - d.x, dz = run.pz - d.z, dd = Math.hypot(dx, dz);
     if (!d.awake) { if (!d.spent && heavy && dd < S.wake) { wakeDormant(i, 'pack'); d.awake = S.chase; d.hit = false; sleeperMesh(i, true); sfxAlert(); hurtT = 0.15; marlaHint(run.toldSleeper ? 'Another one awake. Move!' : 'Your pack woke it, Potts! Get clear, it cannot keep going in the sun.'); run.toldSleeper = true; } return; }
     d.awake -= dt; if (dd > 0.95) { const st = Math.min(dd - 0.9, S.speed * dt); d.x += dx / dd * st; d.z += dz / dd * st; } d.ry = Math.atan2(dx, dz);
@@ -159,6 +163,15 @@ function freezeWorld() { if (!CONFIG.lag.freezeWorld || !world) return; const g 
   g.matrixAutoUpdate = false; g.updateMatrix(); for (const c of g.children) c.matrixWorldAutoUpdate = c === dormG; g.updateMatrixWorld(true); frozenG = g; frozenN = g.children.length; }
 // the night card's warm-up copies (sceneCard, warmNight below)
 const warmG = new THREE.Group(); warmG.name = 'warm';
+// LAG FIX Nov 19 (owner 10:35): a destroyed Gloom machine is kept, hidden, in a pool per kind and used again for the next one of that kind (a new paint shade from the
+// same spread, its far copies registered again), instead of building a new one (model copy, skeleton, display canvases, decals, merge) at every spawn. The night card's
+// warm-up machines start the pool. Emptied when the run's scene is cleared. CONFIG.lag.gloomPool: most kept per kind.
+const gPool = {};
+const gloomBlob = (m, k) => shadeUnder(m, CONFIG.depth.gloom * (k === 'warden' ? 1.8 : k === 'hauler' ? 1.4 : k === 'ticks' ? 0.8 : 1));
+function gloomTake(g) { const l = gPool[gloomKind(g)]; if (!l || !l.length) return null; const m = l.pop(); if (!m.userData.merged) mergeQ.push([m, g.x, g.z]); m.traverse((q) => { if (q.userData.reroll) q.userData.reroll(); }); if (QUALITY === 'high') lodCopy(m, 'gloom'); m.visible = true; return m; }
+function gloomPut(m) { scene.remove(m); const k = m.userData.kind, l = gPool[k] || (gPool[k] = []); if (!k || !m.userData.anim || l.length >= CONFIG.lag.gloomPool) { drop(m); return; }
+  if (m.userData.cullL) { m.userData.cullL = 0; m.traverse((q) => { if (!q.userData.hitOnly) q.layers.set(0); }); } m.matrixWorldAutoUpdate = true; l.push(m); }
+function gloomPoolDrop() { for (const k in gPool) { for (const m of gPool[k]) drop(m); gPool[k].length = 0; } }
 // phone-tier machines waiting for their still pieces to be merged (src/mergestatic.js)
 const mergeQ = [];
 let gMesh = new Map(), dMesh = new Map(), bpGroup = new THREE.Group(), bpParts = [], bpFlash = [];
@@ -198,12 +211,12 @@ function buildDirt(g) { const D = CONFIG.dirt, H = sim.H; let q = ((run ? run.se
 function depthLight(k) { if (!shadeMat) return; const D = CONFIG.depth, n = Math.min(1, Math.max(0, (k - 0.35) / 0.5)); shadeMat.opacity = D.shade + (D.shadeNight - D.shade) * n; poolMat.opacity = D.pool + (D.poolNight - D.pool) * n; poolMat.color.setHex(D.poolSun).lerp(new THREE.Color(D.poolMoon), n); }
 function clearScene() {
   tickGloomLights(false); if (panelGhost) { drop(panelGhost); panelGhost = null; }
-  for (const m of gMesh.values()) drop(m); for (const m of dMesh.values()) drop(m); gMesh.clear(); dMesh.clear();
+  for (const m of gMesh.values()) drop(m); for (const m of dMesh.values()) drop(m); gMesh.clear(); dMesh.clear(); gloomPoolDrop();
   drop(bpGroup); bpGroup = new THREE.Group(); scene.add(bpGroup); bpParts = []; bpFlash = [];
   if (roomGroup) { drop(roomGroup); roomGroup = null; }
   if (townG) { drop(townG); townG = null; }
   for (const m of crateMesh.values()) drop(m); crateMesh.clear();
-  for (const q of debris) drop(q.m); debris.length = 0; for (const q of tracers) drop(q.l); tracers.length = 0;
+  for (const q of debris) opDone(q.m); debris.length = 0; for (const q of tracers) opDone(q.l); tracers.length = 0;
   bossTick(0, null, { scene }); scrapTick(0, { scene }, true); hopsClear(); // the boss and its pieces go with the night (src/bosshi.js)
 }
 
@@ -302,9 +315,15 @@ const relieved = (o) => { applyRelief(o); return o; }, gloomMesh = (g) => reliev
 // ?look=old shows the devices and machines as they were before the Bloomtech style (approved 2026-11-14)
 const LOOK_OLD = (() => { try { return new URLSearchParams(location.search).get('look') === 'old'; } catch (e) { return false; } })(); // looks live in props.js
 const tracers = [];
+// LAG FIX Nov 19 (owner 10:35): short-lived effect objects (shot jets, splash drops, kill smoke, mine flashes, press marks) are kept in pools per kind and reused;
+// they share their geometry and material (src/props.js), so a reused one draws exactly as a new one. opTake(key, make): a free one or a new one; opPut: back to its pool.
+const OP = {}, opV1 = new THREE.Vector3(), opV2 = new THREE.Vector3();
+function opTake(key, make) { const l = OP[key]; const o = l && l.length ? l.pop() : make(); o.userData.poolKey = key; o.rotation.set(0, 0, 0); o.scale.set(1, 1, 1); return o; }
+function opPut(o) { scene.remove(o); const k = o.userData.poolKey, l = OP[k] || (OP[k] = []); if (l.length < CONFIG.lag.fxPool) l.push(o); }
+const opDone = (o) => { if (o.userData.poolKey) opPut(o); else drop(o); };
 function tracer(x1, z1, x2, z2, y1, floor, color) { // a shot: a water jet that lives for an instant, and a splash of drops where it lands
-  const a = new THREE.Vector3(x1, floor * FH + y1, z1), b = new THREE.Vector3(x2, floor * FH + 1.0, z2), l = PR.jet(a, b, color); scene.add(l); tracers.push({ l, t: 0.12 });
-  for (let i = 0; i < 5; i++) { const d = PR.droplet(color); d.position.copy(b); scene.add(d); debris.push({ m: d, y0: floor * FH + 0.06, vx: (Math.random() - 0.5) * 3, vy: 1 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, t: 0.4 }); }
+  const a = opV1.set(x1, floor * FH + y1, z1), b = opV2.set(x2, floor * FH + 1.0, z2), l = PR.jetPlace(opTake('jet' + color, () => PR.jet(a, b, color)), a, b); scene.add(l); tracers.push({ l, t: 0.12 });
+  for (let i = 0; i < 5; i++) { const d = opTake('drop' + color, () => PR.droplet(color)); d.position.copy(b); scene.add(d); debris.push({ m: d, y0: floor * FH + 0.06, vx: (Math.random() - 0.5) * 3, vy: 1 + Math.random() * 2.5, vz: (Math.random() - 0.5) * 3, t: 0.4 }); }
 }
 
 // ---- start / restart
@@ -943,8 +962,8 @@ let aimT = 0; function tickAim(dt) { aimT -= dt; if (aimT > 0) return; aimT = 0.
 // red arc round the crosshair toward the nearest machine that is off screen (desktop, night; CONFIG.hud2.arc)
 function tickArc() { const el = $('arc'), A = CONFIG.hud2.arc; let on = false; if (FINE && A.on && sim && sim.phase === 'night' && state === 'play' && !paused) { const P = sim.player, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), rx = Math.cos(P.yaw), rz = -Math.sin(P.yaw); let best = 1e9, ang = 0;
   for (const g of sim.gloom) { if (g.floor !== P.floor) continue; const dx = g.x - P.x, dz = g.z - P.z, d = Math.hypot(dx, dz); if (d < 1e-3 || (dx * fx + dz * fz) / d > A.off) continue; if (d < best) { best = d; ang = Math.atan2(dx * rx + dz * rz, dx * fx + dz * fz); } }
-  if (best < 1e9) { on = true; el.style.transform = 'rotate(' + Math.round((ang * 180) / Math.PI - 90) + 'deg)'; } } el.classList.toggle('on', on); }
-function tickHud(dt) { keysAuto(); tickBar(dt); tickWake(); tickDrillUi(); tickChips(); musicTick(dt); marlaNightTips(dt); flashT = Math.max(0, flashT - dt); if (flashT <= 0) $('msg').textContent = ''; marlaT = Math.max(0, marlaT - dt); if (marlaT <= 0) $('marla').textContent = ''; $('marla').classList.toggle('face', !!sim && sim.phase === 'night'); H2.mode(!!sim && sim.phase === 'night' && state === 'play'); tickArc(); hsT = Math.max(0, hsT - dt); if (hsT <= 0) $('hs').textContent = ''; }
+  if (best < 1e9) { on = true; sty(el, 'transform', 'rotate(' + Math.round((ang * 180) / Math.PI - 90) + 'deg)'); } } el.classList.toggle('on', on); }
+function tickHud(dt) { keysAuto(); tickBar(dt); tickWake(); tickDrillUi(); tickChips(); musicTick(dt); marlaNightTips(dt); flashT = Math.max(0, flashT - dt); if (flashT <= 0) setText('msg', ''); marlaT = Math.max(0, marlaT - dt); if (marlaT <= 0) setText('marla', ''); $('marla').classList.toggle('face', !!sim && sim.phase === 'night'); H2.mode(!!sim && sim.phase === 'night' && state === 'play'); tickArc(); hsT = Math.max(0, hsT - dt); if (hsT <= 0) setText('hs', ''); }
 function chime(v) { const a = audio(); if (!a) return; const t = a.currentTime; [1318, 1760].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t + i * 0.09); g.gain.exponentialRampToValueAtTime(0.14 * v, t + i * 0.09 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.5); o.connect(g); g.connect(a.destination); o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.55); }); }
 $('lookT').textContent = 'Look: ' + (GRITTY ? 'realistic worn' : 'painted (old)') + ' - tap to switch'; $('lookT').onclick = () => { try { localStorage.setItem('dawnpunk.look', GRITTY ? 'painted' : 'gritty'); } catch (e) { /* not kept */ } location.href = location.href.split('?')[0]; };
 // graphics tier (src/quality.js, CONFIG.quality): the title link and the pause-menu button switch it; the choice is saved and the page reloads, because edge smoothing and the texture set are fixed when the page starts
@@ -993,6 +1012,12 @@ const FINE = (() => { try { return !matchMedia('(pointer: coarse)').matches; } c
 // LAG FIX Nov 19 (lag report finding 10): the pointer kind, read once and again only when it changes (was a matchMedia call every frame in the base)
 const COARSE = { now: false }; try { const mq = matchMedia('(pointer: coarse)'); COARSE.now = mq.matches; const f = (e) => { COARSE.now = e.matches; }; if (mq.addEventListener) mq.addEventListener('change', f); else if (mq.addListener) mq.addListener(f); } catch (e) { COARSE.now = false; }
 // write a HUD line only when its text changes (the base HUD rebuilt and wrote three lines every frame). On the desktop draw() shows a 'USE:' prompt as 'E:', so that form counts as unchanged.
+// (LAG FIX Nov 19, owner 10:35) a style value written only when it changes: the last value written and what the element read back are remembered, so a change
+// made elsewhere (endScreen hiding a button) is still seen
+const STY = new WeakMap();
+function sty(el, prop, v) { if (!el) return; let m = STY.get(el); if (!m) { m = {}; STY.set(el, m); } const q = m[prop]; if (q && q.v === v && el.style[prop] === q.n) return; el.style[prop] = v; m[prop] = { v, n: el.style[prop] }; }
+// device counts by kind and by group ('g:' + group), counted once a frame for the device buttons (was a filter per button per frame)
+const DEVN = {};
 function setText(id, t) { const e = $(id); if (!e) return; const shown = FINE && id === 'bprompt' && t.startsWith('USE:') ? 'E:' + t.slice(4) : t; if (e.textContent !== shown) e.textContent = t; }
 // window.__fakeLock: TEST ONLY (tools/mousecheck.cjs). The headless test browser runs out of memory while it really holds the pointer, so tests set it to false before loading;
 // the game then pretends to hold the pointer instead of asking the browser, and counts the requests it would have made in window.__lockAsks. Players never have it set.
@@ -1055,8 +1080,8 @@ addEventListener('resize', checkTall); addEventListener('orientationchange', () 
 let chargeHeld = false, chargeT = 0;
 function tickCharge(dt) { const CH = CONFIG.cannon.charge, ok = !!sim && state === 'play' && !paused && sim.phase === 'night' && !sim.done, cr = $('cross'); if (!ok) { chargeHeld = false; chargeT = 0; }
   if (chargeHeld) { const was = chargeT; chargeT += dt; if (was < CH.time && chargeT >= CH.time) sfxAlert('upper'); } else if (chargeT > 0) { const full = chargeT >= CH.time; chargeT = 0; if (full) doFire(true); }
-  const k = Math.min(1, chargeT / CH.time), on = chargeT > 0.15; cr.style.transform = on ? 'scale(' + (1 + 1.6 * k) + ')' : ''; cr.style.borderColor = k >= 1 ? '#ffd76a' : on ? '#9fe8ff' : ''; cr.style.boxShadow = k >= 1 ? '0 0 0 1px #000, 0 0 12px #ffd76a' : '';
-  const fb = $('bFire'), tx = state === 'base' ? 'USE' : k >= 1 ? 'LET GO!' : on ? 'CHARGE ' + Math.round(100 * k) + '%' : (sim && sim.phase === 'night' ? 'FIRE<br><small>hold:<br>charged</small>' : 'FIRE'); if (fb.innerHTML !== tx) fb.innerHTML = tx; }
+  const k = Math.min(1, chargeT / CH.time), on = chargeT > 0.15; sty(cr, 'transform', on ? 'scale(' + (1 + 1.6 * k) + ')' : ''); sty(cr, 'borderColor', k >= 1 ? '#ffd76a' : on ? '#9fe8ff' : ''); sty(cr, 'boxShadow', k >= 1 ? '0 0 0 1px #000, 0 0 12px #ffd76a' : '');
+  const fb = $('bFire'), tx = state === 'base' ? 'USE' : k >= 1 ? 'LET GO!' : on ? 'CHARGE ' + Math.round(100 * k) + '%' : (sim && sim.phase === 'night' ? 'FIRE<br><small>hold:<br>charged</small>' : 'FIRE'); if (fb.dataset.t !== tx) { fb.innerHTML = tx; fb.dataset.t = tx; } }
 // ---- NIGHT-1 DRILL (owner Nov 17 18:28; CONFIG.drill): one Gloom at a time, one action per step, Marla says it (H2.say 'marla'), one key chip (desktop) or a pulsing button (phone);
 // the night clock is held while it runs; done steps are kept in localStorage; K (or the Skip button) skips it; afterwards the held spawns come back and the night runs as normal
 let drill = null, drillSim = null, drillPh = null;
@@ -1177,18 +1202,23 @@ setShotTier(QUALITY);
 // one drawn machine, hit by the aimed shot along the sim's own aim (eye, player yaw and pitch): the first of its visible solid triangles the shot meets, above the floor it stands on.
 // Returns { t: distance along the aim measured flat (m, as the sim measures), head: that triangle belongs to a head part } or null for a miss. Head parts: the meshes under the
 // builder's head nodes (each Ticks unit has its own screen); when they hold most of the machine (the Warden's turning torso), whatever is hit in its top live.headTop m
-const LVR = new THREE.Raycaster(), LVO = new THREE.Vector3(), LVD = new THREE.Vector3(), LVB = new THREE.Box3();
+const LVR = new THREE.Raycaster(), LVO = new THREE.Vector3(), LVD = new THREE.Vector3(), LVB = new THREE.Box3(), LVH = [];
 // the phone-tier machines' merged pieces stay as invisible hit shapes on HIT_LAYER (src/mergestatic.js): the aimed shot still sees them, and skips the merged draw mesh
 LVR.layers.enable(HIT_LAYER); LVR.layers.enable(1);
 // LAG FIX Nov 19: the hit test always uses the full meshes, also for a machine drawn with its far copy (src/lod.js lodFull)
 function drawnHit(m, P) { const back = lodFull(m); try { return drawnHit0(m, P); } finally { if (back) back(); } }
-function drawnHit0(m, P) { const L = CONFIG.cannon.live, headSet = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => headSet.add(q));
+// (LAG FIX Nov 19, owner 10:35) per machine, kept until its pieces change (a merge clears it): the head pieces as a Set and, in traverse order, every piece that can be a
+// hit shape at all; each call still applies the full test (visible, opacity) to them, and the ray tests only them, so the result is the same as testing the whole machine
+const HITC = new WeakMap();
+function hitCache(m) { let c = HITC.get(m); if (c) return c; const heads = new Set(), list = []; for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => heads.add(q));
+  m.traverse((q) => { if (q.isMesh && !q.isSprite && !q.userData.blob && !q.userData.mergedDraw) list.push(q); }); c = { heads, list }; HITC.set(m, c); return c; }
+function drawnHit0(m, P) { const L = CONFIG.cannon.live, HC = hitCache(m), headSet = HC.heads;
   const solid = (q) => { if (!q.isMesh || q.isSprite || q.userData.blob || q.userData.mergedDraw) return false; let v = q; while (v) { if (!v.visible) return false; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; return !(mt && (mt.blending === THREE.AdditiveBlending || (mt.transparent && (mt.opacity < L.minOpacity || q.geometry.type === 'PlaneGeometry')))); };
   m.updateMatrixWorld(true); let hv = 0, av = 0, top = -1e9;
-  m.traverse((q) => { if (!solid(q)) return; const gm = q.geometry; if (!gm.boundingBox) gm.computeBoundingBox(); LVB.copy(gm.boundingBox).applyMatrix4(q.matrixWorld); const v = (LVB.max.x - LVB.min.x) * (LVB.max.y - LVB.min.y) * (LVB.max.z - LVB.min.z); av += v; if (headSet.has(q)) hv += v; if (LVB.max.y > top) top = LVB.max.y; });
+  for (const q of HC.list) { if (!solid(q)) continue; const gm = q.geometry; if (!gm.boundingBox) gm.computeBoundingBox(); LVB.copy(gm.boundingBox).applyMatrix4(q.matrixWorld); const v = (LVB.max.x - LVB.min.x) * (LVB.max.y - LVB.min.y) * (LVB.max.z - LVB.min.z); av += v; if (headSet.has(q)) hv += v; if (LVB.max.y > top) top = LVB.max.y; }
   const torso = hv > L.headShare * av, cp = Math.cos(P.pitch || 0);
   LVO.set(P.x, P.floor * FH + CONFIG.cannon.eye, P.z); LVD.set(-Math.sin(P.yaw) * cp, Math.sin(P.pitch || 0), -Math.cos(P.yaw) * cp); LVR.set(LVO, LVD); LVR.camera = cam; LVR.near = 0; LVR.far = CONFIG.cannon.range / Math.max(0.05, cp);
-  for (const h of LVR.intersectObject(m, true)) { if (!solid(h.object) || h.point.y < m.position.y - 0.01) continue; return { t: h.distance * cp, head: torso ? h.point.y >= top - L.headTop : headSet.has(h.object) }; }
+  LVH.length = 0; for (const h of LVR.intersectObjects(HC.list, false, LVH)) { if (!solid(h.object) || h.point.y < m.position.y - 0.01) continue; return { t: h.distance * cp, head: torso ? h.point.y >= top - L.headTop : headSet.has(h.object) }; }
   return null; }
 // the aimed shot against the machines near the aim line as drawn, by Gloom id (both tiers: desktop hits on it alone, phones use it for head shots and as extra body; src/sim.js fireCannon)
 function liveShapes() { const L = CONFIG.cannon.live; if (!L.on || !sim) return null; const P = sim.player, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), out = {};
@@ -1246,15 +1276,26 @@ function musicTick(dt) { if (!mus.ready) return; const want = !mus.on || documen
   const top = (paused ? CONFIG.music.pausedVolume : CONFIG.music.volume) * MV.duck(), step = dt / CONFIG.music.fade; for (const k in mus.el) { const a = mus.el[k], tv = k === mus.cur ? top : 0, v = a.volume + Math.max(-step, Math.min(step, tv - a.volume)); a.volume = Math.max(0, Math.min(1, v)); if (k !== mus.cur && a.volume <= 0.001 && !a.paused) a.pause(); } }
 function audio() { try { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state !== 'running') ac.resume(); } catch (e) { ac = null; } return ac; }
 function panOf(ev) { const p = sim.player, dx = ev.x - p.x, dz = ev.z - p.z, d = Math.hypot(dx, dz) || 1, y = p.yaw; return { pan: Math.max(-1, Math.min(1, (dx * Math.cos(y) - dz * Math.sin(y)) / d)), fwd: (dx * -Math.sin(y) + dz * -Math.cos(y)) / d, dist: d, dFloor: (ev.floor || 0) - p.floor }; }
-function outNode(a, pan) { const g = a.createGain(); let last = g; if (a.createStereoPanner) { const sp = a.createStereoPanner(); sp.pan.value = pan; g.connect(sp); last = sp; } last.connect(a.destination); return g; }
+// (LAG FIX Nov 19, owner 10:35) the gain + panner out chains are kept per context and reused once their sound has ended (the caller says when: outBusy), not built per sound
+const OUTS = new WeakMap();
+function outNode(a, pan) { let l = OUTS.get(a); if (!l) { l = []; OUTS.set(a, l); } const now = a.currentTime; let c = l.find((q) => q.busy <= now);
+  if (!c) { const g = a.createGain(); let last = g, sp = null; if (a.createStereoPanner) { sp = a.createStereoPanner(); g.connect(sp); last = sp; } last.connect(a.destination); c = { g, sp, busy: 0 }; g.__slot = c; l.push(c); }
+  c.busy = now + 30; if (c.sp) c.sp.pan.value = pan; return c.g; }
+const outBusy = (g, end) => { if (g.__slot) g.__slot.busy = (isFinite(end) ? end : g.context.currentTime + 10) + 0.1; };
+// one second of white noise per context, shared by every voice line (was a new buffer per line)
+const VNOISE = new WeakMap();
+function voiceNoise(a) { let b = VNOISE.get(a); if (b) return b; b = a.createBuffer(1, a.sampleRate, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; VNOISE.set(a, b); return b; }
+// the break crunch's fading noise, one per context (was a new buffer per break)
+const BNOISE = new WeakMap();
+function breakNoise(a, len) { let b = BNOISE.get(a); if (b) return b; b = a.createBuffer(1, Math.floor(a.sampleRate * len), a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2); BNOISE.set(a, b); return b; }
 function sfxShot() { const a = audio(); if (!a) return; const S = CONFIG.sfx.shot, t = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(S.from, t); o.frequency.exponentialRampToValueAtTime(S.to, t + S.len); g.gain.setValueAtTime(S.vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + S.len); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + S.len + 0.02); }
 // the machines' voices: broken loudspeaker speech, made here from a buzzing tone shaped into vowels, hiss for consonants, then crushed; it stutters, drops out and slips in pitch
 let noiseBuf = null, crushCurve = null; const VOW = { a: [730, 1090], e: [530, 1840], i: [270, 2290], o: [570, 840], u: [300, 870], y: [300, 2100] };
 function sfxVoice(kind, line, obj) { const V = CONFIG.voice; if (!V.on || !line || state !== 'play' && state !== 'intro') return; const a = audio(); if (!a) return;
   const v3 = obj.getWorldPosition(new THREE.Vector3()).sub(cam.position), dist = v3.length(), pan = Math.max(-1, Math.min(1, v3.dot(new THREE.Vector3(1, 0, 0).applyQuaternion(cam.quaternion)) / (dist || 1))), vol = V.vol * Math.max(0, 1 - dist / V.reach); if (!(vol >= 0.02) || !isFinite(pan)) return; // also skips a machine that has no position yet
-  const out = outNode(a, pan); out.gain.value = vol; voiceN++; voiceInto(a, out, kind, line); }
+  const out = outNode(a, pan); out.gain.value = vol; voiceN++; outBusy(out, voiceInto(a, out, kind, line)); }
 let voiceN = 0;
-function voiceInto(a, out, kind, line) { const V = CONFIG.voice; if (!crushCurve) { crushCurve = new Float32Array(512); for (let i = 0; i < 512; i++) { const x = i / 255.5 - 1; crushCurve[i] = Math.round(x * V.crush) / V.crush; } } const nb = a.createBuffer(1, a.sampleRate, a.sampleRate); { const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+function voiceInto(a, out, kind, line) { const V = CONFIG.voice; if (!crushCurve) { crushCurve = new Float32Array(512); for (let i = 0; i < 512; i++) { const x = i / 255.5 - 1; crushCurve[i] = Math.round(x * V.crush) / V.crush; } } const nb = voiceNoise(a);
   const [hz, slow] = V.kinds[kind] || V.kinds.walker; const sh = a.createWaveShaper(); sh.curve = crushCurve; const env = a.createGain(); env.gain.value = 0; sh.connect(env); env.connect(out);
   const osc = a.createOscillator(); osc.type = 'sawtooth'; const f1 = a.createBiquadFilter(), f2 = a.createBiquadFilter(), mix = a.createGain(); f1.type = f2.type = 'bandpass'; f1.Q.value = 7; f2.Q.value = 9; mix.gain.value = 1.8; osc.connect(f1); osc.connect(f2); f1.connect(mix); f2.connect(mix); mix.connect(sh);
   const ns = a.createBufferSource(); ns.buffer = nb; ns.loop = true; const nf = a.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 2600; const ng = a.createGain(); ng.gain.value = 0; ns.connect(nf); nf.connect(ng); ng.connect(sh);
@@ -1266,13 +1307,12 @@ function voiceInto(a, out, kind, line) { const V = CONFIG.voice; if (!crushCurve
   osc.start(); ns.start(); osc.stop(t + 0.1); ns.stop(t + 0.1); return t + 0.15; }
 function sfxBreak(po, low) {
   const a = audio(); if (!a) return; const t = a.currentTime, len = 0.4, out = outNode(a, po.pan); out.gain.value = Math.max(0.25, 0.9 - po.dist / 40);
-  const buf = a.createBuffer(1, Math.floor(a.sampleRate * len), a.sampleRate), d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+  const buf = breakNoise(a, len); outBusy(out, t + len);
   const src = a.createBufferSource(); src.buffer = buf; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(low ? 1500 : 3200, t); f.frequency.exponentialRampToValueAtTime(250, t + len); src.connect(f); f.connect(out); src.start(t);
   const o = a.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(low ? 90 : 150, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.25); const og = a.createGain(); og.gain.setValueAtTime(0.7, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.3); o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.32);
 }
 let lastHitSfx = 0;
-function sfxHit(po) { const a = audio(); if (!a || a.currentTime - lastHitSfx < 0.25) return; lastHitSfx = a.currentTime; const t = a.currentTime, out = outNode(a, po.pan); out.gain.value = 0.25; const o = a.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(220, t); o.frequency.exponentialRampToValueAtTime(110, t + 0.08); const og = a.createGain(); og.gain.setValueAtTime(0.5, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.1); o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.12); }
+function sfxHit(po) { const a = audio(); if (!a || a.currentTime - lastHitSfx < 0.25) return; lastHitSfx = a.currentTime; const t = a.currentTime, out = outNode(a, po.pan); outBusy(out, t + 0.12); out.gain.value = 0.25; const o = a.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(220, t); o.frequency.exponentialRampToValueAtTime(110, t + 0.08); const og = a.createGain(); og.gain.setValueAtTime(0.5, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.1); o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.12); }
 function breakCue(ev) {
   const po = panOf(ev), isPanel = ev.kind === 'panel';
   const dir = dirWord(po);
@@ -1315,7 +1355,7 @@ if (BOTRUN()) gloomPreload();
 // then kept hidden until the run ends (a disposed material would free its shader program), so the first machine of a kind or the first device placed does not stall a frame
 function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); drop(c); } scene.remove(warmG); }
 function warmNight() { dropWarm(); if (!run) return; const K = CONFIG.gloom.kinds, ring = run.ring || 0;
-  for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); m.position.set(0, -50, 0); warmG.add(m); }
+  for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); gloomBlob(m, k); m.position.set(0, -50, 0); warmG.add(m); }
   for (const k of new Set(slotKinds())) { const m = deviceMesh(k); m.position.set(0, -50, 0); warmG.add(m); }
   // the shot, its splash, a kill's smoke and a broken device's splinters (their shaders), and the scrap pieces' physics file (desktop)
   for (const c of [0x7fd8ff, 0x9fd8ff, 0x9fffa0, 0xd0a0ff, 0xffe08a]) { warmG.add(PR.jet(new THREE.Vector3(0, -50, 0), new THREE.Vector3(1, -50, 0), c)); warmG.add(PR.droplet(c)); }
@@ -1361,7 +1401,9 @@ async function sceneCard(kind) {
       { const was = []; cam.layers.enable(1); try { scene.traverse((o) => { if (o.isLight || o === sky.mesh) return; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; }); renderer.render(scene, cam); }
         finally { for (const [o, v, f] of was) { o.visible = v; o.frustumCulled = f; } cam.layers.disable(1); } await raf(); }
       if (kind === 'night') { draw1(true); await raf(); } draw1(false); try { renderer.getContext().finish(); } catch (e2) { /* no context */ } }
-    // the warm-up copies stay hidden until the run ends: their matrices skip the per-frame pass too (owner 09:50)
+    // the warm-up machines start the Gloom pool (they are built, drawn and uploaded); the rest of the warm-up copies stay hidden until the run ends, their matrices
+    // skipping the per-frame pass too (owner 09:50)
+    if (kind === 'night') for (const c of [...warmG.children]) if (c.userData.kind && c.userData.anim) { warmG.remove(c); gloomPut(c); }
     warmG.visible = false; warmG.matrixWorldAutoUpdate = false;
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
@@ -1437,14 +1479,14 @@ function frame(now) {
       if (ev.e === 'hurt') { hurtT = 0.25; marlaHurt(); marlaStreak(); }
       if (ev.e === 'shot' && ev.head) { $('hs').textContent = 'HEADSHOT x' + CONFIG.cannon.headMult; hsT = 0.9; }
       if (ev.e === 'lance') tracer(ev.x, ev.z, ev.tx, ev.tz, 0.7, ev.floor, ev.kind === 'mist' ? 0x9fd8ff : ev.kind === 'sling' ? 0xd0a0ff : ev.kind === 'twin' ? 0xffe08a : 0x9fffa0);
-      if (ev.e === 'boom') { const m = new THREE.Mesh(new THREE.SphereGeometry(ev.r, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffd060, transparent: true, opacity: 0.45 })); m.position.set(ev.x, ev.floor * FH + 0.8, ev.z); scene.add(m); tracers.push({ l: m, t: 0.22 }); sfxHit(panOf(ev)); }
-      if (ev.e === 'press') { const m = box(1.0, 0.2, 1.0, 0x7ad070); m.position.set(ev.x, ev.floor * FH + 0.6, ev.z); scene.add(m); tracers.push({ l: m, t: 0.3 }); }
+      if (ev.e === 'boom') { const m = opTake('boom', () => { const o = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffd060, transparent: true, opacity: 0.45 })); o.geometry.userData.pool = true; o.material.userData.shared = true; return o; }); m.scale.setScalar(ev.r); m.position.set(ev.x, ev.floor * FH + 0.8, ev.z); scene.add(m); tracers.push({ l: m, t: 0.22 }); sfxHit(panOf(ev)); }
+      if (ev.e === 'press') { const m = opTake('press', () => { const o = box(1.0, 0.2, 1.0, 0x7ad070); o.geometry.userData.pool = true; o.material.userData.shared = true; return o; }); m.position.set(ev.x, ev.floor * FH + 0.6, ev.z); scene.add(m); tracers.push({ l: m, t: 0.3 }); }
       if (ev.e === 'devhit' && ev.kind === 'panel') sfxHit(panOf(ev));
       if (ev.e === 'devhit' && ev.kind === 'collector') { sfxHit(panOf(ev)); marlaSay('collector', { d: dirWord(panOf(ev)) }); }
       if (ev.e === 'devdead') breakCue(ev);
       if (ev.e === 'pop') gloomScrap({ scene }, ev.x, ev.floor * FH, ev.z); // desktop scrap pieces (src/bosshi.js)
       if (ev.e === 'boss' && ev.k === 'rise' && save && fromBase) { save.met = save.met || {}; if (!save.met.beckoner) { save.met.beckoner = true; persist(); } }
-      if (ev.e === 'pop') for (let i = 0; i < 9; i++) { const sm = PR.smoke(); sm.position.set(ev.x + (Math.random() - 0.5) * 0.5, ev.floor * FH + 0.4 + Math.random() * 1.6, ev.z + (Math.random() - 0.5) * 0.5); scene.add(sm); debris.push({ m: sm, y0: -99, vx: (Math.random() - 0.5) * 1.2, vy: 9 * 0.55 + Math.random() * 1.5, vz: (Math.random() - 0.5) * 1.2, t: 0.7, grow: 1.8 }); }
+      if (ev.e === 'pop') for (let i = 0; i < 9; i++) { const sm = opTake('smoke', () => PR.smoke()); sm.scale.setScalar(0.16 + Math.random() * 0.14); sm.position.set(ev.x + (Math.random() - 0.5) * 0.5, ev.floor * FH + 0.4 + Math.random() * 1.6, ev.z + (Math.random() - 0.5) * 0.5); scene.add(sm); debris.push({ m: sm, y0: -99, vx: (Math.random() - 0.5) * 1.2, vy: 9 * 0.55 + Math.random() * 1.5, vz: (Math.random() - 0.5) * 1.2, t: 0.7, grow: 1.8 }); }
       if (ev.e === 'alert') marlaAlert(ev);
       if (ev.e === 'kind' && KIND_LINE[ev.kind] && GLOOM_Q !== 'hood' && CONFIG.gloomLook.machines) { kindQ.push(KIND_LINE[ev.kind]); }
       if (ev.e === 'kind' && save && fromBase) { save.met = save.met || {}; if (!save.met[ev.kind]) { save.met[ev.kind] = true; persist(); } }
@@ -1464,7 +1506,7 @@ function frame(now) {
     if (p.climb) camY = (p.floor + (p.climb.to - p.floor) * (1 - p.climb.t / CONFIG.ladderTime)) * FH + 1.6; else camY += (p.floor * FH + 1.6 - camY) * Math.min(1, dt * 8);
     cam.position.set(p.x, camY, p.z); cam.rotation.set(pitch, yaw, 0, 'YXZ');
     for (const g of sim.gloom) {
-      let m = gMesh.get(g.id); if (!m) { m = gloomMesh(g); if (m.userData.anim) mergeQ.push([m, g.x, g.z]); shadeUnder(m, CONFIG.depth.gloom * (gloomKind(g) === 'warden' ? 1.8 : gloomKind(g) === 'hauler' ? 1.4 : gloomKind(g) === 'ticks' ? 0.8 : 1)); scene.add(m); gMesh.set(g.id, m); }
+      let m = gMesh.get(g.id); if (!m) { m = gloomTake(g); if (m) { scene.add(m); gMesh.set(g.id, m); } else { m = gloomMesh(g); if (m.userData.anim) mergeQ.push([m, g.x, g.z]); gloomBlob(m, gloomKind(g)); scene.add(m); gMesh.set(g.id, m); } }
       // the height it is drawn at comes from the sim (src/sim.js gloomY), so the aimed shot aims where the model stands
       const gy = sim.gloomY(g);
       // LAG FIX Nov 19 (owner 07:10): at night in a house a machine outside that no opening shows is not drawn (src/nightcull.js sees; CONFIG.lag.nightCull.gloomR);
@@ -1474,18 +1516,18 @@ function frame(now) {
       if (m.userData.anim) m.userData.anim(performance.now() / 1000, g); else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
     }
     // every tier (desktop too since owner 09:50): a new machine's still pieces are merged a few machines a frame (CONFIG.lag.mergeGloom.perFrame); the probe poses use times before 0 (no caption line starts)
-    for (let k = 0; k < CONFIG.lag.mergeGloom.perFrame && mergeQ.length; k++) { const [mm, mx, mz] = mergeQ.shift(); if (!mm.parent) continue; mergeStatic(mm, (i) => mm.userData.anim(-(1 + i * 0.73), { x: mx + i * 0.11, z: mz + i * 0.07 })); }
+    for (let k = 0; k < CONFIG.lag.mergeGloom.perFrame && mergeQ.length; k++) { const [mm, mx, mz] = mergeQ.shift(); if (!mm.parent) continue; mergeStatic(mm, (i) => mm.userData.anim(-(1 + i * 0.73), { x: mx + i * 0.11, z: mz + i * 0.07 })); mm.userData.merged = true; HITC.delete(mm); }
     tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000); freezeWorld(); nightCull.tick(world, sim, cam, dormG);
     bossTick(dt, sim, { scene, cam, audio }); scrapTick(dt, { scene }); // the final-night boss (src/bosshi.js): after the camera is set, before the frame is drawn
     if (run && sim.L > 1 && !run.toldStairs && save && (save.nights || 0) < 2 && [...sim.stairs.map((q) => [q.bx, q.bz]), ...sim.stairs.map((q) => [q.tx, q.tz]), ...sim.ladders.map((q) => [q.x, q.z])].some((q) => Math.hypot(q[0] - sim.player.x, q[1] - sim.player.z) < 3)) { run.toldStairs = true; marlaHint('Stairs: the Gloom use them too. The ladder: only you can climb it.'); }
     if (kindQ.length && sim.phase === 'night' && marlaT <= 0.01 && sim.t > CONFIG.gloomLook.kindLineAfter && !paused) marlaHint(kindQ.shift());
-    for (const [id, m] of gMesh) if (!sim.gloom.find((g) => g.id === id)) { drop(m); gMesh.delete(id); }
+    for (const [id, m] of gMesh) if (!sim.gloom.find((g) => g.id === id)) { gloomPut(m); gMesh.delete(id); }
     for (const d of sim.devices) {
       let m = dMesh.get(d.id);
       if (!m) { m = deviceMesh(d.kind); if (!CONFIG.devices[d.kind].wall) shadeUnder(m, CONFIG.depth.device); scene.add(m); dMesh.set(d.id, m); if (CONFIG.devices[d.kind].wall) { if (d.bp !== undefined) { const b = sim.breaches[d.bp]; m.rotation.y = Math.atan2(b.nx, b.nz); } else m.rotation.y = Math.PI / 2; } }
       { const la = landAt.get(d.id); if (la !== undefined) { const k = (now - la) / (1000 * CONFIG.hands.landGrow); m.visible = k >= 0; if (m.visible) m.scale.setScalar(Math.min(1, 0.6 + 0.4 * k)); if (k >= 1) { landAt.delete(d.id); m.scale.setScalar(1); } } }
-      m.position.set(d.x, d.floor * FH, d.z); deviceHop(m, d, !!CONFIG.devices[d.kind].wall, yaw); const bl = m.getObjectByName('blade'); if (bl) bl.rotation.y += dt * 4; if (m.userData.tick) m.userData.tick(now / 1000, d);
-      const br = m.getObjectByName('barrel'); if (br) { let t = null, bd = 1e9; for (const g of sim.gloom) { if (g.floor !== d.floor) continue; const dd = Math.hypot(g.x - d.x, g.z - d.z); if (dd < bd) { bd = dd; t = g; } } if (t) m.rotation.y = Math.atan2(-(t.x - d.x), -(t.z - d.z)) + Math.PI; }
+      m.position.set(d.x, d.floor * FH, d.z); deviceHop(m, d, !!CONFIG.devices[d.kind].wall, yaw); let dr = DEVREF.get(m); if (!dr) { dr = { blade: m.getObjectByName('blade'), barrel: m.getObjectByName('barrel') }; DEVREF.set(m, dr); } const bl = dr.blade; if (bl) bl.rotation.y += dt * 4; if (m.userData.tick) m.userData.tick(now / 1000, d);
+      const br = dr.barrel; if (br) { let t = null, bd = 1e9; for (const g of sim.gloom) { if (g.floor !== d.floor) continue; const dd = Math.hypot(g.x - d.x, g.z - d.z); if (dd < bd) { bd = dd; t = g; } } if (t) m.rotation.y = Math.atan2(-(t.x - d.x), -(t.z - d.z)) + Math.PI; }
       if (m.userData.tintDamage) m.userData.tintDamage(1 - d.hp / CONFIG.devices[d.kind].hp); else if (d.kind === 'panel' && m.userData.body) { const t = 1 - d.hp / CONFIG.devices.panel.hp; m.userData.body.material.color.setRGB(0.42 + 0.5 * t, 0.48 - 0.3 * t, 0.42 - 0.3 * t); }
     }
     for (const [id, m] of dMesh) if (!sim.devices.find((d) => d.id === id)) { drop(m); dMesh.delete(id); }
@@ -1497,28 +1539,29 @@ function frame(now) {
     for (const c of sim.crates) { const m = crateMesh.get(c.id); if (m) m.visible = !c.got; }
     if (state === 'play' && !paused) { const hs = dayNow ? (run ? [] : DAY_HINTS) : (drill ? [] : FINE ? NIGHT_HINTS_DESK : NIGHT_HINTS), tt = dayNow ? CONFIG.day.duration - sim.dayT : sim.t; if (hintN < hs.length && tt >= hs[hintN][0] && marlaT <= 0.01) { const h = hs[hintN++]; if (h[1].indexOf('collectors') < 0 || sim.devices.some((q) => q.kind === 'collector')) marlaHint(h[1]); }
       if (run && !sim.cat.found && sim.player.floor === 0) { const cd = Math.hypot(sim.player.x - sim.cat.x, sim.player.z - sim.cat.z); if (cd < CONFIG.cat.chimeRange) { chimeT -= dt; if (chimeT <= 0) { chime(1 - cd / CONFIG.cat.chimeRange * 0.8); chimeT = 0.4 + (cd / CONFIG.cat.chimeRange) * 1.6; } } }
-      if (dayNow && run) { $('time').style.color = run.bell ? '#ff6a5a' : ''; if (!run.paceTold && sim.speedMult() < 0.995) { run.paceTold = true; marlaHint('Loot is heavy: the more you carry, the slower you walk (Walk speed, top right).'); } if (!run.slowTold && sim.speedMult() < 0.8) { run.slowTold = true; queueHint(0, 'Heavy pack, Potts. You are slowing down.'); } } if (dayNow && run) { run.dayT = sim.dayT; dayHints(dt); bellCheck(sim.dayT); } }
+      if (dayNow && run) { sty($('time'), 'color', run.bell ? '#ff6a5a' : ''); if (!run.paceTold && sim.speedMult() < 0.995) { run.paceTold = true; marlaHint('Loot is heavy: the more you carry, the slower you walk (Walk speed, top right).'); } if (!run.slowTold && sim.speedMult() < 0.8) { run.slowTold = true; queueHint(0, 'Heavy pack, Potts. You are slowing down.'); } } if (dayNow && run) { run.dayT = sim.dayT; dayHints(dt); bellCheck(sim.dayT); } }
     if (duskHold(dt, dayNow && state === 'play' && !paused)) { if (mustSolar()) flash(solarBlock(), 1); else sim.endDay(); }
-    { const d = run && dayNow && sim.player.floor === 0 ? RUN.exitDoor(sim) : null, near = !!d && Math.hypot(sim.player.x - d.inX, sim.player.z - d.inZ) <= CONFIG.town.leaveRadius; $('bLeave').style.display = near ? 'flex' : 'none'; }
+    { const d = run && dayNow && sim.player.floor === 0 ? RUN.exitDoor(sim) : null, near = !!d && Math.hypot(sim.player.x - d.inX, sim.player.z - d.inZ) <= CONFIG.town.leaveRadius; sty($('bLeave'), 'display', near ? 'flex' : 'none'); }
     $('hud').classList.toggle('day', dayNow && state === 'play');
     // HUD
-    $('hp').style.width = (100 * p.hp / CONFIG.player.hp) + '%'; $('en').style.width = (100 * p.energy / CONFIG.player.energyCap) + '%';
+    sty($('hp'), 'width', (100 * p.hp / CONFIG.player.hp) + '%'); sty($('en'), 'width', (100 * p.energy / CONFIG.player.energyCap) + '%');
     H2.setClock($('time'), dayNow ? sim.dayT : leftN, !dayNow); H2.setClockBar(dayNow ? sim.dayT : leftN, !dayNow); H2.setVit($('enL'), p.energy, !dayNow, 100 * p.hp / CONFIG.player.hp);
     H2.setCount($('count'), [dayNow ? ['Crates left', sim.crates.filter((c) => !c.got).length] : null, ['Food', sim.food], ['Essentials', sim.ess], [CONFIG.ui.sun, Math.round(p.energy), 1], dayNow && run ? ['Walk speed', Math.round(100 * sim.speedMult()) + '%'] : null, ['Floor', (p.floor + 1) + ' of ' + sim.L]]);
     setText('coins', sim.coins ? 'Lucky cat found' : '');
-    { const sk = slotKinds(), list = [['b0', 'collector', 'Solar', 'Q']]; for (let i = 0; i < 5; i++) list.push(['b' + (i + 1), sk[i] || null, sk[i] ? CONFIG.devices[sk[i]].name : '', String(i + 1)]);
+    { for (const q in DEVN) DEVN[q] = 0; for (const q of sim.devices) { DEVN[q.kind] = (DEVN[q.kind] || 0) + 1; const gr = CONFIG.devices[q.kind].group; if (gr) DEVN['g:' + gr] = (DEVN['g:' + gr] || 0) + 1; }
+      const sk = slotKinds(), list = [['b0', 'collector', 'Solar', 'Q']]; for (let i = 0; i < 5; i++) list.push(['b' + (i + 1), sk[i] || null, sk[i] ? CONFIG.devices[sk[i]].name : '', String(i + 1)]);
       for (const [id, kind, key, hot] of list) {
         const el = $(id); el.classList.toggle('sel', id === 'b' + (selSlot + 1)); if (!kind) { if (el.style.display !== 'none') el.style.display = 'none'; continue; } if (el.style.display === 'none') el.style.display = '';
         if (el.dataset.k !== kind) { el.dataset.k = kind; el.style.setProperty('--ic', 'url(' + H2.ICON(kind) + ')'); }
-        const dcfg = CONFIG.devices[kind], gm = dcfg.group ? CONFIG.groupMax[dcfg.group] : dcfg.max, n = sim.devices.filter((q) => (dcfg.group ? CONFIG.devices[q.kind].group === dcfg.group : q.kind === kind)).length, full = !!gm && n >= gm, poor = !full && p.energy < dcfg.cost, line = id === 'b0' && !FINE && !full ? CONFIG.firstSolar.btnP : dayNow && id !== 'b0' ? 'at night' : full ? 'max ' + gm : poor ? H2.SUNNO + 'need ' + dcfg.cost : H2.sunCost(dcfg.cost), txt = '<i class="ic"></i><span class="dn">' + key + '</span> <span class="dl">' + line + '</span>' + (gm ? ' <span class="cnt">' + n + '/' + gm + '</span>' : ''); // panel fix: picture, ONE line (cost in Sun with its icon, or what stops you), the count as a corner badge
+        const dcfg = CONFIG.devices[kind], gm = dcfg.group ? CONFIG.groupMax[dcfg.group] : dcfg.max, n = dcfg.group ? (DEVN['g:' + dcfg.group] || 0) : (DEVN[kind] || 0), full = !!gm && n >= gm, poor = !full && p.energy < dcfg.cost, line = id === 'b0' && !FINE && !full ? CONFIG.firstSolar.btnP : dayNow && id !== 'b0' ? 'at night' : full ? 'max ' + gm : poor ? H2.SUNNO + 'need ' + dcfg.cost : H2.sunCost(dcfg.cost), txt = '<i class="ic"></i><span class="dn">' + key + '</span> <span class="dl">' + line + '</span>' + (gm ? ' <span class="cnt">' + n + '/' + gm + '</span>' : ''); // panel fix: picture, ONE line (cost in Sun with its icon, or what stops you), the count as a corner badge
         if (el.dataset.t !== txt) { el.innerHTML = txt; el.dataset.t = txt; }
         el.classList.toggle('poor', poor && !(dayNow && id !== 'b0')); el.classList.toggle('full', full); el.classList.remove('dim');
       }
       const et = '<i class="ic"></i>' + B.eatLabel(sim.food, !FINE), eb = $('bEat'); if (eb.dataset.t !== et) { eb.innerHTML = et; eb.dataset.t = et; } }
   }
-  for (let i = debris.length - 1; i >= 0; i--) { const q = debris[i]; q.t -= dt; q.vy -= 9 * dt; q.m.position.x += q.vx * dt; q.m.position.y = Math.max(q.y0, q.m.position.y + q.vy * dt); q.m.position.z += q.vz * dt; q.m.rotation.x += dt * 6; if (q.grow) { q.vy += 9 * dt * 0.94; q.m.scale.multiplyScalar(1 + q.grow * dt); } if (q.t <= 0) { drop(q.m); debris.splice(i, 1); } }
-  for (let i = tracers.length - 1; i >= 0; i--) { tracers[i].t -= dt; if (tracers[i].t <= 0) { drop(tracers[i].l); tracers.splice(i, 1); } }
-  hurtT = Math.max(0, hurtT - dt); $('hurt').style.opacity = hurtT * 2.5;
+  for (let i = debris.length - 1; i >= 0; i--) { const q = debris[i]; q.t -= dt; q.vy -= 9 * dt; q.m.position.x += q.vx * dt; q.m.position.y = Math.max(q.y0, q.m.position.y + q.vy * dt); q.m.position.z += q.vz * dt; q.m.rotation.x += dt * 6; if (q.grow) { q.vy += 9 * dt * 0.94; q.m.scale.multiplyScalar(1 + q.grow * dt); } if (q.t <= 0) { opDone(q.m); debris.splice(i, 1); } }
+  for (let i = tracers.length - 1; i >= 0; i--) { tracers[i].t -= dt; if (tracers[i].t <= 0) { opDone(tracers[i].l); tracers.splice(i, 1); } }
+  hurtT = Math.max(0, hurtT - dt); sty($('hurt'), 'opacity', String(hurtT * 2.5));
   tickHud(dt); tickAim(dt); tickCharge(dt);
   sky.follow(cam, world ? world.g.rotation.y : 0, dt); draw();
   if (sim && run) tickDormant(sim.phase === 'night');

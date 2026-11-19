@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { CONFIG } from './config.js';
 
 export function createNightCull() {
-  let root = null, items = null, key = '', on = false;
+  let root = null, items = null, on = false; const KY = { x: 0, z: 0, r: 0, n: -1, e: null };
   const L1 = 1, I = new THREE.Vector3(), BX = new THREE.Box3();
   const stats = { items: 0, hidden: 0 };
   try { window.__nightCull = stats; } catch (e) { /* no window */ }
@@ -50,8 +50,11 @@ export function createNightCull() {
     tick(world, sim, cam, dorm) {
       const C = CONFIG.lag.nightCull, want = !!(C && C.on && world && sim && sim.phase === 'night' && !sim.done);
       if (!want) { if (on) { restore(); on = false; } return false; }
-      const g = world.g, k2 = g.uuid + g.position.x.toFixed(2) + g.position.z.toFixed(2) + g.rotation.y.toFixed(3) + ':' + g.children.length;
-      if (g !== root || k2 !== key) { restore(); root = g; key = k2; items = collect(g, dorm); stats.items = items.length; }
+      // (LAG FIX Nov 19, owner 10:35) the world's place compared as numbers, not a string built every frame; the pieces are tested again only when the eye has moved
+      // more than CONFIG.lag.nightCull.eyeMove m (the house and its openings do not move)
+      const g = world.g;
+      if (g !== root || g.position.x !== KY.x || g.position.z !== KY.z || g.rotation.y !== KY.r || g.children.length !== KY.n) { restore(); root = g; KY.x = g.position.x; KY.z = g.position.z; KY.r = g.rotation.y; KY.n = g.children.length; items = collect(g, dorm); stats.items = items.length; KY.e = null; }
+      if (KY.e && on && cam.position.distanceToSquared(KY.e) < C.eyeMove * C.eyeMove) return true; (KY.e || (KY.e = new THREE.Vector3())).copy(cam.position);
       // the sun's shadow camera keeps drawing what is hidden from you (so no shadow changes)
       if (!on) { on = true; g.traverse((l) => { if (l.isLight && l.shadow && l.shadow.camera) l.shadow.camera.layers.enable(L1); }); }
       let hidden = 0;
@@ -61,5 +64,5 @@ export function createNightCull() {
       }
       stats.hidden = hidden; return true;
     },
-    reset() { restore(); on = false; items = null; root = null; key = ''; } };
+    reset() { restore(); on = false; items = null; root = null; KY.n = -1; KY.e = null; } };
 }

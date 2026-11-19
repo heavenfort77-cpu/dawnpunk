@@ -107,13 +107,18 @@ const UP = new THREE.Vector3(0, 1, 0);
 const PGEO = {};
 const pgeo = (k, make) => { if (!PGEO[k]) { PGEO[k] = make(); PGEO[k].userData.pool = true; PGEO[k].userData.shared = true; } return PGEO[k]; };
 export function jet(a, b, color) { // a thin stream from a to b: wider at the nozzle, with a brighter core
-  const d = new THREE.Vector3().subVectors(b, a), len = d.length(), g = new THREE.Group(); g.position.copy(a).addScaledVector(d, 0.5); g.quaternion.setFromUnitVectors(UP, d.normalize());
+  const g = new THREE.Group();
   const o = new THREE.Mesh(pgeo('jetO', () => new THREE.CylinderGeometry(0.012, 0.04, 1, 6, 1, true)), mat('jetO' + color, () => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, depthWrite: false })));
   const c = new THREE.Mesh(pgeo('jetC', () => new THREE.CylinderGeometry(0.005, 0.014, 1, 5, 1, true)), mat('jetC', () => new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false })));
-  o.scale.y = len; c.scale.y = len; g.add(o); g.add(c); return g;
+  g.add(o); g.add(c); return jetPlace(g, a, b);
 }
+// (LAG FIX Nov 19, owner 10:35: jets are pooled in main.js) set a jet made by jet() to run from a to b
+const JD = new THREE.Vector3();
+export function jetPlace(g, a, b) { JD.subVectors(b, a); const len = JD.length(); g.position.copy(a).addScaledVector(JD, 0.5); g.quaternion.setFromUnitVectors(UP, JD.normalize()); for (const m of g.children) m.scale.y = len; return g; }
 export function droplet(color) { return new THREE.Mesh(pgeo('drop', () => new THREE.SphereGeometry(0.035, 5, 4)), mat('drop' + color, () => new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8 }))); }
-export function splinter(kind) { const m = bx(0.1 + Math.random() * 0.25, 0.03 + Math.random() * 0.03, 0.04 + Math.random() * 0.05, kind === 'panel' || kind === 'trellis' ? MT.wood : Math.random() < 0.5 ? MT.brass : MT.dark, 0, 0, 0); m.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); return m; }
+// (LAG FIX Nov 19: one shared 1 m box scaled to each splinter's size, not a new box geometry per splinter)
+export function splinter(kind) { const m = mesh(pgeo('unitBox', () => new THREE.BoxGeometry(1, 1, 1)), kind === 'panel' || kind === 'trellis' ? MT.wood : Math.random() < 0.5 ? MT.brass : MT.dark, 0, 0, 0);
+  m.scale.set(0.1 + Math.random() * 0.25, 0.03 + Math.random() * 0.03, 0.04 + Math.random() * 0.05); m.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3); return m; }
 export function smoke() { const m = new THREE.Mesh(pgeo('smoke', () => new THREE.SphereGeometry(1, 6, 5)), mat('smoke', () => new THREE.MeshBasicMaterial({ map: ptex('gloom'), color: 0xb8a0e0, transparent: true, opacity: 0.75, depthWrite: false }))); m.scale.setScalar(0.16 + Math.random() * 0.14); return m; }
 
 // ---- a chalk ring on the floor (opening you can barricade, stair foot, ladder foot). Its material is its own: main.js flashes it.

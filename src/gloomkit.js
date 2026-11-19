@@ -490,6 +490,8 @@ export function gloomMachine(kind, opts) {
     const DP = GLOOMKIT_DESO().paints, base = new THREE.Color(DP[kind === 'walker2' ? 'walker' : kind] || DP.walker), sh = new THREE.Color().copy(base).offsetHSL((Math.random() - 0.5) * DP.hue, (Math.random() - 0.5) * DP.sat, (Math.random() - 0.5) * DP.light), done = new Map();
     b.traverse((o) => { if (!o.isMesh || Array.isArray(o.material)) return; const k = o.material.userData.k || ''; if (!(k.startsWith('gk_p') || k === 'w2body' || k === 'dWbody')) return;
       if (!done.has(o.material)) { const m = o.material.clone(); m.color.copy(sh); if (hiTier) m.color.multiplyScalar(CONFIG.quality.high.gloom.paintLift); if (m.map && k !== 'dWbody') { m.map = ptex('worn'); m.shininess = 8; } m.userData.shared = false; done.set(o.material, m); } o.material = done.get(o.material); });
+    // reroll (LAG FIX Nov 19, the Gloom pool in src/main.js): a reused machine gets a new shade of its colour from the same spread
+    g.userData.reroll = () => { const s2 = new THREE.Color().copy(base).offsetHSL((Math.random() - 0.5) * DP.hue, (Math.random() - 0.5) * DP.sat, (Math.random() - 0.5) * DP.light); for (const m of done.values()) { m.color.copy(s2); if (hiTier) m.color.multiplyScalar(CONFIG.quality.high.gloom.paintLift); } };
   }
   wearAndTear(b, P, face);
   g.userData.kind = kind; g.userData.head = P.head; g.userData.heads = P.heads || [P.head]; g.userData.dormant = dormant; if (!dormant) { g.userData.lamp = new THREE.Vector3(0, (P.lamp || K.lamp)[0], (P.lamp || K.lamp)[1]); g.userData.lampColor = K.screen; }

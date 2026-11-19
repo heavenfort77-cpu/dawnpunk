@@ -52,6 +52,6 @@ export function glbCopy(kind, tint) {
       m.customProgramCacheKey = () => 'gloomGlbTint'; mats.set(m0, m); }
     o.material = mats.get(m0); });
   // LAG FIX Nov 19: its meshes draw the reduced copy past CONFIG.lag.lod.kinds.gloom.near metres (src/lod.js)
-  lodCopy(sc, 'gloom');
+  lodCopy(sc, 'gloom'); sc.userData.tintU = u;
   return sc;
 }

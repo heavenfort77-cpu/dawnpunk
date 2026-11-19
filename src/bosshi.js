@@ -296,6 +296,9 @@ function aim(o, dir, front) {
   const qw = new THREE.Quaternion().setFromRotationMatrix(scratch.m.makeBasis(x, y, z)); o.parent.getWorldQuaternion(scratch.q); o.quaternion.copy(scratch.q.invert().multiply(qw));
   o.updateMatrixWorld(true);
 }
+// (LAG FIX Nov 19, owner 10:35) scratch quaternions for the boss's pose each frame, one per joint, instead of new ones every frame (same values)
+const BQ = new THREE.Quaternion(), WQ = {}, WE = new THREE.Euler();
+const wq = (key, x, y, z, ord) => (WQ[key] || (WQ[key] = new THREE.Quaternion())).setFromEuler(WE.set(x, y, z, ord || 'XYZ'));
 function slerpTo(o, qLocal, k) { o.quaternion.slerp(qLocal, k); }
 
 function build(sim) {
@@ -352,7 +355,7 @@ function stepPieces(dt) {
     p.t += dt;
     if (p.t > PH.life + PH.fade) { if (p.wrap.visible) { p.wrap.position.y -= dt * 0.15; if (p.t > PH.life + PH.fade + 6) p.wrap.visible = false; } continue; }
     if (p.t > PH.life) { if (p.id && V.phys) { V.phys.remove(p.id); p.id = 0; } continue; }
-    if (p.id && V.phys) { const s = V.phys.get(p.id); if (s) { p.wrap.position.set(s.p[0], s.p[1], s.p[2]); p.wrap.quaternion.set(s.q[0], s.q[1], s.q[2], s.q[3]); } continue; }
+    if (p.id && V.phys) { const s = V.phys.get(p.id, scrapOut); if (s) { p.wrap.position.set(s.p[0], s.p[1], s.p[2]); p.wrap.quaternion.set(s.q[0], s.q[1], s.q[2], s.q[3]); } continue; }
     // phones: scripted fall, a bounce or two, no collisions
     p.v.y += PH.g * dt; p.wrap.position.addScaledVector(p.v, dt); const lo = Math.min(p.h[0], p.h[1], p.h[2]);
     if (p.wrap.position.y < lo) { p.wrap.position.y = lo; p.v.y = Math.abs(p.v.y) * PH.bounce; p.v.x *= 0.6; p.v.z *= 0.6; p.w.multiplyScalar(0.55); if (Math.abs(p.v.y) < 0.6) p.v.y = 0; }
@@ -381,15 +384,15 @@ function pose(dt, ctx) {
   { V.twitch.t -= dt; if (V.twitch.t <= 0) { V.twitch.t = 1.5 + Math.random() * 3; V.twitch.yaw = (Math.random() - 0.5) * 0.3; V.twitch.pitch = (Math.random() - 0.5) * 0.15; }
     const hp = worldPos(N.head), pl = V3(sim.player.x, 1.6, sim.player.z), d = pl.sub(hp); const yawTo = Math.atan2(-d.x, -d.z) - R.rotation.y; let yw = Math.atan2(Math.sin(yawTo), Math.cos(yawTo));
     yw = Math.max(-VW.look, Math.min(VW.look, yw)) + V.twitch.yaw; const pt = 0.12 + V.twitch.pitch - dk * 0.7;
-    want.head = new THREE.Quaternion().setFromEuler(new THREE.Euler(-pt, down ? yw * (1 - dk) : yw, down ? dk * 0.3 : 0, 'YXZ')); }
-  want.body = new THREE.Quaternion().setFromEuler(new THREE.Euler(-dk * VW.tilt * 0.6, 0, dk * VW.tilt * 0.4));
-  want.jaw = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.15 - 0.2 * Math.max(0, Math.sin(now * 1.7)) - (B.act && B.act.kind === 'slam' ? 0.3 : 0), 0, 0));
+    want.head = wq('head', -pt, down ? yw * (1 - dk) : yw, down ? dk * 0.3 : 0, 'YXZ'); }
+  want.body = wq('body', -dk * VW.tilt * 0.6, 0, dk * VW.tilt * 0.4);
+  want.jaw = wq('jaw', -0.15 - 0.2 * Math.max(0, Math.sin(now * 1.7)) - (B.act && B.act.kind === 'slam' ? 0.3 : 0), 0, 0);
   // chest shutters open when both paws are broken
   const co = B.paws.beckon.broken && B.paws.slam.broken ? 1 : 0; V.coreOpen += (co - V.coreOpen) * Math.min(1, dt * 2);
   // the shutters stand half open (the coin always shows behind its grille); fully open, and the grille gone, once both paws are broken
-  want.coreDoorL = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -(0.75 + 0.85 * V.coreOpen), 0)); want.coreDoorR = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0.75 + 0.85 * V.coreOpen, 0));
+  want.coreDoorL = wq('coreDoorL', 0, -(0.75 + 0.85 * V.coreOpen), 0); want.coreDoorR = wq('coreDoorR', 0, 0.75 + 0.85 * V.coreOpen, 0);
   if (V.grille) V.grille.visible = V.coreOpen < 0.5;
-  for (const kk in want) if (N[kk] && !V.gone.has(kk)) slerpTo(N[kk], V.bind[kk].q.clone().multiply(want[kk]), k * 1.5);
+  for (const kk in want) if (N[kk] && !V.gone.has(kk)) slerpTo(N[kk], BQ.copy(V.bind[kk].q).multiply(want[kk]), k * 1.5);
   R.updateMatrixWorld(true);
 
   // BECKONING ARM: rest on the knee; raised to the summon point (the sim's weak point) with the palm to the house and the wrist flapping; limp when broken
@@ -473,7 +476,8 @@ function looks(dt) {
   // sparks
   const pa = V.spk.geometry.attributes.position; let n = 0;
   for (let i = V.sparks.length - 1; i >= 0; i--) { const s = V.sparks[i]; s.t -= dt; if (s.t <= 0) { V.sparks.splice(i, 1); continue; } s.v.y -= 9.8 * dt; s.p.addScaledVector(s.v, dt); if (n < pa.count) pa.setXYZ(n++, s.p.x, s.p.y, s.p.z); }
-  for (let i = n; i < pa.count; i++) pa.setXYZ(i, 0, -50, 0); pa.needsUpdate = true; V.spk.visible = n > 0;
+  // (LAG FIX Nov 19) the spark positions go to the GPU only while there are sparks (or on the frame the last one goes)
+  if (n || V.spkN) { for (let i = n; i < pa.count; i++) pa.setXYZ(i, 0, -50, 0); pa.needsUpdate = true; } V.spkN = n; V.spk.visible = n > 0;
 }
 
 // ---------------------------------------------------------------- events from the sim
@@ -529,19 +533,22 @@ export const bossView = () => V;
 
 // ---------------------------------------------------------------- QUEUED EXTRA (owner): desktop scrap when an ordinary Gloom is destroyed (cannon-es, CONFIG.boss.physics.gloomScrap)
 let scrapW = null; const scraps = []; let scrapGeo = null, scrapMat = null;
+// free scrap meshes for reuse, and the one object the physics writes a piece's place into each frame
+const scrapFree = [], scrapOut = { p: [0, 0, 0], q: [0, 0, 0, 1], asleep: false };
 export function gloomScrap(ctx, x, y, z) {
   if (!DESK || !PH.on || !PH.gloomScrap) return; loadPhysics(); if (bossState.physics !== 'ready' && bossState.physics !== 'running') return;
   if (!scrapW) scrapW = window.__bossPhysics.createWorld(PH);
   if (!scrapGeo) { scrapGeo = new THREE.BoxGeometry(1, 0.5, 0.7); scrapGeo.userData.shared = true; scrapMat = new THREE.MeshStandardMaterial({ color: 0x4a4640, roughness: 0.7, metalness: 0.6 }); scrapMat.userData.shared = true; }
-  for (let i = 0; i < PH.scrap; i++) { if (scraps.length >= PH.max) { const o = scraps.shift(); ctx.scene.remove(o.m); scrapW.remove(o.id); }
-    const s = PH.scrapSize * (0.6 + Math.random() * 0.8), m = new THREE.Mesh(scrapGeo, scrapMat); m.scale.set(s, s, s); m.castShadow = true; ctx.scene.add(m);
+  // (LAG FIX Nov 19, owner 10:35: the scrap meshes are pooled; same shared geometry and material, so a reused piece draws as a new one)
+  for (let i = 0; i < PH.scrap; i++) { if (scraps.length >= PH.max) { const o = scraps.shift(); ctx.scene.remove(o.m); scrapW.remove(o.id); scrapFree.push(o.m); }
+    const s = PH.scrapSize * (0.6 + Math.random() * 0.8), m = scrapFree.pop() || new THREE.Mesh(scrapGeo, scrapMat); m.scale.set(s, s, s); m.castShadow = true; ctx.scene.add(m);
     const id = scrapW.add(s / 2, s / 4, s * 0.35, [x + (Math.random() - 0.5) * 0.5, y + 0.8 + Math.random(), z + (Math.random() - 0.5) * 0.5], [0, 0, 0, 1], [(Math.random() - 0.5) * 4, 2 + Math.random() * 3, (Math.random() - 0.5) * 4], [Math.random() * 8, Math.random() * 8, Math.random() * 8], 0.4);
     scraps.push({ m, id, t: 0 }); }
 }
 export function scrapTick(dt, ctx, clear) {
-  if (clear) { for (const o of scraps) { ctx.scene.remove(o.m); if (scrapW) scrapW.remove(o.id); } scraps.length = 0; return; }
+  if (clear) { for (const o of scraps) { ctx.scene.remove(o.m); if (scrapW) scrapW.remove(o.id); scrapFree.push(o.m); } scraps.length = 0; return; }
   if (!scrapW || !scraps.length) return; scrapW.step(dt);
-  for (const o of scraps) { o.t += dt; if (o.t > PH.life) continue; const s = scrapW.get(o.id); if (s) { o.m.position.set(s.p[0], s.p[1], s.p[2]); o.m.quaternion.set(s.q[0], s.q[1], s.q[2], s.q[3]); } }
+  for (const o of scraps) { o.t += dt; if (o.t > PH.life) continue; const s = scrapW.get(o.id, scrapOut); if (s) { o.m.position.set(s.p[0], s.p[1], s.p[2]); o.m.quaternion.set(s.q[0], s.q[1], s.q[2], s.q[3]); } }
 }
 
 // ---------------------------------------------------------------- texts for main.js: the field guide entry (once met) and the night results line

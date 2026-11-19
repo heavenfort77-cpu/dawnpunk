@@ -28,7 +28,9 @@ export function setClock(el, sec, night) {
 // the count line: [label, value, phoneOnly]; desktop drops the Sun number (it is on its bar) and uses a dot between parts
 export function countLine(parts) { return parts.filter((q) => q && !(FINE2 && q[2])).map((q) => q[0] + ' ' + q[1]).join(FINE2 ? ' · ' : ' | '); }
 // panel fix (Nov 17): the count line as HTML, with the small sun icon in front of the Sun part (CONFIG.ui.sun); written only when it changes
-export function setCount(el, parts) { const h = countLine(parts).replace(new RegExp('(^| )' + CONFIG.ui.sun + ' '), '$1' + SUNI + CONFIG.ui.sun + ' '); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
+// (LAG FIX Nov 19: the pattern is made once per Sun word, not every frame)
+let SUNRX = null, SUNW = '';
+export function setCount(el, parts) { if (SUNW !== CONFIG.ui.sun) { SUNW = CONFIG.ui.sun; SUNRX = new RegExp('(^| )' + SUNW + ' '); } const h = countLine(parts).replace(SUNRX, '$1' + SUNI + SUNW + ' '); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
 // the small sun icon (CSS draws it from --sun-ic; .no = crossed out, for "can't afford")
 export const SUNI = '<i class="sunic"></i>', SUNNO = '<i class="sunic no"></i>';
 // a cost in Sun with its icon and unit ("12 Sun"), or "free"

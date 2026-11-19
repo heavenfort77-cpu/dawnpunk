@@ -29,7 +29,8 @@ function createWorld(o) {
     },
     step(dt) { w.step(1 / 60, dt, 4); },
     // where a piece is: { p: [x, y, z], q: [x, y, z, w], asleep }
-    get(id) { const b = bodies.get(id); if (!b) return null; return { p: [b.position.x, b.position.y, b.position.z], q: [b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w], asleep: b.sleepState === CANNON.Body.SLEEPING }; },
+    // out (optional, LAG FIX Nov 19): an object { p: [3], q: [4] } to write into instead of a new one each call
+    get(id, out) { const b = bodies.get(id); if (!b) return null; const o = out || { p: [0, 0, 0], q: [0, 0, 0, 1], asleep: false }; o.p[0] = b.position.x; o.p[1] = b.position.y; o.p[2] = b.position.z; o.q[0] = b.quaternion.x; o.q[1] = b.quaternion.y; o.q[2] = b.quaternion.z; o.q[3] = b.quaternion.w; o.asleep = b.sleepState === CANNON.Body.SLEEPING; return o; },
     remove(id) { const b = bodies.get(id); if (b) { w.removeBody(b); bodies.delete(id); } },
     count() { return bodies.size; },
     clear() { for (const b of bodies.values()) w.removeBody(b); bodies.clear(); },
