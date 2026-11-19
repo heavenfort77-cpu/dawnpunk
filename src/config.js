@@ -1179,6 +1179,9 @@ export const CONFIG = {
     keepBase: true,
     // endSnap: the run-end screen's blur is made once from the held picture instead of blurring live every frame (src/main.js endSnap)
     endSnap: true,
+    // filmWarm: the film's black is painted first, and its street (and at the dawn shot its base) has its shaders built and every piece drawn once under the black
+    // before the film's clock runs (src/main.js filmWarm)
+    filmWarm: true,
     // mergeBase: the base's still pieces drawn as one mesh per material and cell m of ground (src/baseview.js mergeStill); hidePad: extra m kept clear round the film's hidden plant
     mergeBase: { on: true, cell: 16, hidePad: 1.5 },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind

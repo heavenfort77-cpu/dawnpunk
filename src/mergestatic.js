@@ -36,7 +36,9 @@ export function mergeStatic(root, probe, still, opt) {
     for (const l of groups.values()) { if (l.length < 2) continue;
       const geos = l.map((o) => { o.updateMatrix(); const g = o.geometry.clone(); g.applyMatrix4(o.matrix); return g; }), merged = mergeGeometries(geos, false); for (const g of geos) g.dispose(); if (!merged) { mergeState.failed++; continue; }
       const o0 = l[0], mesh = new THREE.Mesh(merged, o0.material); mesh.castShadow = o0.castShadow; mesh.receiveShadow = o0.receiveShadow; mesh.frustumCulled = o0.frustumCulled; mesh.renderOrder = o0.renderOrder; mesh.userData.mergedDraw = true; mesh.raycast = () => {}; o0.parent.add(mesh);
-      for (const o of l) { o.layers.set(HIT_LAYER); o.userData.hitOnly = true; } made++; mergeState.pieces += l.length; }
+      // (owner 12:17, the matrix pass) these pieces never move against their parent (that is why they were merged): their local matrix is kept (matrixAutoUpdate off),
+      // their world matrix still follows the parent each frame (the aimed shot reads it); the merged mesh sits at its parent's origin
+      for (const o of l) { o.layers.set(HIT_LAYER); o.userData.hitOnly = true; o.updateMatrix(); o.matrixAutoUpdate = false; } mesh.updateMatrix(); mesh.matrixAutoUpdate = false; made++; mergeState.pieces += l.length; }
     if (!still) mergeState.machines++; mergeState.meshes += made; return made;
   } catch (e) { mergeState.failed++; return 0; }
 }

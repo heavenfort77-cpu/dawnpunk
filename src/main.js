@@ -572,7 +572,15 @@ function opMachine(kind, dormant) { const o = GK.gloomMachine(kind, { dormant })
   // an awake machine gets a soft glow on its screen (phones have no screen lights; CONFIG.opening.grid.screenGlow)
   if (!dormant && o.userData.lamp) { const G = CONFIG.opening.grid.screenGlow, s = opGlow(o.userData.lampColor, G[0], G[1]); s.position.copy(o.userData.lamp); o.add(s); }
   return o; }
-function startIntro() { gloomPreload(FILM_KINDS); bview.preChars();
+// LAG FIX Nov 19 (owner 12:17, the film's 1.4-2.2 s frames): the film's black is shown and painted first, then the film's street is built under it; its shaders are
+// built in the background (compileAsync) and every piece drawn once under the black (filmWarm) before the film's clock starts; the same at the dawn shot. (Not in the
+// scripted checks: they keep the old timing.)
+function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = true; const L = CONFIG.lag.card;
+  (async () => { try { if (renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
+    const was = []; scene.traverse((o) => { if (o.isLight || o === sky.mesh) return; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; });
+    try { renderer.render(scene, cam); } finally { for (const [o, v, f] of was) { o.visible = v; o.frustumCulled = f; } } try { renderer.getContext().finish(); } catch (e) { /* no context */ } } catch (e) { /* the film runs as before */ } finally { I.hold = false; } })(); }
+function startIntro() { if (!BOTRUN() && CONFIG.lag.filmWarm && !startIntro.go && CONFIG.opening.on && save) { $('menu').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; startIntro.go = true; requestAnimationFrame(() => requestAnimationFrame(() => { try { startIntro(); } finally { startIntro.go = false; } })); return; }
+  gloomPreload(FILM_KINDS); bview.preChars();
   if (!CONFIG.opening.on) { startIntroOld(); return; }
   if (!save) return; clearScene(); dropWorld(); bview.dispose(); sim = null; ui = null; paused = false;
   if (save.day === 1 && !save.nights) save.scoutSpot = 4; // she is at your door when you wake
@@ -596,7 +604,7 @@ function startIntro() { gloomPreload(FILM_KINDS); bview.preChars();
   for (const l of glights) { l.visible = true; l.intensity = 0; }
   if (C[QUALITY === 'high' ? 'high' : 'low'].lights) { I.devL = new THREE.PointLight(T2.light[0], 0, T2.light[2], 2); I.devL.position.set(dp.x, 0.6, dp.z); I.grp.add(I.devL); }
   { const R = G.rim, rp = opAt(I, M[1] + R[3], R[4], M[2] + R[5]); I.rim = new THREE.PointLight(R[0], 0, R[2], 2); I.rim.position.copy(rp); I.grp.add(I.rim); }
-  I.fov0 = cam.fov; renderer.shadowMap.needsUpdate = true;
+  I.fov0 = cam.fov; renderer.shadowMap.needsUpdate = true; filmWarm(I);
 }
 // the eyelids (part 4): closed share 0..1 (made once, inside #cine)
 function opLids(closed) {
@@ -645,7 +653,7 @@ function introToBase() {
   const I = intro; if (!CONFIG.opening.on) { introToBaseOld(); return; } I.part = 'base'; if (I.grp) { scene.remove(I.grp); drop(I.grp); I.grp = null; } I.walkers = [];
   dropWorld(); run = null; GK.nightGlow(0); glights.forEach((l) => { l.intensity = 0; l.visible = false; }); hemi.color.setHex(CONFIG.baseLight.sky); hemi.groundColor.setHex(CONFIG.baseLight.ground); sky.mesh.visible = false;
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
-  bview.build(save); applyRelief(bview.group); I.hide = []; I.stands = []; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 0; if (o.isSprite && o.userData.kind) I.hide.push(o); if (o.isDirectionalLight && !I.sun) I.sun = o; if (opStandIn(o)) I.stands.push(o.parent); }); renderer.shadowMap.needsUpdate = true; shadowT = 1.5;
+  bview.build(save); applyRelief(bview.group); I.hide = []; I.stands = []; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 0; if (o.isSprite && o.userData.kind) I.hide.push(o); if (o.isDirectionalLight && !I.sun) I.sun = o; if (opStandIn(o)) I.stands.push(o.parent); }); renderer.shadowMap.needsUpdate = true; shadowT = 1.5; filmWarm(I);
 }
 // a person's plain stand-in figure (src/baseview.js: a capsule body and a ball head in their own group, until the person's model has loaded)
 function opStandIn(o) { const q = o.isMesh && o.geometry && o.geometry.type === 'CylinderGeometry' && o.geometry.parameters; return !!q && ((q.radiusTop === 0.3 && q.radiusBottom === 0.38 && q.height === 1.2) || (q.radiusTop === 0.2 && q.radiusBottom === 0.26 && q.height === 1.3)) && !!o.parent; }
@@ -678,7 +686,7 @@ function finishIntro() {
   $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE'; save.seenIntro = true; persist(); flash('Dawn, day ' + save.day + '. Marla is ' + sp.hint + '. Talk to her to ride out. They say a lucky cat hides somewhere in the base.', 2); jobCard(); }
 function introFrame(dt) {
   if (!CONFIG.opening.on) { introFrameOld(dt); return; }
-  const I = intro, C = CONFIG.opening, P = C.parts; I.t += dt; const t = I.t;
+  const I = intro, C = CONFIG.opening, P = C.parts; if (I.hold) return; I.t += dt; const t = I.t; // I.hold: filmWarm is still preparing under the black
   let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
   const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
   // the film's last frame still moves the base's people (from the bed, where the wake's camera is), so they do not stand still for one frame as you take over
@@ -1012,7 +1020,11 @@ $('watch').onclick = () => { if (paused) setPause(false); audio(); musicUnlock()
 // a first-time player (no save yet) gets the opening from "Enter the base" too (coordinator Nov 17); ?film=0 in the address skips that for the scripted checks
 // the scripted checks always open the page with ?quality=..., so a ?quality address also skips it unless ?film=1 asks for it (openingcheck); the player's own Graphics switch (gfxGo) adds film=1 so a real player keeps the film and card
 const NOFILM = (() => { try { const q = new URLSearchParams(location.search); return q.get('film') === '0' || (q.has('quality') && q.get('film') !== '1'); } catch (e) { return false; } })();
-$('enter').onclick = () => { audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = B.loadSave(CONFIG, storage); carry = save.carry || null; persist(); if (!had && !NOFILM) { startIntro(); return; } enterBase(); };
+$('enter').onclick = () => { audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = B.loadSave(CONFIG, storage); carry = save.carry || null; persist(); if (!had && !NOFILM) { startIntro(); return; }
+  // (owner, returning player straight to the base) the 'home' card shows first (painted), then the base is built under it and its shaders and first frames done there
+  // (sceneCard); the scripted checks keep the old direct path
+  if (BOTRUN() || !CONFIG.lag.card.on) { enterBase(); return; } $('lct').textContent = CONFIG.lag.card.titles.home || ''; $('lfill').style.width = '10%'; $('lcard').style.display = 'flex';
+  requestAnimationFrame(() => requestAnimationFrame(() => { enterBase(); sceneCard('home'); })); };
 let resetArm = -1e9; // was 0: a first tap in the first 3 s after the page loaded counted as the second (erasing) tap
 $('reset').onclick = () => { if (performance.now() - resetArm > 3000) { resetArm = performance.now(); $('reset').textContent = 'Tap again to erase your save'; return; } save = B.newSave(CONFIG); B.makeQuests(CONFIG, save); carry = null; persist(); $('reset').textContent = 'New game'; if (paused) setPause(false); audio(); musicUnlock(); startIntro(); }; // a new game plays the opening first (skippable); it lands in the base with Marla at your door
 $('go').onclick = () => { audio(); startRun(); };
