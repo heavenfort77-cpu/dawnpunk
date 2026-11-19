@@ -50,9 +50,19 @@ try { renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: Q.smooth, ste
 // LAG FIX Nov 19 (CPU profile of the night: 30 % of the time in getProgramInfoLog): three.js reads every shader's compile log after building it, which makes the page
 // wait for the driver. Players skip that read (CONFIG.lag.shaderLog); the scripted checks keep it so a broken shader still fails them (?cards=1 perf runs measure as a player)
 try { renderer.debug.checkShaderErrors = CONFIG.lag.shaderLog || (!!navigator.webdriver && new URLSearchParams(location.search).get('cards') !== '1'); } catch (e) { /* keep the default */ }
+// LAG FIX Nov 19 (owner 09:50; profile: shader switching about 9 % of the night frame): solid things are drawn grouped by the shader they need (a key made from the
+// material's kind and the maps and switches that pick its shader), then by material and distance as before. Solid surfaces hide each other by depth, so the order
+// changes nothing on screen; see-through things keep three.js's own back-to-front order. CONFIG.lag.sortByShader.
+const PKEY = new WeakMap(), PIDS = new Map(), PMAPS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'alphaMap', 'envMap', 'aoMap', 'lightMap', 'bumpMap', 'specularMap'];
+function shaderKey(it) { const m = it.material, o = it.object; let e = PKEY.get(m); if (!e || e.v !== m.version) { const k = m.type + '|' + (m.customProgramCacheKey ? m.customProgramCacheKey() : '') + '|' + PMAPS.map((q) => (m[q] ? 1 : 0)).join('') + '|' + m.vertexColors + (m.alphaTest > 0) + m.side + m.fog + m.flatShading + '|' + Object.keys(m.defines || {}).join(',');
+    let id = PIDS.get(k); if (id === undefined) { id = PIDS.size * 4; PIDS.set(k, id); } e = { v: m.version, id }; PKEY.set(m, e); } return e.id + (o.isSkinnedMesh ? 1 : 0) + (o.isInstancedMesh ? 2 : 0); }
+if (CONFIG.lag.sortByShader) renderer.setOpaqueSort((a, b) => (a.groupOrder - b.groupOrder) || (a.renderOrder - b.renderOrder) || (shaderKey(a) - shaderKey(b)) || (a.material.id - b.material.id) || (a.z - b.z) || (a.id - b.id));
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, Q.pixelRatio)); setGpuAniso(renderer.capabilities.getMaxAnisotropy()); if (CONFIG.render.tone) { renderer.toneMapping = THREE.AgXToneMapping; renderer.toneMappingExposure = CONFIG.render.exposure; }
 const hands = createHands(CONFIG);
 const scene = new THREE.Scene();
+// LAG FIX Nov 19 (owner 09:50; profile: updateMatrixWorld 15 % of the night frame): the scene itself never moves, so it no longer forces every object's matrix to be
+// worked out again each frame; objects that move still update themselves, and the still street (freezeWorld) is skipped
+scene.matrixAutoUpdate = false;
 scene.background = new THREE.Color(0x0b1020);
 scene.fog = new THREE.Fog(0x0b1020, 8, 34);
 const cam = new THREE.PerspectiveCamera(75, 1, 0.03, 90);
@@ -94,7 +104,7 @@ const gl_v = new THREE.Vector3();
 // happens under the night card (sceneCard), which builds the shaders for it, so the light count never changes in the middle of play
 function tickGloomLights(on) { GK.nightGlow(on ? 1 : 0); if (!glights.length) return; if (glights[0].visible !== on) for (const l of glights) l.visible = on; const list = on ? [...gMesh.values()].filter((m) => m.userData.lamp).map((m) => [m.position.distanceToSquared(cam.position), m]).sort((a, b) => a[0] - b[0]) : [];
   const use = Math.max(0, glights.length - sky.strain);
-  glights.forEach((l, i) => { const q = i < use ? list[i] : null; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
+  glights.forEach((l, i) => { const q = i < use ? list[i] : null; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); if (!m.matrixWorldAutoUpdate) m.updateWorldMatrix(false, false); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
 let dormM = [];
 function needDormant() {
   if (dormG || !world || !CONFIG.gloomLook.machines || GLOOM_Q === 'hood') return; dormG = new THREE.Group(); world.g.add(dormG);
@@ -105,7 +115,7 @@ function needDormant() {
   dormM = []; for (const d of run.dormant) { d.awake = 0; const o = GK.gloomMachine(d.kind, { dormant: true }); dormM.push(o); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.traverse((m) => { if (m.isMesh && !m.material.transparent) m.castShadow = true; }); dormG.add(o); }
   renderer.shadowMap.needsUpdate = true;
 }
-function tickDormant(night) { if (!dormG) return; dormG.visible = !night; if (night) return; const t = performance.now() / 1000; for (const o of dormG.children) if (!o.userData.awake) o.userData.anim(t, null); }
+function tickDormant(night) { if (!dormG) return; dormG.visible = !night; dormG.matrixWorldAutoUpdate = !night; if (night) return; const t = performance.now() / 1000; for (const o of dormG.children) if (!o.userData.awake) o.userData.anim(t, null); }
 // light sleepers: by day a dormant machine wakes if you pass close with a heavy pack, lurches after you, can hit once, then powers down in the sun
 function sleeperMesh(i, awake) { const d = run.dormant[i], old = dormM[i]; if (old) { dormG.remove(old); drop(old); } const o = GK.gloomMachine(d.kind, { dormant: !awake }); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.userData.awake = !!awake; o.traverse((q) => { if (q.isMesh && !q.material.transparent) q.castShadow = true; }); dormG.add(o); dormM[i] = o; renderer.shadowMap.needsUpdate = true; }
 function tickSleepers(dt) { const S = CONFIG.sleepers; if (!S.on || !run || sim || !dormG || state !== 'play') return; const heavy = RUN.speedMult(run) <= S.pace, t = performance.now() / 1000;
@@ -142,6 +152,11 @@ function noSmallCasters(root) { const R = CONFIG.lag.smallCaster, v = new THREE.
 function needWorld() { if (!world) { if (DESO.place && !run.desoPlaced) { placeSample(run, CONFIG); run.desoPlaced = true; } world = buildWorld(CONFIG, run); noSmallCasters(world.g); scene.add(world.g); applyRelief(world.g); buildGrounding(); buildTrim(); shadowT = 1.5; } renderer.shadowMap.needsUpdate = true; return world; } // the sun's shadows are static: drawn again only when the world is moved or its textures arrive
 let sim = null, state = 'menu', roomGroup = null, catG = null, catArm = null, camY = 1.6;
 const landAt = new Map(); // device id -> time its thrown pod lands: the device is drawn from then, growing in over CONFIG.hands.landGrow s
+// the still street (world.g): its own matrix is set by world.frame(); every child but the day machines (dormG, they move) is skipped by the per-frame matrix pass and
+// worked out again only when the street is moved or a child is added (CONFIG.lag.freezeWorld)
+let frozenN = -1, frozenG = null;
+function freezeWorld() { if (!CONFIG.lag.freezeWorld || !world) return; const g = world.g; if (g === frozenG && g.children.length === frozenN) return;
+  g.matrixAutoUpdate = false; g.updateMatrix(); for (const c of g.children) c.matrixWorldAutoUpdate = c === dormG; g.updateMatrixWorld(true); frozenG = g; frozenN = g.children.length; }
 // the night card's warm-up copies (sceneCard, warmNight below)
 const warmG = new THREE.Group(); warmG.name = 'warm';
 // phone-tier machines waiting for their still pieces to be merged (src/mergestatic.js)
@@ -537,7 +552,7 @@ function opLids(closed) {
 }
 // screen light on the nearest awake machines (the same pool of lights the night uses)
 function opScreens(list) { const use = list.filter((o) => o && o.userData.lamp && o.visible).map((o) => [o.position.distanceToSquared(cam.position), o]).sort((a, b) => a[0] - b[0]);
-  glights.forEach((l, i) => { l.visible = true; const q = use[i]; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
+  glights.forEach((l, i) => { l.visible = true; const q = use[i]; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); if (!m.matrixWorldAutoUpdate) m.updateWorldMatrix(false, false); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
 // part 1: lights die, the machine wakes and turns
 function opGrid(I, t) {
   const C = CONFIG.opening, G = C.grid, c = opPath(G.cam, t), tt = performance.now() / 1000;
@@ -728,7 +743,7 @@ function townFrame(dt) {
   cam.position.set(run.px, 1.6, run.pz); cam.rotation.set(pitch, yaw, 0, 'YXZ');
   $('hp').style.width = (100 - (run.hurt || 0)) + '%'; $('en').style.width = (100 * run.energy / CONFIG.player.energyCap) + '%';
   H2.setClock($('time'), run.dayT, false); H2.setClockBar(run.dayT, false); H2.setVit($('enL'), run.energy, false, 100 - (run.hurt || 0)); H2.setCount($('count'), [['Houses', run.visited + '/6'], ['Food', run.food], ['Essentials', run.ess], [CONFIG.ui.sun, Math.round(run.energy), 1], ['Walk speed', Math.round(100 * RUN.speedMult(run)) + '%']]); $('time').style.color = run.bell ? '#ff6a5a' : ''; $('coins').textContent = run.coins ? 'Lucky cat found' : '';
-  tickSleepers(dt); tickHud(dt); tickAim(dt); sky.follow(cam, world ? world.g.rotation.y : 0, dt); draw();
+  tickSleepers(dt); tickHud(dt); tickAim(dt); sky.follow(cam, world ? world.g.rotation.y : 0, dt); freezeWorld(); draw();
   hands.update(dt, Math.hypot(stick.x, stick.y) > 0.1 || keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD, run.energy / CONFIG.player.energyCap, false); (window.__noHands || hands.render(renderer, cam.aspect));
 }
 function start(viaBase) {
@@ -1303,7 +1318,7 @@ function warmNight() { dropWarm(); if (!run) return; const K = CONFIG.gloom.kind
   // the shot, its splash, a kill's smoke and a broken device's splinters (their shaders), and the scrap pieces' physics file (desktop)
   for (const c of [0x7fd8ff, 0x9fd8ff, 0x9fffa0, 0xd0a0ff, 0xffe08a]) { warmG.add(PR.jet(new THREE.Vector3(0, -50, 0), new THREE.Vector3(1, -50, 0), c)); warmG.add(PR.droplet(c)); }
   warmG.add(PR.smoke()); warmG.add(PR.splinter('panel')); warmG.add(PR.splinter('lance')); physicsPreload();
-  warmG.visible = true; scene.add(warmG); }
+  warmG.visible = true; warmG.matrixWorldAutoUpdate = true; scene.add(warmG); }
 const nap = (ms) => new Promise((r) => setTimeout(r, ms));
 async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
@@ -1326,7 +1341,7 @@ async function sceneCard(kind) {
       scene.traverse((o) => { if ((o.isSpotLight || (o.isPointLight && !glights.includes(o))) && o.visible) { o.visible = false; spots.push(o); } });
       try { for (const n of lamps) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
           fill(0.7 + 0.2 * tmp.length / most); await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
-      finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } for (const o of spots) o.visible = true; for (const l of glights) l.visible = false; warmG.visible = false; } }
+      finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } for (const o of spots) o.visible = true; for (const l of glights) l.visible = false; warmG.visible = false; warmG.matrixWorldAutoUpdate = false; } }
     // LAG FIX Nov 19 (real GPU: the first frame after the night card still took 1.7 s): the scene is drawn once UNDER the card, with the warm-up copies set out in front of
     // the camera, so every shader's first use, every upload and the sun shadow map (whose depth shaders compileAsync does not build) happen here, not in play; then
     // drawn again without them, so the shadow map play starts with is the real one. (Not in the scripted checks: they keep the old timing.)
@@ -1342,7 +1357,8 @@ async function sceneCard(kind) {
       { const was = []; cam.layers.enable(1); try { scene.traverse((o) => { if (o.isLight || o === sky.mesh) return; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; }); renderer.render(scene, cam); }
         finally { for (const [o, v, f] of was) { o.visible = v; o.frustumCulled = f; } cam.layers.disable(1); } await raf(); }
       if (kind === 'night') { draw1(true); await raf(); } draw1(false); try { renderer.getContext().finish(); } catch (e2) { /* no context */ } }
-    warmG.visible = false;
+    // the warm-up copies stay hidden until the run ends: their matrices skip the per-frame pass too (owner 09:50)
+    warmG.visible = false; warmG.matrixWorldAutoUpdate = false;
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
   LCARD.ms = Math.round(performance.now() - t0);
@@ -1444,18 +1460,18 @@ function frame(now) {
     if (p.climb) camY = (p.floor + (p.climb.to - p.floor) * (1 - p.climb.t / CONFIG.ladderTime)) * FH + 1.6; else camY += (p.floor * FH + 1.6 - camY) * Math.min(1, dt * 8);
     cam.position.set(p.x, camY, p.z); cam.rotation.set(pitch, yaw, 0, 'YXZ');
     for (const g of sim.gloom) {
-      let m = gMesh.get(g.id); if (!m) { m = gloomMesh(g); if (QUALITY === 'low' && m.userData.anim) mergeQ.push([m, g.x, g.z]); shadeUnder(m, CONFIG.depth.gloom * (gloomKind(g) === 'warden' ? 1.8 : gloomKind(g) === 'hauler' ? 1.4 : gloomKind(g) === 'ticks' ? 0.8 : 1)); scene.add(m); gMesh.set(g.id, m); }
+      let m = gMesh.get(g.id); if (!m) { m = gloomMesh(g); if (m.userData.anim) mergeQ.push([m, g.x, g.z]); shadeUnder(m, CONFIG.depth.gloom * (gloomKind(g) === 'warden' ? 1.8 : gloomKind(g) === 'hauler' ? 1.4 : gloomKind(g) === 'ticks' ? 0.8 : 1)); scene.add(m); gMesh.set(g.id, m); }
       // the height it is drawn at comes from the sim (src/sim.js gloomY), so the aimed shot aims where the model stands
       const gy = sim.gloomY(g);
       // LAG FIX Nov 19 (owner 07:10): at night in a house a machine outside that no opening shows is not drawn (src/nightcull.js sees; CONFIG.lag.nightCull.gloomR);
       // it stays visible and animated (the aimed shot tests the model as posed, src/main.js drawnHit, so the rules see exactly what they saw before); only its draws move to
-      // layer 1, which the camera does not draw (pieces already on the hit layer stay there)
-      m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; { const L = nightCull.sees(g.x, gy + CONFIG.lag.nightCull.gloomY, g.z, CONFIG.lag.nightCull.gloomR, sim, cam) ? 0 : 1; if ((m.userData.cullL || 0) !== L) { m.userData.cullL = L; m.traverse((q) => { if (!q.userData.hitOnly) q.layers.set(L); }); } }
+      // layer 1, which the camera does not draw (pieces already on the hit layer stay there), and its matrices skip the per-frame pass (drawnHit works them out itself)
+      m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; { const L = nightCull.sees(g.x, gy + CONFIG.lag.nightCull.gloomY, g.z, CONFIG.lag.nightCull.gloomR, sim, cam) ? 0 : 1; if ((m.userData.cullL || 0) !== L) { m.userData.cullL = L; m.traverse((q) => { if (!q.userData.hitOnly) q.layers.set(L); }); m.matrixWorldAutoUpdate = L === 0; } }
       if (m.userData.anim) m.userData.anim(performance.now() / 1000, g); else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
     }
-    // phone tier: a new machine's still pieces are merged a few machines a frame (CONFIG.lag.mergeGloom.perFrame); the probe poses use times before 0 (no caption line starts)
+    // every tier (desktop too since owner 09:50): a new machine's still pieces are merged a few machines a frame (CONFIG.lag.mergeGloom.perFrame); the probe poses use times before 0 (no caption line starts)
     for (let k = 0; k < CONFIG.lag.mergeGloom.perFrame && mergeQ.length; k++) { const [mm, mx, mz] = mergeQ.shift(); if (!mm.parent) continue; mergeStatic(mm, (i) => mm.userData.anim(-(1 + i * 0.73), { x: mx + i * 0.11, z: mz + i * 0.07 })); }
-    tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000); nightCull.tick(world, sim, cam, dormG);
+    tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000); freezeWorld(); nightCull.tick(world, sim, cam, dormG);
     bossTick(dt, sim, { scene, cam, audio }); scrapTick(dt, { scene }); // the final-night boss (src/bosshi.js): after the camera is set, before the frame is drawn
     if (run && sim.L > 1 && !run.toldStairs && save && (save.nights || 0) < 2 && [...sim.stairs.map((q) => [q.bx, q.bz]), ...sim.stairs.map((q) => [q.tx, q.tz]), ...sim.ladders.map((q) => [q.x, q.z])].some((q) => Math.hypot(q[0] - sim.player.x, q[1] - sim.player.z) < 3)) { run.toldStairs = true; marlaHint('Stairs: the Gloom use them too. The ladder: only you can climb it.'); }
     if (kindQ.length && sim.phase === 'night' && marlaT <= 0.01 && sim.t > CONFIG.gloomLook.kindLineAfter && !paused) marlaHint(kindQ.shift());

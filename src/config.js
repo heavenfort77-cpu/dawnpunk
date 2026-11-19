@@ -1164,6 +1164,10 @@ export const CONFIG = {
     nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2, roofCull: 0.02, sceneryFar: 15 },
     // mergeGloom: phone tier, the still pieces of each Gloom machine drawn as one mesh per parent and material (src/mergestatic.js); on: the switch; probes: test poses
     // run to find the pieces that never move; perFrame: machines merged per frame at most (a burst of arrivals is spread over a few frames)
+    // freezeWorld: the still street's matrices are worked out only when it is moved or added to, not every frame (src/main.js freezeWorld)
+    freezeWorld: true,
+    // sortByShader: solid things drawn grouped by the shader they need (src/main.js shaderKey; fewer shader switches, nothing changes on screen)
+    sortByShader: true,
     // shaderLog: true = always read each shader's compile log (three.js checkShaderErrors; costs a wait on the driver per shader); false = only in the scripted checks
     shaderLog: false,
     // mergeDecals: the house's floor shades, door pools and dirt decals (static) drawn as one mesh per material (src/main.js buildDepth; all tiers)

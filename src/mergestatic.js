@@ -22,7 +22,7 @@ export function mergeStatic(root, probe, still) {
   const C = still ? { on: true, probes: 0, transparent: true } : CONFIG.lag.mergeGloom; if (!C || !C.on) return 0;
   try {
     const leaves = [];
-    root.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || o.children.length || !o.geometry || Array.isArray(o.material) || o.userData.blob || o.userData.mergedDraw) return;
+    root.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || o.children.length || !o.geometry || Array.isArray(o.material) || o.userData.blob || o.userData.mergedDraw || o.userData.hitOnly) return;
       const m = o.material; if (!m || (m.transparent && !C.transparent) || m.blending !== THREE.NormalBlending || o.morphTargetInfluences) return; leaves.push(o); });
     if (leaves.length < 2) return 0;
     const k0 = leaves.map(keyOf), moving = new Set();
