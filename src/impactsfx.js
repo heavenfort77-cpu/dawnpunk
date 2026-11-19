@@ -526,18 +526,22 @@ function chainGet(a, dest, C, od, now) {
   let m = POOLS.get(a); if (!m) { m = new Map(); POOLS.set(a, m); } const k = (od ? 'o' : 'i') + (dest ? 'd' : ''); let l = m.get(k); if (!l) { l = []; m.set(k, l); }
   for (const c of l) if (c.busy <= now && c.dest === dest) return c; const c = chainNew(a, dest, C, od); c.dest = dest; l.push(c); return c;
 }
-// render one variant's sources (mono, from time 0) into a buffer of exactly their length; pv from rnd first, as impactPlay draws it
-async function renderSources(sr, kind, C, ph, rnd, maxLen, gvOut) {
-  const oc = new OfflineAudioContext(1, Math.ceil(sr * maxLen), sr), cap = oc.createGain(); cap.connect(oc.destination);
-  const pv = 1 + C.pitchVar * (rnd() * 2 - 1), gv = Math.pow(10, (C.gainVarDb * (rnd() * 2 - 1)) / 20); if (gvOut) gvOut.gv = gv;
-  const end = Math.min(maxLen, impactSources(oc, cap, kind, 0, C, rnd, ph, pv)), buf = await oc.startRendering(), n = Math.max(1, Math.ceil(end * sr));
-  const out = new AudioBuffer({ length: n, sampleRate: sr, numberOfChannels: 1 }); out.copyToChannel(buf.getChannelData(0).subarray(0, n), 0); return out;
+// a seeded random source (the variant's draws, repeatable so its length can be learnt first)
+const seeded = (s0) => { let s = s0 >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let x = Math.imul(s ^ (s >>> 15), 1 | s); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
+// render one variant's sources (mono, from time 0) into a buffer of exactly their length; pv from rnd first, as impactPlay draws it. The sources are first laid out
+// in a one-sample context to learn where they end (the same draws), so only that length is rendered
+async function renderSources(sr, kind, C, ph, seed, maxLen) {
+  const dry = new OfflineAudioContext(1, 1, sr), r0 = seeded(seed), pv0 = 1 + C.pitchVar * (r0() * 2 - 1); r0(); const end = Math.min(maxLen, impactSources(dry, dry.createGain(), kind, 0, C, r0, ph, pv0)), n = Math.max(1, Math.ceil(end * sr));
+  const oc = new OfflineAudioContext(1, n, sr), cap = oc.createGain(), rnd = seeded(seed); cap.connect(oc.destination);
+  const pv = 1 + C.pitchVar * (rnd() * 2 - 1); rnd(); impactSources(oc, cap, kind, 0, C, rnd, ph, pv); return oc.startRendering();
 }
 // render the variants for this device (phone or not) at this sample rate; safe to call again (does nothing once done)
-export async function impactPrerender(sr, C, ph) {
+let preBusy = null;
+export function impactPrerender(sr, C, ph) { if (!preBusy) preBusy = prerender0(sr, C, ph).finally(() => { preBusy = null; }); return preBusy; }
+async function prerender0(sr, C, ph) {
   const V = C.variants || 0; if (!V || typeof OfflineAudioContext === 'undefined') return 0; let n = 0;
   for (const kind of ['shot', 'hit', 'head', 'charged', 'destroyed']) { const k = preKey(kind, ph, sr); if (PRE.has(k)) continue; const l = [];
-    for (let i = 0; i < V; i++) { l.push(await renderSources(sr, kind, C, ph, Math.random, C.renderMax)); n++; } PRE.set(k, l); }
+    for (let i = 0; i < V; i++) { l.push(await renderSources(sr, kind, C, ph, Math.floor(Math.random() * 4294967296), C.renderMax)); n++; } PRE.set(k, l); }
   return n;
 }
 // play one impact sound from a rendered variant through a pooled chain; null when there are no variants yet (the caller then builds it live)

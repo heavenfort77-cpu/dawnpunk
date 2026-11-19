@@ -1377,8 +1377,9 @@ async function sceneCard(kind) {
     // (Nov 19 09:00) For a player the RIDE card waits for them too and builds the night's shaders already (below), so the night card stays short.
     if (QUALITY === 'high' && (kind === 'night' || (kind === 'ride' && !bot))) { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
     if (kind === 'night') warmNight(); else dropWarm(); if (fx && fx.upgradeNow) fx.upgradeNow();
-    // the impact sounds' variants are rendered ahead under the card (src/impactsfx.js impactPrerender; only the first card renders, later ones find them done)
-    if (!bot && kind !== 'home') await Promise.race([IMP.prerender(), nap(L.maxWait * 1000)]);
+    // the impact sounds' variants are rendered ahead (src/impactsfx.js impactPrerender): started by the ride card and left to finish during the day; the night card
+    // waits a moment (CONFIG.lag.card.sfxWait s) if they are not done yet; until they are, a sound is built live as before
+    if (!bot && kind === 'ride') IMP.prerender(); else if (!bot && kind === 'night') await Promise.race([IMP.prerender(), nap(L.sfxWait * 1000)]);
     fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
     // the ride card also builds the NIGHT's shaders: the night's machine lights on (every lit shader is built per light count), one machine of each kind and each device
     // in the scene, then all put back as they were. The night card then finds them built (the first night card took 6.8 s on the test GPU, the next ones 0.5 s).

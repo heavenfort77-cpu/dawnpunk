@@ -1190,6 +1190,7 @@ export const CONFIG = {
     smallCaster: 0.12,
     // dtMax: longest game step one frame may take (s; was 0.1): after a long frame the game slows for a moment instead of jumping (all tiers; the checks set their own)
     dtMax: 0.05,
-    card: { on: true, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' } },
+    // card.sfxWait: the night card waits at most this long (s) for the impact sound variants still being rendered
+    card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' } },
   },
 };
