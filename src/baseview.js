@@ -57,6 +57,11 @@ function label(text, color = '#fff', w = 3.2) {
   x.font = FONT; x.fillStyle = L.bg; x.fillRect(0, 0, c.width, 64); x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round'; x.lineWidth = L.strokeW; x.strokeStyle = L.stroke; x.strokeText(text, c.width / 2, 34); x.fillStyle = color; x.fillText(text, c.width / 2, 34);
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: true, depthWrite: false, toneMapped: false, fog: false })); s.userData.aspect = c.width / 256; s.scale.set(w * s.userData.aspect, w / 4, 1); s.renderOrder = 10; s.userData.w = w; s.userData.text = text; s.userData.textW = tw; s.userData.canvasW = c.width; LABELS.push(s); return s;
 }
+// the quest marks' '!' and '?' pictures, made once and kept (owner 10:50: each change made a throwaway label sprite and left its picture on the GPU)
+const MARKS = {};
+function markTex(ch) { if (MARKS[ch]) return MARKS[ch]; const s = label(ch, ch === '?' ? '#7ae87a' : '#ffe14a', 1.2); LABELS.splice(LABELS.indexOf(s), 1); const t = s.material.map; t.userData.keep = true; s.material.dispose(); MARKS[ch] = t; return t; }
+// the base's sprite list and scratch vectors for the label pass (update)
+const SPV = { b: -1, n: -1, k: 0, list: [], c: new THREE.Vector3(), w: new THREE.Vector3() };
 const ROLE_COL = { hunter: 0xc0583a, gatherer: 0xc8b43a, researcher: 0x3a7ac0 };
 const PATROL = { hunter: [[-15, -15], [15, -15], [15, 15], [-15, 15]], gatherer: [[-9, -8], [0, -16], [-9, -8]], researcher: [[6.0, 3.9], [9, 3.4], [9.55, 2.2], [9, 3.4]] }; // researchers walk past the workshop door (it faces the plaza since Nov 17), clear of its step and urns, and stop to read the quest board beside it
 
@@ -310,16 +315,17 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       // the villager's real model; the plain stand-in shows only until it has loaded
       if (makeChar) { const ch = chars[n.id] || (chars[n.id] = makeChar(n.id)); if (ch) ch.whenReady(() => { if (!npcG[n.id] || npcG[n.id].p === p) { shadowDirty = true; p.remove(stand); ch.root.position.set(0, 0, 0); p.add(ch.root); } }); }
       const lab = label(n.name + ' (' + n.title + ')', '#fff', 2.8); lab.position.y = 2.4; lab.userData.kind = 'npc'; p.add(lab);
-      const mk = label('!', '#ffe14a', 1.2); mk.scale.set(1.2, 0.3, 1); mk.position.y = 3.1; mk.userData.kind = 'mark'; p.add(mk);
+      const mk = label('!', '#ffe14a', 1.2); mk.material.map.dispose(); mk.material.map = markTex('!'); mk.userData.ch = '!'; mk.scale.set(1.2, 0.3, 1); mk.position.y = 3.1; mk.userData.kind = 'mark'; p.add(mk);
       p.position.set(n.x, n.inside && WS ? WS.floor : 0, n.z); g.add(p); circle(n.x, n.z, 0.5); npcG[n.id] = { p, mk, lab };
     }
     refreshNpcs();
   }
-  function refreshNpcs() { for (const n of Object.values(NPCS)) { const o = npcG[n.id]; if (!o || !save) continue; const q = save.quests.find((x) => x.giver === n.id && x.state !== 'done'); o.mk.userData.show = false; const ch = q && q.state === 'ready' ? '?' : '!'; if (o.mk.userData.ch !== ch) { o.mk.userData.ch = ch; o.mk.material.map = label(ch, ch === '?' ? '#7ae87a' : '#ffe14a', 1.2).material.map; o.mk.material.needsUpdate = true; } } }
+  function refreshNpcs() { for (const n of Object.values(NPCS)) { const o = npcG[n.id]; if (!o || !save) continue; const q = save.quests.find((x) => x.giver === n.id && x.state !== 'done'); o.mk.userData.show = false; const ch = q && q.state === 'ready' ? '?' : '!'; if (o.mk.userData.ch !== ch) { o.mk.userData.ch = ch; o.mk.material.map = markTex(ch); o.mk.material.needsUpdate = true; } } }
   function refreshHome() { homeCats.forEach((h, k) => { const c = save.cats.find((x) => x.state === 'placed' && x.slot === k); if (h.cg && (!c || h.cg.userData.id !== c.id)) { h.cg.parent.remove(h.cg); h.cg = null; } if (c && !h.cg) { h.cg = makeCat(c, cfg); h.cg.position.set(HOME.slots[k][0], HOME.slots[k][1] - 0.16, HOME.slots[k][2] + 0.05); g.add(h.cg); } }); for (const o of hiddenCats) o.cg.visible = o.c.state === 'hidden'; }
   // free GPU memory: every base rebuild made new geometries and materials
-  // (LAG FIX Nov 19: the base sun's shadow map is freed with it; a new 2048 map stayed on the GPU after every visit)
-  function freeAll() { if (marla && marla.root.parent) marla.root.parent.remove(marla.root); for (const c of Object.values(chars)) if (c && c.root.parent) c.root.parent.remove(c.root); g.traverse((o) => { if (o.userData.keep) return; if (o.isLight && o.shadow && o.shadow.map) o.shadow.dispose(); if (o.geometry) o.geometry.dispose(); const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && t.userData.shared)) t.dispose(); } m.dispose(); } }); }
+  // (LAG FIX Nov 19: the base sun's shadow map is freed with it; a new 2048 map stayed on the GPU after every visit. Owner 10:50: shared materials and kept
+  // textures (cached for every visit) are left alone, and the label list is emptied, as its labels are freed here)
+  function freeAll() { if (marla && marla.root.parent) marla.root.parent.remove(marla.root); for (const c of Object.values(chars)) if (c && c.root.parent) c.root.parent.remove(c.root); g.traverse((o) => { if (o.userData.keep) return; if (o.isLight && o.shadow && o.shadow.map) o.shadow.dispose(); if (o.geometry) o.geometry.dispose(); const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { if (m.userData && m.userData.shared) continue; for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && (t.userData.shared || t.userData.keep))) t.dispose(); } m.dispose(); } }); LABELS.length = 0; }
   function dispose() { buildN++; freeAll(); g.clear(); scene.remove(g); }
   // out of a room's wall or furniture box (room frame): to the nearest point on the box plus the body radius, or out by the nearest face when inside it
   const outOfBox = (q, x, z) => { const R = 0.35, [lx, lz] = toLocal(q.I, x, z), qx = Math.max(q.cx - q.hx, Math.min(q.cx + q.hx, lx)), qz = Math.max(q.cz - q.hz, Math.min(q.cz + q.hz, lz)), dx = lx - qx, dz = lz - qz, d = Math.hypot(dx, dz); if (d >= R) return [x, z];
@@ -392,8 +398,12 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     if (life) { const k = 1 - Math.exp(-dt * cfg.people.motion.deckEase); for (const o of npcs) { if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) continue; const y = life.deckY(o.n.position.x, o.n.position.z); o.n.position.y += (y - o.n.position.y) * k; } }
     for (const o of hiddenCats) if (o.cg.visible) o.cg.userData.arm.rotation.z = Math.sin(t * 4 + o.c.id) * 0.6;
     for (const h of homeCats) if (h.cg) h.cg.userData.arm.rotation.z = Math.sin(t * 3) * 0.6;
-    const cam = new THREE.Vector3(px, camY, pz);
-    g.traverse((o) => { if (o.isSprite) { const wp = o.getWorldPosition(new THREE.Vector3()), d = wp.distanceTo(cam), lim = cfg.base.labelRange * (o.userData.kind === 'station' ? 1.8 : 1); o.visible = o.userData.kind === 'mark' ? (!!o.userData.show && d < 22) : d < lim && !o.userData.signHid; } }); // signHid: panel fix, the label hides near its painted sign (sizeLabels)
+    // (owner 10:50) the base's sprites are listed once per build (again when the base's node count changes, and once a second for labels added deeper), with
+    // reused vectors, not a full walk each frame;
+    // signHid: panel fix, the label hides near its painted sign (sizeLabels)
+    const cam = SPV.c.set(px, camY, pz);
+    if (SPV.b !== buildN || SPV.n !== g.children.length || ++SPV.k > 60) { SPV.k = 0; SPV.b = buildN; SPV.n = g.children.length; SPV.list.length = 0; g.traverse((o) => { if (o.isSprite) SPV.list.push(o); }); }
+    for (const o of SPV.list) { const wp = o.getWorldPosition(SPV.w), d = wp.distanceTo(cam), lim = cfg.base.labelRange * (o.userData.kind === 'station' ? 1.8 : 1); o.visible = o.userData.kind === 'mark' ? (!!o.userData.show && d < 22) : d < lim && !o.userData.signHid; }
     // indoors her floating name sat over the pegboard and her head (owner's review, Nov 17): inside the room the talk prompt names her, so the label is hidden there
     for (const n of Object.values(NPCS)) if (n.inside && WS && npcG[n.id] && npcG[n.id].lab && inRoom(WS, px, pz)) npcG[n.id].lab.visible = false;
     // (the quest board beside the workshop door answers only when you are nearer to it than to the doorway: at the door the prompt still says to go in)

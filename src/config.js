@@ -1169,6 +1169,8 @@ export const CONFIG = {
     fxPool: 80,
     // pbrWalk: the desktop surface pass (src/fx.js) upgrades what is added to the scene at once and walks the whole scene only every pbr.every x this many frames (was every pbr.every)
     pbrWalk: 15,
+    // shadowSettle: on the street, Marla's shadow is drawn again once she has stood still this long (s) after turning (owner 10:50; was every 0.1 s while she turned)
+    shadowSettle: 0.25,
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind
     gloomPool: 10,
     // freezeWorld: the still street's matrices are worked out only when it is moved or added to, not every frame (src/main.js freezeWorld)

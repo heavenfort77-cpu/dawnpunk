@@ -119,7 +119,8 @@ function needDormant() {
   dormM = []; for (const d of run.dormant) { d.awake = 0; const o = GK.gloomMachine(d.kind, { dormant: true }); dormM.push(o); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.traverse((m) => { if (m.isMesh && !m.material.transparent) m.castShadow = true; }); dormG.add(o); }
   renderer.shadowMap.needsUpdate = true;
 }
-function tickDormant(night) { if (!dormG) return; dormG.visible = !night; dormG.matrixWorldAutoUpdate = !night; if (night) return; const t = performance.now() / 1000; for (const o of dormG.children) if (!o.userData.awake) o.userData.anim(t, null); }
+function tickDormant(night) { if (!dormG) return; dormG.visible = !night; dormG.matrixWorldAutoUpdate = !night; if (night) return; const t = performance.now() / 1000, f2 = cam.far * cam.far; for (const o of dormG.children) if (!o.userData.awake && o.position.distanceToSquared(SLV.copy(cam.position).sub(world.g.position)) < f2) o.userData.anim(t, null); } // (owner 10:50) only the sleepers within the far plane are animated
+const SLV = new THREE.Vector3();
 // light sleepers: by day a dormant machine wakes if you pass close with a heavy pack, lurches after you, can hit once, then powers down in the sun
 function sleeperMesh(i, awake) { const d = run.dormant[i], old = dormM[i]; if (old) { dormG.remove(old); drop(old); } const o = GK.gloomMachine(d.kind, { dormant: !awake }); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.userData.awake = !!awake; o.traverse((q) => { if (q.isMesh && !q.material.transparent) q.castShadow = true; }); dormG.add(o); dormM[i] = o; renderer.shadowMap.needsUpdate = true; }
 function tickSleepers(dt) { const S = CONFIG.sleepers; if (!S.on || !run || sim || !dormG || state !== 'play') return; const heavy = RUN.speedMult(run) <= S.pace, t = performance.now() / 1000;
@@ -208,7 +209,8 @@ function buildDirt(g) { const D = CONFIG.dirt, H = sim.H; let q = ((run ? run.se
       for (let k = ri(D.wall); k > 0; k--) { const u = (rn() * 2 - 1) * (H - 0.9), roll = rn(), kind = roll < 0.5 ? 'leak' : roll < 0.8 ? 'crack' : 'grime', ww = kind === 'leak' ? 0.9 + 1.2 * rn() : kind === 'crack' ? 1.1 + 1.3 * rn() : 1.4 + 1.2 * rn(), hh = kind === 'leak' ? 1.3 + 1.5 * rn() : kind === 'crack' ? ww : 0.9 + 0.5 * rn();
         if (open.some((v) => Math.abs(v - u) < CONFIG.openingHalf + ww / 2 + 0.1)) continue; const o = new THREE.Mesh(wallGeo, dirtMat(kind)); o.scale.set(ww, hh, 1); o.position.set(nx ? nx * W : u, kind === 'leak' ? top - hh / 2 : kind === 'crack' ? y0 + 0.7 + rn() * 1.6 : y0 + 0.1 + hh / 2, nz ? nz * W : u); o.rotation.y = ry; if (kind === 'crack') o.rotation.z = rn() * 6.28; o.renderOrder = 1; g.add(o); } }
     if (D.webs) for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { if (rn() < 0.25) continue; const s = 0.9 + 0.7 * rn(), o = new THREE.Mesh(wallGeo, dirtMat('cobweb')); o.scale.set(s, s, 1); o.position.set(sx * (W - 0.02), top - s / 2 + 0.04, sz * (W - s * 0.35)); o.rotation.y = sx > 0 ? -Math.PI / 2 : Math.PI / 2; if ((sx > 0) === (sz > 0)) o.scale.x = -s; o.renderOrder = 2; g.add(o); } } }
-function depthLight(k) { if (!shadeMat) return; const D = CONFIG.depth, n = Math.min(1, Math.max(0, (k - 0.35) / 0.5)); shadeMat.opacity = D.shade + (D.shadeNight - D.shade) * n; poolMat.opacity = D.pool + (D.poolNight - D.pool) * n; poolMat.color.setHex(D.poolSun).lerp(new THREE.Color(D.poolMoon), n); }
+function depthLight(k) { if (!shadeMat) return; const D = CONFIG.depth, n = Math.min(1, Math.max(0, (k - 0.35) / 0.5)); shadeMat.opacity = D.shade + (D.shadeNight - D.shade) * n; poolMat.opacity = D.pool + (D.poolNight - D.pool) * n; poolMat.color.setHex(D.poolSun).lerp(DLC.setHex(D.poolMoon), n); }
+const DLC = new THREE.Color();
 function clearScene() {
   tickGloomLights(false); if (panelGhost) { drop(panelGhost); panelGhost = null; }
   for (const m of gMesh.values()) drop(m); for (const m of dMesh.values()) drop(m); gMesh.clear(); dMesh.clear(); gloomPoolDrop();
@@ -335,7 +337,10 @@ const SKY = { day: new THREE.Color(CONFIG.sky.horizon), dusk: new THREE.Color(0x
 let skyK = 1, hintN = 0, duskT = 0, duskDown = false, solarT = 0;
 // darker night (panel fix, CONFIG.nightLook per tier): at night n (0 day .. 1 full night) the exposure, the fill light and the house lamps go down by the tier's factors
 function nightLook(n) { const NL = CONFIG.nightLook[QUALITY === 'high' ? 'high' : 'low']; if (CONFIG.render.tone) renderer.toneMappingExposure *= 1 + (NL.exposure - 1) * n; hemi.intensity *= 1 + (NL.fill - 1) * n; if (roomGroup) for (const l of roomGroup.children) if (l.userData.roomLamp) l.intensity = CONFIG.world.lamp * (1 + (NL.lamp - 1) * n); }
-function applySky(k, dawn) { depthLight(Math.max(0, k - dawn)); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure + (CONFIG.render.exposureNight - CONFIG.render.exposure) * Math.min(1, Math.max(0, k - dawn)); if (world) { world.light(Math.max(0, k - dawn)); if (Math.abs(k - skyShadowK) > 0.04) { skyShadowK = k; if (QUALITY !== 'high') renderer.shadowMap.needsUpdate = true; } } if (k < 0.55) skyC.copy(SKY.day).lerp(SKY.dusk, k / 0.55); else skyC.copy(SKY.dusk).lerp(SKY.night, (k - 0.55) / 0.45); skyC.lerp(SKY.dawn, dawn); hemi.intensity = 1.6 + (world ? CONFIG.world.fillDay : 1.6) * Math.max(1 - k, dawn * 0.6); nightLook(Math.min(1, Math.max(0, k - dawn))); hemi.groundColor.setHex(world ? CONFIG.world.fill : 0x403830); hemi.color.setHex(0xb4c4ff); scene.background = skyC; sky.mesh.visible = true; sky.set(k, dawn, skyC); if (scene.fog) { scene.fog.color.copy(skyC); scene.fog.near = 20 - 12 * k; scene.fog.far = 80 - 46 * k; } }
+// (owner 10:50) the per-frame callers skip it while the sky has not moved (same k and dawn as the last call); every other caller still runs it in full
+const SKYL = { k: NaN, d: NaN };
+function applySkyIf(k, dawn) { if (k === SKYL.k && dawn === SKYL.d) return; applySky(k, dawn); }
+function applySky(k, dawn) { SKYL.k = k; SKYL.d = dawn; depthLight(Math.max(0, k - dawn)); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure + (CONFIG.render.exposureNight - CONFIG.render.exposure) * Math.min(1, Math.max(0, k - dawn)); if (world) { world.light(Math.max(0, k - dawn)); if (Math.abs(k - skyShadowK) > 0.04) { skyShadowK = k; if (QUALITY !== 'high') renderer.shadowMap.needsUpdate = true; } } if (k < 0.55) skyC.copy(SKY.day).lerp(SKY.dusk, k / 0.55); else skyC.copy(SKY.dusk).lerp(SKY.night, (k - 0.55) / 0.45); skyC.lerp(SKY.dawn, dawn); hemi.intensity = 1.6 + (world ? CONFIG.world.fillDay : 1.6) * Math.max(1 - k, dawn * 0.6); nightLook(Math.min(1, Math.max(0, k - dawn))); hemi.groundColor.setHex(world ? CONFIG.world.fill : 0x403830); hemi.color.setHex(0xb4c4ff); scene.background = skyC; sky.mesh.visible = true; sky.set(k, dawn, skyC); if (scene.fog) { scene.fog.color.copy(skyC); scene.fog.near = 20 - 12 * k; scene.fog.far = 80 - 46 * k; } }
 function buildCrates() { for (const m of crateMesh.values()) drop(m); crateMesh.clear(); for (const c of sim.crates) { const m = (LOOK_OLD ? PR.crateMesh : BT.crateV2)(c.kind); m.position.set(c.x, c.floor * FH + 0.06, c.z); m.rotation.y = (c.id * 1.7) % 3; shadeUnder(m, CONFIG.depth.crate, 0.02); scene.add(m); crateMesh.set(c.id, m); if (CONFIG.lag.freezeWorld) { m.updateMatrixWorld(true); m.matrixWorldAutoUpdate = false; } } } // crates never move (owner 09:50: they skip the per-frame matrix pass)
 const DAY_HINTS = [[0.5, 'Grab the crates, Potts. Green is food, blue is essentials.'], [7, 'Tap SOLAR by a door or window. It fills your Sun.'], [14, 'Full Sun wins nights. Do not rush the sunset.'], [21, 'Got what you came for? Hold START NIGHT. You choose when the fight begins.']];
 const NIGHT_HINTS = [[0.8, 'Tap the right side to FIRE. Tap a device button to place it; hold it to read what it does.'], [9, 'Panels go in the openings: face one and tap Panel. Heads count double.'], [13, 'Hold FIRE until the ring turns gold, then let go: a charged shot through the whole line.'], [15, 'They smash collectors. Each one saved pays at dawn.']];
@@ -709,7 +714,7 @@ function startRun() { perfRest(); runModels(); queueMicrotask(() => sceneCard('r
   if (newbie) { queueHint(0.5, 'Six houses, Potts. Walk into a door to loot it.', 'street'); queueHint(25, 'That bar is your Sun. Your hand drinks it in.'); queueHint(45, 'At dusk you defend the house you are in.'); queueHint(70, nightLine(), null, nightOnce); }
   queueHint(newbie ? 40 : 8, 'Something waves in a house with ' + cn + ' openings.', null, () => run.houses[run.catHouse].sim.cat.found);
 }
-let kitOpen = false, kitArmed = true, guideYaw = 0, kitWait = 0;
+let kitOpen = false, kitArmed = true, guideYaw = 0, kitWait = 0, guidePrev = 0, guideSet = 0;
 function closeKit() { kitOpen = false; $('kit').style.display = 'none'; marla.talk(false); }
 function openKit() { if (!save) return; kitOpen = true; kitArmed = false; stick.x = stick.y = 0; marla.talk(true); drawLoadout('kitLoadout'); $('kit').style.display = 'flex'; }
 function enterTown() {
@@ -739,7 +744,8 @@ function townFrame(dt) {
     { const m0 = marla.root.userData, far = m0.lpx == null || Math.hypot(run.px - m0.lpx, run.pz - m0.lpz) > 2, x0 = far ? run.px : m0.lpx, z0 = far ? run.pz : m0.lpz, x1 = run.px, z1 = run.pz; m0.lpx = x1; m0.lpz = z1; // pivot steps with her feet held (src/people.js createStepper), deciding inside the motion's slices
       marla.turn(dt, (a) => { const qx = x0 + (x1 - x0) * a - G.x, qz = z0 + (z1 - z0) * a - G.z; return Math.hypot(qx, qz) < 9 ? Math.atan2(qx, qz) : null; }); }
     const c = Math.cos(-marla.root.rotation.y), s = Math.sin(-marla.root.rotation.y); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near);
-    if (Math.abs(marla.root.rotation.y - guideYaw) > 0.06 && shadowT <= 0) { guideYaw = marla.root.rotation.y; shadowT = 0.1; } // her shadow turns with her
+    // her shadow turns with her (owner 10:50, as in the base: the sun's shadow map is drawn again once she has settled, not every 0.1 s while she turns)
+    { const ry = marla.root.rotation.y; guideSet = Math.abs(ry - guidePrev) < 0.002 ? guideSet + dt : 0; guidePrev = ry; if (Math.abs(ry - guideYaw) > 0.06 && guideSet > CONFIG.lag.shadowSettle && shadowT <= 0) { guideYaw = ry; shadowT = 0.01; } }
     if (d > G.rearm) kitArmed = true; else if (d < G.open && kitArmed && !kitOpen && !paused && fromBase && save) { const still = Math.hypot(stick.x, stick.y) < 0.1 && !keys.KeyW && !keys.KeyA && !keys.KeyS && !keys.KeyD; kitWait = still ? kitWait + dt : 0; if (kitWait >= G.wait) { kitWait = 0; openKit(); } } else kitWait = 0;
     if (d < 0.55 && d > 1e-4) { run.px = G.x + dx / d * 0.55; run.pz = G.z + dz / d * 0.55; } }
   tickDormant(false); if (!dormTold && (run.dormant || []).some((d) => Math.hypot(run.px - d.x, run.pz - d.z) < 7)) { dormTold = true; marlaHint('Switched off by day, Potts. Do not shoot them, do not bump them, do not pass close with a heavy pack: wake one and it brings friends tonight.'); }
@@ -760,7 +766,7 @@ function townFrame(dt) {
   if (fromBase && save && Math.hypot(run.px - G.x, run.pz - G.z) < G.hintAt) $('bprompt').textContent = 'Stand by Marla to change your devices';
   if ((save && (save.nights || 0) < 2) && !run.toldBar && runT > 6 && nd > 0 && nd <= 12 && marlaT <= 0.01) { run.toldBar = true; marlaHint('Green bar over a door: loot inside. Red: empty.'); } // said when he first looks at a door from near
   for (const d of townDoors) { const q = RUN.lootLeft(d.h); d.mark.material.color.setHex(q.food + q.ess > 0 ? 0x7ac96a : 0xd04040); } // red bar = emptied
-  skyK += (Math.min(1, Math.max(0, 1 - run.dayT / 12)) * 0.55 - skyK) * Math.min(1, dt * 1.5); applySky(skyK, 0);
+  skyK += (Math.min(1, Math.max(0, 1 - run.dayT / 12)) * 0.55 - skyK) * Math.min(1, dt * 1.5); applySkyIf(skyK, 0);
   cam.position.set(run.px, 1.6, run.pz); cam.rotation.set(pitch, yaw, 0, 'YXZ');
   $('hp').style.width = (100 - (run.hurt || 0)) + '%'; $('en').style.width = (100 * run.energy / CONFIG.player.energyCap) + '%';
   H2.setClock($('time'), run.dayT, false); H2.setClockBar(run.dayT, false); H2.setVit($('enL'), run.energy, false, 100 - (run.hurt || 0)); H2.setCount($('count'), [['Houses', run.visited + '/6'], ['Food', run.food], ['Essentials', run.ess], [CONFIG.ui.sun, Math.round(run.energy), 1], ['Walk speed', Math.round(100 * RUN.speedMult(run)) + '%']]); $('time').style.color = run.bell ? '#ff6a5a' : ''; $('coins').textContent = run.coins ? 'Lucky cat found' : '';
@@ -1436,7 +1442,8 @@ function frame(now) {
     let mx = stick.x, mz = stick.y;
     if (keys.KeyW) mz -= 1; if (keys.KeyS) mz += 1; if (keys.KeyA) mx -= 1; if (keys.KeyD) mx += 1;
     if (!ui && !paused) { const l = Math.hypot(mx, mz); if (l > 1) { mx /= l; mz /= l; } const sy = Math.sin(yaw), cy = Math.cos(yaw), v = CONFIG.base.speed * dt; [bp.x, bp.z] = bview.pushOut(bp.x + (mx * cy + mz * sy) * v, bp.z + (-mx * sy + mz * cy) * v); }
-    const u = bview.update(dt, bp.x, bp.z, 1.6); curTarget = u.target; baseU = u;
+    // (owner 10:50) paused: the base is not stepped (its people and animals hold still, as the picture does); the last result is kept
+    const u = paused && baseU ? baseU : bview.update(dt, bp.x, bp.z, 1.6); curTarget = u.target; baseU = u;
     // base evening (CONFIG.avians.evening / eveLight): the sky light and exposure go down with the sun
     { const ev = bview.evening ? bview.evening() : 0, EL = CONFIG.avians && CONFIG.avians.eveLight; if (EL) { hemi.intensity = CONFIG.baseLight.power * (1 - (1 - EL[0]) * ev); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure * (1 - (1 - EL[1]) * ev); } } if (u.shadow) shadowT = 0.15;
     if (u.target && u.target.kind === 'cat' && !ui) doUse(); // the cat is collected by touching it
@@ -1535,7 +1542,7 @@ function frame(now) {
     if (catG) { catG.visible = !sim.cat.found; catArm.rotation.z = Math.sin(now / 250) * 0.6; }
     const dayNow = sim.phase === 'day', leftN = CONFIG.night.duration - sim.t;
     skyK += ((dayNow ? Math.min(1, Math.max(0, 1 - sim.dayT / 12)) * 0.55 : 1) - skyK) * Math.min(1, dt * 1.5); // the last 12 s of daylight redden toward dusk
-    applySky(skyK, dayNow ? 0 : Math.max(0, Math.min(1, 1 - leftN / 20)));
+    applySkyIf(skyK, dayNow ? 0 : Math.max(0, Math.min(1, 1 - leftN / 20)));
     for (const c of sim.crates) { const m = crateMesh.get(c.id); if (m) m.visible = !c.got; }
     if (state === 'play' && !paused) { const hs = dayNow ? (run ? [] : DAY_HINTS) : (drill ? [] : FINE ? NIGHT_HINTS_DESK : NIGHT_HINTS), tt = dayNow ? CONFIG.day.duration - sim.dayT : sim.t; if (hintN < hs.length && tt >= hs[hintN][0] && marlaT <= 0.01) { const h = hs[hintN++]; if (h[1].indexOf('collectors') < 0 || sim.devices.some((q) => q.kind === 'collector')) marlaHint(h[1]); }
       if (run && !sim.cat.found && sim.player.floor === 0) { const cd = Math.hypot(sim.player.x - sim.cat.x, sim.player.z - sim.cat.z); if (cd < CONFIG.cat.chimeRange) { chimeT -= dt; if (chimeT <= 0) { chime(1 - cd / CONFIG.cat.chimeRange * 0.8); chimeT = 0.4 + (cd / CONFIG.cat.chimeRange) * 1.6; } } }
