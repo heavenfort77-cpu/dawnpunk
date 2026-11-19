@@ -10,6 +10,10 @@
 // Phones (opt.phone): the bright noise layers play at phoneNoise, the crackle grains are cut to phoneGrains of their count, and everything passes a phoneLp lowpass.
 
 export const IMPACT_SFX = {
+  // variants (LAG FIX Nov 19): sources rendered ahead per kind of sound, each with its own random draws (0 = build every sound live as before)
+  variants: 8,
+  // renderMax: longest a kind's sources can last (s), the length each variant is rendered at before it is cut to its real end
+  renderMax: 3.5,
   // loudness of every impact sound before distance (gain); set so the loudest 50 ms of every sound stays under the music's 95th-percentile 50 ms level (docs/sample_impact_sfx.md)
   vol: 0.33,
   // distance (m) at which the distance gain reaches its floor
@@ -426,22 +430,29 @@ export function impactOut(a, dest, po, C, gain, wet, outdoors, phone) {
 // plays one impact sound at time t into dest (null = speakers). kind: 'hit' | 'head' | 'charged' | 'destroyed' | 'shot'.
 // opt: { po: { pan, dist }, C: IMPACT_SFX, rnd: () => 0..1, phone: true for the phone noise share, grain count and lowpass, outdoors: true for the drier street room }. Returns the time the sound ends (room tail included).
 export function impactPlay(a, dest, kind, t, opt) {
-  const o = opt || {}, C = o.C || IMPACT_SFX, rnd = o.rnd || Math.random, nk = o.phone ? C.phoneNoise : 1, od = !!o.outdoors, ph = !!o.phone;
-  // crackle grain count after the phone share (at least one)
-  const cnt = (n) => Math.max(1, Math.round(n * (ph ? C.phoneGrains : 1)));
+  const o = opt || {}, C = o.C || IMPACT_SFX, rnd = o.rnd || Math.random, od = !!o.outdoors, ph = !!o.phone;
   const pv = 1 + C.pitchVar * (rnd() * 2 - 1), gv = Math.pow(10, (C.gainVarDb * (rnd() * 2 - 1)) / 20);
   const tail = (od ? C.room.rt60Out : C.room.rt60In) * 1.2;
+  const out = kind === 'shot' ? impactOut(a, dest, { pan: 0, dist: 0 }, C, C.shot.gain * gv, C.shot.wet, od, ph) : impactOut(a, dest, o.po, C, gv, 1, od, ph);
+  return impactSources(a, out, kind, t, C, rnd, ph, pv) + tail;
+}
+// the sound's own sources (everything before the output chain of impactOut) into out, from time t; pv: the pitch variation; returns when they end (no room tail)
+// (LAG FIX Nov 19: split out of impactPlay unchanged, so the same sources can be rendered ahead into buffers: impactPrerender)
+export function impactSources(a, out, kind, t, C, rnd, ph, pv) {
+  const nk = ph ? C.phoneNoise : 1;
+  // crackle grain count after the phone share (at least one)
+  const cnt = (n) => Math.max(1, Math.round(n * (ph ? C.phoneGrains : 1)));
   if (kind === 'shot') {
-    const S = C.shot, out = impactOut(a, dest, { pan: 0, dist: 0 }, C, S.gain * gv, S.wet, od, ph);
+    const S = C.shot;
     let end = burst(a, out, t, 'bandpass', S.jetF0 * pv, S.jetF1 * pv, S.jetQ, S.jetAttack, S.jetLen, S.jetGain * nk, rnd);
     end = Math.max(end, burst(a, out, t, 'lowpass', S.pushF0 * pv, S.pushF1 * pv, 0.7, 0.002, S.pushLen, S.pushGain, rnd));
     S.dropHz.forEach((hz, j) => { const tm = times(cnt(S.drops), 0.015, 0.015 + S.dropSpan, 1.4, rnd); end = Math.max(end, grains(a, out, t, tm, tm.map((x) => S.dropGain * nk * (0.3 + 0.7 * rnd()) * (1 - 0.7 * x / (S.dropSpan + 0.015)) * (j ? 0.7 : 1)), S.dropGrain, 'bandpass', hz * pv, 1.3, rnd)); });
     end = Math.max(end, strike(a, out, t + 0.002, 0.002, S.valveLp, S.valveGain, S.valveModes, S.valveQ, S.valveGains, pv, rnd));
     end = Math.max(end, strike(a, out, t + S.reseatAt * (0.9 + 0.2 * rnd()), 0.0015, S.valveLp, S.valveGain * S.reseat, S.valveModes, S.valveQ, S.valveGains, pv * 1.05, rnd));
-    return end + tail;
+    return end;
   }
   if (kind === 'destroyed') {
-    const D = C.destroyed, out = impactOut(a, dest, o.po, C, gv, 1, od, ph);
+    const D = C.destroyed;
     let end = burst(a, out, t, 'lowpass', D.rumbleF0 * pv, D.rumbleF1 * pv, 0.7, 0.004, D.rumbleLen, D.rumbleGain, rnd);
     D.clankAt.forEach((at, i) => { const tt = t + (i ? at * (0.9 + 0.2 * rnd()) : 0); end = Math.max(end, strike(a, out, tt, D.strikeLen, D.clankLp[i], D.strikeGain * D.clankGain[i], D.modes, D.modeQ, D.modeGain, D.clankScale[i] * pv * (0.96 + 0.08 * rnd()), rnd)); });
     const ct = times(D.crunch, 0, D.crunchSpan, 1.3, rnd); end = Math.max(end, grains(a, out, t, ct, ct.map((x, i) => D.crunchGain * (1 - 0.6 * i / D.crunch) * (0.6 + 0.4 * rnd())), D.crunchGrain, 'bandpass', D.crunchHz * pv, D.crunchQ, rnd));
@@ -450,11 +461,10 @@ export function impactPlay(a, dest, kind, t, opt) {
     const zt = times(cnt(D.staticBursts), D.staticFrom, D.staticTo, 1.5, rnd), span = D.staticTo - D.staticFrom;
     end = Math.max(end, grains(a, out, t, zt, zt.map((x) => D.staticGain * nk * Math.pow(1 - (x - D.staticFrom) / span, 1.5) * (0.5 + 0.5 * rnd())), zt.map((x) => D.staticGrain0 + (D.staticGrain1 - D.staticGrain0) * (x - D.staticFrom) / span), 'bandpass', [D.staticF0 * pv, D.staticF1 * pv], D.staticQ, rnd));
     const kt = times(cnt(D.sparks), D.sparkFrom, D.sparkTo, 1.2, rnd); end = Math.max(end, grains(a, out, t, kt, kt.map(() => D.sparkGain * nk * (0.3 + 0.7 * rnd())), D.sparkGrain, 'highpass', D.sparkHp, 0.7, rnd));
-    return end + tail;
+    return end;
   }
   const H = C.hit, X = C.charged, P = C.head, ch = kind === 'charged', hd = kind === 'head';
   const pk = pv * (ch ? X.pitch : 1), lk = ch ? X.length : 1, gk = (ch ? X.gain : 1) * (hd ? P.bodyShare : 1);
-  const out = impactOut(a, dest, o.po, C, gv, 1, od, ph);
   let end = burst(a, out, t, 'bandpass', H.slapF0 * pk, H.slapF1 * pk, H.slapQ, 0.001, H.slapLen * lk, H.slapGain * gk, rnd);
   end = Math.max(end, burst(a, out, t + 0.002, 'highpass', H.splashF0 * pk, H.splashF1 * pk, 0.7, H.splashAttack, H.splashLen * lk, H.splashGain * gk * nk, rnd));
   const n = cnt(H.spray * (ch ? X.spray : 1)), sp = times(n, 0.008, 0.008 + H.spraySpan * lk, 1.5, rnd);
@@ -475,7 +485,7 @@ export function impactPlay(a, dest, kind, t, opt) {
     const zt = times(cnt(X.sizzle), X.steamAt + 0.02, X.steamAt + X.steamLen * 0.9, 1.2, rnd);
     end = Math.max(end, grains(a, out, t, zt, zt.map((x) => X.sizzleGain * nk * (1 - 0.7 * x / (X.steamAt + X.steamLen)) * (0.3 + 0.7 * rnd())), X.sizzleGrain, 'highpass', X.sizzleHp, 0.7, rnd));
   }
-  return end + tail;
+  return end;
 }
 
 // the in-game wrapper. audio() returns the running AudioContext or null; cfg() returns the IMPACT_SFX block; phone() is true on phones; outdoors() is true on the street (drier room).
@@ -483,7 +493,75 @@ export function impactPlay(a, dest, kind, t, opt) {
 export function createImpactSfx(audio, cfg, phone, outdoors) {
   let nextHit = 0;
   const C = () => (cfg && cfg()) || IMPACT_SFX;
-  const go = (kind, po, t) => { const a = audio(); if (!a) return 0; try { return impactPlay(a, null, kind, t === undefined ? a.currentTime + 0.003 : t, { po, C: C(), phone: !!(phone && phone()), outdoors: !!(outdoors && outdoors()) }); } catch (e) { return 0; } };
+  // a rendered variant through a pooled chain when there is one (LAG FIX Nov 19, below), else the sound built live as before
+  const go = (kind, po, t) => { const a = audio(); if (!a) return 0; try { const tt = t === undefined ? a.currentTime + 0.003 : t, op = { po, C: C(), phone: !!(phone && phone()), outdoors: !!(outdoors && outdoors()) }; const r = impactPlayPre(a, null, kind, tt, op); return r === null ? impactPlay(a, null, kind, tt, op) : r; } catch (e) { return 0; } };
   const queued = (kind, po) => { const a = audio(); if (!a) return 0; const now = a.currentTime + 0.003, t = Math.max(now, nextHit); if (t - now > C().hitQueue) return 0; nextHit = t + C().hitGap; return go(kind, po, t); };
-  return { shot: () => go('shot', { pan: 0, dist: 0 }), hit: (po, head) => queued(head ? 'head' : 'hit', po), charged: (po) => queued('charged', po), destroyed: (po) => go('destroyed', po) };
+  // prerender(): renders the variants (the loading cards call it; returns a promise)
+  return { prerender: () => { const a = audio(); return a ? impactPrerender(a.sampleRate, C(), !!(phone && phone())).catch(() => 0) : Promise.resolve(0); }, shot: () => go('shot', { pan: 0, dist: 0 }), hit: (po, head) => queued(head ? 'head' : 'hit', po), charged: (po) => queued('charged', po), destroyed: (po) => go('destroyed', po) };
+}
+
+// ---- LAG FIX Nov 19 (owner 10:15; profile: one 3.76 s frame and many stutters inside impactOut): the impact sounds no longer build their whole node graph per shot.
+// 1. Sources rendered ahead: each kind's sources (impactSources, unchanged) are rendered into a few AudioBuffers with an OfflineAudioContext while a loading card is
+//    up, every variant with its own random draws from the same ranges (CONFIG.sfx.impact.variants of them; the pitch variation is in the variant).
+// 2. Output chains built once: the nodes impactOut makes (gain, presence dip, air filter, soft limiter, room send, panner) are kept in a small pool per context and
+//    reused with the same values set for each sound; a chain is used again only after its sound has ended. The level variation is still drawn per sound.
+// Until the buffers exist (or if rendering fails) a sound is built live exactly as before. impactSelfTest renders a sound both ways and gives the RMS difference.
+const PRE = new Map(), POOLS = new WeakMap();
+const preKey = (kind, ph, sr) => kind + '|' + (ph ? 1 : 0) + '|' + sr;
+function chainNew(a, dest, C, od) {
+  const g = a.createGain(), dip = a.createBiquadFilter(), air = a.createBiquadFilter(), send = a.createGain(), soft = a.createWaveShaper(), R = C.room;
+  soft.curve = softCurve(C.limitKnee, C.limitCeil); soft.oversample = '2x';
+  dip.type = 'peaking'; dip.frequency.value = C.dipHz; dip.Q.value = C.dipQ; dip.gain.value = C.dipDb; air.type = 'lowpass'; air.Q.value = 0.5;
+  g.connect(dip); dip.connect(air); air.connect(soft); soft.connect(send); send.connect(room(a, dest, R, od).inp); let last = soft, sp = null;
+  if (a.createStereoPanner) { sp = a.createStereoPanner(); soft.connect(sp); last = sp; }
+  last.connect(dest || a.destination); return { g, air, send, sp, busy: 0 };
+}
+// the values impactOut sets, for this sound
+function chainSet(c, po, C, gain, wet, od, phone) {
+  const dist = Math.max(0, (po && po.dist) || 0), pan = Math.max(-1, Math.min(1, (po && po.pan) || 0)), near = Math.min(1, dist / C.reach), R = C.room;
+  c.g.gain.value = C.vol * gain * Math.max(C.minGain, 1 - near); c.air.frequency.value = Math.min(phone ? C.phoneLp : 1e9, C.airNear * Math.pow(C.airFar / C.airNear, near));
+  c.send.gain.value = (od ? R.wetOut : R.wetIn) * (wet === undefined ? 1 : wet) * (1 + R.farWet * near); if (c.sp) c.sp.pan.value = pan;
+}
+function chainGet(a, dest, C, od, now) {
+  let m = POOLS.get(a); if (!m) { m = new Map(); POOLS.set(a, m); } const k = (od ? 'o' : 'i') + (dest ? 'd' : ''); let l = m.get(k); if (!l) { l = []; m.set(k, l); }
+  for (const c of l) if (c.busy <= now && c.dest === dest) return c; const c = chainNew(a, dest, C, od); c.dest = dest; l.push(c); return c;
+}
+// render one variant's sources (mono, from time 0) into a buffer of exactly their length; pv from rnd first, as impactPlay draws it
+async function renderSources(sr, kind, C, ph, rnd, maxLen, gvOut) {
+  const oc = new OfflineAudioContext(1, Math.ceil(sr * maxLen), sr), cap = oc.createGain(); cap.connect(oc.destination);
+  const pv = 1 + C.pitchVar * (rnd() * 2 - 1), gv = Math.pow(10, (C.gainVarDb * (rnd() * 2 - 1)) / 20); if (gvOut) gvOut.gv = gv;
+  const end = Math.min(maxLen, impactSources(oc, cap, kind, 0, C, rnd, ph, pv)), buf = await oc.startRendering(), n = Math.max(1, Math.ceil(end * sr));
+  const out = new AudioBuffer({ length: n, sampleRate: sr, numberOfChannels: 1 }); out.copyToChannel(buf.getChannelData(0).subarray(0, n), 0); return out;
+}
+// render the variants for this device (phone or not) at this sample rate; safe to call again (does nothing once done)
+export async function impactPrerender(sr, C, ph) {
+  const V = C.variants || 0; if (!V || typeof OfflineAudioContext === 'undefined') return 0; let n = 0;
+  for (const kind of ['shot', 'hit', 'head', 'charged', 'destroyed']) { const k = preKey(kind, ph, sr); if (PRE.has(k)) continue; const l = [];
+    for (let i = 0; i < V; i++) { l.push(await renderSources(sr, kind, C, ph, Math.random, C.renderMax)); n++; } PRE.set(k, l); }
+  return n;
+}
+// play one impact sound from a rendered variant through a pooled chain; null when there are no variants yet (the caller then builds it live)
+export function impactPlayPre(a, dest, kind, t, opt) {
+  const o = opt || {}, C = o.C || IMPACT_SFX, rnd = o.rnd || Math.random, od = !!o.outdoors, ph = !!o.phone, l = PRE.get(preKey(kind, ph, a.sampleRate)); if (!l || !l.length) return null;
+  const buf = l[Math.floor(rnd() * l.length)], gv = Math.pow(10, (C.gainVarDb * (rnd() * 2 - 1)) / 20), c = chainGet(a, dest, C, od, a.currentTime);
+  if (kind === 'shot') chainSet(c, { pan: 0, dist: 0 }, C, C.shot.gain * gv, C.shot.wet, od, ph); else chainSet(c, o.po, C, gv, 1, od, ph);
+  const src = a.createBufferSource(); src.buffer = buf; src.connect(c.g); src.start(t); c.busy = t + buf.duration + 0.05; src.onended = () => src.disconnect();
+  return t + buf.duration + (od ? C.room.rt60Out : C.room.rt60In) * 1.2;
+}
+// the proof that a rendered-and-pooled sound is the live one: the same sound (same random draws, same noise and room) rendered both ways; RMS of the difference / RMS
+export async function impactSelfTest(sr, C, ph, seed) {
+  const mk = (s0) => { let s = s0 >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let x = Math.imul(s ^ (s >>> 15), 1 | s); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; };
+  const MR = Math.random, res = {}, len = C.renderMax + C.room.rt60In * 1.3, po = { pan: 0.3, dist: 6 };
+  const prep = (oc) => { Math.random = mk(seed + 1); noiseBuf(oc); Math.random = mk(seed + 2); room(oc, null, C.room, false); Math.random = MR; };
+  try {
+    for (const kind of ['shot', 'hit', 'head', 'charged', 'destroyed']) {
+      const A = new OfflineAudioContext(2, Math.ceil(sr * len), sr); prep(A); impactPlay(A, null, kind, 0, { C, rnd: mk(seed), phone: ph, outdoors: false, po }); const a = await A.startRendering();
+      const S = new OfflineAudioContext(1, Math.ceil(sr * C.renderMax), sr); Math.random = mk(seed + 1); noiseBuf(S); Math.random = MR;
+      const g = {}, buf = await (async () => { const oc = S, cap = oc.createGain(); cap.connect(oc.destination); const r = mk(seed), pv = 1 + C.pitchVar * (r() * 2 - 1); g.gv = Math.pow(10, (C.gainVarDb * (r() * 2 - 1)) / 20); impactSources(oc, cap, kind, 0, C, r, ph, pv); return oc.startRendering(); })();
+      const B = new OfflineAudioContext(2, Math.ceil(sr * len), sr); prep(B); const c = chainNew(B, null, C, false); if (kind === 'shot') chainSet(c, { pan: 0, dist: 0 }, C, C.shot.gain * g.gv, C.shot.wet, false, ph); else chainSet(c, po, C, g.gv, 1, false, ph);
+      const src = B.createBufferSource(); src.buffer = buf; src.connect(c.g); src.start(0); const b = await B.startRendering();
+      let e = 0, d = 0; for (let ch = 0; ch < 2; ch++) { const x = a.getChannelData(ch), y = b.getChannelData(ch); for (let i = 0; i < x.length; i++) { e += x[i] * x[i]; d += (x[i] - y[i]) * (x[i] - y[i]); } }
+      res[kind] = +(Math.sqrt(d / Math.max(1e-30, e))).toExponential(2); }
+  } finally { Math.random = MR; }
+  return res;
 }
