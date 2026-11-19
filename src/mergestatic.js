@@ -82,7 +82,9 @@ export function singlePassFlat(root) { const users = new Map(); let set = 0, lef
 // geometry groups over the same triangles with a back-side and a front-side copy of its material: three.js draws them in that order, back then front, as its own two
 // passes do, and neither copy is ever marked changed (each keeps its shader). The copies share the colour objects; opacity and visibility follow the material each frame.
 const SIDES = new WeakMap();
-function sidesOf(m) { let p = SIDES.get(m); if (p) return p; const mk = (side) => { const c = m.clone(); c.side = side; for (const k of ['color', 'emissive', 'specular']) if (m[k] && m[k].isColor) c[k] = m[k]; return c; };
+function sidesOf(m) { let p = SIDES.get(m); if (p) return p; const mk = (side) => { const c = m.clone(); c.side = side; for (const k of ['color', 'emissive', 'specular']) if (m[k] && m[k].isColor) c[k] = m[k];
+    // a shader hook of the material's own (clone() does not copy it) goes with the copy too, so the copy builds the same shader
+    if (Object.prototype.hasOwnProperty.call(m, 'onBeforeCompile')) c.onBeforeCompile = m.onBeforeCompile; if (Object.prototype.hasOwnProperty.call(m, 'customProgramCacheKey')) c.customProgramCacheKey = m.customProgramCacheKey; return c; };
   p = [mk(THREE.BackSide), mk(THREE.FrontSide)]; m.addEventListener('dispose', () => { p[0].dispose(); p[1].dispose(); }); SIDES.set(m, p); return p; }
 export function twoPassGroups(root) { let n = 0;
   root.traverse((o) => { if (!o.isMesh || !(o.userData.mergedDraw || o.userData.ownGeo) || o.isSkinnedMesh || Array.isArray(o.material)) return; const m = o.material, g = o.geometry; if (!m || !m.transparent || m.side !== THREE.DoubleSide || m.forceSinglePass || !g || g.groups.length) return;

@@ -1548,7 +1548,7 @@ async function sceneCard(kind) {
     // one material copy per kind of piece that draws it (src/mergestatic.js splitVariants), before the shaders are built
     if (CONFIG.lag.splitVariants) splitVariants(scene);
     // (H round 2) flat see-through two-sided pieces drawn in one pass, same pixels (src/mergestatic.js singlePassFlat); LCARD.twoPass: what is left in two passes
-    if (CONFIG.lag.singlePassFlat) { const gN = twoPassGroups(scene); LCARD.twoPass = singlePassFlat(scene); LCARD.twoPass.groups = gN; }
+    if (CONFIG.lag.singlePassFlat && CONFIG.lag.singlePassFlat.on) { const gN = twoPassGroups(scene); LCARD.twoPass = CONFIG.lag.singlePassFlat.flat ? singlePassFlat(scene) : { set: 0 }; LCARD.twoPass.groups = gN; }
     // the impact sounds' variants are rendered ahead (src/impactsfx.js impactPrerender): started by the ride card and left to finish during the day; the night card
     // waits a moment (CONFIG.lag.card.sfxWait s) if they are not done yet; until they are, a sound is built live as before
     if (!bot && kind === 'ride') IMP.prerender(); else if (!bot && kind === 'night') await Promise.race([IMP.prerender(), nap(L.sfxWait * 1000)]);
@@ -1795,9 +1795,12 @@ window.__game.wsTip = () => wsTipT;
 // (H round 2, test hook) the same frame drawn as now and with the one-pass / two-group changes undone (src/mergestatic.js): mean and largest per-channel difference
 // (0-255) over the canvas, and how many meshes and materials were involved; everything is put back
 window.__game.twoPassPixelTest = () => { const grab = () => { const c = document.createElement('canvas'); c.width = cvs.width; c.height = cvs.height; const x = c.getContext('2d'); renderer.render(scene, cam); x.drawImage(cvs, 0, 0); return x.getImageData(0, 0, c.width, c.height).data; };
-  const a = grab(), undo = [], ms = new Set(); scene.traverse((o) => { if (o.userData.twoPassOf && Array.isArray(o.material)) { undo.push([o, o.material]); o.material = o.userData.twoPassOf; } const m = o.material; if (m && !Array.isArray(m) && m.userData && m.userData.singlePassFlat && m.forceSinglePass) ms.add(m); });
-  for (const m of ms) m.forceSinglePass = false; let b; try { b = grab(); } finally { for (const [o, m] of undo) o.material = m; for (const m of ms) m.forceSinglePass = true; }
-  let sum = 0, mx = 0; for (let i = 0; i < a.length; i++) { const d = Math.abs(a[i] - b[i]); sum += d; if (d > mx) mx = d; } return { mean: +(sum / a.length).toFixed(4), max: mx, groups: undo.length, single: ms.size }; };
+  const a = grab(), a2 = grab(), undo = [], ms = new Set(); scene.traverse((o) => { if (o.userData.twoPassOf && Array.isArray(o.material)) { undo.push([o, o.material]); o.material = o.userData.twoPassOf; } const m = o.material; if (m && !Array.isArray(m) && m.userData && m.userData.singlePassFlat && m.forceSinglePass) ms.add(m); });
+  // b: both undone; bg: only the two-group meshes undone; bs: only the one-pass materials undone
+  let b, bg, bs; try { bg = grab(); for (const m of ms) m.forceSinglePass = false; b = grab(); for (const [o, m] of undo) o.material = m; bs = grab(); } finally { for (const [o, m] of undo) o.material = m; for (const m of ms) m.forceSinglePass = true; }
+  // also the same frame drawn twice with nothing changed (noise: anything that differs between two draws by itself), and where the changed pixels are
+  const cmp = (x, y) => { let sum = 0, mx = 0, n = 0, x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1; const W = cvs.width; for (let i = 0; i < x.length; i++) { const d = Math.abs(x[i] - y[i]); sum += d; if (d > mx) mx = d; if (d > 8 && i % 4 !== 3) { n++; const px = (i >> 2) % W, py = Math.floor((i >> 2) / W); x0 = Math.min(x0, px); y0 = Math.min(y0, py); x1 = Math.max(x1, px); y1 = Math.max(y1, py); } } return { mean: +(sum / x.length).toFixed(4), max: mx, over8: n, box: n ? [x0, y0, x1, y1] : null }; };
+  return { change: cmp(a, b), groupsOnly: cmp(a, bg), singleOnly: cmp(a, bs), noise: cmp(a, a2), groups: undo.length, single: ms.size, size: [cvs.width, cvs.height] }; };
 window.__game.playPrograms = () => ({ n: PLAYP.n, at: PLAYP.at });
 window.__game.endNight = (win = true) => { if (!sim || sim.done || !sim.endNow) return false; sim.endNow(win); return true; };
 window.__game.audioState = () => (ac ? ac.state : 'none');
@@ -1823,7 +1826,7 @@ window.__game.impactCount = () => ({ ...impN });
 window.__game.tipKind = () => tipKind;
 window.__game.catSet = (i, o) => bview.catSet(i, o);
 // graphics tier readout for tools/qualitycheck.cjs: what was picked and what the renderer and the textures really use
-window.__game.quality = () => { let shadow = 0, plaster = 0, plasterN = 0; const root = state === 'base' ? bview.group : world && world.g; if (root) root.traverse((o) => { if (o.isDirectionalLight && o.castShadow) shadow = Math.max(shadow, o.shadow.mapSize.x); if (o.isMesh && o.material && o.material.map && o.material.map.userData.tex === (state === 'base' ? 'render' : 'plaster')) { const m = o.material; plaster = Math.max(plaster, (m.map.image && m.map.image.width) || 0); if (m.normalMap && m.normalMap.image) plasterN = Math.max(plasterN, m.normalMap.image.width); } });
+window.__game.quality = () => { let shadow = 0, plaster = 0, plasterN = 0; const root = state === 'base' ? bview.group : world && world.g; if (root) root.traverse((o) => { if (o.isDirectionalLight && o.castShadow) shadow = Math.max(shadow, o.shadow.mapSize.x); const m0 = o.isMesh && o.material ? (Array.isArray(o.material) ? o.material[0] : o.material) : null; if (m0 && m0.map && m0.map.userData.tex === (state === 'base' ? 'render' : 'plaster')) { const m = m0; plaster = Math.max(plaster, (m.map.image && m.map.image.width) || 0); if (m.normalMap && m.normalMap.image) plasterN = Math.max(plasterN, m.normalMap.image.width); } });
   return { tier: TIER, asset: QUALITY, want: { pixelRatio: Math.min(window.devicePixelRatio || 1, Q.pixelRatio), lights: Q.lights, shadow: Q.shadowMap, baseShadow: Q.baseShadowMap, aniso: Q.aniso, fx: !!Q.fx }, by: QPICK.by, pixelRatio: renderer.getPixelRatio(), antialias: !!renderer.getContextAttributes().antialias, lights: glights.length, sky: sky.detail, shadow, wallTex: plaster, wallRelief: plasterN, hi: { ...hiState }, gpuAniso: renderer.capabilities.getMaxAnisotropy() }; };
 // test hooks for tools/lorecheck.cjs: this visit's note (where, and whether the prompt shows), read it, is it open, the notes found
 // test hook for tools/openingcheck.cjs: person stand-in figures visible in the base right now (the wake shot must show none)

@@ -364,7 +364,10 @@ const BREAKDOWN = (spot) => {
     await p.evaluate(() => window.__game.enterBase()); await p.waitForFunction(() => window.__perfHud, null, { timeout: 600000 }).catch(() => null);
     const hud = await p.evaluate(() => { const e = document.getElementById('perfhud'); return e ? e.textContent.replace(/\n/g, ' | ') : ''; });
     out.push([TT + ': ?perf=1 overlay shows fps, frame ms, calls, triangles, tier, ratio, steps: "' + hud + '"', /fps/.test(hud) && /worst/.test(hud) && /calls \d+/.test(hud) && /tris/.test(hud) && new RegExp('tier ' + TT + ' \\(address\\)').test(hud) && /ratio/.test(hud) && /steps 0/.test(hud)]);
-    const st = await p.evaluate(() => { const g = window.__game; for (let i = 0; i < 4; i++) g.perfForce(); const q = g.quality(); return { s: g.perfStep(), ratio: q.pixelRatio, lights: q.lights, shadow: q.shadow }; });
+    await p.evaluate(() => { const g = window.__game; for (let i = 0; i < 4; i++) g.perfForce(); });
+    // (H, premortem D) the lights step waits for the next loading card during play (the light count stays fixed while you play): a ride's card takes it
+    if (await p.evaluate(() => !!(window.__game.perfStep() || {}).pendingLights)) { await p.evaluate(() => window.__game.startRun()); await p.waitForTimeout(300); await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null); }
+    const st = await p.evaluate(() => { const g = window.__game, q = g.quality(); return { s: g.perfStep(), ratio: q.pixelRatio, lights: q.lights, shadow: q.shadow }; });
     out.push([TT + ': the step-down (forced 4 times) takes ratio, ao, shadow, lights: ' + JSON.stringify(st), st.s.taken.join(',') === 'ratio,ao,shadow,lights' && st.ratio === 1 && st.lights <= 1]);
     await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     const mem = []; for (let k = 0; k < 3; k++) { await p.evaluate(() => { const g = window.__game; document.getElementById('selRing').value = '1'; g.startRun(); g.enterHouse(0); g.nightfall(); const s = g.sim; for (let i = 0; i < 400 && !s.gloom.length; i++) s.step(0.05); });

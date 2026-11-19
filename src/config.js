@@ -1203,8 +1203,9 @@ export const CONFIG = {
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind
     // longFrame: with ?proglog=1 a frame starting more than this many ms after the one before is logged with what the frame before it did (src/main.js lfStart)
     longFrame: 80,
-    // singlePassFlat: under each card, see-through two-sided materials used only by flat one-way meshes are drawn in one pass (same pixels; src/mergestatic.js)
-    singlePassFlat: true,
+    // singlePassFlat: under each card, see-through two-sided merged meshes are drawn as back and front groups (src/mergestatic.js twoPassGroups); flat: also draw
+    // the flat one-way ones in one pass (OFF: the pixel test showed up to 109 changed pixels, max 98 of 255, on 3 of 8 views)
+    singlePassFlat: { on: true, flat: false },
     gloomPool: 10,
     // gloomPrefill: machines of each kind the ring sends, built and merged under the ride / night card to start the pool (src/main.js warmNight); at most gloomPool
     gloomPrefill: 3,
