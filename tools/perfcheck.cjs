@@ -133,7 +133,8 @@ const BREAKDOWN = (spot) => {
         if (process.env.PROFILE && f.cost) console.log('INFO cost ' + tier + ' ' + spot + ' timed window (ms a frame, CPU): ' + JSON.stringify(f.cost));
         // (R4, lead area 1) GPU ms a frame by pass over the same window (EXT_disjoint_timer_query_webgl2), next to the CPU line; (area 2) the light set drawn here
         if (process.env.PROFILE && f.gpu) console.log('INFO cost ' + tier + ' ' + spot + ' timed window (ms a frame, GPU): ' + JSON.stringify(f.gpu));
-        if (f.lights) info('lights ' + tier + ' ' + spot + ': ' + f.lights);
+        // ('INFO cost ' prefix: perfgpu.yml keeps only the lines its filter names)
+        if (f.lights) console.log('INFO cost ' + tier + ' ' + spot + ' lights drawn: ' + f.lights);
         r.fps = +f.fps.toFixed(1); r.avgMs = +f.avg.toFixed(1); r.p95 = +f.p95.toFixed(1); r.worst = +f.worst.toFixed(1); r.first = Math.round(f.first);
         console.log('FPS ' + tier + ' ' + spot + ': ' + r.fps + ' fps, avg ' + r.avgMs + ' ms, p95 ' + r.p95 + ' ms, worst ' + r.worst + ' ms (' + f.n + ' frames), worst first-use frame ' + r.first + ' ms'); }
       rows.push(r); console.log('PERF ' + tier + ' ' + spot + ': calls ' + r.calls + ' (screen ' + r.sCalls + '), triangles ' + (r.tris / 1e6).toFixed(2) + ' M (screen ' + (r.sTris / 1e6).toFixed(2) + ' M), frame ' + r.ms + ' ms (software GPU), downloaded ' + r.mb + ' MB, cam ' + r.cam);
@@ -397,8 +398,8 @@ const BREAKDOWN = (spot) => {
     if (tier === TT) out.push([TT + ': no page errors' + (errs.length ? ': ' + [...new Set(errs)].slice(0, 2).join(' | ') : ''), errs.length === 0]);
     // (R4, lead area 2) every change of the light set drawn (debug pages: PROFILE), with the state and whether a card or the film's black held it; a change while
     // not held changes shader keys in play. (area 1) GPU ms by pass since the page opened (card passes included)
-    { const ll = await p.evaluate(() => (window.__game.lightLog ? window.__game.lightLog() : null)); if (ll) { info(tier + ' light set changes (' + ll.length + '; ' + ll.filter((q) => !q.held).length + ' not under a card or black): ' + ll.map((q) => q.state + (q.held ? '[held]' : '[PLAY]') + '@' + q.t + ' ' + q.lights).join(' ; ').slice(0, 4000)); }
-      const ga = await p.evaluate(() => (window.__game.gpuTime ? window.__game.gpuTime(false) : null)); if (ga && process.env.PROFILE) info(tier + ' GPU ms by pass since load (' + ga.ext + '): ' + JSON.stringify(ga.all)); }
+    { const ll = await p.evaluate(() => (window.__game.lightLog ? window.__game.lightLog() : null)); if (ll) { console.log('INFO cost ' + tier + ' light set changes (' + ll.length + '; ' + ll.filter((q) => !q.held).length + ' not under a card or black): ' + ll.map((q) => q.state + (q.held ? '[held]' : '[PLAY]') + '@' + q.t + ' ' + q.lights).join(' ; ').slice(0, 4000)); }
+      const ga = await p.evaluate(() => (window.__game.gpuTime ? window.__game.gpuTime(false) : null)); if (ga && process.env.PROFILE) console.log('INFO cost ' + tier + ' GPU ms by pass since load (' + ga.ext + '): ' + JSON.stringify(ga.all)); }
     // (owner 14:25) the warm-up gate: no shader program built during play after any card, across the whole run; and the cards' proof counts
     { const pp = await p.evaluate(() => (window.__game.playPrograms ? window.__game.playPrograms() : null)), cp = await p.evaluate(() => (window.__game.cardInfo ? window.__game.cardInfo().proofs : null));
       info(tier + ' shader programs built during play: ' + JSON.stringify(pp).slice(0, 3000) + ' | cards (kind, renders, calls, programs): ' + JSON.stringify((cp || []).map((q) => [q.kind, q.renders, q.calls, q.programs])));

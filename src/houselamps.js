@@ -11,7 +11,7 @@
 import * as THREE from 'three';
 
 const LAMPS = [];
-let MAX = 0, C = null, P = [], Q = [], OFF = false, LASTN = 0, OVER = 0;
+let MAX = 0, C = null, P = [], Q = [], OFF = false, LASTN = 0, OVER = 0; const DRAWN = [];
 // (pixel test only) the shader lamps switched off, so stand-in THREE lights can draw the same lamps for comparison
 export function houseLampsForceOff(v) { OFF = !!v; }
 
@@ -59,12 +59,12 @@ export function bindHouseLamps(scene) {
   if (!MAX) return;
   // a lamp at intensity 0 (or hidden, or not in this scene) is not drawn at all: no zero-intensity light costs anything
   scene.onBeforeRender = () => {
-    let n = 0;
+    let n = 0; DRAWN.length = 0;
     for (const o of LAMPS) {
       if (OFF || n >= MAX || !(o.intensity > 0) || !inScene(o, scene)) continue;
       const e = o.matrixWorld.elements, v = P[n].value, c = Q[n].value;
       v[0] = e[12]; v[1] = e[13]; v[2] = e[14]; v[3] = o.distance; c[0] = o.color.r * o.intensity; c[1] = o.color.g * o.intensity; c[2] = o.color.b * o.intensity;
-      n++;
+      DRAWN.push(o); n++;
     }
     C.value[0] = n; LASTN = n; if (n >= MAX) OVER++;
   };
@@ -77,3 +77,5 @@ export function listHouseLamps(root) { root.traverse((o) => { if (o.userData.hou
 export function unlistHouseLamps(root) { root.traverse((o) => { const i = LAMPS.indexOf(o); if (i >= 0) LAMPS.splice(i, 1); }); }
 export const houseLampState = () => ({ max: MAX, listed: LAMPS.length, drawn: LASTN, full: OVER });
 export const houseLampList = () => LAMPS.slice();
+// the lamps the last draw of the bound scene used (the pixel test stands real lights in for exactly these)
+export const houseLampsDrawn = () => DRAWN.slice();

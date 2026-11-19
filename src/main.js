@@ -28,7 +28,7 @@ import { createFx } from './fx.js';
 import { createPerfStep } from './perfstep.js';
 import { lodTick, lodFull, lodCopy } from './lod.js';
 import { createNightCull } from './nightcull.js';
-import { installHouseLamps, bindHouseLamps, houseLamp, addLamp, listHouseLamps, unlistHouseLamps, houseLampState, houseLampList, houseLampsForceOff } from './houselamps.js';
+import { installHouseLamps, bindHouseLamps, houseLamp, addLamp, listHouseLamps, unlistHouseLamps, houseLampState, houseLampList, houseLampsDrawn, houseLampsForceOff } from './houselamps.js';
 import { freezeStillBones } from './glbmerge.js';
 import { mergeStatic, HIT_LAYER, splitVariants, singlePassFlat, twoPassGroups } from './mergestatic.js';
 import { gloomPreload, glbHooks, glbCopy, glbState } from './gloomglb.js';
@@ -598,11 +598,18 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
   if (fx && fx.upgradeNow) fx.upgradeNow();
   (async () => { try { const tc = performance.now(); let built = !renderer.compileAsync; if (renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam).then(() => { built = true; }), nap(CONFIG.lag.filmCompileCap * 1000)]); FILM.compileMs = Math.round(performance.now() - tc); FILM.compileCut = !built;
     const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); FILM.warm = 0;
-    // (R4 item B, card 27) one part a frame of at most n pieces (and S.film ms of sending), then the GPU's own time for it is waited for (gpuDone) before the next;
-    // n follows the GPU time (gpuPartSize); the closing gl.finish() (one frame that waited for the whole queue) is a last fence wait now
-    const G = CONFIG.lag.gpuPart, gp = G && G.on; let n = S.draws;
-    for (let i = 0; i < list.length;) { const t0 = performance.now(); let k = 0; while (i < list.length && performance.now() - t0 < S.film && (!gp || k < n)) { const e = Math.min(list.length, i + (gp ? Math.min(S.draws, n - k) : S.draws)); FILM.warm += drawPieces(list, i, e, null); k += e - i; i = e; }
-      if (gp) n = gpuPartSize(n, await gpuDone(G.cap)); else await raf(); }
+    // (R4 item B, card 27) after each part the GPU's own time for it is waited for (gpuDone) before the next; the closing gl.finish() (one frame that waited for
+    // the whole queue) is a last fence wait now
+    // (diagnose 7: parts sized by the fence wait shrank to 1-2 pieces, the wait being frame latency, not GPU work: cards of 26-183 s) the part stays S.film ms of
+    // sending; only the wait after it is the GPU's (gpuDone) instead of one frame
+    // (R4 item D, card 28: diagnose 7 'base 109112': 5 depth programs (render.jpg, canopy.png, glaze.jpg, the player's suit) built in the first base frames after the
+    // film) the parts also draw the shadow maps (as the cards' parts do) and the body shadow is warmed, so the depth programs are built under the black
+    const G = CONFIG.lag.gpuPart, gp = G && G.on; if (pshadow.warm) pshadow.warm();
+    for (let i = 0; i < list.length;) { const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.film) { const e = Math.min(list.length, i + S.draws); renderer.shadowMap.needsUpdate = true; FILM.warm += drawPieces(list, i, e, null); i = e; }
+      if (gp) await gpuDone(G.cap); else await raf(); }
+    // (R4 item D, card 28: diagnose 7 'intro 102695: 6 programs', the hands' own materials: MeshStandardMaterial #b08a3c, #8a8468, the cells map 64x64, the water
+    // #4aa8e8, src/hands.js) the film shows the hands in its turning part (CONFIG.opening.turning.hands) and their scene was never drawn under the black: it is now
+    if (hands.warm) hands.warm(renderer, cam.aspect);
     if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e) { /* no context */ } } } catch (e) { /* the film runs as before */ } finally { I.hold = false; } })(); }
 // draws the pieces list[i0..i1) once, each shown and not culled, alone (layer 7), into target (null: the screen; the film's black covers it); the scene's lights
 // take part; everything is put back. Returns the draw calls made.
@@ -610,10 +617,16 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
 // level's visible), so the level not in use was never drawn here and built its shader when the distance changed in play; the LOD is held still while drawn.
 // On the tier with contact shading (GTAO) the pieces are also drawn into its normal pass (its MeshNormalMaterial, one program per kind of piece: 3-4 were built
 // in play on high, diagnose 6)
-function drawPieces(list, i0, i1, target) { const lights = [], was = [], lods = []; scene.traverse((o) => { if (o.isLight) { lights.push(o); o.layers.enable(7); } });
+// (R4, card 27: diagnose 7 44504877710 GPU timer: 'card shadow' 68.5 s of GPU in the medium run vs 'card main' 43.3 s) each part redrew the WHOLE shadow map:
+// once the night cull has put its layer on a shadow camera (src/nightcull.js), three.js draws that camera's layers, not the main camera's layer 7, so every
+// caster in the scene was drawn into the shadow map again for each part. The shadow cameras now take layer 7 alone while a part is drawn (only the part's
+// pieces go into the shadow maps, which still builds their depth programs); put back after.
+function drawPieces(list, i0, i1, target) { const lights = [], was = [], lods = [], shm = []; scene.traverse((o) => { if (o.isLight) { lights.push(o); o.layers.enable(7); if (o.castShadow && o.shadow && o.shadow.camera) { shm.push([o.shadow.camera, o.shadow.camera.layers.mask]); o.shadow.camera.layers.set(7); } } });
   for (let k = i0; k < i1; k++) { const o = list[k]; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; o.layers.enable(7); for (let q = o.parent; q && q !== scene; q = q.parent) { if (q.isLOD && q.autoUpdate) { q.autoUpdate = false; lods.push(q); } if (!q.visible) { was.push([q, false, q.frustumCulled]); q.visible = true; } } }
   const cm = cam.layers.mask, c0 = RSTAT.calls, pt = renderer.getRenderTarget(), ao = fx && fx.ao && fx.aoOn && fx.ao.normalRenderTarget ? fx.ao : null; cam.layers.set(7); renderer.setRenderTarget(target);
-  try { renderer.render(scene, cam); if (ao) { scene.overrideMaterial = ao.normalMaterial; renderer.setRenderTarget(ao.normalRenderTarget); if (ao._overrideVisibility) ao._overrideVisibility(); try { renderer.render(scene, cam); } finally { if (ao._restoreVisibility) ao._restoreVisibility(); } } } catch (e) { /* drawn at first use instead */ } finally { scene.overrideMaterial = null; renderer.setRenderTarget(pt); cam.layers.mask = cm; for (const [o, v, f] of was) { o.visible = v; o.frustumCulled = f; o.layers.disable(7); } for (const l of lights) l.layers.disable(7); for (const q of lods) q.autoUpdate = true; }
+  try { renderer.render(scene, cam); if (ao) { const hid = []; for (let k = i0; k < i1; k++) { const o = list[k], m = o.material; if (o.isSprite || o.isPoints || o.isLine || o.userData.noAO || (m && !Array.isArray(m) && (m.transparent || m.alphaTest > 0))) { hid.push(o); o.visible = false; } }
+    // the shading pass's own rule (src/fx.js: no sprites, points, lines, see-through or cut-out pieces, noAO), but NOT its distance cut: a piece far at the card can be near in play
+    scene.overrideMaterial = ao.normalMaterial; renderer.setRenderTarget(ao.normalRenderTarget); try { renderer.render(scene, cam); } finally { for (const o of hid) o.visible = true; } } } catch (e) { /* drawn at first use instead */ } finally { scene.overrideMaterial = null; renderer.setRenderTarget(pt); cam.layers.mask = cm; for (const [o, v, f] of was) { o.visible = v; o.frustumCulled = f; o.layers.disable(7); } for (const l of lights) l.layers.disable(7); for (const [c, m] of shm) c.layers.mask = m; for (const q of lods) q.autoUpdate = true; }
   return RSTAT.calls - c0; }
 // LAG FIX Nov 19 (owner 13:10, the film's start frame: "1224 ms blob < streetScenery < finish < buildWorld < needWorld < startIntro"): a player's film start is prepared
 // in TIME SLICES under its black (filmPrep, stepped by filmSlice each frame: at most CONFIG.lag.slice.ms of parts a frame, one part is not cut): the scene cleared,
@@ -1578,8 +1591,6 @@ const GPUQ = { waits: 0, ms: 0, worst: 0 };
 function gpuDone(cap) { const gl = renderer.getContext(); let f = null; try { if (gl.fenceSync) { f = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); } } catch (e) { f = null; } if (!f) return Promise.resolve(0);
   const t0 = performance.now(); return new Promise((res) => { const poll = () => { let ok = true; try { ok = gl.isContextLost() || gl.getSyncParameter(f, gl.SYNC_STATUS) === gl.SIGNALED; } catch (e) { ok = true; } const ms = performance.now() - t0;
     if (ok || ms > cap) { try { gl.deleteSync(f); } catch (e) { /* lost */ } GPUQ.waits++; GPUQ.ms += ms; GPUQ.worst = Math.max(GPUQ.worst, ms); res(ms); } else requestAnimationFrame(poll); }; requestAnimationFrame(poll); }); }
-// pieces per part, worked out from the GPU time of the part before (CONFIG.lag.gpuPart): halved when a part took over ms, doubled when under a third of it
-const gpuPartSize = (n, ms) => { const G = CONFIG.lag.gpuPart; return ms > G.ms ? Math.max(1, n >> 1) : ms < G.ms / 3 ? Math.min(G.most, n * 2) : n; };
 async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
   // (owner 12:35) the card's time per step (LCARD.steps: [step, ms]), for perfcheck
@@ -1659,8 +1670,8 @@ async function sceneCard(kind) {
       // (R3, home card 9.4-14 s on the Mac: the whole pass was one draw of every piece in one frame) the pass is drawn in parts: CONFIG.lag.slice.cardDraws pieces at a
       // time, each shown and not culled with the shadow maps drawn (drawPieces), at most CONFIG.lag.slice.card ms of parts a frame; LCARD.allParts: frames, longest ms
       if (!preDrawn) { const S = CONFIG.lag.slice, list = []; if (pshadow.warm) pshadow.warm(); scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); });
-        // (R4, card 27) a part is also capped at n pieces, n following the GPU time of the part before (gpuPartSize); each part waits for the GPU before the next
-        let fr = 0, worst = 0, n = S.cardDraws; for (let i = 0; i < list.length;) { const t0 = performance.now(); let k = 0; while (i < list.length && performance.now() - t0 < S.card && (!gp || k < n)) { const e = Math.min(list.length, i + (gp ? Math.min(S.cardDraws, n - k) : S.cardDraws)); renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); k += e - i; i = e; } worst = Math.max(worst, performance.now() - t0); fr++; if (gp) n = gpuPartSize(n, await gpuDone(G.cap)); else await raf(); }
+        // (R4, card 27) each part (S.card ms of sending) waits for the GPU to finish it (gpuDone) before the next, instead of one frame
+        let fr = 0, worst = 0; for (let i = 0; i < list.length;) { const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.card) { const e = Math.min(list.length, i + S.cardDraws); renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); i = e; } worst = Math.max(worst, performance.now() - t0); fr++; if (gp) await gpuDone(G.cap); else await raf(); }
         LCARD.allParts = [fr, Math.round(worst)]; mark('all pieces'); }
       draw1(true); if (gp) await gpuDone(G.cap); else await raf(); draw1(false); if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e2) { /* no context */ } } }
     // the warm-up machines start the Gloom pool (they are built, drawn and uploaded); the rest of the warm-up copies stay hidden until the run ends, their matrices
@@ -1871,8 +1882,8 @@ window.__game.wsTip = () => wsTipT;
 // (R4 item A, card 26) the house lamps as shader data vs the same lamps as THREE point lights, same frame: a = shader lamps, a2 = the same again (noise),
 // b = shader lamps off and THREE.PointLights put at the same places with the same colour, intensity, reach and decay, none = no lamps at all (shows the lamps light it)
 window.__game.houseLampPixelTest = () => { const grab = () => { const c = document.createElement('canvas'); c.width = cvs.width; c.height = cvs.height; const x = c.getContext('2d'), N = performance.now, R = Math.random; let q = 7; performance.now = () => 1000; Math.random = () => { q = (q * 9301 + 49297) % 233280; return q / 233280; }; try { renderer.render(scene, cam); } finally { performance.now = N; Math.random = R; } x.drawImage(cvs, 0, 0); return x.getImageData(0, 0, c.width, c.height).data; };
-  const st0 = houseLampState(), a = grab(), st = houseLampState(), a2 = grab(), pl = []; let b, none;
-  try { houseLampsForceOff(true); none = grab(); for (const o of houseLampList()) { if (!o.parent) continue; const l = new THREE.PointLight(o.color.getHex(), o.intensity, o.distance, 2); o.getWorldPosition(l.position); scene.add(l); pl.push(l); } b = grab(); }
+  const st0 = houseLampState(), a = grab(), st = houseLampState(), used = houseLampsDrawn(), a2 = grab(), pl = []; let b, none;
+  try { houseLampsForceOff(true); none = grab(); for (const o of used) { const l = new THREE.PointLight(o.color.getHex(), o.intensity, o.distance, 2); o.getWorldPosition(l.position); scene.add(l); pl.push(l); } b = grab(); }
   finally { houseLampsForceOff(false); for (const l of pl) { scene.remove(l); l.dispose(); } }
   const cmp = (x, y) => { let sum = 0, mx = 0, n = 0; for (let i = 0; i < x.length; i++) { const d = Math.abs(x[i] - y[i]); sum += d; if (d > mx) mx = d; if (d > 8 && i % 4 !== 3) n++; } return { mean: +(sum / x.length).toFixed(4), max: mx, over8: n }; };
   return { lamps: st.drawn, listed: st0.listed, stand: pl.length, change: cmp(a, b), noise: cmp(a, a2), lampLight: cmp(a, none), size: [cvs.width, cvs.height] }; };
@@ -1883,7 +1894,7 @@ window.__game.houseLampState = houseLampState;
 window.__game.skinCullCheck = () => { let n = 0, bad = 0, worst = 0, who = ''; const c = new THREE.Vector3();
   scene.traverse((o) => { if (!o.isSkinnedMesh || !o.frustumCulled || !o.boundingSphere || !o.skeleton || o.userData.mergedDraw) return; let v = o; while (v && v.visible) v = v.parent; if (v) return;
     const keep = o.boundingSphere; o.boundingSphere = null; o.computeBoundingSphere(); const posed = o.boundingSphere; o.boundingSphere = keep; n++;
-    const over = c.copy(posed.center).distanceTo(keep.center) + posed.radius - keep.radius; if (over > 0) { bad++; } if (over > worst || !who) { worst = Math.max(worst, over); who = (o.name || '?') + ' < ' + ((o.parent && o.parent.name) || '?'); } });
+    const over = c.copy(posed.center).distanceTo(keep.center) + posed.radius - keep.radius; if (over > 0) { bad++; } if (over > worst || !who) { worst = Math.max(worst, over); who = (() => { const w = []; for (let q = o; q && w.length < 5; q = q.parent) w.push(q.name || q.type); return w.join(' < '); })() + ' posed c ' + posed.center.toArray().map((v) => v.toFixed(2)).join(',') + ' r ' + posed.radius.toFixed(2) + ' cull c ' + keep.center.toArray().map((v) => v.toFixed(2)).join(',') + ' r ' + keep.radius.toFixed(2) + ' bindMode ' + o.bindMode + ' bones ' + o.skeleton.bones.length; } });
   return { n, bad, worst: +worst.toFixed(4), who }; };
 // (R4 item H, card 29) a machine with its still parts frozen (freezeStillBones) vs the same machine without, posed alike at several times, drawn alone from four
 // sides into a 256 px target: per kind the changed pixels (over 8 of 255) and the largest change, and how many of its parts were frozen
