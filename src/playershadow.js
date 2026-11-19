@@ -211,6 +211,9 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
     for (let i = 0; i < a.length; i += 4) { const la = L(a, i), lb = L(b, i); if (la < lb - 3) { dark++; ratio += la / Math.max(1, lb); const q = i / 4, px2 = q % w, py2 = (q / w) | 0; x0 = Math.min(x0, px2); x1 = Math.max(x1, px2); y0 = Math.min(y0, py2); y1 = Math.max(y1, py2); } else if (la > lb + 3) bright++; }
     return { dark, bright, ratio: dark ? +(ratio / dark).toFixed(3) : 0, box: [x0, y0, x1, y1], n: w * h };
   };
+  // (H round 2, warm-up gate: the body's shadow programs were built in the first base frame after the card) the next shadow pass draws the body too, so a
+  // loading card builds its programs
+  api.warm = () => { fresh = true; cleared = false; };
   api.light = PS; api.body = body; api.blob = blob;
   try { window.__pshadow = api; } catch (e) { /* no window */ }
   return api;

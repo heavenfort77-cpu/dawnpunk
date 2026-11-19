@@ -12,7 +12,7 @@ import { okoWork } from './okowork.js';
 import { mergeStatic } from './mergestatic.js';
 import { buildHatchery, createFlock, hatchLayout, hatchSolids } from './hatchery.js';
 import { createVillageCats } from './villagecats.js';
-import { buildBaseLife, startPlants } from './basevillage.js';
+import { buildBaseLifeIter, startPlants } from './basevillage.js';
 import { LIFE_PLANTS } from './baseplants.js';
 import { reserved as lifeReserved, keepOut as lifeKeepOut, baseBound, lifeOn, plotStates } from './baselife.js';
 
@@ -128,8 +128,10 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // the recruits' nodes (owner 11:27: also rebuilt alone, recruitsChanged)
   // base life (src/basevillage.js) with what it adds kept apart (lifeKids: its groups in g; lifeObst: its boxes and circles), so it can be built again alone
   let lifeKids = [], lifeObst = [], lifeGround = null;
-  function addLife() { const n0 = g.children.length, b0 = boxes.length, o0 = obst.length; life = buildBaseLife(g, cfg, HIBASE, save, lifeGround); if (life) { for (const q of life.solids) boxes.push(q); for (const [x, z, rr] of life.circles) circle(x, z, rr); }
+  // addLifeIter: the same in parts (the sliced base build); addLife runs it at once (a recruit's change, a kept base)
+  function* addLifeIter() { const n0 = g.children.length, b0 = boxes.length, o0 = obst.length; life = yield* buildBaseLifeIter(g, cfg, HIBASE, save, lifeGround); if (life) { for (const q of life.solids) boxes.push(q); for (const [x, z, rr] of life.circles) circle(x, z, rr); }
     lifeKids = g.children.slice(n0); lifeObst = [...boxes.slice(b0), ...obst.slice(o0)]; for (const c of lifeKids) c.userData.noMerge = true; }
+  function addLife() { const it = addLifeIter(); while (!it.next().done); }
   // a recruit joined or changed role: only the recruits' nodes and the base life (where their plot houses stand) are built again, not the whole base. The base life is
   // one merged build (every house, plot, sign and plant share a few meshes per material, one random stream and one sign texture with every name), so it is built
   // again as a whole; the stations, rooms, scenery, hedge, Marla and the cats stay.
@@ -324,7 +326,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     if (cfg.villageCats && cfg.villageCats.on) vcats = createVillageCats(g, cfg, HIBASE, (save.seed || 1) + 4321);
     yield;
     // base water and base life (src/basevillage.js): the stream and waterwheel, bridges, flumes, the villagers' houses, the recruits' plots and the set pieces; what you bump into joins the boxes and circles
-    lifeGround = ground; addLife();
+    lifeGround = ground; yield* addLifeIter();
     for (let i = live0; i < g.children.length; i++) g.children[i].userData.noMerge = true;
     yield;
     // sun

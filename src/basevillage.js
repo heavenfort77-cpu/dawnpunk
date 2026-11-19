@@ -31,7 +31,10 @@ const CUR = {}; const curtainGeo = (rad, c) => { const k = rad + ':' + c; if (CU
 
 // at the start of a base build: with the plants rolled out (desktop), open the shared kit so the density pass's plants go into it too (src/basehi.js); buildBaseLife builds it
 export function startPlants(cfg, hi) { const PL = cfg.baseLife && cfg.baseLife.on && cfg.baseLife.plants; LIFE_PLANTS.kit = hi && PL && PL.on && PL.rollout ? plantKit(true, 77) : null; }
-export function buildBaseLife(g, cfg, hi, save, ground) {
+// (H round 2, the title's slow frames: the base life was one part of the sliced base build) buildBaseLifeIter stops (yield) between its houses, plots and set pieces;
+// buildBaseLife runs it at once
+export function buildBaseLife(g, cfg, hi, save, ground) { const it = buildBaseLifeIter(g, cfg, hi, save, ground); for (;;) { const q = it.next(); if (q.done) return q.value; } }
+export function* buildBaseLifeIter(g, cfg, hi, save, ground) {
   if (!lifeOn(cfg) && !(cfg.baseWater && cfg.baseWater.on)) return null;
   const BL = cfg.baseLife, D = hi ? BL.high : BL.low, r = rng(6060), G = shapes(), { acc, P } = lifePlacer(), M = lifeMats(hi), LG = leafGeo(), grp = new THREE.Group(); grp.userData.life = 'village'; g.add(grp);
   const jit = (hx, k) => C(hx).offsetHSL((r() - 0.5) * 0.03, (r() - 0.5) * 0.1, (r() - 0.5) * (k || 0.08)), seg = D.round, solids = [], circles = [], anim = [];
@@ -154,11 +157,15 @@ export function buildBaseLife(g, cfg, hi, save, ground) {
     sign(word, ...toWorld(f, -hw - 0.2, hd + 1.4), f.ry);
     solids.push({ I: f, cx: 0, cz: 0.4, hx: hw + 0.35, hz: hd + 1.0 }); };
   // ---- the villagers' houses and the plots
+  yield;
   houses.forEach((h) => cottage(h, { w: h.w, d: h.d, h: h.h, wall: h.wall, accent: h.accent, roof: h.roof, extra: h.extra, hobby: h.hobby, word: h.sign }));
+  yield;
   for (const p of plots) { if (p.stage === 'empty') emptyPlot(p); else if (p.stage === 'frame') framePlot(p, p.name.toUpperCase()); else { const st = ROLE_HOUSE[p.role] || ROLE_HOUSE.gatherer; cottage(p, Object.assign({ w: p.w, d: p.d, h: p.h, word: p.name.toUpperCase() }, st)); } }
   // ---- set pieces
+  yield;
   const pieces = pieceFrames(cfg), at = (k) => pieces.find((q) => q.key === k);
   // bench circle round a fire pit (unlit by day): a ring of stones, ash and charred logs, a kettle on a tripod, four plank benches on log feet with a gap toward the lane, firewood and a lantern
+  yield;
   { const f = at('fire'); if (f) { const rr = f.r; P.push(f.x, 0, f.z);
     for (let k2 = 0; k2 < 12; k2++) { const a = k2 / 12 * 2 * PI; P.add('stone', G.lump(k2), Math.cos(a) * 0.5, 0.06, Math.sin(a) * 0.5, 0, a, 0, 0.13, 0.1, 0.11, jit(0x8a8478, 0.1)); }
     P.add('soil', G.cyl(0.42, 0.45, 0.04, 14), 0, 0.02, 0, 0, 0, 0, 1, 1, 1, C(0x3a3430)); for (let k2 = 0; k2 < 4; k2++) P.add('wood', G.cyl(0.05, 0.05, 0.6, 7), 0, 0.08, 0, PI / 2, k2 * 0.8, 0.2, 1, 1, 1, C(k2 % 2 ? 0x2a2420 : 0x4a3a2a));
@@ -167,6 +174,7 @@ export function buildBaseLife(g, cfg, hi, save, ground) {
     for (let i = 0; i < 8; i++) P.add('wood', G.cyl(0.07, 0.07, 0.5, 7), -rr - 0.25 + (i % 4) * 0.15, 0.07 + Math.floor(i / 4) * 0.13, 0.9, 0, 0, PI / 2 + 0.4, 1, 1, 1, jit(0x9a7a52, 0.1));
     P.add('wood', G.box(0.08, 1.6, 0.08), rr + 0.2, 0.8, -0.6, 0, 0, 0, 1, 1, 1, jit(0x6a4a2a)); P.pop(); lantern(f.x + rr + 0.2, 1.5, f.z - 0.6, 0); circles.push([f.x, f.z, 0.62]); } }
   // the produce stall: a counter under a striped awning on posts, crates of vegetables, a shelf of jars, baskets, a chalkboard
+  yield;
   { const f = at('stall'); if (f) { P.push(f.x, 0, f.z, f.ry); for (const sx of [-1.15, 1.15]) for (const sz of [-0.55, 0.55]) P.add('wood', G.box(0.09, sz < 0 ? 2.25 : 1.9, 0.09), sx, sz < 0 ? 1.12 : 0.95, sz, 0, 0, 0, 1, 1, 1, jit(0x6a4a2a));
     P.push(0, 2.08, 0.0, 0, 0.33); for (let i = 0; i < 8; i++) P.add('cloth', G.box(0.3, 0.012, 1.45), -1.05 + i * 0.3, 0, 0, 0, 0, 0, 1, 1, 1, C(i % 2 ? 0xf0e8d0 : 0x3f8f6a)); P.pop(); for (let i = 0; i < 8; i++) P.add('cloth', G.box(0.3, 0.16, 0.01), -1.05 + i * 0.3, 1.78, 0.76, 0, 0, 0, 1, 1, 1, C(i % 2 ? 0xf0e8d0 : 0x3f8f6a));
     P.add('wood', G.box(2.4, 0.06, 0.8), 0, 0.85, 0.2, 0, 0, 0, 1, 1, 1, jit(0x8a6a44)); P.add('wood', G.box(2.4, 0.8, 0.04), 0, 0.42, 0.58, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a));
@@ -175,11 +183,13 @@ export function buildBaseLife(g, cfg, hi, save, ground) {
     for (let i = 0; i < 3; i++) basket(-1.4 - (i % 2) * 0.2, 0.8 + i * 0.1, 1.2); P.push(1.55, 0, 0.9, -0.4); P.add('wood', G.box(0.05, 0.9, 0.05), -0.2, 0.45, 0, 0.2, 0, 0); P.add('wood', G.box(0.05, 0.9, 0.05), 0.2, 0.45, 0, 0.2, 0, 0); P.add('iron', G.box(0.5, 0.6, 0.02), 0, 0.75, 0.08, 0.2, 0, 0, 1, 1, 1, C(0x2a3a32)); P.pop();
     P.pop(); solids.push({ I: f, cx: 0, cz: 0, hx: 1.3, hz: 0.7 }); } }
   // bee hives: three stacked box hives on stands, painted in soft colours, with a roof, an entrance slot and a landing board; flowers round them
+  yield;
   { const f = at('hives'); if (f) { P.push(f.x, 0, f.z, f.ry); for (let i = 0; i < 3; i++) { const x = -0.9 + i * 0.9, c = [0xe8dcb0, 0xb8d0c0, 0xe8c0a8][i]; for (const sx of [-0.2, 0.2]) for (const sz of [-0.2, 0.2]) P.add('wood', G.box(0.05, 0.35, 0.05), x + sx, 0.17, sz, 0, 0, 0, 1, 1, 1, jit(0x6a4a2a)); P.add('wood', G.box(0.55, 0.05, 0.55), x, 0.37, 0, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a));
       for (let b = 0; b < 3; b++) P.add('wood', G.box(0.48, 0.22, 0.44), x, 0.51 + b * 0.23, 0, 0, 0, 0, 1, 1, 1, jit(c, 0.04)); P.add('wood', G.box(0.6, 0.06, 0.56), x, 1.2, 0, 0, 0, 0, 1, 1, 1, jit(0x8a8a80)); P.push(x, 1.23, 0); for (const sz of [-1, 1]) P.add('wood', G.box(0.6, 0.03, 0.33), 0, 0.07, sz * 0.14, sz * 0.45, 0, 0, 1, 1, 1, jit(0x5a8a6a)); P.pop();
       P.add('plain', G.box(0.22, 0.025, 0.02), x, 0.45, 0.225, 0, 0, 0, 1, 1, 1, C(0x1a1410)); P.add('wood', G.box(0.3, 0.02, 0.1), x, 0.41, 0.27, -0.2, 0, 0, 1, 1, 1, jit(0x8a6a44)); if (hi) for (let k2 = 0; k2 < 8; k2++) P.add('plain', G.sphere(0.012, 4, 3), x + (r() - 0.5) * 0.4, 0.5 + r() * 0.6, 0.3 + r() * 0.3, 0, 0, 0, 1, 1, 1, C(0x3a2a10)); }
     if (hi) for (let i = 0; i < 6; i++) { const x = -1.3 + i * 0.52; plant(x, 0.02, 0.75, 6, 0.45, 0x5a9a3a, 0.75, 'flower'); if (!ROLL) blooms(x, 0.3, 0.75, 4, 0.4, 0.3, [0xc8a0f0, 0xffe070, 0xffffff]); } P.pop(); solids.push({ I: f, cx: 0, cz: 0, hx: 1.25, hz: 0.38 }); } }
   // cold frame and raised beds by the greenhouse (the flume's branch pours into the first bed): lettuces, beans on a cane teepee, seedlings under the propped glass lid
+  yield;
   { const f = at('cold'); if (f) { P.push(f.x, 0, f.z, f.ry); const bed = (z, kind) => { for (const sx of [-1, 1]) P.add('wood', G.box(0.06, 0.38, 1.0), sx * 0.6, 0.19, z, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a)); for (const sz of [-1, 1]) P.add('wood', G.box(1.26, 0.38, 0.06), 0, 0.19, z + sz * 0.5, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a)); P.add('soil', G.box(1.16, 0.03, 0.94), 0, 0.36, z, 0, 0, 0, 1, 1, 1, C(0x4a3a2a));
       if (kind === 'let') for (let k2 = 0; k2 < 6; k2++) { const x = -0.35 + (k2 % 3) * 0.35, zz = z - 0.22 + Math.floor(k2 / 3) * 0.44; plant(x, 0.37, zz, hi ? 9 : 4, 0.3, 0x8ac858, 0.35, 'leafy'); }
       else { for (const [x, zz] of [[-0.3, -0.25], [0.3, -0.25], [-0.3, 0.25], [0.3, 0.25]]) P.rod('wood', G, V(x, 0.36, z + zz), V(0, 1.7, z), 0.012, 4, jit(0x9a8a5a)); if (hi) for (let k2 = 0; k2 < 40; k2++) { const t = r(), c = [[-0.3, -0.25], [0.3, -0.25], [-0.3, 0.25], [0.3, 0.25]][k2 % 4]; P.push(c[0] * (1 - t), 0.36 + t * 1.34, z + c[1] * (1 - t), r() * 6, -0.3 - r() * 0.5); P.add('leaf', LG, 0, 0, 0, 0, 0, 0, 0.07, 0.07, 0.13, jit(0x5a9a3a, 0.12)); P.pop(); } else P.add('leaf', G.cyl(0.05, 0.28, 1.2, 6), 0, 0.96, z, 0, 0, 0, 1, 1, 1, C(0x5a9a3a)); } };
@@ -188,17 +198,20 @@ export function buildBaseLife(g, cfg, hi, save, ground) {
       if (hi) for (let k2 = 0; k2 < 18; k2++) plant(-0.42 + (k2 % 6) * 0.17, 0.21, z - 0.25 + Math.floor(k2 / 6) * 0.25, 3, 0.12, 0x8ad060, 0.45); P.push(0, 0.38, z - 0.4, 0, -0.75); P.add('glass', G.box(1.15, 0.02, 0.82), 0, 0, 0.41, 0, 0, 0, 1, 1, 1, C(0xe8f4f0)); for (const sx of [-1, 0, 1]) P.add('wood', G.box(0.04, 0.035, 0.84), sx * 0.56, 0.01, 0.41, 0, 0, 0, 1, 1, 1, jit(0x8a6a44)); P.pop(); P.add('wood', G.box(0.03, 0.42, 0.03), 0.5, 0.42, z + 0.1, 0, 0, 0, 1, 1, 1, jit(0x6a4a2a)); }
     P.pop(); solids.push({ I: f, cx: 0, cz: 0, hx: 0.68, hz: 1.65 }); } }
   // compost bays: three slatted bays of boards with heaps at different stages, a fork leaning, a wheelbarrow
+  yield;
   { const f = at('compost'); if (f) { P.push(f.x, 0, f.z, f.ry); for (let i = 0; i <= 3; i++) P.add('wood', G.box(0.06, 0.9, 1.1), -1.5 + i, 0.45, 0, 0, 0, 0, 1, 1, 1, jit(0x6a4a2a)); for (let y = 0.1; y < 0.9; y += 0.15) P.add('wood', G.box(3.05, 0.12, 0.04), 0, y, -0.55, 0, 0, 0, 1, 1, 1, jit(0x8a6a44, 0.1));
     for (let i = 0; i < 3; i++) for (let y = 0.1; y < 0.3 + i * 0.15; y += 0.15) P.add('wood', G.box(0.95, 0.12, 0.04), -1 + i, y, 0.55, 0, 0, 0, 1, 1, 1, jit(0x8a6a44, 0.1));
     for (let i = 0; i < 3; i++) { P.add('soil', G.lump(i + 3), -1 + i, 0.15 + i * 0.05, -0.05, 0, r() * 6, 0, 0.45, 0.3 + i * 0.12, 0.45, C([0x7a6a3a, 0x5a4a2e, 0x3a2e22][i])); if (hi) for (let k2 = 0; k2 < 10; k2++) P.add('leaf', G.box(0.06, 0.01, 0.04), -1 + i + (r() - 0.5) * 0.6, 0.4 + i * 0.1 + r() * 0.1, (r() - 0.5) * 0.5, r(), r() * 6, 0, 1, 1, 1, jit([0x8aa040, 0xc89a40, 0x6a5a30][i])); }
     P.push(1.7, 0, 0.3, -PI / 2 + 0.2); PROPS.tool(P, G, r, 2, 0.2); P.pop(); P.push(2.0, 0, -0.6, 2.6); PROPS.barrow(P, G, r, C(0x5a8a6a), false); P.pop(); P.pop(); solids.push({ I: f, cx: 0, cz: 0, hx: 1.6, hz: 0.6 }); } }
   // the solar herb drying rack: an A-frame with two bars of hanging herb bundles, mesh trays of petals, a small solar petal with a glowing fan box on top
+  yield;
   { const f = at('rack'); if (f) { P.push(f.x, 0, f.z, f.ry); for (const sx of [-1.15, 1.15]) for (const sz of [-1, 1]) P.beam('wood', G, V(sx, 0, sz * 0.45), V(sx, 1.75, 0), 0.07, 0.07, jit(0x6a4a2a)); for (const y of [1.6, 1.25]) P.add('wood', G.box(2.4, 0.05, 0.05), 0, y, 0, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a));
     for (let i = 0; i < (hi ? 14 : 6); i++) { const x = -1.0 + i * (2.0 / ((hi ? 14 : 6) - 1)), y = i % 2 ? 1.6 : 1.25; P.add('cloth', G.box(0.004, 0.12, 0.004), x, y - 0.06, 0, 0, 0, 0, 1, 1, 1, C(0xc8b890)); P.add('leaf', G.cyl(0.07, 0.025, 0.3, 6), x, y - 0.27, 0, PI, 0, 0, 1, 1, 1, jit([0x6a8a3a, 0x8a9a4a, 0x7a6a3a, 0x9a8a6a][i % 4], 0.08)); }
     for (const y of [0.55, 0.85]) { P.add('wood', G.box(2.0, 0.04, 0.7), 0, y, 0, 0, 0, 0, 1, 1, 1, jit(0x8a6a44)); P.add('cloth', G.box(1.9, 0.01, 0.6), 0, y + 0.025, 0, 0, 0, 0, 1, 1, 1, C(0xd8d0b8)); if (hi) for (let k2 = 0; k2 < 30; k2++) P.add('leaf', G.box(0.04, 0.008, 0.03), (r() - 0.5) * 1.8, y + 0.035, (r() - 0.5) * 0.5, 0, r() * 6, 0, 1, 1, 1, jit([0xe8c040, 0xd85a7a, 0x8aa050, 0xc890e0][k2 % 4], 0.06)); }
     P.push(0, 1.85, 0, 0, -0.5); P.add('cell', petalGeo(), 0, 0, 0.36, 0, 0, 0, 1.3, 1, 1.3, C(0xffffff)); P.pop(); P.add('cer', G.box(0.3, 0.22, 0.22), 0.6, 1.78, 0, 0, 0, 0, 1, 1, 1, C(0x7fbfae)); P.add('glow', G.sphere(0.03, 6, 4), 0.6, 1.8, 0.115, 0, 0, 0, 1, 1, 1, C(0x6af0a8));
     P.pop(); solids.push({ I: f, cx: 0, cz: 0, hx: 1.25, hz: 0.5 }); } }
   // the water tower: four timber legs with braces, a stave barrel tank with iron hoops under a green cone roof, a copper pipe down to the wash trough, a small solar pump and a ladder
+  yield;
   { const f = at('tower'); if (f) { P.push(f.x, 0, f.z, f.ry); const lg = [[-0.85, -0.85], [0.85, -0.85], [0.85, 0.85], [-0.85, 0.85]], H = 2.7;
     for (const [x, z] of lg) { P.beam('wood', G, V(x, 0, z), V(x * 0.75, H, z * 0.75), 0.14, 0.14, jit(0x6a4a2a, 0.06)); P.add('stone', G.box(0.32, 0.18, 0.32), x, 0.09, z, 0, 0, 0, 1, 1, 1, jit(0x9a9284)); }
     for (let i = 0; i < 4; i++) { const [ax, az] = lg[i], [bx, bz] = lg[(i + 1) % 4]; P.beam('wood', G, V(ax * 0.92, 0.5, az * 0.92), V(bx * 0.8, 2.0, bz * 0.8), 0.07, 0.07, jit(0x7a5a3a)); P.beam('wood', G, V(ax * 0.85, 1.3, az * 0.85), V(bx * 0.85, 1.3, bz * 0.85), 0.08, 0.08, jit(0x7a5a3a)); }
@@ -210,6 +223,7 @@ export function buildBaseLife(g, cfg, hi, save, ground) {
     for (const sz of [-0.2, 0.2]) P.beam('wood', G, V(-0.95, 0, 0.95 + sz), V(-0.7, H, 0.7 + sz), 0.05, 0.05, jit(0x9a7a52)); for (let i = 1; i < 10; i++) { const t = i / 10; P.add('wood', G.box(0.04, 0.04, 0.42), -0.95 + 0.25 * t, H * t, 0.95 - 0.25 * t, 0, PI / 4, 0, 1, 1, 1, jit(0x9a7a52)); }
     P.pop(); for (const [x, z] of lg) { const [wx, wz] = toWorld(f, x, z); circles.push([wx, wz, 0.2]); } } }
   // the wash yard: a stone trough with water under the tower's tap, a cast-iron hand pump, a washboard, bucket and soap; laundry lines from the tower to two posts
+  yield;
   { const f = at('wash'); if (f) { P.push(f.x, 0, f.z, f.ry); P.add('stone', G.box(1.7, 0.6, 0.7), 0, 0.3, 0, 0, 0, 0, 1, 1, 1, jit(0xa8a090, 0.05)); P.add('stone', G.box(1.5, 0.05, 0.5), 0, 0.58, 0, 0, 0, 0, 1, 1, 1, C(0x5a6a6a)); P.add('glass', G.box(1.48, 0.01, 0.48), 0, 0.56, 0, 0, 0, 0, 1, 1, 1, C(0x6fb8c8)); P.add('glass', G.box(1.48, 0.01, 0.48), 0, 0.555, 0, 0, 0, 0, 1, 1, 1, C(0x2f7f96));
     { P.push(-1.05, 0, 0); P.add('iron', G.cyl(0.09, 0.12, 0.95, hi ? 12 : 8), 0, 0.47, 0, 0, 0, 0, 1, 1, 1, C(0x2f3a36)); P.add('iron', G.cyl(0.11, 0.09, 0.12, hi ? 12 : 8), 0, 1.0, 0, 0, 0, 0, 1, 1, 1, C(0x2f3a36)); P.add('copper', G.cyl(0.03, 0.04, 0.4, 8), 0.25, 0.8, 0, 0, 0, -1.25, 1, 1, 1, C(0xc87a3a)); P.rod('iron', G, V(-0.05, 1.05, 0), V(-0.55, 1.3, 0), 0.022, 6, C(0x2f3a36)); P.add('copper', G.sphere(0.04, 8, 6), -0.57, 1.31, 0, 0, 0, 0, 1, 1, 1, C(0xc87a3a)); P.pop(); }
     P.add('wood', G.box(0.4, 0.55, 0.03), 0.95, 0.3, 0.32, -0.3, 0, 0, 1, 1, 1, jit(0x9a7a52)); if (hi) for (let k2 = 0; k2 < 8; k2++) P.add('iron', G.box(0.34, 0.012, 0.012), 0.95, 0.12 + k2 * 0.05, 0.35 + k2 * 0.016, -0.3, 0, 0, 1, 1, 1, C(0x8a8a84));
@@ -218,6 +232,7 @@ export function buildBaseLife(g, cfg, hi, save, ground) {
     for (const sx of [-1, 1]) { const post = V(sx * 3.3, 0, 2.3); P.add('wood', G.box(0.08, 2.0, 0.08), post.x, 1.0, post.z, 0, 0, 0, 1, 1, 1, jit(0x6a4a2a)); PROPS.laundry(P, G, r, V(sx * 0.75, 1.9, 2.0), V(post.x, 1.92, post.z), [jit(0xf0f0e8), jit(0x8ab0c8), jit(0xd8b088), jit(0xc86a5a), jit(0xa8c890)], D.laundry); const [wx, wz] = toWorld(f, post.x, post.z); circles.push([wx, wz, 0.1]); }
     P.pop(); solids.push({ I: f, cx: -0.15, cz: 0, hx: 1.2, hz: 0.4 }); } }
   // ---- lanes: trodden earth with grassy edges; lanterns and planters along them (never on the water, a bridge or a footprint)
+  yield;
   { const LW = BL.lanes.width / 2, ko = keepOut(cfg), B = bridgeFrames(cfg), clear = (x, z) => !B.some((b) => Math.hypot(x - b.x, z - b.z) < b.len / 2 + 1.8) && (!cfg.baseWater || !cfg.baseWater.on || nearStream(cfg, x, z).d > cfg.baseWater.bed.top + 0.5);
     let lampAt = BL.lanes.lamps * 0.5, potAt = BL.lanes.planters * 0.3;
     const wetLane = (x, z) => cfg.baseWater && cfg.baseWater.on && nearStream(cfg, x, z).d < cfg.baseWater.bed.top + 0.25;
@@ -230,6 +245,7 @@ export function buildBaseLife(g, cfg, hi, save, ground) {
         if (s > potAt) { potAt += BL.lanes.planters; const px = x - nx * (LW + 0.4), pz = z - nz * (LW + 0.4); if (!ko(px, pz) && clear(px, pz)) { P.push(px, 0, pz, Math.atan2(nx, nz)); P.add('wood', G.box(0.8, 0.36, 0.4), 0, 0.18, 0, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a)); P.add('soil', G.box(0.74, 0.02, 0.34), 0, 0.35, 0, 0, 0, 0, 1, 1, 1, C(0x4a3a2a)); plant(-0.2, 0.36, 0, hi ? 8 : 4, 0.4, 0x5a9a3a, 0.75, 'herb'); plant(0.2, 0.36, 0, hi ? 6 : 3, 0.3, 0x7aa848, 0.75, 'flower'); if (hi && !ROLL) blooms(0, 0.5, 0, D.flowers, 0.7, 0.3, FLOWERS); P.pop(); } } });
       if (idx.length) P.add('soil', ownGeo(pos, col, uv, idx), 0, 0, 0); } }
   // ---- merge (the nameplates have their own picture)
+  yield;
   const res = mergeLife(grp, acc, M, { sign: SA.mat }), pk = PK && PK.count() ? PK.build(grp) : null; LIFE_PLANTS.kit = null;
   const cost = { tris: res.tri + (water ? water.cost.tris : 0) + (pk ? pk.tris : 0), meshes: res.meshes + (water ? water.cost.meshes : 0) + anim.length * 2 + (pk ? pk.draws : 0), village: res, water: water && water.cost, plants: pk };
   return { water, plots, solids: [...solids, ...waterSolids(cfg)], circles, cost, keepOut: keepOut(cfg),

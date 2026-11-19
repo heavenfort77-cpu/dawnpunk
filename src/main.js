@@ -724,6 +724,9 @@ function introFrame(dt) {
   if (part >= 2 && I.part === 'town') introToBase();
   // the wake waits (eyes shut) for the people's models, at most CONFIG.opening.wake.waitModels s; stand-ins left are hidden (opStands)
   if (part === 3 && t - P[3] < 0.5 && opStands(I) > 0 && (I.waitT = (I.waitT || 0) + dt) < C.wake.waitModels) { I.t = P[3]; }
+  // (H round 2, warm-up gate: 6 programs built in a shown film frame at the wake: the people's models swapped in after the dawn shot's warm-up) once they are in,
+  // with the eyes still shut, the scene is warmed again under a hold (filmWarm: shaders, then every piece drawn in parts)
+  if (part === 3 && !I.wakeWarm && t - P[3] < 0.5 && opStands(I) === 0) { I.wakeWarm = true; filmWarm(I); if (I.hold) return; }
   if (part === 0) opGrid(I, t); else if (part === 1) opTurning(I, t, dt);
   if (part <= 1) { sky.follow(cam, 0, dt); sty($('cineFade'), 'opacity', String(Math.max(0, Math.min(1, fade)))); musicTick(dt); draw(); if (part === 1 && C.turning.hands > 0) { hands.update(dt, false, C.turning.hands, true); hands.render(renderer, cam.aspect); } return; }
   // the people decide inside the motion's slices on where the camera is at each moment of the frame (dawn path, then the bed at the wake), the same at any frame rate
@@ -1331,27 +1334,25 @@ function musicUnlock() { if (mus.ready) return; mus.ready = true; try { mus.on =
 // loads: the three.js loading manager for models and textures, the handwriting fonts, the music files, a shader compile of the scene), then the begin button #enter.
 // The scripted checks (?quality= in the address) skip the logo and title time unless &splash=1. window.__loadMs = milliseconds from navigation to the begin button.
 // LAG FIX Nov 19 (owner 12:45/12:49): the base is prepared in TIME SLICES from the title on (titleBase starts it, baseSlice runs it each frame): its build parts
-// (src/baseview.js bgStep, at most CONFIG.lag.slice.ms a frame; one part is not cut), then its shaders in the background (compileAsync), then its pieces drawn into an
-// off-screen target slice.draws at a time (their uploads). Only on the title (and never while the tab is hidden); Enter or the film take over what is left.
+// (src/baseview.js bgStep, at most CONFIG.lag.slice.ms a frame; one part is not cut), then its whole-base passes one a frame, then its shaders in the background
+// (compileAsync a few pieces a frame). Only on the title (and never while the tab is hidden); Enter or the film take over what is left.
 // A first visit's base is prepared for the save made here (preSave), which Enter and 'watch' then use.
 let preSave = null; const TB = { phase: '', list: null, i: 0, rt: null, t0: 0 };
 function titleBase() { if (!CONFIG.lag.keepBase || BOTRUN() || state !== 'menu' || TB.phase || FILM.it) return; let sv = null; try { sv = B.loadSave(CONFIG, storage); } catch (e) { sv = null; } if (!sv) return;
   let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } if (!had) { if (sv.day === 1 && !sv.nights) sv.scoutSpot = 4; preSave = sv; }
   if (bview.bgStart(sv)) { TB.phase = 'build'; TB.t0 = performance.now(); } }
-function baseSlice() { const S = CONFIG.lag.slice; if (!TB.phase || TB.phase === 'done' || !S) return; if (state !== 'menu' || document.hidden) { if (state !== 'menu' && !bview.bgBusy && TB.phase === 'build') TB.phase = ''; return; }
+// (H round 2) the title's slow frames from this work, by phase (cardInfo().title.slow: [phase, post step, ms]) so a long title frame is named
+function baseSlice() { const ph = TB.phase, t0 = performance.now(); baseSlice0(); const ms = performance.now() - t0; if (ms > 50) { TB.slow = TB.slow || []; if (TB.slow.length < 20) TB.slow.push([ph, TB.post || 0, Math.round(ms)]); } }
+function baseSlice0() { const S = CONFIG.lag.slice; if (!TB.phase || TB.phase === 'done' || !S) return; if (state !== 'menu' || document.hidden) { if (state !== 'menu' && !bview.bgBusy && TB.phase === 'build') TB.phase = ''; return; }
   const g = bview.group;
   if (TB.phase === 'build') { if (!bview.bgBusy) { TB.phase = ''; return; } if (bview.bgStep(S.ms)) { TB.phase = 'post'; TB.post = 0; } return; }
   // after the build, one of its whole-base passes a frame (relief maps, small casters, the still pieces merged), then its shaders in the background
-  if (TB.phase === 'post') { const k = TB.post++, p0 = performance.now(); TB.postMs = TB.postMs || []; if (k === 0) applyRelief(g); else if (k === 1) noSmallCasters(g); else if (k === 2) bview.mergeStill(); else { TB.phase = 'compile'; if (renderer.compileAsync) { scene.add(g); const p = renderer.compileAsync(scene, cam); scene.remove(g); p.then(() => { if (TB.phase === 'compile') TB.phase = 'draw'; }, () => { TB.phase = 'draw'; }); } else TB.phase = 'draw'; } TB.postMs.push(Math.round(performance.now() - p0)); return; }
-  if (TB.phase === 'draw') tbDraw(S.draws); }
-// n more of the prepared base's pieces drawn off-screen (all that are left when the home card takes over: sceneCard)
-function tbDraw(n) { const g = bview.group; if (TB.phase !== 'draw') return;
-    // a base built again since: its pieces are not these
-    if (TB.list && TB.i < TB.list.length) { let q = TB.list[TB.i]; while (q && q !== g) q = q.parent; if (!q) { TB.phase = ''; TB.list = null; return; } }
-    if (!TB.list) { TB.list = []; g.traverse((o) => { if (o.isMesh || o.isSprite || o.isPoints || o.isLine) TB.list.push(o); }); TB.i = 0; }
-    const rt = TB.rt || (TB.rt = new THREE.WebGLRenderTarget(64, 64)), end = Math.min(TB.list.length, TB.i + n), inS = !!g.parent;
-    if (!inS) scene.add(g); try { TB.calls = (TB.calls || 0) + drawPieces(TB.list, TB.i, end, rt); } finally { if (!inS) scene.remove(g); }
-    TB.i = end; if (TB.i >= TB.list.length) { g.userData.drawn = true; TB.phase = 'done'; TB.list = null; TB.ms = Math.round(performance.now() - TB.t0); pauseDrawn = false; } }
+  if (TB.phase === 'post') { const k = TB.post++, p0 = performance.now(); TB.postMs = TB.postMs || []; if (k === 0) applyRelief(g); else if (k === 1) noSmallCasters(g); else if (k === 2) bview.mergeStill(); else { TB.phase = 'compile'; TB.cq = [...g.children]; } TB.postMs.push(Math.round(performance.now() - p0)); return; }
+  // (H round 2, the title's seconds-long frames) the base's shaders are built a few of its pieces at a time (compileAsync on each, its sync part at most S.ms a frame:
+  // SPREAD); the off-screen draws are gone (REMOVED: they made the GPU's draw states for a 64 px target, not for the screen, so the home card draws on screen anyway)
+  if (TB.phase === 'compile') { const t1 = performance.now(); if (!renderer.compileAsync) { TB.phase = 'done'; return; } const inS = !!g.parent; if (!inS) scene.add(g);
+    try { while (TB.cq.length && performance.now() - t1 < S.ms) { const c = TB.cq.shift(); if (c.parent === g) renderer.compileAsync(c, cam, scene).catch(() => {}); } } finally { if (!inS) scene.remove(g); }
+    if (!TB.cq.length) { TB.phase = 'done'; TB.ms = Math.round(performance.now() - TB.t0); pauseDrawn = false; } } }
 const SPLASH = (() => {
   const S = CONFIG.splash, el = $('spl'), q = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })(), quick = q.has('quality') && q.get('splash') !== '1';
   const t0 = performance.now(), st = { scripts: [1, 1], assets: [0, 0], fonts: [0, 1], music: [0, 0], warm: [0, 1] }, began = {}, label = { scripts: 'Scripts', assets: 'Models and textures', fonts: 'Handwriting fonts', music: 'Music', warm: 'First scene (shaders)' };
@@ -1453,10 +1454,10 @@ addEventListener('resize', resize); resize();
 // skipped in the scripted checks, whose software GPU builds them on the first frame as before), and draw the sun shadow map once on the first frame after.
 cvs.addEventListener('webglcontextlost', (e) => { e.preventDefault(); ctxLost = true; }, false);
 // (owner 13:10, premortem C) after a restore three.js uploads every geometry, texture and shader again on its next use (pools, the kept base, the baked ground, merged
-// meshes: their data stays in memory); what the game drew only once is drawn again: the held picture under a pause or run-end screen (pauseDrawn), the shadow map,
-// and the title's off-screen base draws (their uploads were lost); the run-end blur is taken again from the new picture
+// meshes: their data stays in memory); what the game drew only once is drawn again: the held picture under a pause or run-end screen (pauseDrawn) and the
+// shadow map; the run-end blur is taken again from the new picture
 cvs.addEventListener('webglcontextrestored', () => { ctxLost = false; renderer.shadowMap.needsUpdate = true; pauseDrawn = false; ENDS.re = true;
-  if (TB.phase === 'draw' || TB.phase === 'done') { TB.phase = 'draw'; TB.list = null; bview.group.userData.drawn = false; } }, false);
+}, false);
 // ---- PERF OVERLAY (owner Nov 19 05:55): ?perf=1 shows real frame rates on a real device in a corner: FPS, average and worst frame (ms) over the last ~2 s, draw calls and
 // triangles per frame (every render of the frame summed), tier, pixel ratio and the automatic step-downs taken. Off (and costing nothing) without ?perf=1.
 const PERFHUD = (() => { try { return new URLSearchParams(location.search).get('perf') === '1'; } catch (e) { return false; } })();
@@ -1470,7 +1471,7 @@ function perfHud(ms) {
 // ?cards=1: the scripted checks get the real card work too (tools/perfcheck.cjs on the real GPU), not the quick bot card
 const CARDS_REAL = (() => { try { return new URLSearchParams(location.search).get('cards') === '1'; } catch (e) { return false; } })();
 // (owner 13:10: warm-ups must be proven to have run) every render's draw calls are counted (RSTAT), so each card reports the renders, draw calls and new shader
-// programs made under it (LCARD.proofs, last 12: kind, renders, calls, programs), and the title's off-screen base draws theirs (TB.calls)
+// programs made under it (LCARD.proofs, last 12: kind, renders, calls, programs)
 const RSTAT = { renders: 0, calls: 0 }; { const r0 = renderer.render.bind(renderer); renderer.render = (s2, c2) => { const I = renderer.info.render, b = renderer.info.autoReset ? 0 : I.calls; r0(s2, c2); RSTAT.renders++; RSTAT.calls += I.calls - b; }; }
 const nProg = () => (renderer.info.programs ? renderer.info.programs.length : 0);
 const LCARD = { on: false, n: 0, proofs: [] }, BOTRUN = () => { if (CARDS_REAL) return false; try { return !!window.__dtMax || !!navigator.webdriver; } catch (e) { return false; } };
@@ -1588,15 +1589,15 @@ async function sceneCard(kind) {
       // to the GPU then; the shadow pass only sent positions) happens under the card, not when you turn round or step to a window in the fight
       // and once more with EVERY piece shown and not culled (hidden effects such as the boss's summon bars and sparks included; lights left as they are, so no shader changes)
       // (owner 12:35) the home card over a base already drawn at the title (titleBase: shaders built, every piece uploaded) skips the turn-round and all-pieces passes
-      // the title's off-screen draws that are left, then the card's own passes are not needed
-      if (kind === 'home' && TB.phase === 'draw') tbDraw(Infinity);
       // (H round 2, Enter on medium: "3338 ms drawArrays < render < renderBufferDirect" in the first frame after the card) the title's off-screen draws (a 64 px target)
       // uploaded the data but did not make the draws the screen needs (the GPU builds its draw states per target), so the home card always makes its own passes on screen
       const preDrawn = false;
       if (!preDrawn) { const ry = cam.rotation.y; cam.layers.enable(1); try { for (let k = 1; k <= 4; k++) { cam.rotation.y = ry + k * Math.PI / 2; cam.updateMatrixWorld(); draw1(false); } } finally { cam.layers.disable(1); cam.rotation.y = ry; cam.updateMatrixWorld(); } await raf(); }
-      if (!preDrawn) { const was = []; cam.layers.enable(1); try { scene.traverse((o) => { if (o.isLight || o === sky.mesh) return; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; }); renderer.render(scene, cam); }
+      // (H round 2, warm-up gate: shadow (depth) programs of pieces first seen by the shadow pass after the card) this pass also draws the shadow maps, with every
+      // piece shown and not culled, so every caster's depth program is built here; the shadows are drawn again as they are just after; the body shadow too
+      if (!preDrawn) { const was = []; cam.layers.enable(1); if (pshadow.warm) pshadow.warm(); try { scene.traverse((o) => { if (o.isLight || o === sky.mesh) return; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; }); renderer.shadowMap.needsUpdate = true; renderer.render(scene, cam); }
         finally { for (const [o, v, f] of was) { o.visible = v; o.frustumCulled = f; } cam.layers.disable(1); } await raf(); }
-      if (kind === 'night') { draw1(true); await raf(); } draw1(false); try { renderer.getContext().finish(); } catch (e2) { /* no context */ } }
+      draw1(true); await raf(); draw1(false); try { renderer.getContext().finish(); } catch (e2) { /* no context */ } }
     // the warm-up machines start the Gloom pool (they are built, drawn and uploaded); the rest of the warm-up copies stay hidden until the run ends, their matrices
     // skipping the per-frame pass too (owner 09:50)
     mark('first draws'); if (kind === 'night') for (const c of [...warmG.children]) if (c.userData.kind && c.userData.anim) { warmG.remove(c); gloomPut(c); }
@@ -1821,7 +1822,7 @@ window.__game.cardOn = () => LCARD.on; window.__game.filmHold = () => !!(FILM.it
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);
 window.__game.impactPrerender = () => IMP.prerender();
 // the last card's work time (ms) and any error it swallowed (tools/perfcheck.cjs prints them)
-window.__game.cardInfo = () => ({ twoPass: LCARD.twoPass || null, proof: LCARD.proofs[LCARD.proofs.length - 1] || null, proofs: LCARD.proofs, title: { phase: TB.phase, calls: TB.calls || 0, ms: TB.ms || 0, worstPart: bview.bgWorst, postMs: TB.postMs || null }, ms: LCARD.ms, settle: LCARD.settle || null, steps: LCARD.steps || null, buildMs: LCARD.buildMs || null, err: window.__cardErr || '' });
+window.__game.cardInfo = () => ({ twoPass: LCARD.twoPass || null, proof: LCARD.proofs[LCARD.proofs.length - 1] || null, proofs: LCARD.proofs, title: { phase: TB.phase, calls: TB.calls || 0, ms: TB.ms || 0, worstPart: bview.bgWorst, postMs: TB.postMs || null, slow: TB.slow || null }, ms: LCARD.ms, settle: LCARD.settle || null, steps: LCARD.steps || null, buildMs: LCARD.buildMs || null, err: window.__cardErr || '' });
 // the shader programs built so far (tools/perfcheck.cjs: which ones are first built after the night card); name and a short key each
 // (owner 12:35) which pieces use a given program id (perfcheck names the program built during a fight)
 window.__game.programUsers = (ids) => { const want = new Set(ids), out = {}; const look = (o) => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { const pr = renderer.properties.get(m); const prog = pr && pr.currentProgram; if (prog && want.has(prog.id)) { const l = out[prog.id] || (out[prog.id] = []); if (l.length < 4) { let path = [], q = o; while (q && q !== scene && path.length < 4) { path.push(q.name || q.type); q = q.parent; } l.push(m.type + ' ' + (m.name || '') + ' col ' + (m.color ? m.color.getHexString() : '-') + (m.map ? ' map' : '') + ' on ' + path.join('<')); } } } };
