@@ -625,8 +625,8 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
 // once the night cull has put its layer on a shadow camera (src/nightcull.js), three.js draws that camera's layers, not the main camera's layer 7, so every
 // caster in the scene was drawn into the shadow map again for each part. The shadow cameras now take layer 7 alone while a part is drawn (only the part's
 // pieces go into the shadow maps, which still builds their depth programs); put back after.
-function drawPieces(list, i0, i1, target) { const lights = [], was = [], lods = [], shm = []; scene.traverse((o) => { if (o.isLight) { lights.push(o); o.layers.enable(7); if (o.castShadow && o.shadow && o.shadow.camera) { shm.push([o.shadow.camera, o.shadow.camera.layers.mask]); o.shadow.camera.layers.set(7); } } });
-  for (let k = i0; k < i1; k++) { const o = list[k]; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; o.layers.enable(7); for (let q = o.parent; q && q !== scene; q = q.parent) { if (q.isLOD && q.autoUpdate) { q.autoUpdate = false; lods.push(q); } if (!q.visible) { was.push([q, false, q.frustumCulled]); q.visible = true; } } }
+function drawPieces(list, i0, i1, target) { const lights = [], was = [], lods = [], shm = []; scene.traverse((o) => { if (o.isLight && !(ML.on && ML.lights.includes(o))) { lights.push(o); o.layers.enable(7); if (o.castShadow && o.shadow && o.shadow.camera) { shm.push([o.shadow.camera, o.shadow.camera.layers.mask]); o.shadow.camera.layers.set(7); } } });
+  for (let k = i0; k < i1; k++) { const o = list[k]; if (ML.on && marlaHas(o)) continue; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; o.layers.enable(7); for (let q = o.parent; q && q !== scene; q = q.parent) { if (q.isLOD && q.autoUpdate) { q.autoUpdate = false; lods.push(q); } if (!q.visible) { was.push([q, false, q.frustumCulled]); q.visible = true; } } }
   const cm = cam.layers.mask, c0 = RSTAT.calls, pt = renderer.getRenderTarget(), ao = fx && fx.ao && fx.aoOn && fx.ao.normalRenderTarget ? fx.ao : null; cam.layers.set(7); renderer.setRenderTarget(target);
   try { renderer.render(scene, cam); if (ao) { const hid = []; for (let k = i0; k < i1; k++) { const o = list[k], m = o.material; if (o.isSprite || o.isPoints || o.isLine || o.userData.noAO || (m && !Array.isArray(m) && (m.transparent || m.alphaTest > 0))) { hid.push(o); o.visible = false; } }
     // the shading pass's own rule (src/fx.js: no sprites, points, lines, see-through or cut-out pieces, noAO), but NOT its distance cut: a piece far at the card can be near in play
@@ -1520,7 +1520,37 @@ function breakCue(ev) {
 // ---- loop
 let fx = null; const FXOFF = (() => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } })();
 // (R4 worker 5, item 3) window.__noBodyShadow (perfcheck's control only): the body shadow off, to read the GPU passes without it
-function draw() { pshadow.tick(cam, (state === 'base' || state === 'play') && !window.__noBodyShadow, pshadowFloor());if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (holdDraw) return; fitFar(); if (QUALITY === 'high') lodTick(cam); if (fx && fx.render) fx.render(); else renderer.render(scene, cam); }
+// OWNER DECISION Nov 19 23:24 (CONFIG.lag.marlaOwnLight): in play Marla's key SpotLight and rim light light only her. Her pieces and her two lights are moved to
+// their own layer; the street is drawn without them (the same light set by day as at night, so one program per material), then marlaPass draws only her pieces
+// with the scene's lights plus her two, over the same picture (no clear, no background, matrices already updated). The other lights get her layer too, the
+// shadow cameras draw her as a caster as before, and only her key's shadow map is drawn in her pass (when the frame's shadow maps were). Base and film: as before.
+const ML = { on: false, bit: CONFIG.lag.marlaOwnLight ? CONFIG.lag.marlaOwnLight.layer : 6, lights: [], keys: [], all: [], k: 0, n: -1, sh: false, fxSet: false, save: [] };
+function marlaSync() {
+  const C = CONFIG.lag.marlaOwnLight, want = !!(C && C.on && state === 'play' && marla && marla.ready && marla.root.parent);
+  if (want !== ML.on) {
+    if (want) { ML.lights.length = 0; marla.root.traverse((o) => { if (o.isLight) ML.lights.push(o); }); if (!ML.lights.length) return; }
+    ML.on = want; const m = want ? 1 << ML.bit : 1;
+    marla.root.traverse((o) => { if (o.isMesh || o.isSkinnedMesh || o.isLight || o.isSprite || o.isPoints || o.isLine) o.layers.mask = m; });
+    for (const l of ML.lights) if (l.castShadow && l.shadow && l.shadow.camera) { if (want) { l.userData.mlMask = l.shadow.camera.layers.mask; l.shadow.camera.layers.mask = 1 | (1 << ML.bit); } else if (l.userData.mlMask !== undefined) l.shadow.camera.layers.mask = l.userData.mlMask; }
+    ML.n = -1;
+  }
+  if (!ML.on) return;
+  // the scene's other lights: listed again every C.lightsEvery frames or when the scene's top level changes; each sees her layer, each shadow camera draws her
+  if (++ML.k >= C.lightsEvery || ML.n !== scene.children.length) { ML.k = 0; ML.n = scene.children.length; ML.all.length = 0; scene.traverse((o) => { if (o.isLight && !ML.lights.includes(o)) ML.all.push(o); }); }
+  for (const l of ML.all) { l.layers.enable(ML.bit); if (l.castShadow && l.shadow && l.shadow.camera) { const L = l.shadow.camera.layers; if (!L.isEnabled(ML.bit)) { if (!(L.mask & ~1)) L.mask = cam.layers.mask; L.enable(ML.bit); } } }
+}
+// a piece of Marla (her pieces are drawn only in her own pass while her lights are split off)
+function marlaHas(o) { for (let q = o; q; q = q.parent) if (q === marla.root) return true; return false; }
+function marlaPass() {
+  if (!ML.on) return;
+  const r = renderer, ac = r.autoClear, ar = r.info.autoReset, bg = scene.background, mu = scene.matrixWorldAutoUpdate, cm = cam.layers.mask, sv = ML.save; sv.length = 0;
+  for (const l of ML.all) if (l.castShadow && l.shadow) { sv.push(l, l.shadow.autoUpdate, l.shadow.needsUpdate); l.shadow.autoUpdate = false; l.shadow.needsUpdate = false; }
+  r.autoClear = false; r.info.autoReset = false; scene.background = null; scene.matrixWorldAutoUpdate = false; cam.layers.set(ML.bit); r.shadowMap.needsUpdate = ML.sh;
+  try { r.render(scene, cam); } finally { r.autoClear = ac; r.info.autoReset = ar; scene.background = bg; scene.matrixWorldAutoUpdate = mu; cam.layers.mask = cm; for (let i = 0; i < sv.length; i += 3) { sv[i].shadow.autoUpdate = sv[i + 1]; sv[i].shadow.needsUpdate = sv[i + 2]; } sv.length = 0; }
+}
+// her own programs under the loading card (the street's are built without her lights): only her pieces, with the scene's lights plus her two
+function marlaCompile() { if (!ML.on || !renderer.compileAsync) return Promise.resolve(); const cm = cam.layers.mask; cam.layers.set(ML.bit); try { return renderer.compileAsync(marla.root, cam, scene).catch(() => {}); } finally { cam.layers.mask = cm; } }
+function draw() { pshadow.tick(cam, (state === 'base' || state === 'play') && !window.__noBodyShadow, pshadowFloor());if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (holdDraw) return; fitFar(); if (QUALITY === 'high') lodTick(cam); marlaSync(); ML.sh = renderer.shadowMap.needsUpdate; if (fx && fx.render) { if (fx.setAfterMain && !ML.fxSet) { ML.fxSet = true; fx.setAfterMain(marlaPass, ML.bit); } fx.render(); } else { renderer.render(scene, cam); marlaPass(); } }
 // the far plane follows the fog (CONFIG.lag.farPad): nothing past the fog's end is drawn; the sky dome (40 m) shrinks to stay inside the far plane
 const FAR0 = cam.far; function fitFar() { const f = scene.fog && scene.fog.isFog ? Math.min(FAR0, scene.fog.far + CONFIG.lag.farPad) : FAR0; if (Math.abs(cam.far - f) > 0.25) { cam.far = f; cam.updateProjectionMatrix(); } sky.mesh.scale.setScalar(Math.min(1, (cam.far - 1) / 40)); }
 // (owner 13:10, premortem J) a new size clears the canvas: a held picture (pause, run end) is drawn once again and the run-end blur taken again from it
@@ -1680,7 +1710,7 @@ async function sceneCard(kind) {
     // the impact sounds' variants are rendered ahead (src/impactsfx.js impactPrerender): started by the ride card and left to finish during the day; the night card
     // waits a moment (CONFIG.lag.card.sfxWait s) if they are not done yet; until they are, a sound is built live as before
     if (!bot && kind === 'ride') IMP.prerender(); else if (!bot && kind === 'night') await Promise.race([IMP.prerender(), nap(L.sfxWait * 1000)]);
-    mark('prepare'); fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); mark('compile');
+    mark('prepare'); fill(0.6); marlaSync(); if (!bot && renderer.compileAsync) await Promise.race([Promise.all([renderer.compileAsync(scene, cam), marlaCompile()]), nap(L.maxWait * 1000)]); mark('compile');
     // the ride card also builds the NIGHT's shaders: the night's machine lights on (every lit shader is built per light count), one machine of each kind and each device
     // in the scene, then all put back as they were. The night card then finds them built (the first night card took 6.8 s on the test GPU, the next ones 0.5 s).
     // A house adds one ceiling lamp per floor (buildRoom), so the night's light count also depends on the house: stand-in lamps for each floor count among this ring's
@@ -1775,7 +1805,7 @@ let last = performance.now(), acc = 0, hurtT = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   // a loading card is up (sceneCard): the game is held still and nothing is drawn under it
-  lfStart(now); playProgs(); baseSlice(); filmSlice(); nightBgSlice(); glbFlush();
+  lfStart(now); playProgs(); baseSlice(); filmSlice(); nightBgSlice(); glbFlush(); marlaSync();
   if (LCARD.on) { last = now; return; }
   // window.__dtMax is set only by the slow headless checks (software renderer, under 1 frame a second) so game time keeps up; players never set it.
   const rawMs = now - last, dt = Math.min(window.__dtMax || CONFIG.lag.dtMax, rawMs / 1000); last = now; const holdNow = paused || state === 'end' || (state === 'menu' && MENU_EL.style.display !== 'none'); holdDraw = (holdNow && pauseDrawn) || ctxLost; pauseDrawn = holdNow; perfHud(rawMs); perf.tick(rawMs, (state === 'base' || state === 'play') && !paused);
@@ -1967,6 +1997,15 @@ window.__game.houseLampPixelTest = () => { const grab = () => { const c = docume
   const cmp = (x, y) => { let sum = 0, mx = 0, n = 0; for (let i = 0; i < x.length; i++) { const d = Math.abs(x[i] - y[i]); sum += d; if (d > mx) mx = d; if (d > 8 && i % 4 !== 3) n++; } return { mean: +(sum / x.length).toFixed(4), max: mx, over8: n }; };
   return { lamps: st.drawn, listed: st0.listed, stand: pl.length, change: cmp(a, b), noise: cmp(a, a2), lampLight: cmp(a, none), size: [cvs.width, cvs.height] }; };
 window.__game.houseLampState = houseLampState;
+// (owner decision 23:24, test hook) the same frame drawn with Marla's lights as before (on the street's light set) and with them lighting only her (marlaOwnLight):
+// time and random held, every shadow map drawn for both; returns both pictures (PNG data) and the per-channel difference (0-255) over the canvas
+window.__game.marlaLightPixelTest = () => { const C = CONFIG.lag.marlaOwnLight, on0 = C.on, N = performance.now, R = Math.random;
+  const grab = (v) => { C.on = v; marlaSync(); let q = 7; performance.now = () => 1000; Math.random = () => { q = (q * 9301 + 49297) % 233280; return q / 233280; };
+    try { renderer.shadowMap.needsUpdate = true; ML.sh = true; if (fx && fx.render) fx.render(); else { renderer.render(scene, cam); marlaPass(); } } finally { performance.now = N; Math.random = R; }
+    const c = document.createElement('canvas'); c.width = cvs.width; c.height = cvs.height; const x = c.getContext('2d'); x.drawImage(cvs, 0, 0); return { url: c.toDataURL('image/png'), d: x.getImageData(0, 0, c.width, c.height).data }; };
+  let a, a2, b; try { a = grab(false); a2 = grab(false); b = grab(true); } finally { C.on = on0; marlaSync(); }
+  const cmp = (x, y) => { let sum = 0, mx = 0, n = 0; for (let i = 0; i < x.length; i++) { if (i % 4 === 3) continue; const d = Math.abs(x[i] - y[i]); sum += d; if (d > mx) mx = d; if (d > 0) n++; } return { mean: +(sum / x.length).toFixed(4), max: mx, changed: n }; };
+  return { split: ML.lights.length, before: a.url, after: b.url, change: cmp(a.d, b.d), noise: cmp(a.d, a2.d), size: [cvs.width, cvs.height] }; };
 // (R4 item I, card 30) every skinned character piece that is frustum culled (src/lod.js cullSkinned: Marla, the villagers, the recruits) is checked against its
 // pose this frame: the posed vertices' sphere (SkinnedMesh.computeBoundingSphere) must lie inside the grown sphere the culling uses, so a piece can never be
 // culled while any of it is on screen. Returns the pieces checked, how many stuck out, the worst overshoot (m) and its name.

@@ -1129,6 +1129,9 @@ export const CONFIG = {
     keepPrograms: { on: true, max: 1200 },
     // nightNoMarla (R4 worker 5): the ride card builds the night's shaders with Marla off the scene (she is never in a house at night)
     nightNoMarla: true,
+    // marlaOwnLight (OWNER DECISION Nov 19 23:24, "Marla's street light to light only her"): in play her key SpotLight and rim light live on this layer with her
+    //   pieces only, and she is drawn in a second pass after the street (src/main.js marlaPass); the street draws with the night's light set, day and night alike
+    marlaOwnLight: { on: true, layer: 6, lightsEvery: 30 },
     // nightBg (R4 worker 6): the night's shaders (night lights, each lamp count) are built in the background on the day street (compileAsync, at most ms of its
     // own JS a frame, KHR_parallel_shader_compile present on the Mac), not under the ride card; the night card builds what is left
     // OFF (worker 6): its programs are built on the day street, outside a card, so the warm-up gate counts them; on only with the lead's decision on that gate
