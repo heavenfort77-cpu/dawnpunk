@@ -4,6 +4,8 @@
 // one of the openings (a rectangle CONFIG.openingHalf + pad wide, a storey high + pad) can reach it. Pieces that cannot be seen are moved to layer 1, which the camera
 // does not draw but the sun's shadow cameras still do, so no shadow changes. The far plane already follows the fog (main.js fitFar). Day, the base and the street are
 // untouched (everything goes back to layer 0 when the night ends). Gloom, devices, the boss and the room are not in world.g and are never touched. All tiers.
+// OWNER DECISION Nov 19 09:20 (option A): at night the street scenery (grass, tufts, hedge, tree and wood cells) wholly farther than CONFIG.lag.nightCull.sceneryFar m
+// from the house's walls is not drawn either (its shadows stay: hidden pieces are still in the sun's shadow pass).
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
 
@@ -21,7 +23,10 @@ export function createNightCull() {
       if (!bs || !isFinite(bs.radius)) return; const e = o.matrixWorld.elements, k = Math.sqrt(Math.max(e[0] * e[0] + e[1] * e[1] + e[2] * e[2], e[4] * e[4] + e[5] * e[5] + e[6] * e[6], e[8] * e[8] + e[9] * e[9] + e[10] * e[10]));
       // lo: the lowest point of the piece (m), so a piece wholly above the top floor's ceiling (the roof of the house you are in) is not taken as part of the room
       let lo = -Infinity; try { if (o.isInstancedMesh) { if (!o.boundingBox) o.computeBoundingBox(); BX.copy(o.boundingBox); } else { if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); BX.copy(o.geometry.boundingBox); } lo = BX.applyMatrix4(o.matrixWorld).min.y; } catch (e) { lo = -Infinity; }
-      out.push({ o, c: bs.center.clone().applyMatrix4(o.matrixWorld), r: bs.radius * k, lo, hid: false }); });
+      // sc: street scenery (grass, tufts, hedge, tree and wood cells: scenehi's scenery / noAO pieces, the street's tuft and grass cards), for the night distance cut
+      let sc = false; for (let p = o; p && p !== g; p = p.parent) if (p.userData.scenery || p.userData.noAO) { sc = true; break; }
+      const mt = Array.isArray(o.material) ? o.material[0] : o.material, tx = mt && mt.map && mt.map.userData ? mt.map.userData.tex : ''; if (tx === 'tuft' || tx === 'grass') sc = true;
+      out.push({ o, c: bs.center.clone().applyMatrix4(o.matrixWorld), r: bs.radius * k, lo, sc, hid: false }); });
     return out;
   }
   const restore = () => { if (items) for (const it of items) if (it.hid) { it.o.layers.set(0); it.hid = false; } stats.hidden = 0; };
@@ -51,7 +56,7 @@ export function createNightCull() {
       if (!on) { on = true; g.traverse((l) => { if (l.isLight && l.shadow && l.shadow.camera) l.shadow.camera.layers.enable(L1); }); }
       let hidden = 0;
       for (const it of items) {
-        const vis = seen(it.c, it.r, sim, cam.position, it.lo);
+        const vis = !(it.sc && Math.hypot(it.c.x, it.c.z) - it.r - sim.H > C.sceneryFar) && seen(it.c, it.r, sim, cam.position, it.lo);
         if (vis === it.hid) { it.hid = !vis; it.o.layers.set(vis ? 0 : L1); } if (it.hid) hidden++;
       }
       stats.hidden = hidden; return true;

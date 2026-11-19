@@ -1127,8 +1127,8 @@ export const CONFIG = {
     lod: { on: true, minTris: 1500,
       kinds: { people: { near: 7, ratio: 0.3, error: 0.005 }, gloom: { near: 9, ratio: 0.35, error: 0.01 }, boss: { near: 14, ratio: 0.5, error: 0.006 } },
       // medium: the default tier's own values laid over kinds (owner 07:10, night combat fps first; owner's rule: characters full mesh only within a few metres):
-      // a Gloom machine is drawn in full within 4.5 m, the boss within 10 m with a lighter far copy
-      medium: { gloom: { near: 4.5, ratio: 0.25 }, boss: { near: 10, ratio: 0.35, error: 0.01 } } },
+      // a Gloom machine is drawn in full within 4.5 m, the boss within 5 m (owner decision Nov 19 09:20, option E; was 10 m) with its 35 % far copy beyond
+      medium: { gloom: { near: 4.5, ratio: 0.25 }, boss: { near: 5, ratio: 0.35, error: 0.01 } } },
     // step: automatic step-down while playing (src/perfstep.js; never in the scripted checks, which run with window.__dtMax or a webdriver browser, unless ?autostep=1).
     // on: the switch (?autostep=0 / 1 overrides it for one visit); slowMs: a frame slower than this on average is too slow; watch: seconds averaged per reading;
     // hold: readings in a row that must be too slow before one step is taken; settle: seconds after a step (or the start of a scene) before measuring again;
@@ -1160,7 +1160,8 @@ export const CONFIG = {
     // gloom: the same test for the Gloom machines (src/main.js; owner 07:10 night combat): one outside that no opening shows is not drawn or animated. gloomY: height (m)
     // of the machine's test sphere above its feet, gloomR: its radius (m), generous so a tall Warden or a Stilt's head showing at a window always counts as seen
     // roofCull: a piece of the house you are in whose lowest point is above the top floor's ceiling less this (m) is taken as roof (behind the ceiling, seen only through an opening)
-    nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2, roofCull: 0.02 },
+    // sceneryFar (owner decision Nov 19 09:20, option A): at night, street scenery (grass, tufts, hedge, tree and wood cells) wholly farther than this (m) from the house's walls is not drawn
+    nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2, roofCull: 0.02, sceneryFar: 15 },
     // mergeGloom: phone tier, the still pieces of each Gloom machine drawn as one mesh per parent and material (src/mergestatic.js); on: the switch; probes: test poses
     // run to find the pieces that never move; perFrame: machines merged per frame at most (a burst of arrivals is spread over a few frames)
     // shaderLog: true = always read each shader's compile log (three.js checkShaderErrors; costs a wait on the driver per shader); false = only in the scripted checks
