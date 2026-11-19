@@ -20,7 +20,7 @@ while :; do ST=$(gh api "repos/$REPO/actions/runs/$RID" --jq '.status + " " + (.
   if [ $(( $(date +%s) - T0 + 30 )) -gt "$MAXWAIT" ]; then echo "still running ($ST); re-attach with: tools/gpu_task.sh --wait $RID"; exit 3; fi; sleep 30; done
 echo "$ST"; mkdir -p /home/claude/solard-g/ci_out/perfgpu; OUTF=/home/claude/solard-g/ci_out/perfgpu/$RID.txt; : > "$OUTF"
 for JID in $(gh api "repos/$REPO/actions/runs/$RID/jobs?per_page=100" --jq '.jobs[] | select(.name != "plan") | .id'); do
-  gh api "repos/$REPO/actions/jobs/$JID/logs" 2>/dev/null | sed -E 's/^[0-9T:.-]+Z //' | grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^INFO|^BREAK|^PROFILE|^  |^ BY" >> "$OUTF" || true; done
+  gh api "repos/$REPO/actions/jobs/$JID/logs" 2>/dev/null | sed -E 's/^[0-9T:.-]+Z //' | grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^INFO|^LEDGER|^REPORT|^BREAK|^PROFILE|^  |^ BY" >> "$OUTF" || true; done
 echo "--- summary"; grep -E "^JOB|^FPS|^PERF" "$OUTF" | sed -E 's/, downloaded.*//' | cut -c1-170
 python3 - "$OUTF" <<'PY'
 import re,sys

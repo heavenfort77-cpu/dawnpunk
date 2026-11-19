@@ -14,9 +14,10 @@ const path = require('path');
   await p.evaluate(() => { localStorage.clear(); window.__dtMax = 0.5; }); await p.click('#enter'); await p.waitForTimeout(3000);
   await p.evaluate(() => { const g = window.__game; g.cfg.lore.chance = 1; g.startRun(); }); await p.waitForTimeout(3000);
   // the first house (of six) that has its note on a furniture top, else the first with any note
-  const pick = await p.evaluate(async () => { const g = window.__game, wait = (ms) => new Promise((r) => setTimeout(r, ms)); let any = null;
-    for (let i = 0; i < 6; i++) { g.enterHouse(i); await wait(1500); const n = g.lore.note(); if (n && n.top) return { i, ...n }; if (n && !any) any = { i, ...n }; g.leaveHouse(); await wait(800); }
-    if (any) { g.enterHouse(any.i); await wait(1500); } return any; });
+  // (H) every wait is for a game condition (in the house with its note decided, the night begun) or a number of drawn frames, never a fixed time
+  const pick = await p.evaluate(async () => { const g = window.__game, wait = (ms) => new Promise((r) => setTimeout(r, ms)); const until = async (f) => { const t0 = performance.now(); while (!f() && performance.now() - t0 < 120000) await new Promise((r) => setTimeout(r, 50)); }, frames = (n) => new Promise((r) => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), inHouse = (g, i) => () => g.state === 'play' && g.sim && g.run.inside === i && g.run.lore && (i in g.run.lore) && (g.run.lore[i] < 0 || !!g.lore.note()); let any = null;
+    for (let i = 0; i < 6; i++) { g.enterHouse(i); await until(inHouse(g, i)); const n = g.lore.note(); if (n && n.top) return { i, ...n }; if (n && !any) any = { i, ...n }; g.leaveHouse(); }
+    if (any) { g.enterHouse(any.i); await until(inHouse(g, any.i)); } return any; });
   ok('a street house holds a note (chance 1)', pick, pick ? 'house ' + pick.i + ', note ' + pick.i + ' ' + (pick.top ? 'on a furniture top' : 'on a pinboard') : '');
   if (!pick) { await b.close(); process.exit(1); }
   console.log('INFO placing the note took ' + (await p.evaluate(() => window.__game.lore.ms())).toFixed(0) + ' ms (rays on the house)');
@@ -42,13 +43,13 @@ const path = require('path');
   const cl = await p.evaluate(() => { const g = window.__game, q = document.getElementById('qb'); return { open: g.lore.open(), shown: q.style.display !== 'none', pausedMenu: getComputedStyle(document.getElementById('pause')).display !== 'none', play: g.state === 'play' && !!g.sim }; });
   ok('Escape closes it, back in the house, no pause menu', !cl.open && !cl.shown && !cl.pausedMenu && cl.play, JSON.stringify(cl));
   // the same house again: no note (found once)
-  const again = await p.evaluate(async () => { const g = window.__game, i = g.run.inside, wait = (ms) => new Promise((r) => setTimeout(r, ms)); g.leaveHouse(); await wait(800); g.enterHouse(i); await wait(1500); return g.lore.note(); });
+  const again = await p.evaluate(async () => { const g = window.__game, i = g.run.inside, wait = (ms) => new Promise((r) => setTimeout(r, ms)); const until = async (f) => { const t0 = performance.now(); while (!f() && performance.now() - t0 < 120000) await new Promise((r) => setTimeout(r, 50)); }, frames = (n) => new Promise((r) => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), inHouse = (g, i) => () => g.state === 'play' && g.sim && g.run.inside === i && g.run.lore && (i in g.run.lore) && (g.run.lore[i] < 0 || !!g.lore.note()); g.leaveHouse(); g.enterHouse(i); await until(inHouse(g, i)); return g.lore.note(); });
   ok('going back into that house, the note is not there again', !again);
   // at night: another house's note has no prompt
-  const night = await p.evaluate(async () => { const g = window.__game, wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    for (let i = 0; i < 6; i++) { if (i === g.run.inside) continue; g.leaveHouse(); await wait(600); g.enterHouse(i); await wait(1500); const n = g.lore.note(); if (!n) continue;
-      const s = g.sim, d = Math.hypot(n.x, n.z) || 1, px = n.x - (n.x / d) * 1.1, pz = n.z - (n.z / d) * 1.1; s.player.x = px; s.player.z = pz; g.setYaw(Math.atan2(-(n.x - px), -(n.z - pz))); await wait(1200); const dayOn = g.lore.note().prompt;
-      g.endDay(); await wait(2500); return { dayOn, phase: g.sim.phase, nightOn: g.lore.note() ? g.lore.note().prompt : null }; } return null; });
+  const night = await p.evaluate(async () => { const g = window.__game, wait = (ms) => new Promise((r) => setTimeout(r, ms)); const until = async (f) => { const t0 = performance.now(); while (!f() && performance.now() - t0 < 120000) await new Promise((r) => setTimeout(r, 50)); }, frames = (n) => new Promise((r) => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), inHouse = (g, i) => () => g.state === 'play' && g.sim && g.run.inside === i && g.run.lore && (i in g.run.lore) && (g.run.lore[i] < 0 || !!g.lore.note());
+    for (let i = 0; i < 6; i++) { if (i === g.run.inside) continue; g.leaveHouse(); g.enterHouse(i); await until(inHouse(g, i)); const n = g.lore.note(); if (!n) continue;
+      const s = g.sim, d = Math.hypot(n.x, n.z) || 1, px = n.x - (n.x / d) * 1.1, pz = n.z - (n.z / d) * 1.1; s.player.x = px; s.player.z = pz; g.setYaw(Math.atan2(-(n.x - px), -(n.z - pz))); await frames(30); const dayOn = g.lore.note().prompt;
+      g.endDay(); await until(() => g.sim && g.sim.phase === 'night'); await frames(30); return { dayOn, phase: g.sim.phase, nightOn: g.lore.note() ? g.lore.note().prompt : null }; } return null; });
   ok('at night a note shows no prompt (day only)', night && night.dayOn && night.phase === 'night' && night.nightOn === false, JSON.stringify(night));
   // back home: the journal lists it under Found notes
   await p.evaluate(() => window.__game.reBase()); await p.waitForTimeout(2500);

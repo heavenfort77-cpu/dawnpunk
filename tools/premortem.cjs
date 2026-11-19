@@ -1,13 +1,16 @@
 // Premortem: the ways a long play session or an odd device could break Dawnpunk that the other checks do not try.
 // Usage: node tools/premortem.cjs [distDir]      (default: dist next to tools/).
-// Environment: TESTS=a,b runs only those tests, TIER is the page's tier (default low), SEED (default 777), TEST_CAP is seconds per test (default 1200).
+// Environment: TESTS=a,b runs only those tests, TIER is the page's tier (default low), SEED (default 777), TOTAL_CAP is the seconds all tests may take together (default 900:
+// the CI job stops at 20 minutes). Each test has its own cap (CAPS below), cut to what is left of TOTAL_CAP; each test's elapsed seconds and cap are printed (TIME line).
 // Prints one 'PASS <name>' or 'FAIL <name>: <reason>' per test ('SKIP <name>: <why>' counts as neither), INFO lines along the way,
-// then 'PREMORTEM <n> PASS, <m> FAIL'; exit 1 on any FAIL.
+// then 'PREMORTEM <n> PASS, <m> FAIL, <k> CAPHIT'; exit 1 on any FAIL, else 2 on any CAPHIT, else 0.
+// CAPHIT <name> is a TEST issue, not a game FAIL: the test ran out of its own cap (or the total cap) before it finished. Each test prints
+// 'TIME <name>: <elapsed> s of cap <cap> s', so the next round can set the caps from measured times.
 // Patterns from tools/guidecheck.cjs and tools/perfcheck.cjs: playwright chromium on the software renderer (swiftshader), the page served over http from a local
 // server (the CI checks may open dist from a folder; this script always serves it), ?quality=low, the window.__game test hooks of src/main.js.
 // Every wait is on a game condition with a cap (state, hooks, frame counters), never a fixed long sleep.
 // Tests:
-//   base_reuse      3 base visits plus a new run after the run end in one page: people (bview.group) pose and place match visit 1; gpu() flat after visit 2
+//   base_reuse      3 base visits plus a new run after the run end in one page: people (basePeople(), by id) place and pose checksum match visit 1; gpu() flat after visit 2
 //   context_loss    WEBGL_lose_context lose + restore at the title, right after enterBase() starts, in the base and at night: frames go on, canvas not blank
 //   tier_change     medium -> low -> medium the way the game switches (saved choice + reload with ?quality=), in the base and at night; gpu() flat
 //   zip_serve       the newest dist/*.zip unzipped and served: title -> base -> night; again with one models/*.glb request aborted
@@ -19,10 +22,13 @@
 const { chromium } = require('playwright'); const http = require('http'); const fs = require('fs'); const path = require('path'); const os = require('os');
 const { execFileSync } = require('child_process');
 const DIST = path.resolve(process.argv[2] || path.join(__dirname, '..', 'dist')), TOOLS = __dirname;
-const SEED = +(process.env.SEED || 777), TIER = process.env.TIER || 'low', CAP = +(process.env.TEST_CAP || 1200);
+const SEED = +(process.env.SEED || 777), TIER = process.env.TIER || 'low', TOTAL_CAP = +(process.env.TOTAL_CAP || 900);
 const ONLY = process.env.TESTS ? process.env.TESTS.split(',').map((s) => s.trim()) : null;
-// tolerances: people place (m), facing (rad), mean bone turn (rad); gpu() growth allowed between like visits; soak growth (heap and gpu, owner's 10%)
-const TOL = { pos: 0.5, yaw: 0.5, pose: 0.5, flat: 0.05, soak: 0.10 };
+// gpu() growth allowed between like visits; soak growth (heap and gpu, owner's 10%). The base_reuse people tolerances are not set here: they are measured
+// in the run (3x the larger of the noise floor and NOISE_MIN, see base_reuse)
+const TOL = { flat: 0.05, soak: 0.10 }, NOISE_MIN = 0.001;
+// seconds per test on a software GPU; the 9 together (885 s) fit in TOTAL_CAP
+const CAPS = { base_reuse: 150, context_loss: 100, tier_change: 140, zip_serve: 120, old_save: 60, soak: 170, resize: 80, audio_resume: 55, wallclock_audit: 10 };
 // the software-GL flags of guidecheck/perfcheck, plus gc() and exact heap numbers for the soak, and sound allowed without a click for audio_resume
 const ARGS = ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--expose-gc', '--enable-precise-memory-info', '--autoplay-policy=no-user-gesture-required'];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.glb': 'model/gltf-binary', '.ktx2': 'image/ktx2', '.wasm': 'application/wasm', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
@@ -63,7 +69,7 @@ const INIT = ({ seed, oldSave }) => {
     if (!P) continue; const pr = P.prototype;
     for (const nm of ['drawArrays', 'drawElements', 'drawArraysInstanced', 'drawElementsInstanced', 'drawRangeElements']) { const o = pr[nm]; if (!o) continue; pr[nm] = function () { window.__pmDraws++; return o.apply(this, arguments); }; }
   }
-  // every AudioContext the game makes is kept, so its state can be read (main.js keeps its own private); if that fails, audio is left as it is
+  // fallback for a build without window.__game.audioState(): every AudioContext the game makes is kept, so its state can be read; if that fails, audio is left as it is
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (AC) { const W = class extends AC { constructor(...a) { super(...a); window.__pmAC.push(this); } }; window.AudioContext = W; if (window.webkitAudioContext) window.webkitAudioContext = W; }
@@ -102,7 +108,7 @@ const SETTLED = () => {
     return true;
   } catch (e) { return false; }
 };
-async function settle(p, capS) { const ok = await waitFor(p, SETTLED, undefined, capS || 120, 500); if (!ok) console.log('INFO settle: loads not done after ' + (capS || 120) + ' s (state ' + await stateOf(p) + ')'); await frames(p, 3, 60); return ok; }
+async function settle(p, capS) { const ok = await waitFor(p, SETTLED, undefined, capS || 40, 500); if (!ok) console.log('INFO settle: loads not done after ' + (capS || 40) + ' s (state ' + await stateOf(p) + ')'); await frames(p, 3, 30); return ok; }
 const gpu = (p) => p.evaluate(() => { const m = window.__game.gpu(); return { geometries: m.geometries, textures: m.textures }; });
 const heap = (p) => p.evaluate(() => { if (window.gc) { window.gc(); window.gc(); } return performance.memory ? performance.memory.usedJSHeapSize : -1; });
 const grew = (a, b, pct, slack) => b > a * (1 + pct) + (slack || 0);
@@ -114,57 +120,51 @@ async function toBase(p, how) {
   else if (how === 'again') await p.evaluate(() => document.getElementById('again').click());
   else { try { await p.click('#enter', { timeout: 20000 }); } catch (e) { await p.evaluate(() => document.getElementById('enter').click()); } }
   if (how === 'enter' && await waitFor(p, () => window.__game.state === 'intro', undefined, 3)) { console.log('INFO the opening film started from Enter; going to the base by the hook'); await p.evaluate(() => window.__game.reBase()); }
-  if (!await waitFor(p, () => { const g = window.__game; return !!g && g.state === 'base'; }, undefined, 120)) throw new Error('base not reached via ' + how + ' (state ' + await stateOf(p) + ')');
+  if (!await waitFor(p, () => { const g = window.__game; return !!g && g.state === 'base'; }, undefined, 60)) throw new Error('base not reached via ' + how + ' (state ' + await stateOf(p) + ')');
   await settle(p);
 }
 // a run (ring 0, as perfcheck and crashrepro), then night by the hooks: nightfall() goes into the nearest house and ends the day, so endDay() after it does nothing more
 async function toRun(p) {
   await p.evaluate(() => { const s = document.getElementById('selRing'); if (s) s.value = '0'; window.__game.startRun(); });
-  if (!await waitFor(p, () => { const g = window.__game; return !!g && !!g.run && g.state === 'play'; }, undefined, 120)) throw new Error('run did not start (state ' + await stateOf(p) + ')');
+  if (!await waitFor(p, () => { const g = window.__game; return !!g && !!g.run && g.state === 'play'; }, undefined, 60)) throw new Error('run did not start (state ' + await stateOf(p) + ')');
   await settle(p);
 }
 async function toNight(p) {
   await toRun(p);
   await p.evaluate(() => { window.__game.nightfall(); window.__game.endDay(); });
-  if (!await waitFor(p, () => { const g = window.__game, s = g && g.sim; return !!s && s.phase === 'night'; }, undefined, 120)) throw new Error('night did not start (state ' + await stateOf(p) + ')');
+  if (!await waitFor(p, () => { const g = window.__game, s = g && g.sim; return !!s && s.phase === 'night'; }, undefined, 60)) throw new Error('night did not start (state ' + await stateOf(p) + ')');
   await settle(p);
 }
-// the night ends as a loss (hp 0: src/sim.js finish(false) on the next step), the way other tools reach the end screen; abandon() if that does not come
+// the night ends through window.__game.endNight(true) (sim.endNow: the game's own finish, a won night) and the end screen comes on the next frame
 async function endNight(p) {
-  await p.evaluate(() => { const s = window.__game.sim; if (s) s.player.hp = 0; });
-  let ok = await waitFor(p, () => { const g = window.__game; return !!g && g.state === 'end'; }, undefined, 60);
-  if (!ok) { await p.evaluate(() => { const s = window.__game.sim; if (s && s.abandon) s.abandon(); }); ok = await waitFor(p, () => window.__game.state === 'end', undefined, 60); }
-  if (!ok) throw new Error('night did not end (state ' + await stateOf(p) + ')');
+  const ok0 = await p.evaluate(() => { const g = window.__game; return typeof g.endNight === 'function' ? g.endNight(true) : 'no hook'; });
+  if (ok0 === 'no hook') throw new Error('needs hook: window.__game.endNight');
+  if (!ok0) throw new Error('endNight(true) refused (state ' + await stateOf(p) + ')');
+  if (!await waitFor(p, () => { const g = window.__game; return !!g && g.state === 'end'; }, undefined, 45)) throw new Error('no end screen after endNight(true) (state ' + await stateOf(p) + ')');
   await frames(p, 2, 30);
 }
-// people in the base: every object carrying a name label (sprite userData.kind 'npc': recruits, villagers, Marla) in bview.group, in build order;
-// place and facing from the first skinned mesh inside (the model, which turns) or the group itself (stand-in), and that model's bone rotations
-const PEOPLE = () => {
-  const g = window.__game, root = g.bview && g.bview.group; if (!root) return null; root.updateMatrixWorld(true);
-  const seen = []; root.traverse((o) => { if (o.isSprite && o.userData && o.userData.kind === 'npc' && o.parent && !seen.includes(o.parent)) seen.push(o.parent); });
-  return seen.map((n) => {
-    let sk = null; n.traverse((o) => { if (!sk && o.isSkinnedMesh && o.skeleton) sk = o; });
-    const e = (sk || n).matrixWorld.elements;
-    return { x: e[12], y: e[13], z: e[14], yaw: Math.atan2(e[8], e[10]), vis: n.visible, bones: sk ? sk.skeleton.bones.map((b) => [b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w]) : null };
-  });
-};
+// people in the base: window.__game.basePeople() (id, x, z and a pose checksum per villager, recruit and Marla), matched by id
+async function people(p) {
+  const r = await p.evaluate(() => (typeof window.__game.basePeople === 'function' ? window.__game.basePeople() : 'no hook'));
+  if (r === 'no hook') throw new Error('needs hook: window.__game.basePeople');
+  return r;
+}
+// the same settle for every visit: loads done (settle), then polled each second until the people list (ids and checksums rounded) holds for 3 polls (cap 15 s)
 async function peopleReady(p) {
-  // the models swap in for the stand-ins when loaded: polled each second until the count of skinned meshes holds for 3 polls (cap 40 s)
-  let last = -1, same = 0;
-  for (let i = 0; i < 40 && same < 3; i++) { const n = await p.evaluate(() => { const r = window.__game.bview && window.__game.bview.group; let k = 0; if (r) r.traverse((o) => { if (o.isSkinnedMesh) k++; }); return k; }); same = n === last ? same + 1 : 0; last = n; await p.waitForTimeout(1000); }
-  return last;
+  let last = '', same = 0;
+  for (let i = 0; i < 15 && same < 3; i++) { const k = JSON.stringify((await people(p)).map((q) => q.id + ':' + Math.round(q.pose))); same = k === last ? same + 1 : 0; last = k; await p.waitForTimeout(1000); }
+  return same >= 3;
 }
 function comparePeople(a, b) {
-  if (!a || !b) return { err: 'no people found in bview.group' };
-  if (a.length !== b.length) return { err: 'people count ' + b.length + ' vs ' + a.length + ' on visit 1' };
-  let wp = 0, wy = 0, wq = 0, model = 0;
-  for (let i = 0; i < a.length; i++) {
-    const A = a[i], B = b[i]; wp = Math.max(wp, Math.hypot(A.x - B.x, A.z - B.z));
-    let dy = Math.abs(A.yaw - B.yaw) % (2 * Math.PI); if (dy > Math.PI) dy = 2 * Math.PI - dy; wy = Math.max(wy, dy);
-    if (!!A.bones !== !!B.bones || (A.bones && A.bones.length !== B.bones.length)) { model++; continue; }
-    if (A.bones && A.bones.length) { let s = 0; for (let j = 0; j < A.bones.length; j++) { const q = A.bones[j], r = B.bones[j], d = Math.min(1, Math.abs(q[0] * r[0] + q[1] * r[1] + q[2] * r[2] + q[3] * r[3])); s += 2 * Math.acos(d); } wq = Math.max(wq, s / A.bones.length); }
+  if (!a || !b || !a.length) return { err: 'no people from basePeople()' };
+  const byId = new Map(b.map((q) => [String(q.id), q])), missing = [], extra = b.filter((q) => !a.some((r) => String(r.id) === String(q.id))).map((q) => q.id);
+  let wp = 0, wq = 0, wpId = '', wqId = ''; const rows = [];
+  for (const A of a) {
+    const B = byId.get(String(A.id)); if (!B) { missing.push(A.id); continue; }
+    const dp = Math.hypot(A.x - B.x, A.z - B.z), dq = Math.abs(A.pose - B.pose); rows.push({ id: A.id, dp, dq });
+    if (dp > wp) { wp = dp; wpId = A.id; } if (dq > wq) { wq = dq; wqId = A.id; }
   }
-  return { wp, wy, wq, model };
+  return { wp, wq, wpId, wqId, missing, extra, rows };
 }
 
 // ---- the tests ----
@@ -177,23 +177,30 @@ async function open(t, o) {
   p.on('console', (m) => { if (m.type() === 'error') t.errs.push('console: ' + m.text().slice(0, 240)); });
   p.on('crash', () => { t.errs.push('page crashed'); t.perrs.push('page crashed'); });
   if (o.before) await o.before(p);
-  await p.goto((o.url || t.url) + '?quality=' + (o.tier || TIER) + '&seed=' + SEED, { timeout: 300000 });
-  if (!await waitFor(p, () => !!(window.__game && window.__game.enterBase), undefined, 300)) throw new Error('game did not start (no window.__game)');
+  await p.goto((o.url || t.url) + '?quality=' + (o.tier || TIER) + '&seed=' + SEED, { timeout: 90000 });
+  if (!await waitFor(p, () => !!(window.__game && window.__game.enterBase), undefined, 90)) throw new Error('game did not start (no window.__game)');
   await frames(p, 2, 60);
   return p;
 }
 const errsSince = (t, k, label, list) => { const e = (list || t.errs).slice(k); if (e.length) t.fail(label + ': ' + e.length + ' error(s), first: ' + e[0]); };
 
 async function base_reuse(t) {
-  const p = await open(t), visits = [];
+  const p = await open(t), visits = []; let noise = null, tol = null;
   const visit = async (how, label) => {
     const k = t.errs.length;
     // game time held nearly still in the base (as perfcheck's measuring), so people stand where a visit puts them
     await p.evaluate(() => { window.__dtMax = 0.0005; });
-    await toBase(p, how); await peopleReady(p);
-    const people = await p.evaluate(PEOPLE), g = await gpu(p);
+    await toBase(p, how); if (!await peopleReady(p)) t.info(label + ': people still changing after 15 s');
+    const pl = await people(p), g = await gpu(p);
+    // noise floor (visit 1 only): basePeople() read again 1 s later with game time still held; the difference is what a still base drifts by
+    if (!visits.length) {
+      await p.waitForTimeout(1000); const pl2 = await people(p), c = comparePeople(pl, pl2);
+      if (c.err || c.missing.length || c.extra.length) t.fail('noise floor: the people list changed within 1 s of held time: ' + (c.err || 'missing ' + c.missing.join(', ') + ' extra ' + c.extra.join(', ')));
+      noise = { pos: c.wp || 0, pose: c.wq || 0 }; tol = { pos: 3 * Math.max(noise.pos, NOISE_MIN), pose: 3 * Math.max(noise.pose, NOISE_MIN) };
+      t.info('noise floor (1 s, time held): place ' + noise.pos.toFixed(4) + ' m, pose checksum ' + noise.pose.toFixed(4) + '; tolerance used: place ' + tol.pos.toFixed(4) + ' m, pose ' + tol.pose.toFixed(4));
+    }
     await p.evaluate(() => { delete window.__dtMax; });
-    errsSince(t, k, label); visits.push({ people, g }); t.info(label + ': ' + (people ? people.length : 0) + ' people, gpu ' + JSON.stringify(g));
+    errsSince(t, k, label); visits.push({ people: pl, g }); t.info(label + ': ' + pl.length + ' people, gpu ' + JSON.stringify(g));
   };
   await visit('hook', 'visit 1');
   // each later visit gets visit 1's save back (put back after the night is banked, before going home), so the same people are compared
@@ -207,11 +214,12 @@ async function base_reuse(t) {
   for (const n of [1, 2]) {
     const c = comparePeople(visits[0].people, visits[n].people), lb = 'visit ' + (n + 1) + ' vs 1';
     if (c.err) { t.fail(lb + ': ' + c.err); continue; }
-    t.info(lb + ': worst place ' + c.wp.toFixed(2) + ' m, facing ' + c.wy.toFixed(2) + ' rad, mean bone turn ' + c.wq.toFixed(2) + ' rad, model/stand-in mismatches ' + c.model);
-    if (c.wp > TOL.pos) t.fail(lb + ': a person stands ' + c.wp.toFixed(2) + ' m from visit 1 (tolerance ' + TOL.pos + ')');
-    if (c.wy > TOL.yaw) t.fail(lb + ': a person faces ' + c.wy.toFixed(2) + ' rad off visit 1 (tolerance ' + TOL.yaw + ')');
-    if (c.wq > TOL.pose) t.fail(lb + ': a pose differs by ' + c.wq.toFixed(2) + ' rad mean bone turn (tolerance ' + TOL.pose + ')');
-    if (c.model) t.fail(lb + ': ' + c.model + ' person(s) shown as model in one visit and stand-in in the other');
+    t.info(lb + ' per person (place m / pose checksum): ' + c.rows.map((q) => q.id + ' ' + q.dp.toFixed(4) + '/' + q.dq.toFixed(4)).join(', '));
+    t.info(lb + ': worst place ' + c.wp.toFixed(4) + ' m (' + c.wpId + '), worst pose ' + c.wq.toFixed(4) + ' (' + c.wqId + '); tolerance ' + tol.pos.toFixed(4) + ' m / ' + tol.pose.toFixed(4));
+    if (c.missing.length) t.fail(lb + ': people missing: ' + c.missing.join(', '));
+    if (c.extra.length) t.fail(lb + ': people not there on visit 1: ' + c.extra.join(', '));
+    if (c.wp > tol.pos) t.fail(lb + ': ' + c.wpId + ' stands ' + c.wp.toFixed(4) + ' m from visit 1 (tolerance ' + tol.pos.toFixed(4) + ' = 3x noise ' + noise.pos.toFixed(4) + ', at least 3x ' + NOISE_MIN + ')');
+    if (c.wq > tol.pose) t.fail(lb + ': ' + c.wqId + ' pose checksum differs by ' + c.wq.toFixed(4) + ' (tolerance ' + tol.pose.toFixed(4) + ' = 3x noise ' + noise.pose.toFixed(4) + ', at least 3x ' + NOISE_MIN + ')');
   }
   const a = visits[1].g, b = visits[2].g;
   for (const k of ['geometries', 'textures']) if (grew(a[k], b[k], TOL.flat, 2)) t.fail('gpu ' + k + ' grew after visit 2: ' + a[k] + ' -> ' + b[k]);
@@ -229,7 +237,7 @@ async function context_loss(t) {
     await frames(p, 3, 30);
     await p.evaluate(() => window.__pmRestore());
     if (!await waitFor(p, (n) => window.__pmRestored > n, c0[1], 30)) { t.fail(label + ': no webglcontextrestored event'); return; }
-    if (o.start) { if (!await waitFor(p, () => window.__game.state === 'base', undefined, 120)) t.fail(label + ': base not reached (state ' + await stateOf(p) + ')'); await settle(p); }
+    if (o.start) { if (!await waitFor(p, () => window.__game.state === 'base', undefined, 60)) t.fail(label + ': base not reached (state ' + await stateOf(p) + ')'); await settle(p); }
     const f0 = await p.evaluate(() => [window.__pmFrames, window.__pmDraws]);
     if (!await waitFor(p, (f) => window.__pmFrames >= f + 5, f0[0], 60)) t.fail(label + ': animation frames stopped after the restore');
     const d1 = await p.evaluate(() => window.__pmDraws);
@@ -254,8 +262,8 @@ async function tier_change(t) {
     if (i > 0) {
       // as gfxGo in src/main.js: saveQuality(tier) (localStorage dawnpunk.quality), then the address with ?quality=tier is loaded; film=0 here because gfxGo's film=1 is for players
       await p.evaluate((tier) => { try { localStorage.setItem('dawnpunk.quality', tier); } catch (e) { } const x = new URL(location.href); x.searchParams.set('quality', tier); x.searchParams.set('film', '0'); setTimeout(() => { location.href = x.href; }, 0); }, tier);
-      await p.waitForURL((u) => u.searchParams.get('quality') === tier, { timeout: 120000 });
-      if (!await waitFor(p, () => !!(window.__game && window.__game.enterBase), undefined, 300)) throw new Error('game did not start after the switch to ' + tier);
+      await p.waitForURL((u) => u.searchParams.get('quality') === tier, { timeout: 60000 });
+      if (!await waitFor(p, () => !!(window.__game && window.__game.enterBase), undefined, 90)) throw new Error('game did not start after the switch to ' + tier);
       await frames(p, 2, 60);
     }
     const got = await p.evaluate(() => window.__game.quality().tier); if (got !== tier) t.fail('step ' + (i + 1) + ': tier is ' + got + ', wanted ' + tier);
@@ -330,7 +338,7 @@ async function soak(t) {
   { const k = t.errs.length; await toBase(p, 'hook'); errsSince(t, k, 'base visit 1'); }
   for (let c = 1; c <= 6; c++) {
     // nights 1-4 start from the base; 5 and 6 straight from the end screen (6 nights with 4 base visits in one page)
-    const k = t.errs.length; await toNight(p); await frames(p, 10, 120); await endNight(p);
+    const k = t.errs.length; await toNight(p); await frames(p, 5, 30); await endNight(p);
     const r = { heap: await heap(p), g: await gpu(p) }; m.push(r); t.info('cycle ' + c + ': heap ' + MB(r.heap) + ', gpu ' + JSON.stringify(r.g));
     if (visits < 4) { await toBase(p, 'again'); visits++; }
     errsSince(t, k, 'cycle ' + c);
@@ -361,16 +369,17 @@ async function resize(t) {
 
 async function audio_resume(t) {
   const p = await open(t);
-  const AUDIO = () => { let m = null; try { m = window.__game.music(); } catch (e) { m = null; } return { music: m ? (m.playing || []).join(',') || '-' : 'no hook', on: m ? m.on : null, ac: (window.__pmAC || []).map((a) => a.state).join(',') || 'none' }; };
-  const ON = () => { let m = null; try { m = window.__game.music(); } catch (e) { m = null; } return !!(m && m.playing && m.playing.length) || (window.__pmAC || []).some((a) => a.state === 'running'); };
+  // the AudioContext state from window.__game.audioState() ('none' before the first click); the constructor wrapper of INIT only when the hook is missing
+  const AUDIO = () => { const g = window.__game; let m = null; try { m = g.music(); } catch (e) { m = null; } const ac = typeof g.audioState === 'function' ? g.audioState() : 'fallback ' + ((window.__pmAC || []).map((a) => a.state).join(',') || 'none'); return { music: m ? (m.playing || []).join(',') || '-' : 'no hook', on: m ? m.on : null, ac }; };
+  const ON = () => { const g = window.__game; let m = null; try { m = g.music(); } catch (e) { m = null; } if (m && m.playing && m.playing.length) return true; return typeof g.audioState === 'function' ? g.audioState() === 'running' : (window.__pmAC || []).some((a) => a.state === 'running'); };
   { const k = t.errs.length; await toBase(p, 'enter'); errsSince(t, k, 'Enter'); }
-  const before = await waitFor(p, ON, undefined, 30); t.info('before hiding: ' + JSON.stringify(await p.evaluate(AUDIO)) + (before ? '' : ' (no sound running yet)'));
+  const before = await waitFor(p, ON, undefined, 15); t.info('before hiding: ' + JSON.stringify(await p.evaluate(AUDIO)) + (before ? '' : ' (no sound running yet)'));
   {
     const k = t.errs.length;
     await p.evaluate(() => window.__pmHide(true)); await frames(p, 3, 30); t.info('hidden: ' + JSON.stringify(await p.evaluate(AUDIO)));
     await p.evaluate(() => window.__pmHide(false));
-    const back = await waitFor(p, ON, undefined, 30), st = await p.evaluate(AUDIO); t.info('visible again: ' + JSON.stringify(st));
-    if (!back) t.fail('after the tab came back neither music (music().playing) nor an AudioContext runs: ' + JSON.stringify(st));
+    const back = await waitFor(p, ON, undefined, 15), st = await p.evaluate(AUDIO); t.info('visible again: ' + JSON.stringify(st));
+    if (!back) t.fail('after the tab came back neither music (music().playing) nor the AudioContext (audioState()) runs: ' + JSON.stringify(st));
     await p.evaluate(() => { const g = window.__game; if (g.isPaused && g.isPaused()) g.setPause(false); }); await frames(p, 2, 30);
     errsSince(t, k, 'hidden and back');
   }
@@ -425,13 +434,15 @@ function wallclock_audit(t) {
 
 const TESTS = [['base_reuse', base_reuse], ['context_loss', context_loss], ['tier_change', tier_change], ['zip_serve', zip_serve], ['old_save', old_save], ['soak', soak], ['resize', resize], ['audio_resume', audio_resume], ['wallclock_audit', wallclock_audit]];
 
-async function runTest(b, url, name, fn) {
+async function runTest(b, url, name, fn, cap) {
   const t = { name, b, url, errs: [], perrs: [], fails: [], ctxs: [], info: (m) => console.log('INFO ' + name + ': ' + m), fail: (m) => t.fails.push(m) };
-  let r, timer;
+  let r, timer, capHit = false; const t0 = Date.now(), CAPERR = 'premortem cap';
   try {
     const run = Promise.resolve().then(() => fn(t)); run.catch(() => {});
-    r = await Promise.race([run, new Promise((_, no) => { timer = setTimeout(() => no(new Error('test cap of ' + CAP + ' s reached')), CAP * 1000); })]);
-  } catch (e) { t.fails.push('stopped: ' + msg(e)); } finally { clearTimeout(timer); for (const c of t.ctxs) await c.close().catch(() => {}); }
+    r = await Promise.race([run, new Promise((_, no) => { timer = setTimeout(() => no(new Error(CAPERR)), cap * 1000); })]);
+  } catch (e) { if (msg(e) === CAPERR) capHit = true; else t.fails.push('stopped: ' + msg(e)); } finally { clearTimeout(timer); for (const c of t.ctxs) await c.close().catch(() => {}); console.log('TIME ' + name + ': ' + Math.round((Date.now() - t0) / 1000) + ' s of cap ' + cap + ' s'); }
+  // a cap hit is reported apart from game failures; failures found before the cap are still printed as FAIL
+  if (capHit) { console.log('CAPHIT ' + name + ': cap of ' + cap + ' s reached before the test finished (a test issue, not a game failure)'); if (t.fails.length) console.log('FAIL ' + name + ': ' + t.fails.join('; ').slice(0, 1200)); return t.fails.length ? 'fail+cap' : 'caphit'; }
   if (typeof r === 'string' && r.startsWith('skip:')) { console.log('SKIP ' + name + ': ' + r.slice(5)); return 'skip'; }
   if (name === 'wallclock_audit') { if (t.fails.length) t.info('audit stopped early: ' + t.fails.join('; ')); console.log('PASS ' + name); return 'pass'; }
   if (t.fails.length) { console.log('FAIL ' + name + ': ' + t.fails.join('; ').slice(0, 1200)); return 'fail'; }
@@ -441,13 +452,17 @@ async function runTest(b, url, name, fn) {
 (async () => {
   process.on('unhandledRejection', (e) => console.log('INFO unhandled: ' + msg(e)));
   const want = TESTS.filter(([n]) => !ONLY || ONLY.includes(n)), needB = want.some(([n]) => n !== 'wallclock_audit');
-  if (needB && !fs.existsSync(path.join(DIST, 'index.html'))) { console.log('FAIL setup: no index.html in ' + DIST); console.log('PREMORTEM 0 PASS, 1 FAIL'); process.exit(1); }
-  let b = null, srv = null; if (needB) { srv = await serve(DIST); b = await chromium.launch({ args: ARGS }); }
-  let pass = 0, fail = 0;
+  if (needB && !fs.existsSync(path.join(DIST, 'index.html'))) { console.log('FAIL setup: no index.html in ' + DIST); console.log('PREMORTEM 0 PASS, 1 FAIL, 0 CAPHIT'); process.exit(1); }
+  // the total time counts from before the browser starts
+  const T0 = Date.now(); let b = null, srv = null; if (needB) { srv = await serve(DIST); b = await chromium.launch({ args: ARGS }); }
+  let pass = 0, fail = 0, capHits = 0;
   for (const [n, f] of want) {
     if (needB && n !== 'wallclock_audit' && !b.isConnected()) { console.log('INFO browser gone: launching again'); b = await chromium.launch({ args: ARGS }); }
-    const r = await runTest(b, srv && srv.url, n, f); if (r === 'pass') pass++; else if (r === 'fail') fail++;
+    const left = Math.round(TOTAL_CAP - (Date.now() - T0) / 1000), cap = Math.max(5, Math.min(CAPS[n] || 60, left));
+    if (left < 5 && n !== 'wallclock_audit') { console.log('TIME ' + n + ': 0 s of cap 0 s'); console.log('CAPHIT ' + n + ': not run, TOTAL_CAP of ' + TOTAL_CAP + ' s used up'); capHits++; continue; }
+    const r = await runTest(b, srv && srv.url, n, f, cap); if (r === 'pass') pass++; else if (r === 'fail') fail++; else if (r === 'caphit') capHits++; else if (r === 'fail+cap') { fail++; capHits++; }
   }
   if (b) await b.close().catch(() => {}); if (srv) await srv.close();
-  console.log('PREMORTEM ' + pass + ' PASS, ' + fail + ' FAIL'); process.exit(fail ? 1 : 0);
-})().catch((e) => { console.log('FAIL premortem: ' + msg(e)); console.log('PREMORTEM 0 PASS, 1 FAIL'); process.exit(1); });
+  console.log('INFO total ' + Math.round((Date.now() - T0) / 1000) + ' s');
+  console.log('PREMORTEM ' + pass + ' PASS, ' + fail + ' FAIL, ' + capHits + ' CAPHIT'); process.exit(fail ? 1 : capHits ? 2 : 0);
+})().catch((e) => { console.log('FAIL premortem: ' + msg(e)); console.log('PREMORTEM 0 PASS, 1 FAIL, 0 CAPHIT'); process.exit(1); });

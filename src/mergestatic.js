@@ -59,3 +59,33 @@ export function splitVariants(root) { let made = 0; const first = new Map();
     if (!c) { try { c = m.clone(); } catch (e) { return; } for (const p of ['color', 'emissive', 'specularColor', 'sheenColor', 'attenuationColor']) if (m[p] && m[p].isColor) c[p] = m[p]; v.c[k] = c; VAR.set(c, { k, c: v.c }); m.addEventListener('dispose', () => c.dispose()); made++; }
     o.material = c; });
   return made; }
+
+// (H round 2, troubleshoot card "two-pass transparent", trace "set needsUpdate < renderObject < renderObjects < renderScene": three.js draws a see-through, two-sided
+// material in two passes, back faces then front faces, and marks the material changed (needsUpdate) before each pass, so its shader is looked up again (getParameters)
+// twice per draw, every frame) a mesh whose triangles all lie in one plane and all face the same way covers each pixel with one triangle at most, all in the same pass,
+// so drawing it in ONE pass (forceSinglePass) gives the same pixels in the same order. Set on a material only when every mesh drawing it in root is such a mesh.
+// Returns { set: materials switched, left: two-sided see-through materials still drawn in two passes (a non-flat mesh uses them) }.
+const FLAT = new WeakMap();
+function flatOneWay(g) { let r = FLAT.get(g); if (r !== undefined) return r; r = false; try { const P = g.attributes.position, I = g.index, n = I ? I.count : P.count; if (P && n >= 3) {
+    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), nm = new THREE.Vector3(), n0 = new THREE.Vector3(); let d0 = 0, ok = true, have = false;
+    for (let k = 0; k + 2 < n && ok; k += 3) { const i0 = I ? I.getX(k) : k, i1 = I ? I.getX(k + 1) : k + 1, i2 = I ? I.getX(k + 2) : k + 2; a.fromBufferAttribute(P, i0); b.fromBufferAttribute(P, i1); c.fromBufferAttribute(P, i2);
+      nm.subVectors(c, b).cross(b.clone().sub(a)); const L = nm.length(); if (L < 1e-12) continue; nm.multiplyScalar(1 / L);
+      if (!have) { n0.copy(nm); d0 = n0.dot(a); have = true; continue; } if (nm.dot(n0) < 0.9999) ok = false;
+      for (const v of [a, b, c]) if (Math.abs(n0.dot(v) - d0) > 1e-4) ok = false; }
+    r = ok && have; } } catch (e) { r = false; } FLAT.set(g, r); return r; }
+export function singlePassFlat(root) { const users = new Map(); let set = 0, left = 0;
+  root.traverse((o) => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; const m = o.material; if (!m.transparent || m.side !== THREE.DoubleSide || m.forceSinglePass) return; let u = users.get(m); if (!u) users.set(m, u = { flat: true }); if (!o.geometry || o.isInstancedMesh || o.isSkinnedMesh || !flatOneWay(o.geometry)) u.flat = false; });
+  for (const [m, u] of users) { if (u.flat) { m.forceSinglePass = true; m.userData.singlePassFlat = true; set++; } else left++; }
+  return { set, left }; }
+
+// (H round 2, same card) a merged see-through two-sided mesh (ours: mergedDraw, or the street's merged meshes, ownGeo; its geometry its own) holds pieces in many planes, so it keeps two passes, but as two
+// geometry groups over the same triangles with a back-side and a front-side copy of its material: three.js draws them in that order, back then front, as its own two
+// passes do, and neither copy is ever marked changed (each keeps its shader). The copies share the colour objects; opacity and visibility follow the material each frame.
+const SIDES = new WeakMap();
+function sidesOf(m) { let p = SIDES.get(m); if (p) return p; const mk = (side) => { const c = m.clone(); c.side = side; for (const k of ['color', 'emissive', 'specular']) if (m[k] && m[k].isColor) c[k] = m[k]; return c; };
+  p = [mk(THREE.BackSide), mk(THREE.FrontSide)]; m.addEventListener('dispose', () => { p[0].dispose(); p[1].dispose(); }); SIDES.set(m, p); return p; }
+export function twoPassGroups(root) { let n = 0;
+  root.traverse((o) => { if (!o.isMesh || !(o.userData.mergedDraw || o.userData.ownGeo) || o.isSkinnedMesh || Array.isArray(o.material)) return; const m = o.material, g = o.geometry; if (!m || !m.transparent || m.side !== THREE.DoubleSide || m.forceSinglePass || !g || g.groups.length) return;
+    const cnt = g.index ? g.index.count : g.attributes.position.count, p = sidesOf(m); g.addGroup(0, cnt, 0); g.addGroup(0, cnt, 1); o.material = p; o.userData.twoPassOf = m;
+    const ob = o.onBeforeRender; o.onBeforeRender = function (...a) { p[0].opacity = p[1].opacity = m.opacity; p[0].visible = p[1].visible = m.visible; return ob.apply(this, a); }; n++; });
+  return n; }

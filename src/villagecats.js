@@ -65,7 +65,7 @@ const POSE = {
   jump: { t: [0.22, -0.2, 0], h: [-0.1, 0, 0], l: [[-0.7, 0.2], [-0.7, 0.2], [0.6, -0.2], [0.6, -0.2]], tail: [-0.3, 0] },
 };
 export function createVillageCats(parent, cfg, hi, seed) {
-  const VC = cfg.villageCats, n = VC.count[hi ? 'high' : 'low'], brains = createCatBrains(cfg, n, hi ? 'high' : 'low', seed), cats = [];
+  const VC = cfg.villageCats, n = VC.count[hi ? 'high' : 'low'], cats = []; let brains = createCatBrains(cfg, n, hi ? 'high' : 'low', seed);
   brains.cats.forEach((b, i) => { const m = makeCat(i, hi, hi ? 14 : 8); m.root.position.set(b.x, b.y, b.z); parent.add(m.root); cats.push(Object.assign(m, { b, ph: 0, cur: null, flickT: 0, body: m.torso.children[0], rs: (b.id * 7919 + (seed | 0) * 31 + 1) >>> 0, side: 1 })); });
   // each cat's own small random numbers for its blinks and ear flicks (so they never blink together)
   const rn = (c) => (c.rs = (c.rs * 1664525 + 1013904223) >>> 0) / 4294967296;
@@ -95,5 +95,7 @@ export function createVillageCats(parent, cfg, hi, seed) {
       c.flickT += dt; const fl = Math.sin(c.flickT * 2 * PI * VC.flick[1] * (1 + (b.id % 3) * 0.3)) * VC.flick[0];
       c.tail.forEach((g, j) => { const tip = j / Math.max(1, c.tail.length - 1); g.rotation.set(C.tail[0] / c.tail.length * (j === 0 ? 1.6 : 0.9), C.tail[1] / c.tail.length + fl * tip * 0.6, 0); }); }
   }
-  return { cats, update, brains };
+  // (H, premortem A) a kept base shown again: the cats' wander state starts over as in a fresh build (new brains from the same seed), their models kept (no rebuild)
+  function reset() { brains = createCatBrains(cfg, n, hi ? 'high' : 'low', seed); cats.forEach((c, i) => { const b = brains.cats[i]; Object.assign(c, { b, ph: 0, cur: null, flickT: 0, rs: (b.id * 7919 + (seed | 0) * 31 + 1) >>> 0, side: 1 }); c.root.position.set(b.x, b.y, b.z); }); }
+  return { cats, update, reset, get brains() { return brains; } };
 }

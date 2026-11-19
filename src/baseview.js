@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { createSky } from './sky.js';
 import { BM, BLOOM, petal, stem, halo, lathe, collectorV2 } from './bloomtech.js';
 import { HIBASE, vaultHi, detailDevice } from './basehi.js';
-import { SCENERY, baseScenery } from './scenehi.js';
+import { SCENERY, baseSceneryIter } from './scenehi.js';
 import { STATIONS, CAT_SPOTS, HOME, NPCS, catPos, scoutPos, marlaJournalUnread, boardYaw, BOARD_BOX } from './base.js';
 import { roomInfo, roomSolids, toWorld, toLocal, inRoom, doorAt, workshopLow, marlaLow, workshopHi, marlaHi } from './rooms.js';
 import { densityOn } from './density.js';
@@ -109,11 +109,12 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   function reuse(sv) {
     save = sv; scene.add(g); if (keptFog) scene.fog = keptFog; eveT = 0; shadowDirty = true;
     // (owner 13:10, premortem A) everything a rebuild used to reset: the pieces back where the build left them (a piece moved to another parent since keeps its new
-    // place), the sun as built, the stream's flow and the wheel from their start, the village cats made again (their own wander state starts over)
+    // place), the sun as built, the stream's flow and the wheel from their start, the village cats' wander state started over
     for (const [o, p, q, k] of snap0) if (o.parent) { o.position.copy(p); o.quaternion.copy(q); o.scale.copy(k); }
     if (sunL) { sunL.intensity = sun0; sunL.color.setHex(sunC0); }
     if (life && life.water && life.water.reset) life.water.reset();
-    if (vcats) { for (const c of vcats.cats) { g.remove(c.root); c.root.traverse((q) => { if (q.geometry) q.geometry.dispose(); }); } vcats = createVillageCats(g, cfg, HIBASE, (save.seed || 1) + 4321); for (const c of vcats.cats) c.root.userData.noMerge = true; }
+    // (H round 2: making the cats again cost 377 ms at Enter, "mergeAttributes < makeCat < createVillageCats < reuse") their wander state is reset instead
+    if (vcats) vcats.reset();
     // the kept pieces point at this save's own records (a cat found or a recruit's role is written to the save the game keeps)
     for (const h of hiddenCats) { const c = (sv.cats || []).find((x) => x.id === h.c.id); if (c) h.c = c; h.cg.visible = h.c.state === 'hidden'; }
     // the recruits start their rounds again where a fresh build puts them, each person restarted (as a fresh build does)
@@ -331,7 +332,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     sun.castShadow = true; sun.shadow.mapSize.set(Q.baseShadowMap, Q.baseShadowMap); sun.shadow.radius = Q.shadowSoft; { const c = sun.shadow.camera; c.left = c.bottom = -28; c.right = c.top = 28; c.near = 2; c.far = 90; } sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.05;
     yield;
     // desktop scenery (src/scenehi.js): meadow, flowers, hedge, trees, shrubs, sunflowers, pond, far hills, sky and light; its parts keep their own shadow settings (userData.scenery)
-    if (SCENERY) { let pondM = null; g.traverse((o) => { if (o.userData.pond) pondM = o; }); baseScenery({ g, scene, sky, sun, ground, plaza, pond: pondM, ST: STATIONS, CATS: CAT_SPOTS, HOME, trees: sceneTrees, rooms: KEEP, keepOut: LIFE_ANY ? LIFE_KO : null, hedge: HEDGE_R }); }
+    if (SCENERY) { let pondM = null; g.traverse((o) => { if (o.userData.pond) pondM = o; }); yield* baseSceneryIter({ g, scene, sky, sun, ground, plaza, pond: pondM, ST: STATIONS, CATS: CAT_SPOTS, HOME, trees: sceneTrees, rooms: KEEP, keepOut: LIFE_ANY ? LIFE_KO : null, hedge: HEDGE_R }); }
     yield;
     // static shadows: everything that stands still casts one; walkers, turbine blades, labels and glass do not
     const still = new Set(); for (const q of npcs) q.n.traverse((o) => still.add(o)); for (const q of towers) q.traverse((o) => still.add(o)); g.traverse((o) => { if (o.isSprite || o.isSkinnedMesh) still.add(o); });
@@ -351,7 +352,9 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // background: bgStart(sv) begins a build of sv's base unless that base is kept already; bgStep(ms) runs its parts (at least one) until ms have gone by (a part is not cut);
   // returns true once it is built (and taken out of the scene again, kept hidden)
   function bgStart(sv) { const sig = keySig(sv); if (!sig || (keptSig === sig && g.children.length) || (bg && bg.sig === sig)) return false; bg = { sig, it: buildIter(sv) }; return true; }
-  function bgStep(ms) { if (!bg) return false; const t0 = performance.now(); do { if (bg.it.next().done) { bg = null; scene.remove(g); return true; } } while (performance.now() - t0 < ms); return false; }
+  // bgWorst: the longest single part so far and its number (for perfcheck: a part too long for a slice is named, then cut)
+  const bgWorst = { ms: 0, part: -1, n: 0 };
+  function bgStep(ms) { if (!bg) return false; const t0 = performance.now(); do { const p0 = performance.now(), dn = bg.it.next().done, pm = performance.now() - p0; bgWorst.n++; if (pm > bgWorst.ms) { bgWorst.ms = Math.round(pm); bgWorst.part = bgWorst.n; } if (dn) { bg = null; scene.remove(g); return true; } } while (performance.now() - t0 < ms); return false; }
 
   // ---- solarpunk dressing: sky, solar tree, pond, greenhouse, canopy, paths, flowers, lanterns
   const sky = createSky(cfg);
@@ -549,5 +552,5 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   const meshCost = (roots) => { let meshes = 0, tris = 0; for (const r of roots) r.traverse((o) => { if (!o.isMesh) return; meshes++; const gq = o.geometry; tris += (gq.index ? gq.index.count : gq.attributes.position.count) / 3; }); return { meshes, tris: Math.round(tris) }; };
   const peek = () => ({ cost: { hatchery: hatch ? meshCost([hatch.group]) : null, birds: flock ? meshCost(flock.birds.map((b) => b.root)) : null, cats: vcats ? meshCost(vcats.cats.map((c) => c.root)) : null }, chars, npcG, npcs, scoutG, rooms: { WS, MH }, journal: jn && { ribbon: jn.ribbon.visible, glow: !!jn.glow.userData.show, at: jn.at }, avians: flock && { shown: flock.shown(), birds: flock.birds.map((b) => ({ id: b.id, kind: b.kind, st: b.st, x: b.x, z: b.z, gone: b.gone })), eveT, layout: AV }, vcats: vcats && vcats.cats.map((c) => ({ x: c.b.x, y: c.b.y, z: c.b.z, mode: c.b.mode, act: c.b.act })), life: life && { cost: life.cost, plots: life.plots, wheel: life.water ? life.water.angle() : null } });
   // preChars (owner 11:40): the villagers' models are made ahead (during the opening film), so the base's first build does not load and parse them in the dawn shot
-  return { bgStart, bgStep, get bgBusy() { return !!bg; }, recruitsChanged, mergeStill, free, get kept() { return keptSig !== null; }, preChars: () => { if (makeChar) for (const n of Object.values(NPCS)) if (!chars[n.id]) chars[n.id] = makeChar(n.id); }, setView: (c) => { viewCam = c; }, build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
+  return { bgStart, bgStep, bgWorst, get bgBusy() { return !!bg; }, recruitsChanged, mergeStill, free, get kept() { return keptSig !== null; }, preChars: () => { if (makeChar) for (const n of Object.values(NPCS)) if (!chars[n.id]) chars[n.id] = makeChar(n.id); }, setView: (c) => { viewCam = c; }, build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
 }

@@ -1196,10 +1196,15 @@ export const CONFIG = {
     // titleBase: a returning player's base is prepared this many seconds after the title is ready, while it idles (src/main.js titleBase)
     titleBase: 1.5,
     // slice: the base prepared at the title in time slices: ms of build parts a frame (a part is not cut), then draws pieces drawn off-screen a frame (src/main.js baseSlice)
-    slice: { ms: 4, draws: 40 },
+    // film: the same for the film's start under its black (nothing shows, so a bigger share of each frame), ms of parts or piece draws a frame
+    slice: { ms: 4, draws: 40, film: 40 },
     // mergeBase: the base's still pieces drawn as one mesh per material and cell m of ground (src/baseview.js mergeStill); hidePad: extra m kept clear round the film's hidden plant
     mergeBase: { on: true, cell: 16, hidePad: 1.5 },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind
+    // longFrame: with ?proglog=1 a frame starting more than this many ms after the one before is logged with what the frame before it did (src/main.js lfStart)
+    longFrame: 80,
+    // singlePassFlat: under each card, see-through two-sided materials used only by flat one-way meshes are drawn in one pass (same pixels; src/mergestatic.js)
+    singlePassFlat: true,
     gloomPool: 10,
     // gloomPrefill: machines of each kind the ring sends, built and merged under the ride / night card to start the pool (src/main.js warmNight); at most gloomPool
     gloomPrefill: 3,
