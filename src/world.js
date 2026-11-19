@@ -395,7 +395,8 @@ export function buildWorld(cfg, run) {
     // house i becomes the origin (the sim's own coordinates); -1 puts the world back for the street
     frame(i) { if (i < 0) { g.position.set(0, 0, 0); g.rotation.y = 0; return; } const h = run.houses[i]; g.rotation.y = -houses[i].rotation.y; g.position.set(-(h.x * h.cs + h.z * h.sn), 0, -(-h.x * h.sn + h.z * h.cs)); },
     light(k) { sun.intensity = W.sun * Math.max(0.06, 1 - k * 1.05); sun.color.setHex(k > 0.6 ? 0x9db4ff : 0xfff1d6); const dk = 1 - 0.55 * Math.min(1, k * 1.2); M.int.color.setHex(W.intTint).multiplyScalar(dk); M.wood.color.setHex(W.floorTint).multiplyScalar(dk); },
-    // LAG FIX Nov 19: every picture a material holds is freed (not only .map: relief, cut-out and glow pictures piled up run after run), unless it is marked shared
-    dispose() { g.traverse((q) => { if (q.geometry) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && t.userData.shared)) t.dispose(); } m.dispose(); } }); }
+    // LAG FIX Nov 19: every picture a material holds is freed (not only .map: relief, cut-out and glow pictures piled up run after run), unless it is marked shared;
+    // the sun's shadow map too (a new 2048 map stayed on the GPU after every run)
+    dispose() { g.traverse((q) => { if (q.isLight && q.shadow && q.shadow.map) q.shadow.dispose(); if (q.geometry) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && t.userData.shared)) t.dispose(); } m.dispose(); } }); }
   };
 }
