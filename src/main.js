@@ -1659,7 +1659,7 @@ window.__game.marlaVoice = () => ({ n: MV.hook.n, last: MV.hook.last, lastText: 
 window.__game.wakeText = () => wakeT; window.__game.uiNow = () => ui; window.__game.isPaused = () => paused; window.__game.setPause = (v) => setPause(v);
 window.__game.wsTip = () => wsTipT;
 // the automatic step-down (tools/perfcheck.cjs): its state, and take the next step now
-window.__game.cardOn = () => LCARD.on;
+window.__game.cardOn = () => LCARD.on; window.__game.filmHold = () => !!(intro && intro.hold);
 // the impact sound proof (tools/perfcheck.cjs, local probes): each kind rendered live and as a rendered variant through a pooled chain, RMS difference / RMS
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);
 window.__game.impactPrerender = () => IMP.prerender();
