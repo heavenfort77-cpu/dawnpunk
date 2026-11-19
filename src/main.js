@@ -1316,8 +1316,13 @@ async function sceneCard(kind) {
     fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
     // the ride card also builds the NIGHT's shaders: the night's machine lights on (every lit shader is built per light count), one machine of each kind and each device
     // in the scene, then all put back as they were. The night card then finds them built (the first night card took 6.8 s on the test GPU, the next ones 0.5 s).
+    // A house adds one ceiling lamp per floor (buildRoom), so the night's light count also depends on the house: stand-in lamps for each floor count among this ring's
+    // houses are put in the scene in turn while the shaders are built, then removed.
     if (!bot && kind === 'ride' && run && renderer.compileAsync && glights.length) { for (const l of glights) l.visible = true; warmNight(); if (fx && fx.upgradeNow) fx.upgradeNow();
-      fill(0.75); try { await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } finally { for (const l of glights) l.visible = false; warmG.visible = false; } }
+      const lamps = [...new Set(run.houses.map((h) => h.L || 1))].sort(), tmp = [];
+      try { for (const n of lamps) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
+          fill(0.7 + 0.2 * tmp.length / lamps[lamps.length - 1]); await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
+      finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } for (const l of glights) l.visible = false; warmG.visible = false; } }
     // LAG FIX Nov 19 (real GPU: the first frame after the night card still took 1.7 s): the scene is drawn once UNDER the card, with the warm-up copies set out in front of
     // the camera, so every shader's first use, every upload and the sun shadow map (whose depth shaders compileAsync does not build) happen here, not in play; then
     // drawn again without them, so the shadow map play starts with is the real one. (Not in the scripted checks: they keep the old timing.)
@@ -1325,7 +1330,11 @@ async function sceneCard(kind) {
       // the frame's own drawing (draw(): far plane, far copies, picture pass) and the hands; a last plain frame, then the GPU is made to finish all of it under the card
       // (real GPU: without the finish the first frame of play waited ~0.6 s for the card's queued work)
       const draw1 = (sh) => { if (sh) renderer.shadowMap.needsUpdate = true; draw(); if (sim && state === 'play' && !window.__noHands) hands.render(renderer, cam.aspect); }, raf = () => new Promise((r) => requestAnimationFrame(() => r()));
-      draw1(true); warmG.visible = false; await raf(); if (kind === 'night') { draw1(true); await raf(); } draw1(false); try { renderer.getContext().finish(); } catch (e2) { /* no context */ } }
+      draw1(true); warmG.visible = false; await raf();
+      // then the view all round (four quarter turns), with the pieces the night cull hides (layer 1) drawn too: every piece's first draw (its normals, uvs and colours go
+      // to the GPU then; the shadow pass only sent positions) happens under the card, not when you turn round or step to a window in the fight
+      { const ry = cam.rotation.y; cam.layers.enable(1); try { for (let k = 1; k <= 4; k++) { cam.rotation.y = ry + k * Math.PI / 2; cam.updateMatrixWorld(); draw1(false); } } finally { cam.layers.disable(1); cam.rotation.y = ry; cam.updateMatrixWorld(); } await raf(); }
+      if (kind === 'night') { draw1(true); await raf(); } draw1(false); try { renderer.getContext().finish(); } catch (e2) { /* no context */ } }
     warmG.visible = false;
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
