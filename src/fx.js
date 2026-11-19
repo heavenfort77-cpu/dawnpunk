@@ -28,5 +28,7 @@ export function createFx(renderer, scene, cam, F, P, hemi) {
   const render = () => { if (P) { if (tick-- <= 0) { tick = P.every; upgrade(scene, P); } scene.environmentIntensity = P.env * Math.min(1.5, hemi.intensity / P.hemiDay); } const h0 = hemi.intensity; if (P) hemi.intensity = h0 * P.hemiKeep; renderer.render(scene, cam); hemi.intensity = h0; if (!aoOn) return; ao.render(renderer, null, null); ao.blendMaterial.uniforms.intensity.value = F.ao; ao.blendMaterial.uniforms.tDiffuse.value = ao.pdRenderTarget.texture; ao._renderPass(renderer, ao.blendMaterial, null); };
   // F.ao 0 (the medium tier): no shading pass at all; setAO(false): the automatic step-down (src/perfstep.js) turns the contact shading off without a reload
   let aoOn = F.ao > 0;
-  return { render, setSize: () => { const s = renderer.getDrawingBufferSize(new THREE.Vector2()); ao.setSize(Math.max(1, Math.round(s.x * sc)), Math.max(1, Math.round(s.y * sc))); }, ao, setAO: (v) => { aoOn = !!v; }, get aoOn() { return aoOn; } };
+  // upgradeNow: the loading card (src/main.js sceneCard) turns every new simple surface into its physically based form BEFORE it builds the shaders, so the first
+  // frames after the card do not rebuild them (LAG FIX Nov 19: the night's first frame stalled 2.4 s on the real GPU)
+  return { upgradeNow: () => { if (P) upgrade(scene, P); }, render, setSize: () => { const s = renderer.getDrawingBufferSize(new THREE.Vector2()); ao.setSize(Math.max(1, Math.round(s.x * sc)), Math.max(1, Math.round(s.y * sc))); }, ao, setAO: (v) => { aoOn = !!v; }, get aoOn() { return aoOn; } };
 }

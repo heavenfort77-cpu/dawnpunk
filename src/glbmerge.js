@@ -23,6 +23,8 @@ function partGeo(o, bone, keys) {
   out.setAttribute('skinIndex', new THREE.BufferAttribute(si, 4)); out.setAttribute('skinWeight', new THREE.BufferAttribute(sw, 4));
   return out;
 }
+// rays (the aimed shot) never test the skinned draw mesh: the parts are the hit shapes, and a skinned ray test poses every vertex on the CPU
+const noRay = () => {};
 const isRam = (o) => { for (let p = o; p; p = p.parent) if (p.name && p.name.startsWith('ram')) return true; return false; };
 
 // sc: a loaded model (not in the scene, its root at rest). Adds the skinned draw meshes and hides the parts' draws.
@@ -37,7 +39,7 @@ export function mergeGlb(sc) {
       const keys = ['position', 'normal', 'uv'].filter((k) => l.every((o) => o.geometry.attributes[k])), geos = l.map((o, i) => partGeo(o, i, keys)), geo = mergeGeometries(geos, false); for (const g of geos) g.dispose(); if (!geo) { glbMergeState.failed++; continue; }
       geo.userData.shared = true; geo.computeBoundingSphere();
       const skel = new THREE.Skeleton(l, l.map((o) => o.matrixWorld.clone().invert())), mesh = new THREE.SkinnedMesh(geo, m);
-      mesh.name = 'glbMerged'; mesh.userData.mergedDraw = true; mesh.castShadow = l.some((o) => o.castShadow); mesh.receiveShadow = l.some((o) => o.receiveShadow);
+      mesh.name = 'glbMerged'; mesh.userData.mergedDraw = true; mesh.raycast = noRay; mesh.castShadow = l.some((o) => o.castShadow); mesh.receiveShadow = l.some((o) => o.receiveShadow);
       sc.add(mesh); mesh.bind(skel, new THREE.Matrix4());
       // culling: the sphere of the whole model at rest, grown (as src/lod.js cullSkinned does for the people), so a swing never pokes out of it
       const b = geo.boundingSphere.clone(); b.radius = b.radius * CONFIG.lag.cull.grow + CONFIG.lag.cull.pad; mesh.boundingSphere = b; mesh.frustumCulled = true;
@@ -53,5 +55,5 @@ export function rebindMerged(tpl, copy) {
   for (let i = 0; i < a.length; i++) map.set(a[i], b[i]);
   for (let i = 0; i < a.length; i++) { const t = a[i], c = b[i]; if (!t.isSkinnedMesh || !t.userData.mergedDraw) continue;
     const bones = t.skeleton.bones.map((x) => map.get(x)); if (bones.some((x) => !x)) continue;
-    c.bind(new THREE.Skeleton(bones, t.skeleton.boneInverses.map((m) => m.clone())), t.bindMatrix.clone()); c.boundingSphere = t.boundingSphere.clone(); }
+    c.raycast = noRay; c.bind(new THREE.Skeleton(bones, t.skeleton.boneInverses.map((m) => m.clone())), t.bindMatrix.clone()); c.boundingSphere = t.boundingSphere.clone(); }
 }

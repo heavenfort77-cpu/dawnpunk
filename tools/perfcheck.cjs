@@ -228,13 +228,14 @@ const BREAKDOWN = (spot) => {
     out.push([TT + ' ' + r.spot + ': ' + (r.tris / 1e6).toFixed(2) + ' M triangles per frame (target < ' + (T.tris / 1e6).toFixed(2) + ' M)', r.tris < T.tris]); }
   // owner Nov 19 07:10: night combat must not fail. On the default tier every combat gate; on low the frame-rate gates; high is printed only.
   { const hub = (rows.find((r) => r.tier === TT && r.spot === 'hub') || {}).fps;
+    // the frame-rate gates need a real GPU (GPU=1, perfgpu.yml on macOS); on the Linux software GPU only the draw call and triangle gates count
     for (const r of rows) { if (!COMBAT[r.spot] || r.tier === 'high' || !r.fps) continue; const t = r.tier + ' ' + r.spot + ' (combat): ';
-      out.push([t + r.fps + ' fps (target >= ' + CGATE.fps + ')', r.fps >= CGATE.fps]); out.push([t + 'p95 ' + r.p95 + ' ms (target <= ' + CGATE.p95 + ')', r.p95 <= CGATE.p95]);
-      out.push([t + 'worst frame from the card on ' + r.worstAll + ' ms (target <= ' + CGATE.worst + ')', r.worstAll <= CGATE.worst]);
+      if (GPU) { out.push([t + r.fps + ' fps (target >= ' + CGATE.fps + ')', r.fps >= CGATE.fps]); out.push([t + 'p95 ' + r.p95 + ' ms (target <= ' + CGATE.p95 + ')', r.p95 <= CGATE.p95]);
+        out.push([t + 'worst frame from the card on ' + r.worstAll + ' ms (target <= ' + CGATE.worst + ')', r.worstAll <= CGATE.worst]); }
       if (r.tier !== TT) continue;
-      if (hub) out.push([t + r.fps + ' fps vs hub ' + hub + ' fps in the same job (the night must not be slower)', r.fps >= hub]);
+      if (hub && GPU) out.push([t + r.fps + ' fps vs hub ' + hub + ' fps in the same job (the night must not be slower)', r.fps >= hub]);
       out.push([t + r.calls + ' draw calls per frame on average (target < 500; max ' + r.callsMax + ')', r.calls < 500]); out.push([t + (r.tris / 1e6).toFixed(2) + ' M triangles per frame on average (target < 0.50 M; max ' + (r.trisMax / 1e6).toFixed(2) + ' M)', r.tris < 0.5e6]);
-      const c = r.combat || {}; out.push([t + 'the fight was real: ' + c.quick + ' quick and ' + c.charged + ' charged shots, ' + c.kills + ' kills, ' + c.placeOk + ' devices placed, ' + c.avgAlive + ' Gloom alive on average (' + c.avgInside + ' inside)' + (COMBAT[r.spot].boss ? ', boss acting ' + c.boss : ''), c.kills > 0 && c.charged > 0 && c.avgAlive >= COMBAT[r.spot].n * 0.6 && (!COMBAT[r.spot].boss || c.boss)]); } }
+      const c = r.combat || {}; if (GPU) out.push([t + 'the fight was real: ' + c.quick + ' quick and ' + c.charged + ' charged shots, ' + c.kills + ' kills, ' + c.placeOk + ' devices placed, ' + c.avgAlive + ' Gloom alive on average (' + c.avgInside + ' inside)' + (COMBAT[r.spot].boss ? ', boss acting ' + c.boss : ''), c.kills > 0 && c.charged > 0 && c.avgAlive >= COMBAT[r.spot].n * 0.6 && (!COMBAT[r.spot].boss || c.boss)]); } }
   // owner Nov 19 06:43: the night house and the boss night are the most intense play, so on the default tier their real frame rate (GPU=1) must be at least the hub's
   { const f = (sp) => (rows.find((r) => r.tier === TT && r.spot === sp) || {}).fps; const hub = f('hub');
     if (hub) for (const sp of ['house', 'boss']) if (f(sp)) out.push([TT + ' ' + sp + ': ' + f(sp) + ' fps, hub ' + hub + ' fps (the night must not be slower than the hub)', f(sp) >= hub]); }

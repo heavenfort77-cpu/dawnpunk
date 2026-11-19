@@ -1306,7 +1306,7 @@ async function sceneCard(kind) {
     // the night's models are waited for under the NIGHT card only: the ride card shows the day street, which does not need them (they keep loading behind it).
     // (Waiting on the ride card held the street hidden for up to maxWait s in the checks: playershadowcheck_desktop saw the card, not the street.)
     if (QUALITY === 'high' && kind === 'night') { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
-    if (kind === 'night') warmNight(); else dropWarm();
+    if (kind === 'night') warmNight(); else dropWarm(); if (fx && fx.upgradeNow) fx.upgradeNow();
     fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
     warmG.visible = false;
     fill(0.9); renderer.shadowMap.needsUpdate = true;
