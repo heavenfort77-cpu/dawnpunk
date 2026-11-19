@@ -1556,7 +1556,7 @@ const nap = (ms) => new Promise((r) => setTimeout(r, ms));
 async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
   // (owner 12:35) the card's time per step (LCARD.steps: [step, ms]), for perfcheck
-  let tm = performance.now(); const mark = (k) => { const n = performance.now(); LCARD.steps.push([k, Math.round(n - tm)]); tm = n; }; LCARD.steps = []; LCARD.allParts = null;
+  let tm = performance.now(); const mark = (k) => { const n = performance.now(); LCARD.steps.push([k, Math.round(n - tm)]); tm = n; }; LCARD.steps = []; LCARD.allParts = null; LCARD.lampCounts = null;
   // (H, owner 13:04: the home card's draws were no-ops: draw() returns while holdDraw is set, and the held title menu left it set) the card's own draws always draw
   holdDraw = false; pauseDrawn = false; const pf0 = [RSTAT.renders, RSTAT.calls, nProg(), UPL.n, UPL.ms, UPL.bn, UPL.bms];
   LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
@@ -1587,21 +1587,24 @@ async function sceneCard(kind) {
     if (!bot && kind === 'ride' && run && renderer.compileAsync && glights.length) { for (const l of glights) l.visible = true; warmNight(); if (fx && fx.upgradeNow) fx.upgradeNow();
       // the night has no spot lights (Marla's and the people's key lights belong to the day street), so they are off while the night's shaders are built
       // every other point light of the day street is off too, and the house lamps are stood in for 0, 1, ... up to the most floors any house here has
-      const most = Math.max(1, ...run.houses.map((h) => h.L || 1)), lamps = [...Array(most + 1).keys()], tmp = [], spots = [];
+      // (R4, first ride card 58.5 / 72.4 s: 404 / 471 programs, one set per lamp count 0..most) only the lamp counts this run's houses have (one per floor) are
+      // built (LCARD.lampCounts); the night is spent inside a house, so a count no house has is never drawn
+      const most = Math.max(1, ...run.houses.map((h) => h.L || 1)), lamps = CONFIG.lag.lampsUsed ? [...new Set(run.houses.map((h) => h.L || 1))].sort((a, b) => a - b) : [...Array(most + 1).keys()], tmp = []; LCARD.lampCounts = lamps.slice(); const spots = [];
       scene.traverse((o) => { if ((o.isSpotLight || (o.isPointLight && !glights.includes(o))) && o.visible) { o.visible = false; spots.push(o); } });
-      try { for (const n of lamps) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
+      try { for (const n of lamps) { while (tmp.length > n) { const lp = tmp.pop(); scene.remove(lp); lp.dispose(); } while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
           fill(0.7 + 0.2 * tmp.length / most); await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
       finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } for (const o of spots) o.visible = true; for (const l of glights) l.visible = false; warmG.visible = false; warmG.matrixWorldAutoUpdate = false; } }
     // (H round 2, warm-up gate: 8-23 shader programs built on entering a house by day, no card there) a house by day: the day's lights with one ceiling lamp per floor
     // (1 up to the most floors among this ring's houses; buildRoomDyn), Marla off the street (she stays out of the house), and the room's own pieces (a food and an
     // essentials crate, the cat), built and kept hidden in the warm-up set until the run ends (a freed material would free its shader); their shaders built here
-    if (!bot && kind === 'ride' && run && renderer.compileAsync) { const most = Math.max(1, ...run.houses.map((h) => h.L || 1)), tmp = [], mp = marla.root.parent;
+    if (!bot && kind === 'ride' && run && renderer.compileAsync) { const counts = CONFIG.lag.lampsUsed ? [...new Set(run.houses.map((h) => h.L || 1))].sort((a, b) => a - b) : [...Array(Math.max(1, ...run.houses.map((h) => h.L || 1))).keys()].map((k) => k + 1), tmp = [], mp = marla.root.parent;
       if (!warmG.userData.day) { warmG.userData.day = true; for (const k of ['food', 'ess']) { const c = (LOOK_OLD ? PR.crateMesh : BT.crateV2)(k); shadeUnder(c, CONFIG.depth.crate, 0.02); c.position.set(0, -50, 0); warmG.add(c); } const cat = PR.catMesh(CONFIG.catStyles[0]); cat.g.position.set(0, -50, 0); warmG.add(cat.g);
         // (R3, Mac 44481169893: 3 shaders built entering the first house by day, "MeshLambertMaterial map transparent" x2 and "MeshBasicMaterial #ffe2a8 map transparent")
         // the house's dirt decals (dirtMat) and the light pools at its openings (poolMat), which buildDepth puts in every house, are in the set too
         depthMats(); for (const m of [dirtMat('grime'), poolMat, shadeMat]) { const d = new THREE.Mesh(flatGeo, m); d.position.set(0, -50, 0); d.renderOrder = 1; warmG.add(d); } }
       warmG.visible = true; if (mp) mp.remove(marla.root);
-      try { for (let n = 1; n <= most; n++) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); } await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
+      // (R4) by day too: only the lamp counts this run's houses have
+      try { for (const n of counts) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); } await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
       finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } if (mp) mp.add(marla.root); warmG.visible = false; } }
     // LAG FIX Nov 19 (real GPU: the first frame after the night card still took 1.7 s): the scene is drawn once UNDER the card, with the warm-up copies set out in front of
     // the camera, so every shader's first use, every upload and the sun shadow map (whose depth shaders compileAsync does not build) happen here, not in play; then
@@ -1641,7 +1644,7 @@ async function sceneCard(kind) {
       LCARD.settle = fr; mark('settle'); }
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
-  LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, allParts: LCARD.allParts || null, bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
+  LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, allParts: LCARD.allParts || null, lamps: LCARD.lampCounts || null, bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
   fill(1); if (id === LCARD.n) { LCARD.on = false; $('lcard').style.display = 'none'; perfRest(); }
 }
@@ -1849,6 +1852,12 @@ window.__game.endNight = (win = true) => { if (!sim || sim.done || !sim.endNow) 
 window.__game.audioState = () => (ac ? ac.state : 'none');
 window.__game.basePeople = () => { const pk = bview.peek(), out = [], v = new THREE.Vector3(), one = (id, root) => { if (!root || !root.parent) return; root.getWorldPosition(v); let sum = 0; root.traverse((q) => { if (q.isBone) sum += q.quaternion.x + q.quaternion.y * 2 + q.quaternion.z * 3 + q.quaternion.w * 4; }); out.push({ id, x: +v.x.toFixed(3), z: +v.z.toFixed(3), pose: +sum.toFixed(4) }); };
   for (const [id, c] of Object.entries(pk.chars || {})) if (c) one(id, c.root); for (const q of pk.npcs || []) one('recruit ' + (q.p && q.p.id), q.ch ? q.ch.root : q.n); if (marla) one('marla', marla.root); return out; };
+// (R4, the film's 4721 ms upload of one 1024x1024 ImageBitmap, card 21) ?proglog=1 only: the same picture uploaded through the game's renderer as an ImageBitmap (as
+// GLTFLoader makes it: premultiplyAlpha none, colorSpaceConversion none, flipY off) and as an <img>, twice each, timed (ms; gl.finish after each); the control
+window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl = renderer.getContext(), out = [], img = new Image(), u = URL.createObjectURL(blob); img.src = u; await img.decode();
+  const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
+  for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
+  for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
 window.__game.cardOn = () => LCARD.on; window.__game.frameCost = (reset) => { const n = Math.max(1, FC.n), o = { frames: FC.n }; for (const k of ['js', 'logic', 'draw', 'hands', 'shadow', 'matrix']) o[k] = +(FC[k] / n).toFixed(2); o.renderRest = +((FC.draw - FC.shadow - FC.matrix) / n).toFixed(2); if (reset) for (const k in FC) FC[k] = 0; return o; }; window.__game.uploads = () => ({ n: UPL.n, ms: Math.round(UPL.ms), bn: UPL.bn, bms: Math.round(UPL.bms), big: UPL.big.slice() }); window.__game.filmHold = () => !!(FILM.it || (intro && intro.hold)); window.__game.filmPrepInfo = () => ({ worst: Math.round(FILM.worst), ms: FILM.ms, err: FILM.err || null, compileMs: FILM.compileMs, compileCut: FILM.compileCut, modelWait: FILM.modelWait });
 // the impact sound proof (tools/perfcheck.cjs, local probes): each kind rendered live and as a rendered variant through a pooled chain, RMS difference / RMS
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);

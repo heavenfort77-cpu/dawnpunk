@@ -1203,6 +1203,9 @@ export const CONFIG = {
     // filmCompileCap (R3): the film's black waits at most this many s for its shaders to finish building in the background before its pieces are drawn (it was the
     // card's maxWait, 12 s: on the Mac test GPU the build took longer, and the first draw then waited for the rest of it in one held frame of 19-22 s)
     filmCompileCap: 90,
+    // lampsUsed (R4, card 22): the ride card builds the night's and the house-by-day shaders only for the lamp counts this run's houses have (false: every count
+    // 0..most, as before; off until the coordinator approves the round)
+    lampsUsed: false,
     // filmModelWait (R3): the film's black waits at most this many s for the film's desktop Gloom models and sharp textures, now asked for when the film starts
     // (not with the page), so the film shows the same machines and pictures as before
     filmModelWait: 60,
