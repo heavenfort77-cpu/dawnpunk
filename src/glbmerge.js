@@ -93,7 +93,9 @@ export function freezeStillBones(root, probe, n) {
     for (const m of meshes) { const S = m.skeleton; let ch = false;
       for (let i = 0; i < S.bones.length; i++) { const b = S.bones[i], a = anchor.get(b); if (!a) continue;
         // offset = ancestor's world inverse x part's world (constant: nothing between them moves)
-        _mc.copy(a.matrixWorld).invert().multiply(b.matrixWorld); S.boneInverses[i] = _mi.copy(_mc).multiply(S.boneInverses[i]).clone(); S.bones[i] = a; ch = true; } }
+        _mc.copy(a.matrixWorld).invert().multiply(b.matrixWorld); S.boneInverses[i] = _mi.copy(_mc).multiply(S.boneInverses[i]).clone(); S.bones[i] = a; ch = true;
+        // (R4 worker 5) kept for the aimed shot: the part's world matrix is ancestor's world x offset (src/main.js drawnHit0 puts it back before testing the part)
+        if (!b.userData.fz) b.userData.fz = { a, off: _mc.clone() }; } }
     let k = 0; for (const b of anchor.keys()) { b.updateMatrix(); b.matrixAutoUpdate = false; b.matrixWorldAutoUpdate = false; k++; }
     glbMergeState.frozen = (glbMergeState.frozen || 0) + k; glbMergeState.frozenOf = (glbMergeState.frozenOf || 0) + bones.size; return k;
   } catch (e) { glbMergeState.failed++; return 0; }

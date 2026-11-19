@@ -11,7 +11,7 @@ import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
 import { say } from './hud2.js';
 import { lodPrepare, lodCopy } from './lod.js';
-import { mergeGlb, rebindMerged, splitShared } from './glbmerge.js';
+import { mergeGlb, rebindMerged, splitShared, freezeStillBones } from './glbmerge.js';
 
 const BC = CONFIG.boss, VW = BC.view, PH = BC.physics, S = BC.scale;
 const fxOff = (() => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } })();
@@ -277,6 +277,13 @@ function buildGlb() {
   if (nodes.body) { const sm = lensFor('standby'), sg = new THREE.SphereGeometry(0.014, 6, 4); for (const [x, y, z] of [[0.2, 1.1, -0.2], [-0.25, 0.62, -0.27], [0.33, 0.4, 0.15], [-0.18, 0.95, 0.27]]) { const me = new THREE.Mesh(sg, sm); me.position.set(x - PIV.body[0], y - PIV.body[1], z - PIV.body[2]); nodes.body.add(me); } }
   const setGlow = (key, c, k) => { const m = glows[key]; if (m) m.color.set(c).multiplyScalar(k); };
   let n = 0; sc.traverse((o) => { if (o.isMesh && !o.userData.hitOnly) n += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; }); bossState.tris = n;
+  // (R4 worker 5, item 3: boss night ~20 ms CPU a frame, its 116 nodes updated by pose()'s forced passes and the scene's) the parts that never move against the
+  // named node they hang from leave the matrix pass (src/glbmerge.js freezeStillBones: skinned by that node, the constant offset folded into the bone's inverse).
+  // Every named node (PIV: the joints, the cores, the bell, the coin and every plate) counts as moving, so a plate or piece knocked off (addPiece, under physics)
+  // carries its own parts with it as before; the probe poses turn only the named nodes. CONFIG.lag.bossFreeze; bossState.frozen: parts taken out.
+  if (CONFIG.lag.bossFreeze) { const nm = Object.values(nodes), st = nm.map((o) => [o.position.clone(), o.quaternion.clone()]), eu = new THREE.Euler();
+    const probe = (i) => nm.forEach((o, j) => { o.quaternion.setFromEuler(eu.set(0.3 * Math.sin(i * 1.7 + j), 0.3 * Math.cos(i * 1.3 + j * 0.7), 0.3 * Math.sin(i * 0.9 + j * 1.9))); o.position.y = st[j][0].y + 0.01 * (i + 1); });
+    bossState.frozen = freezeStillBones(sc, probe, 4); nm.forEach((o, j) => { o.position.copy(st[j][0]); o.quaternion.copy(st[j][1]); }); sc.updateMatrixWorld(true); }
   // v2 model (owner 18:51): the CRT face plate is 0.42 x 0.24 and the screen draws the eyes, like the approved phone build
   lodCopy(sc, 'boss');
   return { root: sc, nodes, setGlow, kind: 'glb', mats, screenEyes: true, screenSize: [0.42, 0.24] };

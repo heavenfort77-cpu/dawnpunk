@@ -1121,6 +1121,14 @@ export const CONFIG = {
   lag: {
     // cull: skinned characters are culled again (src/lod.js cullSkinned); their bounding sphere, taken in the bind pose, is grown: radius times grow, plus pad metres
     cull: { grow: 1.35, pad: 0.35 },
+    // glSlowAfter: ?proglog=1 pages time every WebGL call while a card or the film's black is up and this many s after (the slowest call of a long frame is logged)
+    glSlowAfter: 3,
+    // keepPrograms (R4 worker 5): every shader program built is kept for the visit (never freed and built again by a later card); max: at most this many kept
+    keepPrograms: { on: true, max: 1200 },
+    // nightNoMarla (R4 worker 5): the ride card builds the night's shaders with Marla off the scene (she is never in a house at night)
+    nightNoMarla: true,
+    // bossFreeze (R4 worker 5): the desktop boss model's still parts leave the per-frame matrix pass (src/bosshi.js buildGlb)
+    bossFreeze: true,
     // lod: a reduced copy of big meshes for far away (src/lod.js; meshoptimizer simplifier). on: the switch; minTris: meshes with fewer triangles than this keep only their full mesh;
     // kinds: per kind of model, near = metres from the camera within which the full mesh is drawn, ratio = share of triangles the far copy aims for, error = largest change of shape
     // allowed as a share of that mesh part's size (the simplifier stops there even if the ratio is not reached, so the far copy keeps the silhouette)

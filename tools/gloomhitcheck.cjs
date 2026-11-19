@@ -13,7 +13,8 @@ const { chromium } = require('playwright');
 const path = require('path');
 const tier = process.argv[2] === 'high' ? 'high' : 'low';
 const page0 = process.argv[3] || path.resolve(__dirname, '../dist/' + (tier === 'high' ? 'index_single.html' : 'index.html'));
-const KINDS = ['walker', 'lurcher', 'ticks', 'hauler', 'stilt', 'lantern', 'warden'], DISTS = [2, 5, 10, 15];
+// KINDS=a,b / DISTS=2,5 (env) narrow a local run
+const KINDS = process.env.KINDS ? process.env.KINDS.split(',') : ['walker', 'lurcher', 'ticks', 'hauler', 'stilt', 'lantern', 'warden'], DISTS = process.env.DISTS ? process.env.DISTS.split(',').map(Number) : [2, 5, 10, 15];
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [], out = [];
   const add = (name, ok) => { out.push((ok ? 'PASS ' : 'FAIL ') + name); };
@@ -33,7 +34,10 @@ const KINDS = ['walker', 'lurcher', 'ticks', 'hauler', 'stilt', 'lantern', 'ward
     // world corners of the visible meshes under o (no sprites, additive glow or ground shade); also the same points in the machine's own frame (m: position, turn)
     // only: this mesh alone (not the meshes under it)
     const pts = (o, m, only) => { const W = [], L = []; const th = m.rotation.y, co = Math.cos(th), si = Math.sin(th);
-      o.updateMatrixWorld(true); (only ? (f) => f(o) : (f) => o.traverse(f))((q) => { if (!q.isMesh || q.isSprite || q.userData.blob || q.userData.mergedDraw) return; let v = q; while (v) { if (!v.visible) return; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; if (mt && (mt.blending === 2 || mt.visible === false || (mt.transparent && mt.opacity < 0.15))) return;
+      // (R4 worker 5) a part frozen out of the matrix pass (src/glbmerge.js freezeStillBones) keeps a stale world matrix: put it where it is drawn (ancestor's world x
+      // its kept offset), as the game's aimed shot does, so the aim points at the machine as drawn
+      o.updateMatrixWorld(true); o.traverse((q) => { const z = q.userData && q.userData.fz; if (z) q.matrixWorld.multiplyMatrices(z.a.matrixWorld, z.off); });
+      (only ? (f) => f(o) : (f) => o.traverse(f))((q) => { if (!q.isMesh || q.isSprite || q.userData.blob || q.userData.mergedDraw) return; let v = q; while (v) { if (!v.visible) return; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; if (mt && (mt.blending === 2 || mt.visible === false || (mt.transparent && mt.opacity < 0.15))) return;
         // leaf cards and dirt decals (see-through flat cards) hang off the body; they are not part of what you aim at. (mergedDraw, lag fix Nov 19: the one mesh that DRAWS a model's
         // parts, src/glbmerge.js / src/mergestatic.js; the parts themselves stay as the shapes, so the merged copy is left out, as the game's aimed shot leaves it out)
         if (q.geometry && q.geometry.type === 'PlaneGeometry' && mt && mt.transparent) return;
