@@ -229,6 +229,15 @@ function clearScene() {
   bossTick(0, null, { scene }); scrapTick(0, { scene }, true); hopsClear(); // the boss and its pieces go with the night (src/bosshi.js)
 }
 
+// LAG FIX Nov 19 (owner, run-end screen at 15 fps on the Mac): the picture behind the run-end screen is held, so the screen's blur (.ov: blur(5px) saturate(1.15))
+// is made once from the held frame (a canvas behind #end, the same filter at the canvas's own pixel scale) and the live backdrop blur is switched off while it shows.
+// CONFIG.lag.endSnap; the snapshot goes when the screen does.
+const ENDS = { cv: null, on: false };
+function endSnap() { const want = CONFIG.lag.endSnap && state === 'end' && $('end').style.display === 'flex';
+  if (!want) { if (ENDS.on) { ENDS.on = false; ENDS.cv.style.display = 'none'; $('end').style.backdropFilter = ''; $('end').style.webkitBackdropFilter = ''; } return; }
+  if (ENDS.on) return; if (!ENDS.cv) { const c = document.createElement('canvas'); c.id = 'endSnap'; c.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:8;pointer-events:none;display:none'; document.body.appendChild(c); ENDS.cv = c; }
+  const c = ENDS.cv, k = cvs.width / Math.max(1, cvs.clientWidth); c.width = cvs.width; c.height = cvs.height; const x = c.getContext('2d'); x.filter = 'blur(' + (5 * k).toFixed(2) + 'px) saturate(1.15)'; x.drawImage(cvs, 0, 0); x.filter = 'none';
+  c.style.display = 'block'; $('end').style.backdropFilter = 'none'; $('end').style.webkitBackdropFilter = 'none'; ENDS.on = true; }
 // ---- house: floors, walls, slabs with stair + ladder holes, stairs, ladder, markers, hidden cat
 // rundown look (visual only): moss patches low on the walls and dark holes high up; more of both further out. side = 1 inside (marks on the inner wall faces), -1 outside
 const mixHex = (a, b, k) => { const ca = new THREE.Color(a), cb = new THREE.Color(b); return ca.lerp(cb, Math.max(0, Math.min(1, k))).getHex(); };
@@ -567,6 +576,9 @@ function startIntro() { gloomPreload(FILM_KINDS); bview.preChars();
   if (!CONFIG.opening.on) { startIntroOld(); return; }
   if (!save) return; clearScene(); dropWorld(); bview.dispose(); sim = null; ui = null; paused = false;
   if (save.day === 1 && !save.nights) save.scoutSpot = 4; // she is at your door when you wake
+  // (owner 11:40) the base is built now, under the film's opening black, and kept hidden (src/baseview.js, CONFIG.lag.keepBase; its shaders built in the background),
+  // so the dawn shot shows it without building it (it was built there, a 2 s frame); the loading page no longer builds it (the title came 12 s later)
+  if (CONFIG.lag.keepBase) { try { bview.build(save); applyRelief(bview.group); noSmallCasters(bview.group); bview.mergeStill(); if (renderer.compileAsync) renderer.compileAsync(bview.group, cam, scene).catch(() => {}); } catch (e) { /* built at the dawn shot instead */ } bview.dispose(); }
   const C = CONFIG.opening, G = C.grid; state = 'intro';
   $('menu').style.display = 'none'; $('hud').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; $('cineCap').textContent = ''; opLids(0);
   run = RUN.createRun(CONFIG, 0, C.seed, {}); scene.fog = DESO.on ? new THREE.Fog(CONFIG.desolate.over.fogColor, CONFIG.desolate.over.fogNear, CONFIG.desolate.over.fogFar) : new THREE.Fog(0xbfe6f0, 20, 80);
@@ -941,8 +953,8 @@ function openPanel(kind, after) {
     const a = b.dataset.a, id = b.dataset.id;
     if (a === 'take') { const q0 = save.quests.find((x) => x.id === +id); if (q0 && q0.giver && q0.type === 'deliver' && carry) flash('Your hands are full: deliver the crate you carry first.', true); else { const q = B.takePosting(save, id); if (q && q.giver && q.type === 'deliver') { carry = { questId: q.id, to: q.to }; save.carry = carry; flash('You take ' + B.NPCS[q.giver].name + '\'s crate. Bring it to ' + B.STATIONS[q.to].name + '.', true); } } }
     else if (a === 'hand') { const q = B.handIn(save, id); if (q) flash(B.NPCS[q.giver].name + '\'s posting handed in: ' + rew(q).slice(1, -1), true); }
-    else if (a === 'rec') { const g = B.recruit(CONFIG, save); flash(g.msg, true); if (g.ok) (bview.build(save), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); }
-    else if (a === 'role') { B.cycleRole(save, +id); (bview.build(save), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); }
+    else if (a === 'rec') { const g = B.recruit(CONFIG, save); flash(g.msg, true); if (g.ok) (bview.recruitsChanged(save), applyRelief(bview.group), noSmallCasters(bview.group), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); } // (owner 11:27) the recruits and the base life only
+    else if (a === 'role') { B.cycleRole(save, +id); (bview.recruitsChanged(save), applyRelief(bview.group), noSmallCasters(bview.group), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); }
     else if (a === 'buy') flash(B.startResearch(CONFIG, save, id).msg, true);
     else if (a === 'help') flash(B.helpResearch(CONFIG, save).msg, true);
     else if (a === 'egg') { flash(B.placeEgg(CONFIG, save).msg, true); bview.refreshAvians(); }
@@ -996,11 +1008,11 @@ const gfxPauseLabel = () => 'Graphics: ' + TIER + (TIER === 'medium' ? ' (defaul
 let gfxArm = 0; $('gfxT').textContent = 'Graphics: ' + TIER + (TIER === 'medium' ? ' (default)' : '') + ' - tap to switch'; $('gfxT').onclick = gfxGo;
 $('bGfx').textContent = gfxPauseLabel(); $('bGfx').addEventListener('click', () => { if (!gfxArm) { gfxArm = 1; $('bGfx').textContent = 'Switch to ' + GFX_OTHER + '? Reloads: this night ends. Tap again'; return; } gfxGo(); });
 GK.speak.fn = (kind, line, obj) => sfxVoice(kind, line, obj);
-$('watch').onclick = () => { if (paused) setPause(false); audio(); musicUnlock(); save = B.loadSave(CONFIG, storage); carry = save.carry || null; startIntro(); }; $('cineSkip').onclick = () => finishIntro();
+$('watch').onclick = () => { if (paused) setPause(false); audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = B.loadSave(CONFIG, storage); carry = save.carry || null; startIntro(); }; $('cineSkip').onclick = () => finishIntro();
 // a first-time player (no save yet) gets the opening from "Enter the base" too (coordinator Nov 17); ?film=0 in the address skips that for the scripted checks
 // the scripted checks always open the page with ?quality=..., so a ?quality address also skips it unless ?film=1 asks for it (openingcheck); the player's own Graphics switch (gfxGo) adds film=1 so a real player keeps the film and card
 const NOFILM = (() => { try { const q = new URLSearchParams(location.search); return q.get('film') === '0' || (q.has('quality') && q.get('film') !== '1'); } catch (e) { return false; } })();
-$('enter').onclick = () => { audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = !had && preSave ? preSave : B.loadSave(CONFIG, storage); preSave = null; carry = save.carry || null; persist(); if (!had && !NOFILM) { startIntro(); return; } enterBase(); };
+$('enter').onclick = () => { audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = B.loadSave(CONFIG, storage); carry = save.carry || null; persist(); if (!had && !NOFILM) { startIntro(); return; } enterBase(); };
 let resetArm = -1e9; // was 0: a first tap in the first 3 s after the page loaded counted as the second (erasing) tap
 $('reset').onclick = () => { if (performance.now() - resetArm > 3000) { resetArm = performance.now(); $('reset').textContent = 'Tap again to erase your save'; return; } save = B.newSave(CONFIG); B.makeQuests(CONFIG, save); carry = null; persist(); $('reset').textContent = 'New game'; if (paused) setPause(false); audio(); musicUnlock(); startIntro(); }; // a new game plays the opening first (skippable); it lands in the base with Marla at your door
 $('go').onclick = () => { audio(); startRun(); };
@@ -1275,7 +1287,6 @@ function musicUnlock() { if (mus.ready) return; mus.ready = true; try { mus.on =
 // ---- START FLOW (owner Nov 17 23:33 / 23:36; CONFIG.splash): the V logo, the DAWNPUNK title card, then the loading page with REAL progress (each stage is counted from actual
 // loads: the three.js loading manager for models and textures, the handwriting fonts, the music files, a shader compile of the scene), then the begin button #enter.
 // The scripted checks (?quality= in the address) skip the logo and title time unless &splash=1. window.__loadMs = milliseconds from navigation to the begin button.
-let preSave = null;
 const SPLASH = (() => {
   const S = CONFIG.splash, el = $('spl'), q = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })(), quick = q.has('quality') && q.get('splash') !== '1';
   const t0 = performance.now(), st = { scripts: [1, 1], assets: [0, 0], fonts: [0, 1], music: [0, 0], warm: [0, 1] }, began = {}, label = { scripts: 'Scripts', assets: 'Models and textures', fonts: 'Handwriting fonts', music: 'Music', warm: 'First scene (shaders)' };
@@ -1297,11 +1308,7 @@ const SPLASH = (() => {
   const frac = () => { const W = S.weights; let a = 0, b = 0; for (const k in W) { const [d, t] = st[k], f = t > 0 ? Math.min(1, d / t) : (k === 'assets' && (began.assetsDone || performance.now() - t0 > 1500) ? 1 : 0); a += W[k] * f; b += W[k]; } return a / b; };
   const tick = () => { const now = performance.now(), age = (now - t0) / 1000;
     for (const k in st) if (st[k][0] < st[k][1] && age > S.stageCap) st[k][0] = st[k][1];
-    // (owner 11:40) the base is built here, hidden, under the loading page (a first visit: for the new save made here, kept in preSave and used on Enter, Marla at the door
-    // as the film leaves her) (its shaders built with the warm-up), and shown again on Enter (src/baseview.js
-    // keeps it: CONFIG.lag.keepBase); the title is then drawn once more without it
-    if (!began.warm && (began.assetsDone || st.assets[1] === 0 || age > S.stageCap) && st.fonts[0] >= 1) { began.warm = true; requestAnimationFrame(() => { let pre = false; try { if (CONFIG.lag.keepBase && !BOTRUN()) { const sv = B.loadSave(CONFIG, storage); if (sv && firstVisit && sv.day === 1 && !sv.nights) sv.scoutSpot = 4; preSave = firstVisit ? sv : null; if (sv) { bview.build(sv); applyRelief(bview.group); noSmallCasters(bview.group); bview.mergeStill(); pre = true; } } } catch (e) { /* built on Enter instead */ }
-      try { renderer.compile(scene, cam); renderer.render(scene, cam); } catch (e) { /* nothing to warm */ } if (pre) bview.dispose(); pauseDrawn = false; st.warm = [1, 1]; }); }
+    if (!began.warm && (began.assetsDone || st.assets[1] === 0 || age > S.stageCap) && st.fonts[0] >= 1) { began.warm = true; requestAnimationFrame(() => { try { renderer.compile(scene, cam); renderer.render(scene, cam); } catch (e) { /* nothing to warm */ } st.warm = [1, 1]; }); }
     // (owner 11:40) the bar, the percent and the stage line are written only when they change
     const f = frac(); setText('spct', Math.floor(100 * f) + '%'); sty($('sfill'), 'width', (100 * f).toFixed(1) + '%');
     const cur = Object.keys(S.weights).find((k) => st[k][1] > 0 ? st[k][0] < st[k][1] : false) || (f < 1 ? 'assets' : ''); setText('sstage', f >= 1 ? 'Ready' : 'Loading: ' + label[cur] + (cur === 'assets' && st.assets[1] ? ' (' + st.assets[0] + ' of ' + st.assets[1] + ')' : cur === 'music' ? ' (' + st.music[0] + ' of ' + st.music[1] + ')' : ''));
@@ -1615,7 +1622,7 @@ function frame(now) {
   if (!paused && state !== 'end') for (let i = tracers.length - 1; i >= 0; i--) { tracers[i].t -= dt; if (tracers[i].t <= 0) { opDone(tracers[i].l); tracers.splice(i, 1); } }
   hurtT = Math.max(0, hurtT - dt); sty($('hurt'), 'opacity', String(hurtT * 2.5));
   tickHud(dt); tickAim(dt); tickCharge(dt);
-  sky.follow(cam, world ? world.g.rotation.y : 0, dt); draw();
+  sky.follow(cam, world ? world.g.rotation.y : 0, dt); draw(); endSnap();
   if (sim && run) tickDormant(sim.phase === 'night');
   if (sim && state === 'play') { hands.update(paused ? 0 : dt, Math.hypot(stick.x, stick.y) > 0.1 || keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD, sim.player.energy / CONFIG.player.energyCap, sim.phase === 'night'); (window.__noHands || holdDraw || hands.render(renderer, cam.aspect)); }
 }

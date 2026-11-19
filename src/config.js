@@ -1177,6 +1177,8 @@ export const CONFIG = {
     farStep: { dist: 15, hz: 5 },
     // keepBase: the base is built once and kept while you are out; a visit with nothing changed that the build reads from the save shows it again (src/baseview.js)
     keepBase: true,
+    // endSnap: the run-end screen's blur is made once from the held picture instead of blurring live every frame (src/main.js endSnap)
+    endSnap: true,
     // mergeBase: the base's still pieces drawn as one mesh per material and cell m of ground (src/baseview.js mergeStill); hidePad: extra m kept clear round the film's hidden plant
     mergeBase: { on: true, cell: 16, hidePad: 1.5 },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind

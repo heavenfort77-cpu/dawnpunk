@@ -115,6 +115,38 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     if (marla && scoutG) marla.whenReady(() => { if (!scoutG || !g.parent) return; shadowDirty = true; if (scoutG.userData.stand) scoutG.remove(scoutG.userData.stand); marla.root.position.set(0, 0, 0); marla.root.rotation.set(0, 0, 0); scoutG.add(marla.root); });
     refreshNpcs(); refreshHome(); refreshJournal(); refreshAvians();
   }
+  // the recruits' nodes (owner 11:27: also rebuilt alone, recruitsChanged)
+  // base life (src/basevillage.js) with what it adds kept apart (lifeKids: its groups in g; lifeObst: its boxes and circles), so it can be built again alone
+  let lifeKids = [], lifeObst = [], lifeGround = null;
+  function addLife() { const n0 = g.children.length, b0 = boxes.length, o0 = obst.length; life = buildBaseLife(g, cfg, HIBASE, save, lifeGround); if (life) { for (const q of life.solids) boxes.push(q); for (const [x, z, rr] of life.circles) circle(x, z, rr); }
+    lifeKids = g.children.slice(n0); lifeObst = [...boxes.slice(b0), ...obst.slice(o0)]; for (const c of lifeKids) c.userData.noMerge = true; }
+  // a recruit joined or changed role: only the recruits' nodes and the base life (where their plot houses stand) are built again, not the whole base. The base life is
+  // one merged build (every house, plot, sign and plant share a few meshes per material, one random stream and one sign texture with every name), so it is built
+  // again as a whole; the stations, rooms, scenery, hedge, Marla and the cats stay.
+  function recruitsChanged(sv) { if (!keptSig || !g.parent) { build(sv); return; } save = sv;
+    // freed as freeAll frees (every texture slot, shared and kept ones left), the recruits' labels taken off the label list
+    const dropT = (o) => { o.traverse((q) => { if (q.userData.keep) return; if (q.isLight && q.shadow && q.shadow.map) q.shadow.dispose(); if (q.geometry && !(q.geometry.userData && q.geometry.userData.shared)) q.geometry.dispose(); for (const m of q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []) { if (!m || (m.userData && m.userData.shared)) continue; for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && (t.userData.shared || t.userData.keep))) t.dispose(); } m.dispose(); } if (q.isSprite) { const i = LABELS.indexOf(q); if (i >= 0) LABELS.splice(i, 1); } }); };
+    for (const o of npcs) { if (o.ch && o.ch.root.parent === o.n) o.n.remove(o.ch.root); g.remove(o.n); dropT(o.n); } npcs.length = 0;
+    for (const c of lifeKids) { g.remove(c); dropT(c); } { const gone = new Set(lifeObst); for (const a of [boxes, obst]) { const k = a.filter((q) => !gone.has(q)); a.length = 0; a.push(...k); } }
+    startPlants(cfg, HIBASE); addLife(); addRecruits(buildN); shadowDirty = true; keptSig = keySig(sv);
+    // the shadow settings the build gives (see 'static shadows' in build): the base life casts and takes shadows, the recruits only take them
+    const rule = (o, cast) => { if (!o.isMesh || o === sky.mesh || o.isSkinnedMesh || o.userData.blob || o.userData.scenery) return; o.receiveShadow = !o.material.transparent; o.castShadow = cast && !o.material.transparent; };
+    for (const c of lifeKids) c.traverse((o) => rule(o, true)); for (const q of npcs) q.n.traverse((o) => rule(o, false)); }
+  function addRecruits(tok) {
+    for (const p of save.personnel) {
+      const n = new THREE.Group(), stand = new THREE.Group(), body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 1.2, 8), mat(ROLE_COL[p.role] || 0xaaaaaa)); body.position.y = 0.8; stand.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 6), mat(0xe0b890)); head.position.y = 1.65; stand.add(head); n.add(stand);
+      // every recruit is their own person: one of the nine recruit models (gen1..gen9) by the order they joined; a soft blob is their shadow as they walk
+      const key = 'gen' + cfg.base.recruitOrder[(p.id - 1) % Math.min(cfg.base.recruitModels, cfg.base.recruitOrder.length)], ch = makeChar ? (chars[key] || (chars[key] = makeChar(key))) : null;
+      // a person kept from the last build starts over (restart): the same motion as on a fresh page, whatever it did before
+      if (ch) ch.whenReady(() => { if (tok !== buildN) return; n.remove(stand); n.rotation.set(0, 0, 0); ch.root.position.set(0, 0, 0); if (ch.restart) ch.restart(); ch.root.traverse((o) => { o.castShadow = false; }); n.add(ch.root); });
+      { const bl = new THREE.Mesh(new THREE.CircleGeometry(0.42, 14), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })); bl.rotation.x = -Math.PI / 2; bl.position.y = 0.035; bl.userData.blob = true; n.add(bl); }
+      const lab = label(p.name + ' (' + p.role + ')', '#fff', 2.6); lab.position.y = 2.4; lab.userData.kind = 'npc'; n.add(lab);
+      const crate = bx(0.4, 0.3, 0.4, 0xb08a4a, 0, 1.05, 0.4, n); crate.visible = p.role === 'researcher';
+      const wp = p.role === 'hunter' && cfg.baseWater && cfg.baseWater.on && cfg.baseLife && cfg.baseLife.rounds ? [PATROL.hunter[0], PATROL.hunter[1], ...cfg.baseLife.rounds, PATROL.hunter[2], PATROL.hunter[3]] : PATROL[p.role] || PATROL.hunter, i = p.id % wp.length; n.position.set(wp[i][0], 0, wp[i][1]);
+      g.add(n); npcs.push({ n, p, wp, i, i0: i, crate, ch });
+    }
+  }
   function build(sv) {
     const sig = cfg.lag && cfg.lag.keepBase ? keySig(sv) : null; if (sig && sig === keptSig && g.children.length) { reuse(sv); return; }
     keptSig = null; const tok = ++buildN; // a model that finishes loading after this base is gone must not be pulled back into it (Marla is on the street then)
@@ -249,20 +281,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       const hl = label('Your home', '#ffe9a0'); hl.position.set(hx, 4.9, hz); hl.userData.kind = 'station'; g.add(hl);
       if (HIBASE) vaultHi(g, { x: hx, z: hz, w: 6.8, d: 4.4, h: 3, R: 2.45, k: 0.55, front: 1, open: true, door: [0, 2.4, 2.4] });
       homeCats = HOME.slots.map(() => ({ cg: null })); refreshHome(); }
-    // personnel
-    for (const p of save.personnel) {
-      const n = new THREE.Group(), stand = new THREE.Group(), body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 1.2, 8), mat(ROLE_COL[p.role] || 0xaaaaaa)); body.position.y = 0.8; stand.add(body);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 6), mat(0xe0b890)); head.position.y = 1.65; stand.add(head); n.add(stand);
-      // every recruit is their own person: one of the nine recruit models (gen1..gen9) by the order they joined; a soft blob is their shadow as they walk
-      const key = 'gen' + cfg.base.recruitOrder[(p.id - 1) % Math.min(cfg.base.recruitModels, cfg.base.recruitOrder.length)], ch = makeChar ? (chars[key] || (chars[key] = makeChar(key))) : null;
-      // a person kept from the last build starts over (restart): the same motion as on a fresh page, whatever it did before
-      if (ch) ch.whenReady(() => { if (tok !== buildN) return; n.remove(stand); n.rotation.set(0, 0, 0); ch.root.position.set(0, 0, 0); if (ch.restart) ch.restart(); ch.root.traverse((o) => { o.castShadow = false; }); n.add(ch.root); });
-      { const bl = new THREE.Mesh(new THREE.CircleGeometry(0.42, 14), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })); bl.rotation.x = -Math.PI / 2; bl.position.y = 0.035; bl.userData.blob = true; n.add(bl); }
-      const lab = label(p.name + ' (' + p.role + ')', '#fff', 2.6); lab.position.y = 2.4; lab.userData.kind = 'npc'; n.add(lab);
-      const crate = bx(0.4, 0.3, 0.4, 0xb08a4a, 0, 1.05, 0.4, n); crate.visible = p.role === 'researcher';
-      const wp = p.role === 'hunter' && cfg.baseWater && cfg.baseWater.on && cfg.baseLife && cfg.baseLife.rounds ? [PATROL.hunter[0], PATROL.hunter[1], ...cfg.baseLife.rounds, PATROL.hunter[2], PATROL.hunter[3]] : PATROL[p.role] || PATROL.hunter, i = p.id % wp.length; n.position.set(wp[i][0], 0, wp[i][1]);
-      g.add(n); npcs.push({ n, p, wp, i, i0: i, crate, ch });
-    }
+    // personnel (addRecruits)
+    addRecruits(tok);
     // the Scout (you have to look for him)
     const sp = scoutPos(save); scoutG = new THREE.Group();
     // Marla is the real character model; a simple stand-in shows only until the model has loaded
@@ -282,7 +302,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // the ambient village cats (CONFIG.villageCats): scenery only, never near a lucky-cat hideout, not part of any cat code
     if (cfg.villageCats && cfg.villageCats.on) vcats = createVillageCats(g, cfg, HIBASE, (save.seed || 1) + 4321);
     // base water and base life (src/basevillage.js): the stream and waterwheel, bridges, flumes, the villagers' houses, the recruits' plots and the set pieces; what you bump into joins the boxes and circles
-    life = buildBaseLife(g, cfg, HIBASE, save, ground); if (life) { for (const q of life.solids) boxes.push(q); for (const [x, z, rr] of life.circles) circle(x, z, rr); }
+    lifeGround = ground; addLife();
     for (let i = live0; i < g.children.length; i++) g.children[i].userData.noMerge = true;
     // sun
     const sun = new THREE.DirectionalLight(0xffe8c0, 1.9); sunL = sun; sun0 = sun.intensity; sun.position.set(-20, 30, -14); g.add(sun); g.add(sun.target);
@@ -491,5 +511,5 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   const meshCost = (roots) => { let meshes = 0, tris = 0; for (const r of roots) r.traverse((o) => { if (!o.isMesh) return; meshes++; const gq = o.geometry; tris += (gq.index ? gq.index.count : gq.attributes.position.count) / 3; }); return { meshes, tris: Math.round(tris) }; };
   const peek = () => ({ cost: { hatchery: hatch ? meshCost([hatch.group]) : null, birds: flock ? meshCost(flock.birds.map((b) => b.root)) : null, cats: vcats ? meshCost(vcats.cats.map((c) => c.root)) : null }, chars, npcG, npcs, scoutG, rooms: { WS, MH }, journal: jn && { ribbon: jn.ribbon.visible, glow: !!jn.glow.userData.show, at: jn.at }, avians: flock && { shown: flock.shown(), birds: flock.birds.map((b) => ({ id: b.id, kind: b.kind, st: b.st, x: b.x, z: b.z, gone: b.gone })), eveT, layout: AV }, vcats: vcats && vcats.cats.map((c) => ({ x: c.b.x, y: c.b.y, z: c.b.z, mode: c.b.mode, act: c.b.act })), life: life && { cost: life.cost, plots: life.plots, wheel: life.water ? life.water.angle() : null } });
   // preChars (owner 11:40): the villagers' models are made ahead (during the opening film), so the base's first build does not load and parse them in the dawn shot
-  return { mergeStill, free, get kept() { return keptSig !== null; }, preChars: () => { if (makeChar) for (const n of Object.values(NPCS)) if (!chars[n.id]) chars[n.id] = makeChar(n.id); }, setView: (c) => { viewCam = c; }, build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
+  return { recruitsChanged, mergeStill, free, get kept() { return keptSig !== null; }, preChars: () => { if (makeChar) for (const n of Object.values(NPCS)) if (!chars[n.id]) chars[n.id] = makeChar(n.id); }, setView: (c) => { viewCam = c; }, build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
 }
