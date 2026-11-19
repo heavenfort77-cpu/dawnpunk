@@ -47,6 +47,9 @@ loadBookFonts();
 const cvs = $('c');
 let renderer;
 try { renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: Q.smooth, stencil: !!(Q.fx && Q.fx.keepOut) }); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; renderer.shadowMap.autoUpdate = false; } catch (e) { document.body.insertAdjacentHTML('beforeend', '<div style="position:fixed;inset:0;z-index:99;background:#0b1020;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px">This game needs WebGL, which your browser could not start. Try another browser or turn on hardware acceleration.</div>'); throw e; }
+// LAG FIX Nov 19 (CPU profile of the night: 30 % of the time in getProgramInfoLog): three.js reads every shader's compile log after building it, which makes the page
+// wait for the driver. Players skip that read (CONFIG.lag.shaderLog); the scripted checks keep it so a broken shader still fails them (?cards=1 perf runs measure as a player)
+try { renderer.debug.checkShaderErrors = CONFIG.lag.shaderLog || (!!navigator.webdriver && new URLSearchParams(location.search).get('cards') !== '1'); } catch (e) { /* keep the default */ }
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, Q.pixelRatio)); setGpuAniso(renderer.capabilities.getMaxAnisotropy()); if (CONFIG.render.tone) { renderer.toneMapping = THREE.AgXToneMapping; renderer.toneMappingExposure = CONFIG.render.exposure; }
 const hands = createHands(CONFIG);
 const scene = new THREE.Scene();
@@ -1156,7 +1159,7 @@ setShotTier(QUALITY);
 // builder's head nodes (each Ticks unit has its own screen); when they hold most of the machine (the Warden's turning torso), whatever is hit in its top live.headTop m
 const LVR = new THREE.Raycaster(), LVO = new THREE.Vector3(), LVD = new THREE.Vector3(), LVB = new THREE.Box3();
 // the phone-tier machines' merged pieces stay as invisible hit shapes on HIT_LAYER (src/mergestatic.js): the aimed shot still sees them, and skips the merged draw mesh
-LVR.layers.enable(HIT_LAYER);
+LVR.layers.enable(HIT_LAYER); LVR.layers.enable(1);
 // LAG FIX Nov 19: the hit test always uses the full meshes, also for a machine drawn with its far copy (src/lod.js lodFull)
 function drawnHit(m, P) { const back = lodFull(m); try { return drawnHit0(m, P); } finally { if (back) back(); } }
 function drawnHit0(m, P) { const L = CONFIG.cannon.live, headSet = new Set(); for (const h of m.userData.heads || [m.userData.head]) if (h) h.traverse((q) => headSet.add(q));
@@ -1409,8 +1412,10 @@ function frame(now) {
       let m = gMesh.get(g.id); if (!m) { m = gloomMesh(g); if (QUALITY === 'low' && m.userData.anim) mergeQ.push([m, g.x, g.z]); shadeUnder(m, CONFIG.depth.gloom * (gloomKind(g) === 'warden' ? 1.8 : gloomKind(g) === 'hauler' ? 1.4 : gloomKind(g) === 'ticks' ? 0.8 : 1)); scene.add(m); gMesh.set(g.id, m); }
       // the height it is drawn at comes from the sim (src/sim.js gloomY), so the aimed shot aims where the model stands
       const gy = sim.gloomY(g);
-      // LAG FIX Nov 19 (owner 07:10): at night in a house a machine outside that no opening shows is neither drawn nor animated (src/nightcull.js sees; CONFIG.lag.nightCull.gloomR)
-      m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; m.visible = nightCull.sees(g.x, gy + CONFIG.lag.nightCull.gloomY, g.z, CONFIG.lag.nightCull.gloomR, sim, cam); if (!m.visible) continue;
+      // LAG FIX Nov 19 (owner 07:10): at night in a house a machine outside that no opening shows is not drawn (src/nightcull.js sees; CONFIG.lag.nightCull.gloomR);
+      // it stays visible and animated (the aimed shot tests the model as posed, src/main.js drawnHit, so the rules see exactly what they saw before); only its draws move to
+      // layer 1, which the camera does not draw (pieces already on the hit layer stay there)
+      m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; { const L = nightCull.sees(g.x, gy + CONFIG.lag.nightCull.gloomY, g.z, CONFIG.lag.nightCull.gloomR, sim, cam) ? 0 : 1; if ((m.userData.cullL || 0) !== L) { m.userData.cullL = L; m.traverse((q) => { if (!q.userData.hitOnly) q.layers.set(L); }); } }
       if (m.userData.anim) m.userData.anim(performance.now() / 1000, g); else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
     }
     // phone tier: a new machine's still pieces are merged a few machines a frame (CONFIG.lag.mergeGloom.perFrame); the probe poses use times before 0 (no caption line starts)

@@ -472,7 +472,7 @@ let HB = null; const hiB = () => HB || (HB = hiBuilders({ ptex, grp, glow, halo,
 const pick = (kind, deso, old) => (b, K, f) => (DESO.machines ? (HIGLOOM ? hiB()[kind] : deso) : old)(b, K, f);
 const BUILD = { walker: pick('walker', walkerDeso, (b, K, face) => walker(b, K, face, true)), walkerFrame: walkerGrit, lurcher: pick('lurcher', lurcherDeso, lurcher), hauler: pick('hauler', haulerDeso, hauler), stilt: pick('stilt', stiltDeso, stilt), lantern: pick('lantern', lanternDeso, lantern), ticks: pick('ticks', ticksDeso, ticks), warden: pick('warden', wardenDeso, warden), walker2: (b, K, face) => walker(b, K, face, true) }, talk = { until: 0 };
 // triangles in one machine (for the budget check)
-export function gloomTris(kind) { const g = gloomMachine(kind); let n = 0; g.traverse((o) => { if (o.isMesh) n += (o.geometry.index ? o.geometry.index.count / 3 : o.geometry.attributes.position.count / 3) * (o.isInstancedMesh ? o.count : 1); }); g.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); return Math.round(n); }
+export function gloomTris(kind) { const g = gloomMachine(kind); let n = 0; g.traverse((o) => { if (o.isMesh && !o.userData.hitOnly) n += (o.geometry.index ? o.geometry.index.count / 3 : o.geometry.attributes.position.count / 3) * (o.isInstancedMesh ? o.count : 1); }); g.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); return Math.round(n); }
 
 // One machine. opts.dormant: the daytime kind (black screen, limp, a jerk now and then; it says nothing).
 // at night the worn metal gets a faint cold sheen so a dark frame still reads against a dark room (k = 0 by day, 1 at night)

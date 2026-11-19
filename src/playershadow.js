@@ -125,7 +125,8 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   // left out: the feet are taken from the view (eye height 1.6 m). With a floor the body always stands on it, so it never sinks into a floor or floats while the view eases after the stairs or a drop.
   let hang = false, feet = 0, blobOn = false;
   api.tick = (cam, on, floorY) => {
-    const now = performance.now(), dt = Math.min(window.__dtMax || 0.1, (now - last) / 1000); last = now; t += dt;
+    // the same longest step as the game's own frame (CONFIG.lag.dtMax, LAG FIX Nov 19), so the body's walk speed matches the view's after a long frame
+    const now = performance.now(), dt = Math.min(window.__dtMax || CONFIG.lag.dtMax, (now - last) / 1000); last = now; t += dt;
     want = !!on; lastCam = cam; hang = floorY === null; const eyeFeet = cam.position.y - EYE, x = cam.position.x, y = typeof floorY === 'number' ? floorY : eyeFeet, z = cam.position.z, yaw = cam.rotation.y, pitch = cam.rotation.x; feet = y;
     // the blob lies on the floor, and only while the view has settled over it (not on the ladder, not mid-way after the stairs or a drop)
     if (blob) { blobOn = want && !hang && Math.abs(eyeFeet - y) <= C.blob.settle; blob.visible = blobOn; if (blobOn) { blob.position.set(x, y + C.blob.lift, z); blob.rotation.set(-Math.PI / 2, yaw, 0); } }
