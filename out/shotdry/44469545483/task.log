@@ -1,0 +1,28 @@
+$ mkdir -p shots && for s in title base street house gloom boss; do SCALE=0.5 node tools/itchshot.cjs $s shots/ 2>&1 | grep -E "wrote|INFO .*(not all|still up)|Error|FAIL" | tail -6; done   (limit 45 min)
+INFO wrote title_card.png and title_alpha.png
+INFO wrote shots/base_4.png (249 s) cam 7.61,1.60,-9.22 yaw -0.629 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+INFO wrote shots/base_5.png (285 s) cam 11.86,1.60,-6.67 yaw 0.219 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+INFO wrote shots/base_6.png (326 s) cam 16.00,1.61,-9.00 yaw 0.785 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+INFO wrote shots/base_7.png (358 s) cam 10.60,1.62,-11.25 yaw -0.427 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+INFO wrote shots/base_8.png (390 s) cam 7.00,1.62,-8.00 yaw -0.512 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+INFO wrote shots/base_9.png (424 s) cam 6.47,1.62,-6.52 yaw -0.507 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · next ride: ring 1 (3 of 5 open) · Next recruit: 23/30 food" time="" hs=""
+INFO wrote shots/street_2.png (505 s) cam 12.50,1.60,0.80 yaw -0.765 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+INFO wrote shots/street_3.png (549 s) cam 10.00,1.60,-1.50 yaw -0.496 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+INFO wrote shots/street_4.png (601 s) cam -15.71,1.60,0.80 yaw 0.843 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+INFO wrote shots/street_5.png (656 s) cam -13.21,1.60,-1.50 yaw 0.616 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+INFO wrote shots/street_6.png (712 s) cam -5.89,1.60,0.80 yaw 0.777 | HUD marla="" csay="" msg="" bprompt="Walk in the door: 9 food, 6 essentials inside · 14 openings to guard · 2 floors" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+INFO wrote shots/street_7.png (764 s) cam -3.39,1.60,-1.50 yaw 0.514 | HUD marla="" csay="" msg="" bprompt="Walk in the door: 9 food, 6 essentials inside · 14 openings to guard · 2 floors" bstat="" time="DAYLIGHT LEFT 3h 40m" hs=""
+INFO wrote shots/house_02.png (274 s) cam 0.96,1.60,-2.68 yaw -0.275 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+INFO wrote shots/house_03.png (307 s) cam 1.36,1.60,-1.08 yaw -0.116 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+INFO wrote shots/house_10.png (356 s) cam 1.96,1.60,-1.88 yaw 0.000 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+INFO wrote shots/house_11.png (391 s) cam 2.96,1.60,-2.68 yaw 0.275 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+INFO wrote shots/house_12.png (420 s) cam 0.96,1.60,-2.68 yaw -0.275 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+INFO wrote shots/house_13.png (452 s) cam 1.36,1.60,-1.08 yaw -0.116 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+INFO wrote shots/gloom_0.png (217 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="Company on your left. Do not make it weird." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 00m" hs=""
+INFO wrote shots/gloom_1.png (321 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="Use the panels. That is their job." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs="HEADSHOT x2"
+INFO wrote shots/gloom_2.png (420 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="I am not carrying you home twice." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 30m" hs="HEADSHOT x2"
+INFO wrote shots/gloom_3.png (500 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="That one was free. Duck, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 20m" hs="HEADSHOT x2"
+INFO wrote shots/gloom_4.png (562 s) cam -2.68,1.60,-5.20 yaw -0.949 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 10m" hs=""
+INFO wrote shots/gloom_5.png (612 s) cam -2.68,1.60,-5.20 yaw -0.949 | HUD marla="I am not carrying you home twice." csay="" msg="" bprompt="" bstat="" time="DAWN IN 9h 50m" hs="HEADSHOT x2"
+TIMED OUT after 45 min
+exit code 124
