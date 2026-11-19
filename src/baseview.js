@@ -553,7 +553,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       if (Math.hypot(px - AV.inc[0], pz - AV.inc[1]) < R + 0.4) { target = { kind: 'incubator' }; prompt = F.held > 0 ? 'USE: put an egg in the warm dome (you hold ' + F.held + ')' : 'USE: look at the incubator'; } }
     if (jn && inRoom(MH, px, pz) && Math.hypot(px - jn.at[0], pz - jn.at[1]) < cfg.marlaHouse.read) { target = { kind: 'mjournal' }; prompt = "USE: read Marla's journal (private)"; }
     const sp = scoutG.position; if (Math.hypot(px - sp.x, pz - sp.z) < 2.6) { target = { kind: 'scout' }; prompt = 'USE: talk to Marla, the Scout'; }
-    let catDist = 1e9; for (const o of hiddenCats) { if (!o.cg.visible) continue; const d = Math.hypot(px - o.cg.position.x, pz - o.cg.position.z); if (d < catDist) catDist = d; if (d <= cfg.cat.baseRadius) target = { kind: 'cat', id: o.c.id }; }
+    // (worker 7, guidecheck 44529552521) within Marla's talk range USE talks to her: a hidden cat by the wind tower (spot 3) is 1.7 m from where you stand to talk on day 1 and took the USE; the cat is still found from its own side
+    let catDist = 1e9; for (const o of hiddenCats) { if (!o.cg.visible) continue; const d = Math.hypot(px - o.cg.position.x, pz - o.cg.position.z); if (d < catDist) catDist = d; if (d <= cfg.cat.baseRadius && !(target && target.kind === 'scout')) target = { kind: 'cat', id: o.c.id }; }
     { let k = yawChk(scoutG, 0); for (const id in NPCS) k = yawChk(chars[id] && chars[id].root, k); } // a figure that has turned gets its shadow drawn again (no list made each frame: owner 11:27)
     const shadow = shadowDirty; shadowDirty = false; // a model that has just arrived must get into the (static) shadow map
     // deck: height of a footbridge deck under you (your view rides over it); water: how far the stream and the wheel are; indoor: inside a room or your home (the water sound is muffled there)

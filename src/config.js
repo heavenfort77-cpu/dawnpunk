@@ -800,6 +800,8 @@ export const CONFIG = {
     topY: [0.55, 1.25],
     // board: the pinboard [width, height, thickness] (m), its height above the floor (m), its gap from the wall face (m); doorKeep: least distance (m) from a door on the same wall line
     board: [0.62, 0.46, 0.025], boardY: 1.45, boardGap: 0.01, doorKeep: 2.6,
+    // stairKeep: least distance (m) from the ground floor's ladder foot or stair foot (sim zoneRadius 0.7 markers climb when stepped on); reading spots 1.1 m in front stay off them
+    stairKeep: 2.0,
     // paper: the note's size [width, depth] (m); glint: [size m, least, most opacity, pulses per second]
     paper: [0.21, 0.15], glint: [0.16, 0.12, 0.55, 0.6],
     // reach: how close (m) you must be to read it; aimCos: how straight you must look at it (cosine; within 0.9 m you need only face it roughly, nearCos)
@@ -1133,6 +1135,8 @@ export const CONFIG = {
     nightBg: { on: false, ms: 6 },
     // crossWarm (R4 worker 6, Card 40): the crosshair's Gloom state is drawn first under each loading card (its drop-shadow filters cost 226 ms of GPU raster the first time)
     crossWarm: true,
+    // glbDefer (R4 worker 6): a model that finishes loading while the film or play is shown gets its pictures and shaders prepared at the next held time (card, film black, title)
+    glbDefer: true,
     // bossFreeze (R4 worker 5): the desktop boss model's still parts leave the per-frame matrix pass (src/bosshi.js buildGlb)
     bossFreeze: true,
     // skipCard (R4 worker 5): the film skipped before its base part shows the home card while the base's first frames are made
