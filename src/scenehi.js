@@ -365,7 +365,9 @@ function pond(parent, p, r, sun) {
 
 // ---------------------------------------------------------------- THE STREET (desolate houses stay desolate; nature takes the street back)
 // o: { g (world group), run, cfg, M (world materials), sprays [[group, x, y, z, size]], free(x, z, pad), onPath(x, z), X0, RZ, inner (where the footway ends, from the road middle), tufts (crack and slab-gap weed spots) }
-export function streetScenery(o) {
+// (LAG FIX Nov 19, owner 13:10) streetSceneryIter stops (yield) between its parts so the film builds the street in time slices; streetScenery runs it at once
+export function streetScenery(o) { const it = streetSceneryIter(o); for (;;) { const q = it.next(); if (q.done) return q.value; } }
+export function* streetSceneryIter(o) {
   const C = S(), T = C.street, grp = new THREE.Group(), r = rng((o.run.seed || 1) * 7 + 99), sun = V(-0.45, 0.75, -0.5).normalize(), stat = {}; grp.userData.scenery = true; o.g.add(grp); freeOnRemove(grp);
   if (o.M.grass) o.M.grass.color.setHex(T.ground);
   // the tree and bush crowns: every leaf spray of world.js becomes a leaf cluster (the picture cards and the single leaves go)
@@ -379,26 +381,33 @@ export function streetScenery(o) {
   let ti = 0; for (const [, list] of byTree) { const cc = list.reduce((a, q) => a.add(q[0]), V(0, 0, 0)).multiplyScalar(1 / list.length), cr = Math.max(1, ...list.map((q) => q[0].distanceTo(cc) + q[1] * 0.45)), pal = C.palettes.street[(ti++ * 7 + Math.floor(r() * 3)) % C.palettes.street.length];
     // a crown of separate leaf clumps with sky between them (owner's coordinator, 18:50: the round crowns read as foam balls and lollipops): every spray becomes clumpsPer
     // small clumps scattered round it, a few loose clumps hang between the sprays, and twigs, seen through the gaps, tie the clumps to the limbs
+    yield;
     const clumps = [];
     for (const [c, s] of list) { const rr = s * T.sprayR; for (let k = 0; k < T.clumpsPer; k++) { const d = V(r() - 0.5, (r() - 0.5) * 0.7, r() - 0.5).normalize().multiplyScalar(rr * (0.35 + 0.75 * r())); clumps.push([c.clone().add(d), rr * T.clumpR * (0.6 + 0.6 * r()), c]); } }
     for (let k = 0, n = Math.round(list.length * T.looseClumps); k < n; k++) { const a = list[Math.floor(r() * list.length)][0], b = list[Math.floor(r() * list.length)][0], t = r(); const p = a.clone().lerp(b, t).add(V((r() - 0.5) * 1.2, (r() - 0.3) * 0.8, (r() - 0.5) * 1.2)); clumps.push([p, T.clumpR * (0.25 + 0.3 * r()), list.reduce((m, q) => (q[0].distanceTo(p) < m.distanceTo(p) ? q[0] : m), list[0][0])]); }
     // clumps: leaves through the whole clump (no solid core), so each clump is a loose leafy cluster with light through it; short twigs run from the limb end (the spray, where world.js ends a limb) out to a share of the clumps
-    for (const [c, rr, at] of clumps) { blob(fol, c, rr, rr * 0.7, rr, { r, crown: cc, crownR: cr, sun, pal, leaf: T.leaf, lower: 0.6, cover: C.foliage.cover * T.clumpCover, core: false, fill: true });
+    for (const [c, rr, at] of clumps) { yield; blob(fol, c, rr, rr * 0.7, rr, { r, crown: cc, crownR: cr, sun, pal, leaf: T.leaf, lower: 0.6, cover: C.foliage.cover * T.clumpCover, core: false, fill: true });
       if (r() < T.branchShare && at.distanceTo(c) > rr) branch(at.clone().lerp(c, -0.15), c, 0.03, 0.012); } }
   // shrubs between the houses and along the plot edges (low, below the window sills; never on a door path)
   for (let k = 0, n = 0; k < T.shrubs * 6 && n < T.shrubs; k++) { const x = (r() * 2 - 1) * (o.X0 - 4), sd = r() < 0.5 ? -1 : 1, z = sd * (o.inner + 0.8 + r() * (o.cfg.town.boundZ - 2)); if (!o.free(x, z, 1.6) || o.onPath(x, z) || (o.run.cars || []).some((c) => Math.hypot(c.x - x, c.z - z) < 3)) continue; n++;
+    yield;
     const s = T.shrubSize * (0.7 + 0.6 * r()); for (let q = 0; q < 3; q++) blob(fol, V(x + (r() - 0.5) * s, s * (0.45 + 0.2 * q), z + (r() - 0.5) * s), s * (0.65 - 0.1 * q), s * 0.5, s * (0.6 - 0.1 * q), { r, sun, pal: C.palettes.shrub[q & 1], leaf: C.foliage.shrubLeaf, lower: 0.2 }); }
   // woods round the town: trees behind the plots and across both road ends (the road's own end stays open a little), larger leaves (seen from 6 m and more behind the bounds)
   // their own meshes without the street's fog (by day it hides everything past 80 m); the haze is baked into their colours by distance from the playable street instead, like the far hills
+  yield;
   const bark = Bake(T.cell), wf = Bake(T.cell), BZ = o.cfg.town.boundZ, BX = o.cfg.town.boundX, WX = o.X0 + T.farGap - 2, WZ = BZ + T.farGap - 2;
   // tall (crowns 9-13 m up, so they show over the roofs), first behind the plots on both sides, then across both road ends where the street looks out
   const wood = (x, z) => { const s = 0.8 + 0.6 * r(); tree(bark, wf, x, z, { r, h: 2.2 * s + 1.0, R: 4.6 * s, lean: 1, pal: C.palettes.tree[Math.floor(r() * C.palettes.tree.length)], sun, blobs: 6, leaf: T.woodsLeaf, cover: C.foliage.cover * 0.75 }); };
   for (let k = 0, n = 0; k < T.woods * 10 && n < T.woods; k++) { const x = (r() * 2 - 1) * WX, z = (r() < 0.5 ? -1 : 1) * (BZ + 6 + r() * (WZ - BZ - 6)); if (fbm(x * 0.04 + 5, z * 0.04 - 2) < 0.3) continue; n++; wood(x, z); }
+  yield;
   for (const sd of [-1, 1]) for (let k = 0, n = 0; k < T.woodsEnd * 10 && n < T.woodsEnd; k++) { const x = sd * (o.X0 + 3 + r() * (WX - o.X0 - 3)), z = (r() * 2 - 1) * (BZ + 6); if (Math.abs(z) < o.RZ + 4 && Math.abs(x) < o.X0 + T.roadOpen) continue; n++; wood(x, z); }
+  yield;
   { const hz = new THREE.Color(C.sky.horizon); const haze = (cl, i, x, y, z) => { const k = Math.min(T.woodsHazeMax, T.woodsHaze * Math.hypot(Math.max(0, Math.abs(x) - BX), Math.max(0, Math.abs(z) - BZ))); cl[i] += (hz.r - cl[i]) * k; cl[i + 1] += (hz.g - cl[i + 1]) * k; cl[i + 2] += (hz.b - cl[i + 2]) * k; };
     wf.each(haze); bark.each(haze); }
+  yield;
   stat.branchTris = brB.meshes(solidMat(0.9), grp, { cast: true }); stat.leafTris = fol.meshes(leafMat(), grp, { cast: true, tick: true }); stat.woodsTris = wf.meshes(leafMat({ fog: false }), grp, { cast: false, tick: true }); stat.barkTris = bark.meshes(solidMat(0.9, { fog: false }), grp, { cast: false });
   // the ground: the world's flat grass plane becomes a mottled one (patches of deep and light green and dry straw); it keeps its texture and size
+  yield;
   { let gp = null; o.g.traverse((q) => { if (!gp && q.isMesh && q.material === o.M.grass && q.geometry.parameters && q.geometry.parameters.width >= 2 * o.cfg.town.boundX + 80) gp = q; });
     if (gp) stat.ground = mottle(gp, gp.geometry.parameters.width, gp.geometry.parameters.height, 5); }
   // the meadow: verges, lawns and plots in long grass and wildflowers; weeds and flowers in the footway gaps and the road cracks
@@ -406,11 +415,14 @@ export function streetScenery(o) {
   const dens = (x, z) => { const az = Math.abs(z); if (carAt(x, z)) return 0; if (az < o.RZ - 0.15) return 0; if (az < inner) return C.grass.density * T.edge; if (!o.free(x, z, 0.35)) return 0; if (o.onPath(x, z)) return C.grass.density * 0.12; return C.grass.density * T.verge; };
   const height = (x, z) => { const az = Math.abs(z); return az < inner ? T.tall * 0.45 : T.tall * (0.7 + 0.6 * fbm(x * 0.06, z * 0.06)); };
   const flower = (x, z) => Math.max(0, Math.min(1, T.flowers * (0.3 + 1.5 * fbm(x * 0.05 + 13, z * 0.05 - 6))));
+  yield;
   const gm = plantMat(C.grass.sway), m1 = meadow(grp, { x0: -o.X0 - 4, z0: -(o.cfg.town.boundZ + 8), x1: o.X0 + 4, z1: o.cfg.town.boundZ + 8, seed: (o.run.seed || 1) + 5, density: dens, height, flower, mat: gm, chunk: T.chunk, near: T.near, far: T.far });
   stat.meadow = m1.n; stat.grassTris = m1.tris; stat.grassDraws = m1.draws;
   // weeds and flowers in the road cracks and slab gaps (the world's own weed spots)
+  yield;
   stat.cracks = scatter(grp, (o.tufts || []).filter(([x, z]) => !carAt(x, z)).map(([x, z, sz]) => [x, z, 0.15 + 0.25 * sz, r() < T.crackFlowers ? 1 + Math.floor(r() * 3) : 0]), gm, r, 0.02);
   // the far world round the town: hills and woods, more of the old town's roofs, our solar masts on the far hills (no fog: the street's day fog is short; the haze is baked)
+  yield;
   stat.far = horizon(grp, { seed: (o.run.seed || 1) + 31, cx: 0, cz: 0, rx: o.X0 + T.farGap, rz: o.cfg.town.boundZ + T.farGap, depth: T.farDepth, height: T.farH, haze: C.sky.horizon, hazeK: 0.9, fog: false, trees: T.farTrees, roofs: T.roofs, roofAt: PI * 0.5, masts: T.masts, mastAt: -PI * 0.5 });
   grp.traverse((q) => { q.userData.scenery = true; });
   grp.userData.stat = stat; window.__scenery = { where: 'street', stat, grp };

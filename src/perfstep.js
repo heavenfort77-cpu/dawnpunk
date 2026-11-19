@@ -13,6 +13,7 @@ export function createPerfStep(o) {
   let acc = 0, n = 0, slow = 0, settle = S ? S.settle : 0, level = 0;
   const state = { on, level: 0, taken: [], lastAvg: 0 };
   try { window.__perfStep = state; } catch (e) { /* no window */ }
+  function dropLights() { const L = o.lights; for (const l of L.slice(S.lights)) { l.intensity = 0; if (l.parent) l.parent.remove(l); } L.length = Math.min(L.length, S.lights); state.pendingLights = false; }
   function apply(k) {
     const R = o.renderer;
     if (k === 'ratio') { R.setPixelRatio(Math.min(window.devicePixelRatio || 1, S.ratio)); o.resize(); }
@@ -20,7 +21,9 @@ export function createPerfStep(o) {
     else if (k === 'shadow') { Q.shadowMap = Math.min(Q.shadowMap, S.shadow); Q.baseShadowMap = Math.min(Q.baseShadowMap, S.shadow);
       o.scene.traverse((l) => { if (!l.isDirectionalLight || !l.castShadow || l.name === 'playerShadowLight' || l.shadow.mapSize.x <= S.shadow) return; const k2 = l.shadow.mapSize.x / S.shadow; l.shadow.mapSize.set(S.shadow, S.shadow); l.shadow.radius = Math.max(1, l.shadow.radius / k2); if (l.shadow.map) { l.shadow.map.dispose(); l.shadow.map = null; } });
       R.shadowMap.needsUpdate = true; }
-    else if (k === 'lights') { const L = o.lights; for (const l of L.slice(S.lights)) { l.intensity = 0; if (l.parent) l.parent.remove(l); } L.length = Math.min(L.length, S.lights); }
+    // (owner 13:10, premortem D) fewer lights changes every lit shader (the light count is part of it), so during play it waits for the next loading card, where the
+    // shaders are built anyway (flush, src/main.js sceneCard); the light count stays fixed while you play
+    else if (k === 'lights') { if (o.playing && o.playing()) { state.pendingLights = true; } else dropLights(); }
     state.taken.push(k); state.level = ++level;
   }
   return { state,
@@ -36,5 +39,7 @@ export function createPerfStep(o) {
     // a new scene has started (its first frames compile shaders and upload textures): wait before measuring again
     rest() { settle = Math.max(settle, S.settle); acc = 0; n = 0; slow = 0; },
     // the checks: take the next step now
-    force() { if (level < S.order.length) apply(S.order[level]); return state; } };
+    force() { if (level < S.order.length) apply(S.order[level]); return state; },
+    // a loading card is up: a light step waiting since play is taken now
+    flush() { if (state.pendingLights) dropLights(); } };
 }

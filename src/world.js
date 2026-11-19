@@ -33,7 +33,11 @@ function tbox(w, h, d, mats, tile, ox, oy, oz) {
 }
 function scaleUV(g, k) { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * k, uv.getY(i) * k); return g; }
 
-export function buildWorld(cfg, run) {
+// LAG FIX Nov 19 (owner 13:10, the film's 1.2 s start frame: "blob < streetScenery < finish < buildWorld < needWorld < startIntro"): the street is built by a generator
+// that stops (yield) between its parts (each house, each car, the scenery's crowns and fields, every 50 pieces of the merge, each merged mesh), so the film can
+// build it in time slices under its black (src/main.js filmPrep); buildWorld runs it to the end at once, as before.
+export function buildWorld(cfg, run) { const it = buildWorldIter(cfg, run); for (;;) { const r = it.next(); if (r.done) return r.value; } }
+export function* buildWorldIter(cfg, run) {
   const W = cfg.world, T = cfg.town, g = new THREE.Group(), R = rng(run.seed ^ 0x51ed), wear = run.ring / 4;
   const lam = (o) => new THREE.MeshLambertMaterial(o);
   const M = {
@@ -237,6 +241,7 @@ export function buildWorld(cfg, run) {
     g.add(hg); houses.push(hg);
     // worn dirt path from the road to the door
     const pz = (h.doorZ + 0) / 2; plane(1.7, Math.abs(h.doorZ) - 3.2, M.dirt, h.doorX, 0.02, Math.sign(h.doorZ) * (3.4 + (Math.abs(h.doorZ) - 3.2) / 2), 2.5);
+    yield;
   }
 
   // ---------------------------------------------------------------- overgrowth: tufts everywhere, bushes, trees
@@ -262,6 +267,7 @@ export function buildWorld(cfg, run) {
     for (const a of by.values()) { const im = new THREE.InstancedMesh(tg, tufts.material, a.length); for (let i = 0; i < a.length; i++) im.setMatrixAt(i, a[i]); im.receiveShadow = true; im.userData.scenery = true; im.computeBoundingSphere(); add(im); tuftParts.push(im); }
     tufts.dispose(); } }
   // a tree: leaning trunk, real branches, and a crown made of many leaf sprays on twigs (not one green ball)
+  yield;
   const RL = rng(((run.seed || 1) ^ 0x1eaf) >>> 0);
   // high graphics tier: leafMore smaller extra cards round each spray (own random stream, so nothing else moves)
   const spray = (p, x, y, z, s, dark) => { for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(new THREE.PlaneGeometry(s, s), dark ? M.canopyDark : M.canopy); c.position.set(x, y, z); c.rotation.set((R() - 0.5) * 1.2, R() * Math.PI + k * 1.05, (R() - 0.5) * 0.8); p.add(c); }
@@ -291,6 +297,7 @@ export function buildWorld(cfg, run) {
   for (let k = 0, n = 0; k < 80 && n < W.trees; k++) { const x = (R() * 2 - 1) * (T.boundX + 10), z = (R() * 2 - 1) * (T.boundZ + 10); if (Math.abs(z) < 5 || Math.hypot(x - cfg.marla.guide.x, z - cfg.marla.guide.z) < 3 || !free(x, z, 2.5) || run.cars.some((c) => Math.hypot(c.x - x, c.z - z) < 3) || run.houses.some((h) => Math.abs(x - h.doorX) < 2.5 && Math.sign(z) === Math.sign(h.doorZ) && Math.abs(z) < Math.abs(h.doorZ) + 1)) continue; treeAt(x, z, 0.8 + 0.9 * R()); n++; }
   for (let k = 0, n = 0; k < 120 && n < W.bushes; k++) { const x = (R() * 2 - 1) * (T.boundX + 10), z = (R() * 2 - 1) * (T.boundZ + 10); if (Math.abs(z) < 3.6 || !free(x, z, 0.6) || run.houses.some((h) => Math.abs(x - h.doorX) < 1.6 && Math.sign(z) === Math.sign(h.doorZ) && Math.abs(z) < Math.abs(h.doorZ) + 1)) continue;
     const bg = new THREE.Group(), s2 = 0.8 + 0.8 * R(); for (let q = 0; q < 3; q++) spray(bg, (R() - 0.5) * 0.7 * s2, (0.35 + 0.35 * q) * s2, (R() - 0.5) * 0.7 * s2, (1.3 - 0.2 * q) * s2, q === 0); bg.position.set(x, 0, z); bg.userData.tint = hslc(0.18 + 0.16 * R(), 0.3 + 0.3 * R(), 0.62 + 0.3 * R()); add(bg); n++; }
+  yield;
   // ---------------------------------------------------------------- abandoned cars: each with its own paint, rust and damage
   const PAINT = ['#b23a2e', '#2f5d8a', '#d8d2c0', '#3f6b4a', '#c9a227', '#5a5a5e'];
   const PROF = [[[-2.1, 0.35], [-2.1, 0.85], [-1.5, 0.95], [-0.9, 1.45], [0.6, 1.45], [1.2, 0.95], [2.1, 0.85], [2.1, 0.35]], [[-2.2, 0.35], [-2.2, 1.9], [1.3, 1.9], [1.9, 1.2], [2.2, 1.1], [2.2, 0.35]], [[-2.3, 0.35], [-2.3, 0.95], [-0.3, 0.95], [-0.3, 1.6], [0.9, 1.6], [1.4, 1.0], [2.3, 0.9], [2.3, 0.35]]];
@@ -365,9 +372,12 @@ export function buildWorld(cfg, run) {
     for (let k = 0; k < (CC.green ? 9 : c.cond === 0 ? 0 : 2 + Math.round(4 * c.rust)); k++) { const t = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.0), M.tuft), a = r() * 6.28; t.position.set(c.x + Math.cos(a) * 1.6, 0.5, c.z + Math.sin(a) * 1.6); t.rotation.y = r() * 3; add(t); }
     if (c.rust > 0.7) { const v = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.5), M.vine); v.rotation.x = -Math.PI / 2 + 0.2; v.position.set(L2 - 0.9, top + 0.03, 0); cg.add(v); }
     add(cg);
+    yield;
   }
 
-  if (SH) SH.finish();
+  yield;
+  if (SH) yield* SH.finishIter();
+  yield;
   // ---------------------------------------------------------------- batching: everything static is merged per material (about 1,100 draw calls become a few dozen)
   {
     g.updateMatrixWorld(true); const keep = new Set(marks.map((q) => q.mark)); for (const t of tuftParts) keep.add(t); const buckets = new Map(), dead = [], v = new THREE.Vector3(), nm = new THREE.Matrix3(), WHITE = new THREE.Color(1, 1, 1);
@@ -377,7 +387,7 @@ export function buildWorld(cfg, run) {
     const houseOf = (o) => { hv.setFromMatrixPosition(o.matrixWorld); for (let i = 0; i < houses.length; i++) { const H = ((run.houses[i] && run.houses[i].H) || 0) + CONFIG.lag.housePad; if (H <= CONFIG.lag.housePad) continue;
       const q = hv.clone().applyMatrix4(hInv[i]); if (Math.abs(q.x) < H && Math.abs(q.z) < H) return i; } return -1; };
     const tintOf = (o, m) => { for (let q = o; q; q = q.parent) { if (q.userData.tint) return q.userData.tint; if (q.userData.tintM && q.userData.tintM[m.uuid]) return q.userData.tintM[m.uuid]; } return WHITE; };
-    g.traverse((o) => {
+    const one = (o) => {
       // (desktop scenery, src/scenehi.js: its leaf masses, hills and roofs carry their own vertex colours and cells, so they are left out of the merge)
       if (!o.isMesh || o.isInstancedMesh || keep.has(o) || o.userData.scenery) return; const geo = o.geometry, P = geo.attributes.position, N = geo.attributes.normal, U = geo.attributes.uv, idx = geo.index, mats = Array.isArray(o.material) ? o.material : [o.material];
       const total = idx ? idx.count : P.count, groups = geo.groups.length && mats.length > 1 ? geo.groups : [{ start: 0, count: total, materialIndex: 0 }]; nm.getNormalMatrix(o.matrixWorld);
@@ -388,17 +398,19 @@ export function buildWorld(cfg, run) {
       for (const gr of groups) { const m = mats[gr.materialIndex] || mats[0], bk = CELL ? m.uuid + ck : m; let b = buckets.get(bk); if (!b) { b = { p: [], n: [], u: [], c: [], m, house: hi }; buckets.set(bk, b); } const tc = tintOf(o, m);
         for (let k = gr.start; k < Math.min(total, gr.start + gr.count); k++) { const i = idx ? idx.getX(k) : k; v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); b.p.push(v.x, v.y, v.z); if (N) { v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); b.n.push(v.x, v.y, v.z); } else b.n.push(0, 1, 0); if (U) b.u.push(U.getX(i), U.getY(i)); else b.u.push(0, 0); b.c.push(tc.r, tc.g, tc.b); } }
       dead.push(o);
-    });
+    };
+    { const all = []; g.traverse((o) => { all.push(o); }); for (let i = 0; i < all.length; i++) { one(all[i]); if (i % 50 === 49) yield; } }
     for (const o of dead) { o.geometry.dispose(); o.parent.remove(o); }
     // a material with few vertices in all stays ONE mesh (splitting it by cell only adds draws); only big ones are split
     if (CELL) { const byM = new Map(); for (const [k, b] of buckets) { const l = byM.get(b.m) || []; l.push([k, b]); byM.set(b.m, l); }
       for (const l0 of byM.values()) { const l = l0.filter((q) => q[1].house < 0 || q[1].p.length / 3 < CONFIG.lag.houseMinVerts); if (l.length < 2 || l.reduce((a, q) => a + q[1].p.length / 3, 0) >= CONFIG.lag.mergeSplitVerts) continue; const b0 = l[0][1]; for (const [k, b] of l.slice(1)) { for (const key of ['p', 'n', 'u', 'c']) for (const x of b[key]) b0[key].push(x); buckets.delete(k); } } }
-    for (const b of buckets.values()) { const m = b.m, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.u, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(b.c, 3)); m.vertexColors = true; m.needsUpdate = true; const mm = new THREE.Mesh(geo, m); mm.receiveShadow = true; mm.castShadow = !m.transparent; g.add(mm); }
+    for (const b of buckets.values()) { yield; const m = b.m, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.u, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(b.c, 3)); m.vertexColors = true; m.needsUpdate = true; const mm = new THREE.Mesh(geo, m); mm.receiveShadow = true; mm.castShadow = !m.transparent; g.add(mm); }
   }
 
   // OWNER DECISION Nov 19 12:35: at night the tufts use a geometry with only the first CONFIG.lag.nightTuftBlades blades of the same tuft (same seed, same blades); by
   // day the full one as before. nightTufts(on) swaps it on every chunk; the night geometry is made once and freed with the world.
-  let ntg = null, ntOn = false;
+  // the night geometry is made with the world (owner 12:49: no build at the switch)
+  let ntg = SH && Q.street.detail.tufts && CONFIG.lag && CONFIG.lag.nightTuftBlades ? tuftGeo(CONFIG.lag.nightTuftBlades, 7) : null, ntOn = false;
   const nightTufts = (on) => { on = !!on && !!(SH && Q.street.detail.tufts) && !!(CONFIG.lag && CONFIG.lag.nightTuftBlades); if (on === ntOn) return; ntOn = on; if (on && !ntg) ntg = tuftGeo(CONFIG.lag.nightTuftBlades, 7); for (const t of tuftParts) t.geometry = on ? ntg : tg; };
   return {
     g, houses, marks, torn: tornN, sigs, sunDir, nightTufts,

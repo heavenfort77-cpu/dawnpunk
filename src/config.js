@@ -1174,9 +1174,11 @@ export const CONFIG = {
     // bodyIdleHz: standing still, the body shadow's idle chest sway is redrawn this many times a second (src/playershadow.js; it redrew every frame)
     bodyIdleHz: 10,
     // farStep: a base villager out of view and farther than dist m (Oko: also while you are outside the workshop) steps her motion hz times a second, time added up
-    // (Nov 19 12:45: OFF, null. tools/animcheck.cjs times the villagers' bones every frame wherever the player stands, and the summed steps showed as pose jumps;
-    // the checks must pass unchanged. Was { dist: 15, hz: 5 }.)
-    farStep: null,
+    // (Nov 19 12:45 it was OFF: tools/animcheck.cjs times the villagers' bones every frame wherever the player stands, and the summed steps showed as pose jumps.
+    // ON again 13:10: the drawn pose is blended every frame between the last two stepped poses, src/baseview.js farPre / farPost)
+    farStep: { dist: 15, hz: 5 },
+    // modelRetry: a light character model whose fetch fails is fetched again n more times, ms x (try number) apart, before its script twin (src/modeldata.js liteModel)
+    modelRetry: { n: 2, ms: 600 },
     // keepBase: the base is built once and kept while you are out; a visit with nothing changed that the build reads from the save shows it again (src/baseview.js)
     keepBase: true,
     // endSnap: the run-end screen's blur is made once from the held picture instead of blurring live every frame (src/main.js endSnap)
@@ -1192,6 +1194,8 @@ export const CONFIG = {
     nightTuftBlades: 5,
     // titleBase: a returning player's base is prepared this many seconds after the title is ready, while it idles (src/main.js titleBase)
     titleBase: 1.5,
+    // slice: the base prepared at the title in time slices: ms of build parts a frame (a part is not cut), then draws pieces drawn off-screen a frame (src/main.js baseSlice)
+    slice: { ms: 4, draws: 40 },
     // mergeBase: the base's still pieces drawn as one mesh per material and cell m of ground (src/baseview.js mergeStill); hidePad: extra m kept clear round the film's hidden plant
     mergeBase: { on: true, cell: 16, hidePad: 1.5 },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind

@@ -208,5 +208,8 @@ export function buildBaseWater(g, cfg, hi, ground, kit) {
     WT.map.offset.y = -t * flow; WT.normal.offset.y = -t * flow * 1.15; WT.normal.offset.x = Math.sin(t * 0.3) * 0.02; if (foam) WT.foam.offset.y = -t * flow * 1.4;
     if (drops) { const a = drops.geometry.attributes.position.array; dropV.forEach((d, i) => { d.t -= dt; if (d.t <= 0 || d.y < wy) { const ang = 0.25 + Math.random() * 0.9; d.x = (Math.random() - 0.5) * W.wheel.width; d.y = ay - Math.cos(ang) * R; d.z = Math.sin(ang) * R * 0.98; d.vx = (Math.random() - 0.5) * 0.3; d.vy = 0.4 + Math.random() * 0.8; d.vz = 0.6 + Math.random() * 0.9; d.t = 0.5 + Math.random() * 0.6; }
       d.vy -= 9.8 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.z += d.vz * dt; a[3 * i] = d.x; a[3 * i + 1] = Math.max(wy, d.y); a[3 * i + 2] = d.z; }); drops.geometry.attributes.position.needsUpdate = true; } }
-  return { group: grp, update, wheel: spin, cost: { tris: tri, meshes, ground: gTris }, angle: () => spin.rotation.x };
+  // (owner 13:10, premortem A) a kept base shown again starts its flow and wheel where a fresh build does
+  const spin0 = spin.rotation.x, pul0 = genPulley ? genPulley.quaternion.clone() : null;
+  function reset() { t = 0; spin.rotation.x = spin0; if (genPulley) genPulley.quaternion.copy(pul0); update(0); }
+  return { group: grp, update, reset, wheel: spin, cost: { tris: tri, meshes, ground: gTris }, angle: () => spin.rotation.x };
 }

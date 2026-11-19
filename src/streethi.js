@@ -7,7 +7,7 @@
 // (cans, bottles, paper, bags, a tyre, bricks). The approved desolate look (overgrown, broken) is built in when DESO.machines is on (the default). Numbers: CONFIG.quality.high.street.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
-import { SCENERY, streetScenery } from './scenehi.js';
+import { SCENERY, streetSceneryIter } from './scenehi.js';
 
 function rng(seed) { let q = (seed >>> 0) || 1; return () => { q = (q * 1664525 + 1013904223) >>> 0; return q / 4294967296; }; }
 const PI = Math.PI, V = (x, y, z) => new THREE.Vector3(x, y, z), YAX = V(0, 1, 0);
@@ -103,8 +103,11 @@ export function streetHi(o) {
   const spray = (p, x, y, z, s) => { if (D.leaves) sprays.push([p, x, y, z, s]); };
   const tree = (x, z) => trees.push([x, z]);
 
-  function finish() {
+  // (LAG FIX Nov 19, owner 13:10) finishIter stops between its parts so the film builds the street in time slices; finish runs it at once
+  function finish() { const it = finishIter(); while (!it.next().done); }
+  function* finishIter() {
     if (D.street) street();
+    yield;
     g.updateMatrixWorld(true); const v = new THREE.Vector3(), lc = new THREE.Color(), LEAFC = new THREE.Color(0x4a6630), WHITE = new THREE.Color(1, 1, 1), tint = (p) => { for (let q = p; q; q = q.parent) { if (q.userData.tint) return q.userData.tint; if (q.userData.tintM) { const t = Object.values(q.userData.tintM)[0]; if (t) return t; } } return WHITE; };
     // (desktop scenery: the sprays become leaf clusters in src/scenehi.js instead of single leaves; the crack weeds become its grass and flower clumps)
     for (const [p, x, y, z, s] of SCENERY ? [] : sprays) { const tc = tint(p), n = Math.round(SQ.leaves * Math.min(1.6, s / 1.8)); for (let k = 0; k < n; k++) { const u = r() * 2 * PI, w = Math.acos(2 * r() - 1), rad = s * (0.28 + 0.24 * Math.cbrt(r()));
@@ -116,7 +119,8 @@ export function streetHi(o) {
     const MAT = { stone: K.stone, slab: K.slab, lump: K.asphalt, leaf: K.leaf, dead: K.leaf, can: K.small, bottle: K.small, paper: K.leaf, brick: K.slab, tyre: K.rubber, tuft: tuftMat() };
     let tris = 0; for (const [kind, c] of inst) { const n = c.c.length / 3, im = new THREE.InstancedMesh(G[kind], MAT[kind], n); im.instanceMatrix.array.set(c.m); im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(c.c), 3); im.castShadow = kind !== 'dead' && kind !== 'tuft'; im.receiveShadow = true; im.userData.hiInst = kind; im.computeBoundingSphere(); g.add(im); const ge = G[kind]; tris += n * (ge.index ? ge.index.count : ge.attributes.position.count) / 3; }
     g.userData.streetTris = Math.round(tris);
-    if (SCENERY) streetScenery({ g, run, cfg, M, sprays, free, onPath, X0, RZ, inner: RZ + kd + FW, tufts });
+    yield;
+    if (SCENERY) yield* streetSceneryIter({ g, run, cfg, M, sprays, free, onPath, X0, RZ, inner: RZ + kd + FW, tufts });
   }
-  return { spray, tree, finish };
+  return { spray, tree, finish, finishIter };
 }
