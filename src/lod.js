@@ -24,7 +24,15 @@ try { window.__lod = lodState; } catch (e) { /* no window */ }
 export function cullSkinned(o) {
   const C = LG().cull; if (!o || !o.isMesh) return;
   // the sphere of the mesh in its bind pose (the skinned vertices stay in the mesh's own frame however the character's root moves), grown to take in any pose
-  try { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const b = o.geometry.boundingSphere.clone(); b.radius = b.radius * C.grow + C.pad; o.boundingSphere = b; o.frustumCulled = true; } catch (e) { o.frustumCulled = false; }
+  // (R4 item I, card 30: local probe, the hub: 68 of 72 people pieces had a culling sphere ~29 km from their drawn place, e.g. eye_l "cull c 560,29669,2147 r 656"
+  // vs "posed c 0.03,1.46,0.10 r 0.02") the people's models keep their positions as 16-bit integers (KHR_mesh_quantization) that only the skin's bind matrices
+  // turn into metres, so the geometry's own sphere is in integer units: eyes, lashes and corneas were culled in every frame (never drawn) and the bodies' spheres
+  // (radius ~9 km) never culled. A skinned mesh's sphere is now taken from its skinned vertices in the pose it is in (three.js SkinnedMesh.computeBoundingSphere,
+  // the same local frame the GPU draws in), then grown as before
+  const t0 = performance.now(); try { let b; if (o.isSkinnedMesh && o.skeleton) { let r = o; while (r.parent) r = r.parent; r.updateMatrixWorld(true); o.boundingSphere = null; o.computeBoundingSphere(); b = o.boundingSphere.clone(); }
+    else { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); b = o.geometry.boundingSphere.clone(); }
+    b.radius = b.radius * C.grow + C.pad; o.boundingSphere = b; o.frustumCulled = true; } catch (e) { o.frustumCulled = false; }
+  lodState.cullMs = (lodState.cullMs || 0) + performance.now() - t0; lodState.cullWorst = Math.max(lodState.cullWorst || 0, performance.now() - t0);
 }
 
 const tris = (g) => Math.floor((g.index ? g.index.count : g.attributes.position.count) / 3);

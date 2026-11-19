@@ -564,6 +564,8 @@ function opWindows(I) {
   I.wins = use;
 }
 // street lamps along both sides near the target (built for the film only), with real light under the nearest on desktop
+// (R4, lead area 2; diagnose 8 light ledger: the film had 6 real point lights, dying to intensity 0 one by one) the film's lamp lights, the device light and the
+// machine's rim light are shader lamps (src/houselamps.js): a dead lamp (intensity 0) is not drawn at all
 function opLamps(I) {
   const G = CONFIG.opening.grid, T = CONFIG.opening[QUALITY === 'high' ? 'high' : 'low'], [n, gap, side, hgt] = G.lamps, per = Math.min(n, T.lamps), metal = new THREE.MeshLambertMaterial({ color: 0x23262a });
   I.lamps = [];
@@ -577,7 +579,7 @@ function opLamps(I) {
   const camEnd = opAt(I, G.cam[G.cam.length - 1][1], 0, G.cam[G.cam.length - 1][3]);
   I.lamps = I.lamps.filter((l) => { const ok = Math.hypot(l.x - camEnd.x, l.z - camEnd.z) >= G.lampClear; if (!ok) { I.grp.remove(l.g); drop(l.g); } return ok; });
   I.lamps.sort((a, b) => Math.hypot(b.x - I.W.x, b.z - I.W.z) - Math.hypot(a.x - I.W.x, a.z - I.W.z)).forEach((l, k) => { l.off = G.lampOff[0] + k * G.lampOff[1]; });
-  if (T.lights) I.lamps.slice().sort((a, b) => Math.hypot(a.x - camEnd.x, a.z - camEnd.z) - Math.hypot(b.x - camEnd.x, b.z - camEnd.z)).slice(0, 4).forEach((l) => { l.light = new THREE.PointLight(G.lampColor, G.lampLight[0], G.lampLight[1], 2); l.light.position.set(l.x, G.lamps[3] - 0.5, l.z); I.grp.add(l.light); });
+  if (T.lights) I.lamps.slice().sort((a, b) => Math.hypot(a.x - camEnd.x, a.z - camEnd.z) - Math.hypot(b.x - camEnd.x, b.z - camEnd.z)).slice(0, 4).forEach((l) => { l.light = HL_ON ? addLamp(houseLamp(G.lampLight[0], G.lampLight[1], G.lampColor)) : new THREE.PointLight(G.lampColor, G.lampLight[0], G.lampLight[1], 2); l.light.position.set(l.x, G.lamps[3] - 0.5, l.z); I.grp.add(l.light); });
 }
 // a light that flickers before it dies: 1 on, 0 off
 function opFlick(t, off, flick) { if (t < off - flick) return 1; if (t >= off) return 0; const k = (off - t) / flick; return Math.sin(t * 47) + Math.sin(t * 23) > 0.6 - k ? 1 : 0.12; }
@@ -668,8 +670,8 @@ function startIntro() { if (!BOTRUN() && CONFIG.lag.filmWarm && !startIntro.go &
   for (const w of T2.walkers) { if (QUALITY !== 'high' && !w[8]) continue; const o = opMachine(w[0], false); I.grp.add(o); if (renderer.compileAsync) renderer.compileAsync(o, cam, scene).catch(() => {}); o.visible = false; I.walkers.push({ w, o }); }
   // (owner 11:40) the night's machine lights are in the scene (dark) from the start of the film, so the light count does not change mid-film (which rebuilt the shaders)
   for (const l of glights) { l.visible = true; l.intensity = 0; }
-  if (C[QUALITY === 'high' ? 'high' : 'low'].lights) { I.devL = new THREE.PointLight(T2.light[0], 0, T2.light[2], 2); I.devL.position.set(dp.x, 0.6, dp.z); I.grp.add(I.devL); }
-  { const R = G.rim, rp = opAt(I, M[1] + R[3], R[4], M[2] + R[5]); I.rim = new THREE.PointLight(R[0], 0, R[2], 2); I.rim.position.copy(rp); I.grp.add(I.rim); }
+  if (C[QUALITY === 'high' ? 'high' : 'low'].lights) { I.devL = HL_ON ? addLamp(houseLamp(0, T2.light[2], T2.light[0])) : new THREE.PointLight(T2.light[0], 0, T2.light[2], 2); I.devL.position.set(dp.x, 0.6, dp.z); I.grp.add(I.devL); }
+  { const R = G.rim, rp = opAt(I, M[1] + R[3], R[4], M[2] + R[5]); I.rim = HL_ON ? addLamp(houseLamp(0, R[2], R[0])) : new THREE.PointLight(R[0], 0, R[2], 2); I.rim.position.copy(rp); I.grp.add(I.rim); }
   I.fov0 = cam.fov; renderer.shadowMap.needsUpdate = true; filmWarm(I);
 }
 // the eyelids (part 4): closed share 0..1 (made once, inside #cine)
@@ -716,7 +718,7 @@ function opTurning(I, t, dt) {
 }
 // leave the street: the base at dawn is built while the screen is black
 function introToBase() {
-  const I = intro; if (!CONFIG.opening.on) { introToBaseOld(); return; } I.part = 'base'; if (I.grp) { scene.remove(I.grp); drop(I.grp); I.grp = null; } I.walkers = [];
+  const I = intro; if (!CONFIG.opening.on) { introToBaseOld(); return; } I.part = 'base'; if (I.grp) { scene.remove(I.grp); if (HL_ON) unlistHouseLamps(I.grp); drop(I.grp); I.grp = null; } I.walkers = [];
   dropWorld(); run = null; GK.nightGlow(0); glights.forEach((l) => { l.intensity = 0; l.visible = false; }); hemi.color.setHex(CONFIG.baseLight.sky); hemi.groundColor.setHex(CONFIG.baseLight.ground); sky.mesh.visible = false;
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   bview.build(save); applyRelief(bview.group); I.hide = []; I.stands = []; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 0; if (o.isSprite && o.userData.kind) I.hide.push(o); if (o.isDirectionalLight && !I.sun) I.sun = o; if (opStandIn(o)) I.stands.push(o.parent); }); renderer.shadowMap.needsUpdate = true; shadowT = 1.5; filmWarm(I);

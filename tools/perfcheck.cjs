@@ -259,7 +259,10 @@ const BREAKDOWN = (spot) => {
     }
     if (ONLY.includes('hub')) {
       // day 1, a fresh save, the start spot and view
-      await p.evaluate(() => window.__game.enterBase()); await waitLoads('hub'); const startMB = MB(sumB()); await waitGame(3, 0.3);
+      // (R4 item D, card 28: diagnose 8 'base 274056': 13 programs built when this spot entered the base with enterBase() and no card, after the flow had run in
+      // the same page; diagnose 6's 'base 366854' list is the same) after the flow the base is entered the player's way (the run-end screen's Back = the home card)
+      await p.evaluate(() => { const g = window.__game; if (g.homeCard && g.save && g.state !== 'menu') g.homeCard(); else g.enterBase(); }); await p.waitForTimeout(300); await p.waitForFunction(() => !window.__game.cardOn || !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null);
+      await waitLoads('hub'); const startMB = MB(sumB()); await waitGame(3, 0.3);
       const r = await measure('hub'); r.startMB = startMB;
       // (R4, lead area 3: runner noise) SPOTS with hub2: the hub measured a second time at once, same page, same view (the noise band of one job)
       if (ONLY.includes('hub2')) await measure('hub2');

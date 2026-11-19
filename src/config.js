@@ -1211,7 +1211,8 @@ export const CONFIG = {
     // can have (floors: levelAt gives at most 3; one spare). off: the lamps are THREE.PointLights again and the ride card builds a shader set per lamp count
     // (R4, lead area 2) also the night machines' screen lights (Q.lights of them, src/main.js glights) and the base's room lamps (src/baseview.js): max 7 = 3 house
     // floors + 1 spare + 3 machine lights (the base has 3 room lamps)
-    houseLamps: { on: true, max: 7 },
+    // the film adds its 4 street lamps, the device light and the machine's rim light: max 10 (4 + 1 + 1 + up to 3 machine lights, + 1 spare)
+    houseLamps: { on: true, max: 10 },
     // gpuPart (R4 items B/C, card 27): the film black's and the cards' parts wait for the GPU to finish the part before (a fence, src/main.js gpuDone) instead of
     // queueing all of them and then gl.finish(); cap: the most ms one wait lasts (a safety cap). (Sizing parts by the wait was dropped: diagnose 7)
     gpuPart: { on: true, cap: 10000 },
