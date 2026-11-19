@@ -10,6 +10,14 @@ const tier = process.argv[2] || 'low', dir = process.argv[3] || null, W = +(proc
   const page = tier === 'high' ? 'dist/index_single.html?quality=high' : 'dist/index.html?quality=low';
   await p.goto('file://' + path.resolve(__dirname, '..', page.split('?')[0]) + '?' + page.split('?')[1] + '&seed=' + (process.env.SEED || 11));
   await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 240000 });
+  // OWNER DECISION (lead 00:25): the boss comes only on ring 5 (index 4), on night 6 or later, once an upgrade is finished (src/base.js bossNight). Setup only: the save
+  // is given 5 nights played (this is night 6) and one finished upgrade before the run starts; the rule's own lines below use the game's bossNight on copies of the save
+  const rule = await p.evaluate(() => { const g = window.__game; g.enterBase(); const s = g.save, C = window.CONFIG, up1 = Object.fromEntries(Object.keys(s.up).map((k, i) => [k, i === 0 ? 1 : 0])), up0 = Object.fromEntries(Object.keys(s.up).map((k) => [k, 0]));
+    const at = (nights, up, ring) => g.B.bossNight(C, { ...s, nights, up }, ring); return { r5n5: at(4, up1, 4), r4n5: at(4, up1, 3), r4n6: at(5, up1, 3), r5n6none: at(5, up0, 4), r5n6: at(5, up1, 4) }; });
+  out.push(['boss rule: no boss on ring 5 before night 6 (night 5, an upgrade done)', rule.r5n5 === false]);
+  out.push(['boss rule: no boss on another ring at night 5 or 6 (ring 4)', rule.r4n5 === false && rule.r4n6 === false]);
+  out.push(['boss rule: no boss on ring 5 night 6 without a finished upgrade; boss with one', rule.r5n6none === false && rule.r5n6 === true]);
+  await p.evaluate(() => { const s = window.__game.save; s.nights = 5; s.trips = 5; const k = Object.keys(s.up)[0]; s.up[k] = Math.max(1, s.up[k] || 0); });
   await p.evaluate(() => { window.__dtMax = 0.25; window.__noHands = true; const g = window.__game; g.enterBase(); const sel = document.getElementById('selRing'); [...sel.options].forEach((o) => { o.disabled = false; }); sel.value = '4'; g.startRun(); });
   await p.waitForTimeout(1500);
   const house = +(process.env.HOUSE || 0);

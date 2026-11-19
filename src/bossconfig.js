@@ -6,6 +6,12 @@ export const BOSS_CONFIG = {
   // master switch; ring: the ring index (0-based) whose nights have the boss (4 = ring 5, the last ring of the demo)
   on: true,
   ring: 4,
+  // OWNER DECISION (lead 00:24, R4 worker 8, Card 49): at most this many Gloom alive at once on the boss nights (was the normal maximum 24, measured: tools/perfcheck.cjs
+  // BOSS_N); a spawn whose time has come waits while this many are alive (src/sim.js spawn loop); 0 = no cap
+  maxAlive: 22,
+  // OWNER DECISION (lead 00:25, Card 50): in the game the boss comes only on this ring, on the player's fromNight-th night or later (save.nights + 1), and only once
+  // the player has finished at least minUpgrades workshop upgrades (reaching ring 5 needs no upgrade: src/base.js applyNight opens ring N+1 on a win); src/base.js bossNight
+  fromNight: 6, minUpgrades: 1,
   // name used in every text (hidden-cat safety: no text calls it a lucky cat)
   name: 'the Beckoner',
   // where it stands, in the held house's own frame: out = metres out from the front wall (across the road), side = metres along the street toward the nearer street end.

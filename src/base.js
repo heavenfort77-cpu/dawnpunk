@@ -82,6 +82,8 @@ export const count = (save, role) => save.personnel.filter((p) => p.role === rol
 export const gloomMult = (cfg, save) => (1 - Math.min(cfg.base.passive.hunterCap, cfg.base.passive.hunterCut * count(save, 'hunter'))) * (1 + cfg.cat.lurePer * placedCats(save, 'lure'));
 export const placedCats = (save, type) => save.cats.filter((c) => c.state === 'placed' && (!type || c.type === type)).length;
 export const carriedCats = (save) => save.cats.filter((c) => c.state === 'carried').length;
+// OWNER DECISION (lead 00:25, Card 50): the boss's night = the boss ring AND night >= CONFIG.boss.fromNight AND at least CONFIG.boss.minUpgrades upgrades finished
+export const bossNight = (cfg, save, ring) => !!(cfg.boss && cfg.boss.on && ring === cfg.boss.ring && save && (save.nights || 0) + 1 >= (cfg.boss.fromNight || 1) && Object.values(save.up || {}).reduce((a, v) => a + (+v || 0), 0) >= (cfg.boss.minUpgrades || 0));
 export const nightEnergyBonus = (cfg, save) => placedCats(save, 'energy') * cfg.cat.energyBonus + save.up.energy * cfg.base.upgrades.energy.per; // only cats that sit in your home count
 export const lootMult = (cfg, save) => 1 + placedCats(save, 'lure') * cfg.cat.lureLoot;
 // the sim config for a night: research upgrades change panels and turbines

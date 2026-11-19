@@ -12,7 +12,7 @@ export function createRun(cfg, ring, seed = 1, opts = {}) {
   const loadTotal = cfg.loot.perBP * cfg.ring.mult[ring] * bp.reduce((a, n) => a + n, 0); // the settlement's loot; the food you packed does not weigh you down
   const houses = [], er = mulberry32((seed ^ 0xe47a) >>> 0);
   for (let i = 0; i < 6; i++) {
-    const sim = createSim({ cfg, ring, house: i, seed: (seed + 101 * (i + 1)) >>> 0, day: true, noPack: true, hand: true, furniture: true, noCat: i !== catHouse, gloomMult: opts.gloomMult, lootMul: lootMul[i], loadTotal });
+    const sim = createSim({ cfg, ring, house: i, seed: (seed + 101 * (i + 1)) >>> 0, day: true, noPack: true, hand: true, furniture: true, noCat: i !== catHouse, gloomMult: opts.gloomMult, lootMul: lootMul[i], loadTotal, boss: opts.boss }); // opts.boss: B.bossNight (OWNER DECISION lead 00:25); undefined = the sim's ring rule (bots)
     const slot = slots[i], row = slot < 3 ? -1 : 1, x = ((slot % 3) - 1) * T.gapX, z = row * T.rowZ; // two rows facing the street (z = 0)
     // the house is turned so that its real front door faces the street: town = (x, z) + R(local). cs/sn are that quarter turn.
     const d = exitDoor(sim); let cs = 1, sn = 0;

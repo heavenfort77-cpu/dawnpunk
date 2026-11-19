@@ -26,7 +26,8 @@ const ARG = process.argv[2] || 'medium', OUT = process.argv[3] || '', SEED = +(p
 const GPU = !!process.env.GPU, SECS = +(process.env.SECS || (GPU ? 8 : 0)), SETTLE = +(process.env.SETTLE || 6);
 const ONLY = process.env.SPOTS ? process.env.SPOTS.split(/[,+]/) : ['hub', 'street', 'house', 'boss'];
 // combat spots: ring index, Gloom kept alive (the night's normal most at once, see the header), seconds timed
-const COMBAT = { combat: { ring: 2, n: +(process.env.COMBAT_N || 18) }, bosscombat: { ring: 4, n: +(process.env.BOSS_N || 24), boss: true } }, CSECS = +(process.env.CSECS || 20);
+// OWNER DECISION (lead 00:24): the boss night's normal maximum is 22 (CONFIG.boss.maxAlive, src/bossconfig.js), so BOSS_N is 22 (was 24); no gate changed
+const COMBAT = { combat: { ring: 2, n: +(process.env.COMBAT_N || 18) }, bosscombat: { ring: 4, n: +(process.env.BOSS_N || 22), boss: true } }, CSECS = +(process.env.CSECS || 20);
 // combat gates: fps at least, 95th percentile frame at most (ms), worst frame at most (ms); on the default tier, and the fps gate on low too
 const CGATE = { fps: 60, p95: 25, worst: 100 };
 // (R3, owner) the card time budget: every card (and every frame held under a card or the film's black) at most this many ms, per tier; tiers not listed: report only

@@ -373,8 +373,9 @@ export function createSim(opts = {}) {
     const p = s.player, hp0 = p.hp;
     p.cd = Math.max(0, p.cd - dt); p.eatCd = Math.max(0, p.eatCd - dt); p.stairCd = Math.max(0, p.stairCd - dt); p.ladderCd = Math.max(0, p.ladderCd - dt);
     if (p.climb) { p.climb.t -= dt; if (p.climb.t <= 0) { p.floor = p.climb.to; p.x = p.climb.ax; p.z = p.climb.az; p.climb = null; p.ladderCd = cfg.ladderCd; s.log.push({ e: 'floor' }); } } else playerTravel();
-    // spawn
-    while (s.spawned < spawns.length && spawns[s.spawned].t <= s.t) {
+    // spawn (OWNER DECISION lead 00:24, Card 49: on the boss nights a spawn waits while CONFIG.boss.maxAlive Gloom are alive)
+    const aliveCap = s.boss && cfg.boss && cfg.boss.maxAlive ? cfg.boss.maxAlive : 0;
+    while (s.spawned < spawns.length && spawns[s.spawned].t <= s.t && !(aliveCap && s.gloom.length >= aliveCap)) {
       const sp = spawns[s.spawned++], b = breaches[sp.bp];
       const tx = -b.nz, tz = b.nx, j = (s.rng() - 0.5) * 3;
       const kind = kindOf(s.nextId), khp = (KINDS[kind] || ONE).hp * (cfg.gloom.kindHp || 1); if (!kindSeen[kind]) { kindSeen[kind] = true; s.log.push({ e: "kind", kind }); }
