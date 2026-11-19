@@ -1321,7 +1321,8 @@ async function sceneCard(kind) {
       draw1(); warmG.visible = false; await nap(0); if (kind === 'night') draw1(); }
     warmG.visible = false;
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
-  } catch (e) { /* the card never blocks the game */ }
+  } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
+  LCARD.ms = Math.round(performance.now() - t0);
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
   fill(1); if (id === LCARD.n) { LCARD.on = false; $('lcard').style.display = 'none'; perfRest(); }
 }
@@ -1502,6 +1503,8 @@ window.__game.wakeText = () => wakeT; window.__game.uiNow = () => ui; window.__g
 window.__game.wsTip = () => wsTipT;
 // the automatic step-down (tools/perfcheck.cjs): its state, and take the next step now
 window.__game.cardOn = () => LCARD.on;
+// the last card's work time (ms) and any error it swallowed (tools/perfcheck.cjs prints them)
+window.__game.cardInfo = () => ({ ms: LCARD.ms, err: window.__cardErr || '' });
 // the shader programs built so far (tools/perfcheck.cjs: which ones are first built after the night card); name and a short key each
 window.__game.programs = () => (renderer.info.programs || []).map((q) => q.id + ' ' + q.name + ' ' + String(q.cacheKey).replace(/,+/g, ',').slice(0, 160));
 window.__game.perfStep = () => (perf ? { ...perf.state } : null); window.__game.perfForce = () => (perf ? { ...perf.force() } : null);

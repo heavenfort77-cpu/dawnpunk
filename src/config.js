@@ -1143,6 +1143,8 @@ export const CONFIG = {
     mergeCell: 16,
     // housePad: a street piece within a house's half size plus this (m) belongs to that house's own merged meshes (gutters, sills, steps), never to the street's
     housePad: 0.8,
+    // houseMinVerts: a house's own mesh of one material with fewer vertices than this joins the street's mesh of that material instead (a few small pieces: one draw saved)
+    houseMinVerts: 1500,
     // mergeSplitVerts: only a material with at least this many vertices in the whole street is split by cell; smaller ones stay one mesh
     mergeSplitVerts: 30000,
     // farPad: the camera's far plane follows the fog: fog end plus this (m), never past the camera's own 90 m. Beyond the fog's end everything is pure fog colour, so
