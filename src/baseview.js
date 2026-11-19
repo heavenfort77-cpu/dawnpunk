@@ -150,7 +150,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   function build(sv) {
     const sig = cfg.lag && cfg.lag.keepBase ? keySig(sv) : null; if (sig && sig === keptSig && g.children.length) { reuse(sv); return; }
     keptSig = null; const tok = ++buildN; // a model that finishes loading after this base is gone must not be pulled back into it (Marla is on the street then)
-    save = sv; freeAll(); g.clear(); g.userData.merged = false; obst.length = 0; npcs.length = 0; towers = []; boxes.length = 0; jn = null; life = null; startPlants(cfg, HIBASE); hatch = null; flock = null; eveT = 0; vcats = null;
+    save = sv; freeAll(); g.clear(); g.userData.merged = false; g.userData.drawn = false; obst.length = 0; npcs.length = 0; towers = []; boxes.length = 0; jn = null; life = null; startPlants(cfg, HIBASE); hatch = null; flock = null; eveT = 0; vcats = null;
     const gt = tex('grass').clone(); gt.repeat.set(34, 34); gt.needsUpdate = true; const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshLambertMaterial({ map: gt, color: 0xc4ec9a })); ground.rotation.x = -Math.PI / 2; g.add(ground);
     const pt = tex('block').clone(); pt.repeat.set(7, 7); pt.needsUpdate = true; const plaza = new THREE.Mesh(new THREE.CircleGeometry(12, 32), new THREE.MeshLambertMaterial({ map: pt, color: 0xf6e8c0 })); plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; g.add(plaza);
     // stations

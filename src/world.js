@@ -396,14 +396,18 @@ export function buildWorld(cfg, run) {
     for (const b of buckets.values()) { const m = b.m, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.u, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(b.c, 3)); m.vertexColors = true; m.needsUpdate = true; const mm = new THREE.Mesh(geo, m); mm.receiveShadow = true; mm.castShadow = !m.transparent; g.add(mm); }
   }
 
+  // OWNER DECISION Nov 19 12:35: at night the tufts use a geometry with only the first CONFIG.lag.nightTuftBlades blades of the same tuft (same seed, same blades); by
+  // day the full one as before. nightTufts(on) swaps it on every chunk; the night geometry is made once and freed with the world.
+  let ntg = null, ntOn = false;
+  const nightTufts = (on) => { on = !!on && !!(SH && Q.street.detail.tufts) && !!(CONFIG.lag && CONFIG.lag.nightTuftBlades); if (on === ntOn) return; ntOn = on; if (on && !ntg) ntg = tuftGeo(CONFIG.lag.nightTuftBlades, 7); for (const t of tuftParts) t.geometry = on ? ntg : tg; };
   return {
-    g, houses, marks, torn: tornN, sigs, sunDir,
+    g, houses, marks, torn: tornN, sigs, sunDir, nightTufts,
     // house i becomes the origin (the sim's own coordinates); -1 puts the world back for the street
     // (LAG FIX Nov 19, owner 09:50: the street never moves while you play, so its matrices are worked out here once per move, not every frame: src/main.js freezeWorld)
     frame(i) { if (i < 0) { g.position.set(0, 0, 0); g.rotation.y = 0; } else { const h = run.houses[i]; g.rotation.y = -houses[i].rotation.y; g.position.set(-(h.x * h.cs + h.z * h.sn), 0, -(-h.x * h.sn + h.z * h.cs)); } g.updateMatrix(); g.updateMatrixWorld(true); },
     light(k) { sun.intensity = W.sun * Math.max(0.06, 1 - k * 1.05); sun.color.setHex(k > 0.6 ? 0x9db4ff : 0xfff1d6); const dk = 1 - 0.55 * Math.min(1, k * 1.2); M.int.color.setHex(W.intTint).multiplyScalar(dk); M.wood.color.setHex(W.floorTint).multiplyScalar(dk); },
     // LAG FIX Nov 19: every picture a material holds is freed (not only .map: relief, cut-out and glow pictures piled up run after run), unless it is marked shared;
     // the sun's shadow map too (a new 2048 map stayed on the GPU after every run)
-    dispose() { g.traverse((q) => { if (q.isLight && q.shadow && q.shadow.map) q.shadow.dispose(); if (q.geometry) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && t.userData.shared)) t.dispose(); } m.dispose(); } }); }
+    dispose() { nightTufts(false); if (ntg) { ntg.dispose(); ntg = null; } g.traverse((q) => { if (q.isLight && q.shadow && q.shadow.map) q.shadow.dispose(); if (q.geometry) q.geometry.dispose(); const ms = q.material ? (Array.isArray(q.material) ? q.material : [q.material]) : []; for (const m of ms) { for (const k in m) { const t = m[k]; if (t && t.isTexture && !(t.userData && t.userData.shared)) t.dispose(); } m.dispose(); } }); }
   };
 }

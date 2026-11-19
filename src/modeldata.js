@@ -16,3 +16,12 @@ export const MODELS = {
   oko: 'models/lo_oko.glb',
   pip: 'models/lo_pip.glb'
 };
+// LAG FIX Nov 19 12:45: a light model as an ArrayBuffer. Over http(s), or a data: address (index_single.html), it is fetched; a page opened from a folder (file://)
+// cannot fetch, so it loads the model's script twin (dist/models/lo_<name>.js, written by build.mjs: it puts the base64 in window.__LOMODELS) with a script tag.
+export function liteModel(key) {
+  const src = MODELS[key]; if (!src) return Promise.reject(new Error('no model ' + key));
+  const viaScript = () => new Promise((ok, no) => { const B = window.__LOMODELS || (window.__LOMODELS = {}); const done = () => { const b = B[key]; if (!b) { no(new Error('no model ' + key)); return; } ok(Uint8Array.from(atob(b), (c) => c.charCodeAt(0)).buffer); };
+    if (B[key]) { done(); return; } const sc = document.createElement('script'); sc.src = src.replace(/\.glb$/, '.js'); sc.onload = done; sc.onerror = () => no(new Error('no model ' + key)); document.head.appendChild(sc); });
+  if (!src.startsWith('data:') && location.protocol === 'file:') return viaScript();
+  return fetch(src).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).catch((e) => (src.startsWith('data:') ? Promise.reject(e) : viaScript()));
+}

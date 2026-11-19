@@ -4,7 +4,7 @@
 import { GRITTY, GRIT } from './look.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { MODELS } from './modeldata.js';
+import { MODELS, liteModel } from './modeldata.js';
 import { QUALITY } from './quality.js';
 import { hiMat, hiLights } from './marlahi.js';
 import { createStepper } from './people.js';
@@ -16,7 +16,7 @@ export function createMarla(cfg, key = 'marla') {
   // desktop closed smile (owner approved Nov 16 23:29): hiModel = the desktop model loaded (it carries expr_smileClosed and expr_smileClosedSym); smile = its eased weight, 0..1 of CONFIG.marlaHi.smile.strength
   let hiModel = false, smile = 0, stepper = null, lookV = 0, lookAcc = 0;
   // LAG FIX Nov 19 (owner 11:40): the light model (a file, src/modeldata.js) is fetched only when it is used (phones, or the desktop model failing), not decoded at every start
-  const lite = () => fetch(MODELS[key]).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, false)).catch((e) => console.error(key + ' light model failed to load', e));
+  const lite = () => liteModel(key).then((b) => go(b, false)).catch((e) => console.error(key + ' light model failed to load', e));
   const HI = QUALITY === 'high' && cfg.marlaHi && cfg.marlaHi.files[key];      // desktops and laptops: her own high model and materials (src/marlahi.js); phones: the packed light model
   const go = (buf, isHi) => new GLTFLoader().parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => {

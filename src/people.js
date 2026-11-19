@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { GRITTY, GRIT } from './look.js';
-import { MODELS } from './modeldata.js';
+import { MODELS, liteModel } from './modeldata.js';
 import { QUALITY } from './quality.js';
 import { peopleHiMat, peopleHiLight, peopleHiCornea } from './peoplehi.js';
 import { cullSkinned, lodPrepare } from './lod.js';
@@ -94,7 +94,7 @@ export function createPerson(cfg, key) {
     if (useScan && isHi) { keyBid = peopleHiLight(root, P.hiMat.key, cfg.marlaHi && cfg.marlaHi.keyBias); if (hiCopy) peopleHiCornea(sc, HM); } ready = true; const w0 = wait; wait = []; for (const f of w0) f();
   }, (e) => console.error(key + ' model failed to load', e));
   // LAG FIX Nov 19 (owner 11:40): the light model is a file beside the page (src/modeldata.js; inside index_single.html as a data: address)
-  const packed = () => fetch(MODELS[key]).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, false)).catch((e) => console.error(key + ' light model failed to load', e));
+  const packed = () => liteModel(key).then((b) => go(b, false)).catch((e) => console.error(key + ' light model failed to load', e));
   // a page opened straight from a folder (file://) cannot fetch a file beside it: play index_single.html from a folder (every model inside it)
   if (file && (file.startsWith('data:') || location.protocol !== 'file:')) fetch(file).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, true)).catch(() => packed()); else packed();
 
