@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
 import { lodPrepare, lodCopy } from './lod.js';
-import { mergeGlb, rebindMerged } from './glbmerge.js';
+import { mergeGlb, rebindMerged, splitShared } from './glbmerge.js';
 
 const FILES = { walker: 'models/gloom_walker_hi.glb', lurcher: 'models/gloom_lurcher_hi.glb', ticks: 'models/gloom_ticks_hi.glb', hauler: 'models/gloom_hauler_hi.glb', stilt: 'models/gloom_stilt_hi.glb', lantern: 'models/gloom_lantern_hi.glb', warden: 'models/gloom_warden_hi.glb' };
 const TPL = {};
@@ -52,6 +52,6 @@ export function glbCopy(kind, tint) {
       m.customProgramCacheKey = () => 'gloomGlbTint'; mats.set(m0, m); }
     o.material = mats.get(m0); });
   // LAG FIX Nov 19: its meshes draw the reduced copy past CONFIG.lag.lod.kinds.gloom.near metres (src/lod.js)
-  lodCopy(sc, 'gloom'); sc.userData.tintU = u;
+  splitShared(sc); lodCopy(sc, 'gloom'); sc.userData.tintU = u;
   return sc;
 }

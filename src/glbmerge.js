@@ -58,3 +58,14 @@ export function rebindMerged(tpl, copy) {
     const bones = t.skeleton.bones.map((x) => map.get(x)); if (bones.some((x) => !x)) continue;
     c.raycast = noRay; c.bind(new THREE.Skeleton(bones, t.skeleton.boneInverses.map((m) => m.clone())), t.bindMatrix.clone()); c.boundingSphere = t.boundingSphere.clone(); }
 }
+
+// A material drawn both by a merged (skinned) mesh and by an ordinary part needs two shader programs, and three.js looked the program up again at every draw that
+// switched between them (owner 09:50 profile: getProgram / getParameters). The ordinary parts get their own copy of it: same values, same tint uniform, same shader
+// changes, so they draw exactly as before. LAG FIX Nov 19.
+export function splitShared(root) {
+  const skinMats = new Set(); root.traverse((o) => { if (o.isSkinnedMesh && o.userData.mergedDraw) skinMats.add(o.material); }); if (!skinMats.size) return 0;
+  const copies = new Map(); let n = 0;
+  root.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || o.userData.hitOnly || Array.isArray(o.material) || !skinMats.has(o.material)) return; const m = o.material; let c = copies.get(m);
+    if (!c) { c = m.clone(); c.userData = { ...m.userData }; c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; copies.set(m, c); } o.material = c; n++; });
+  return n;
+}

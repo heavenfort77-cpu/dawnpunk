@@ -9,7 +9,7 @@ import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
 import { say } from './hud2.js';
 import { lodPrepare, lodCopy } from './lod.js';
-import { mergeGlb, rebindMerged } from './glbmerge.js';
+import { mergeGlb, rebindMerged, splitShared } from './glbmerge.js';
 
 const BC = CONFIG.boss, VW = BC.view, PH = BC.physics, S = BC.scale;
 const fxOff = (() => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } })();
@@ -268,6 +268,9 @@ function buildGlb() {
     // one copy per model material (LAG FIX Nov 19; was one per part): every change the boss makes to them (m.mats) is the same for all, so nothing looks different,
     // and the merged mesh and its parts share it
     if (!o.userData.bossMat) { let m = byBase.get(m0); if (!m) { m = m0.clone(); m.fog = !VW.fogOff; if (m.map) { m.emissiveMap = m.map; m.emissive = new THREE.Color(0x000000); } byBase.set(m0, m); mats.push(m); } o.material = m; o.userData.bossMat = true; } });
+  // (LAG FIX Nov 19) parts drawn on their own get their own copy of a material the merged mesh uses (src/glbmerge.js splitShared); m.mats keeps both, so every
+  // change the boss makes to them still reaches both
+  { const before = new Set(); sc.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material)) before.add(o.material); }); splitShared(sc); sc.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material) && !before.has(o.material) && !mats.includes(o.material)) mats.push(o.material); }); }
   // small red standby lights on the body (the code-built cat has them in its glow mesh)
   if (nodes.body) { const sm = lensFor('standby'), sg = new THREE.SphereGeometry(0.014, 6, 4); for (const [x, y, z] of [[0.2, 1.1, -0.2], [-0.25, 0.62, -0.27], [0.33, 0.4, 0.15], [-0.18, 0.95, 0.27]]) { const me = new THREE.Mesh(sg, sm); me.position.set(x - PIV.body[0], y - PIV.body[1], z - PIV.body[2]); nodes.body.add(me); } }
   const setGlow = (key, c, k) => { const m = glows[key]; if (m) m.color.set(c).multiplyScalar(k); };
