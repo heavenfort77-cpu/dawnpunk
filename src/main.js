@@ -1310,15 +1310,22 @@ async function sceneCard(kind) {
   try {
     // the night's models are waited for under the NIGHT card only: the ride card shows the day street, which does not need them (they keep loading behind it).
     // (Waiting on the ride card held the street hidden for up to maxWait s in the checks: playershadowcheck_desktop saw the card, not the street.)
-    if (QUALITY === 'high' && kind === 'night') { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
+    // (Nov 19 09:00) For a player the RIDE card waits for them too and builds the night's shaders already (below), so the night card stays short.
+    if (QUALITY === 'high' && (kind === 'night' || (kind === 'ride' && !bot))) { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
     if (kind === 'night') warmNight(); else dropWarm(); if (fx && fx.upgradeNow) fx.upgradeNow();
     fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
+    // the ride card also builds the NIGHT's shaders: the night's machine lights on (every lit shader is built per light count), one machine of each kind and each device
+    // in the scene, then all put back as they were. The night card then finds them built (the first night card took 6.8 s on the test GPU, the next ones 0.5 s).
+    if (!bot && kind === 'ride' && run && renderer.compileAsync && glights.length) { for (const l of glights) l.visible = true; warmNight(); if (fx && fx.upgradeNow) fx.upgradeNow();
+      fill(0.75); try { await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } finally { for (const l of glights) l.visible = false; warmG.visible = false; } }
     // LAG FIX Nov 19 (real GPU: the first frame after the night card still took 1.7 s): the scene is drawn once UNDER the card, with the warm-up copies set out in front of
     // the camera, so every shader's first use, every upload and the sun shadow map (whose depth shaders compileAsync does not build) happen here, not in play; then
     // drawn again without them, so the shadow map play starts with is the real one. (Not in the scripted checks: they keep the old timing.)
     if (!bot) { if (kind === 'night') { const n = warmG.children.length; warmG.children.forEach((o, i) => { const a = yaw + ((i + 0.5) / n - 0.5) * 0.9, d = 2.5 + (i % 3); o.position.set(cam.position.x - Math.sin(a) * d, cam.position.y - 1.2, cam.position.z - Math.cos(a) * d); }); warmG.visible = true; }
-      const draw1 = () => { renderer.shadowMap.needsUpdate = true; if (fx) fx.render(); else renderer.render(scene, cam); };
-      draw1(); warmG.visible = false; await nap(0); if (kind === 'night') draw1(); }
+      // the frame's own drawing (draw(): far plane, far copies, picture pass) and the hands; a last plain frame, then the GPU is made to finish all of it under the card
+      // (real GPU: without the finish the first frame of play waited ~0.6 s for the card's queued work)
+      const draw1 = (sh) => { if (sh) renderer.shadowMap.needsUpdate = true; draw(); if (sim && state === 'play' && !window.__noHands) hands.render(renderer, cam.aspect); }, raf = () => new Promise((r) => requestAnimationFrame(() => r()));
+      draw1(true); warmG.visible = false; await raf(); if (kind === 'night') { draw1(true); await raf(); } draw1(false); try { renderer.getContext().finish(); } catch (e2) { /* no context */ } }
     warmG.visible = false;
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
