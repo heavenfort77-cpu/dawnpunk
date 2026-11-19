@@ -366,21 +366,27 @@ export function buildWorld(cfg, run) {
   {
     g.updateMatrixWorld(true); const keep = new Set(marks.map((q) => q.mark)); keep.add(tufts); const buckets = new Map(), dead = [], v = new THREE.Vector3(), nm = new THREE.Matrix3(), WHITE = new THREE.Color(1, 1, 1);
     const CELL = QUALITY === 'high' ? CONFIG.lag.mergeCell : 0;
+    // which house's footprint (its half size from the house's own sim, plus CONFIG.lag.housePad m) a piece stands in, or -1
+    const hInv = houses.map((hg) => hg.matrixWorld.clone().invert()), hv = new THREE.Vector3();
+    const houseOf = (o) => { hv.setFromMatrixPosition(o.matrixWorld); for (let i = 0; i < houses.length; i++) { const H = ((run.houses[i] && run.houses[i].H) || 0) + CONFIG.lag.housePad; if (H <= CONFIG.lag.housePad) continue;
+      const q = hv.clone().applyMatrix4(hInv[i]); if (Math.abs(q.x) < H && Math.abs(q.z) < H) return i; } return -1; };
     const tintOf = (o, m) => { for (let q = o; q; q = q.parent) { if (q.userData.tint) return q.userData.tint; if (q.userData.tintM && q.userData.tintM[m.uuid]) return q.userData.tintM[m.uuid]; } return WHITE; };
     g.traverse((o) => {
       // (desktop scenery, src/scenehi.js: its leaf masses, hills and roofs carry their own vertex colours and cells, so they are left out of the merge)
       if (!o.isMesh || o.isInstancedMesh || keep.has(o) || o.userData.scenery) return; const geo = o.geometry, P = geo.attributes.position, N = geo.attributes.normal, U = geo.attributes.uv, idx = geo.index, mats = Array.isArray(o.material) ? o.material : [o.material];
       const total = idx ? idx.count : P.count, groups = geo.groups.length && mats.length > 1 ? geo.groups : [{ start: 0, count: total, materialIndex: 0 }]; nm.getNormalMatrix(o.matrixWorld);
       // LAG FIX Nov 19 (desktop): one merged mesh per material AND per cell of CELL m (by where each piece stands), so the parts behind you or out of view are culled
-      const ck = CELL ? Math.floor(o.matrixWorld.elements[12] / CELL) + ',' + Math.floor(o.matrixWorld.elements[14] / CELL) : '';
-      for (const gr of groups) { const m = mats[gr.materialIndex] || mats[0], bk = CELL ? m.uuid + ck : m; let b = buckets.get(bk); if (!b) { b = { p: [], n: [], u: [], c: [], m }; buckets.set(bk, b); } const tc = tintOf(o, m);
+      // and (owner 07:10, night: skip other interiors) a piece standing inside a house's footprint goes to that house's own mesh, never one shared with the street or
+      // another house, so at night (src/nightcull.js) the other houses' rooms and walls are left out unless an opening shows them
+      const hi = CELL ? houseOf(o) : -1, ck = CELL ? (hi >= 0 ? 'h' + hi : Math.floor(o.matrixWorld.elements[12] / CELL) + ',' + Math.floor(o.matrixWorld.elements[14] / CELL)) : '';
+      for (const gr of groups) { const m = mats[gr.materialIndex] || mats[0], bk = CELL ? m.uuid + ck : m; let b = buckets.get(bk); if (!b) { b = { p: [], n: [], u: [], c: [], m, house: hi }; buckets.set(bk, b); } const tc = tintOf(o, m);
         for (let k = gr.start; k < Math.min(total, gr.start + gr.count); k++) { const i = idx ? idx.getX(k) : k; v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); b.p.push(v.x, v.y, v.z); if (N) { v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); b.n.push(v.x, v.y, v.z); } else b.n.push(0, 1, 0); if (U) b.u.push(U.getX(i), U.getY(i)); else b.u.push(0, 0); b.c.push(tc.r, tc.g, tc.b); } }
       dead.push(o);
     });
     for (const o of dead) { o.geometry.dispose(); o.parent.remove(o); }
     // a material with few vertices in all stays ONE mesh (splitting it by cell only adds draws); only big ones are split
     if (CELL) { const byM = new Map(); for (const [k, b] of buckets) { const l = byM.get(b.m) || []; l.push([k, b]); byM.set(b.m, l); }
-      for (const l of byM.values()) { if (l.length < 2 || l.reduce((a, q) => a + q[1].p.length / 3, 0) >= CONFIG.lag.mergeSplitVerts) continue; const b0 = l[0][1]; for (const [k, b] of l.slice(1)) { for (const key of ['p', 'n', 'u', 'c']) for (const x of b[key]) b0[key].push(x); buckets.delete(k); } } }
+      for (const l0 of byM.values()) { const l = l0.filter((q) => q[1].house < 0); if (l.length < 2 || l.reduce((a, q) => a + q[1].p.length / 3, 0) >= CONFIG.lag.mergeSplitVerts) continue; const b0 = l[0][1]; for (const [k, b] of l.slice(1)) { for (const key of ['p', 'n', 'u', 'c']) for (const x of b[key]) b0[key].push(x); buckets.delete(k); } } }
     for (const b of buckets.values()) { const m = b.m, geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.u, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(b.c, 3)); m.vertexColors = true; m.needsUpdate = true; const mm = new THREE.Mesh(geo, m); mm.receiveShadow = true; mm.castShadow = !m.transparent; g.add(mm); }
   }
 

@@ -1141,6 +1141,8 @@ export const CONFIG = {
     // uploaded, every shader of the scene built, and the sun shadow map drawn once. on: the switch; min: shortest time each card shows (s); titles: the card's line per change
     // mergeCell: the street's static pieces are merged per material and per square cell of this size (m) on the desktop builds (src/world.js), so out-of-view cells are culled
     mergeCell: 16,
+    // housePad: a street piece within a house's half size plus this (m) belongs to that house's own merged meshes (gutters, sills, steps), never to the street's
+    housePad: 0.8,
     // mergeSplitVerts: only a material with at least this many vertices in the whole street is split by cell; smaller ones stay one mesh
     mergeSplitVerts: 30000,
     // farPad: the camera's far plane follows the fog: fog end plus this (m), never past the camera's own 90 m. Beyond the fog's end everything is pure fog colour, so
@@ -1155,7 +1157,8 @@ export const CONFIG = {
     // plane (m), everything beyond it counts as seen
     // gloom: the same test for the Gloom machines (src/main.js; owner 07:10 night combat): one outside that no opening shows is not drawn or animated. gloomY: height (m)
     // of the machine's test sphere above its feet, gloomR: its radius (m), generous so a tall Warden or a Stilt's head showing at a window always counts as seen
-    nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2 },
+    // roofCull: a piece of the house you are in whose lowest point is above the top floor's ceiling less this (m) is taken as roof (behind the ceiling, seen only through an opening)
+    nightCull: { on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2, roofCull: 0.02 },
     // mergeGloom: phone tier, the still pieces of each Gloom machine drawn as one mesh per parent and material (src/mergestatic.js); on: the switch; probes: test poses
     // run to find the pieces that never move; perFrame: machines merged per frame at most (a burst of arrivals is spread over a few frames)
     // shaderLog: true = always read each shader's compile log (three.js checkShaderErrors; costs a wait on the driver per shader); false = only in the scripted checks

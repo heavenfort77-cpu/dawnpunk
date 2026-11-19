@@ -33,8 +33,9 @@ const KINDS = ['walker', 'lurcher', 'ticks', 'hauler', 'stilt', 'lantern', 'ward
     // world corners of the visible meshes under o (no sprites, additive glow or ground shade); also the same points in the machine's own frame (m: position, turn)
     // only: this mesh alone (not the meshes under it)
     const pts = (o, m, only) => { const W = [], L = []; const th = m.rotation.y, co = Math.cos(th), si = Math.sin(th);
-      o.updateMatrixWorld(true); (only ? (f) => f(o) : (f) => o.traverse(f))((q) => { if (!q.isMesh || q.isSprite || q.userData.blob) return; let v = q; while (v) { if (!v.visible) return; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; if (mt && (mt.blending === 2 || mt.visible === false || (mt.transparent && mt.opacity < 0.15))) return;
-        // leaf cards and dirt decals (see-through flat cards) hang off the body; they are not part of what you aim at
+      o.updateMatrixWorld(true); (only ? (f) => f(o) : (f) => o.traverse(f))((q) => { if (!q.isMesh || q.isSprite || q.userData.blob || q.userData.mergedDraw) return; let v = q; while (v) { if (!v.visible) return; v = v.parent; } const mt = Array.isArray(q.material) ? q.material[0] : q.material; if (mt && (mt.blending === 2 || mt.visible === false || (mt.transparent && mt.opacity < 0.15))) return;
+        // leaf cards and dirt decals (see-through flat cards) hang off the body; they are not part of what you aim at. (mergedDraw, lag fix Nov 19: the one mesh that DRAWS a model's
+        // parts, src/glbmerge.js / src/mergestatic.js; the parts themselves stay as the shapes, so the merged copy is left out, as the game's aimed shot leaves it out)
         if (q.geometry && q.geometry.type === 'PlaneGeometry' && mt && mt.transparent) return;
         const gm = q.geometry; if (!gm || !gm.attributes || !gm.attributes.position) return; if (!gm.boundingBox) gm.computeBoundingBox(); const bb = gm.boundingBox, e = q.matrixWorld.elements;
         for (const x of [bb.min.x, bb.max.x]) for (const y of [bb.min.y, bb.max.y]) for (const z of [bb.min.z, bb.max.z]) { const wx = e[0] * x + e[4] * y + e[8] * z + e[12], wy = e[1] * x + e[5] * y + e[9] * z + e[13], wz = e[2] * x + e[6] * y + e[10] * z + e[14]; W.push([wx, wy, wz]); const dx = wx - m.position.x, dz = wz - m.position.z; L.push([dx * co - dz * si, wy - m.position.y, dx * si + dz * co]); } });

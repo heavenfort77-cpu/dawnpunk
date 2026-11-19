@@ -9,7 +9,7 @@ import { CONFIG } from './config.js';
 
 export function createNightCull() {
   let root = null, items = null, key = '', on = false;
-  const L1 = 1, I = new THREE.Vector3();
+  const L1 = 1, I = new THREE.Vector3(), BX = new THREE.Box3();
   const stats = { items: 0, hidden: 0 };
   try { window.__nightCull = stats; } catch (e) { /* no window */ }
   // every drawable leaf under world.g with its sphere in world space (the world stands still at night; rebuilt if it is moved)
@@ -19,14 +19,16 @@ export function createNightCull() {
       if (!(o.isMesh || o.isPoints || o.isLine || o.isSprite) || !o.geometry) return; let bs = null;
       if (o.isInstancedMesh) { if (!o.boundingSphere) o.computeBoundingSphere(); bs = o.boundingSphere; } else { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); bs = o.geometry.boundingSphere; }
       if (!bs || !isFinite(bs.radius)) return; const e = o.matrixWorld.elements, k = Math.sqrt(Math.max(e[0] * e[0] + e[1] * e[1] + e[2] * e[2], e[4] * e[4] + e[5] * e[5] + e[6] * e[6], e[8] * e[8] + e[9] * e[9] + e[10] * e[10]));
-      out.push({ o, c: bs.center.clone().applyMatrix4(o.matrixWorld), r: bs.radius * k, hid: false }); });
+      // lo: the lowest point of the piece (m), so a piece wholly above the top floor's ceiling (the roof of the house you are in) is not taken as part of the room
+      let lo = -Infinity; try { if (o.isInstancedMesh) { if (!o.boundingBox) o.computeBoundingBox(); BX.copy(o.boundingBox); } else { if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); BX.copy(o.geometry.boundingBox); } lo = BX.applyMatrix4(o.matrixWorld).min.y; } catch (e) { lo = -Infinity; }
+      out.push({ o, c: bs.center.clone().applyMatrix4(o.matrixWorld), r: bs.radius * k, lo, hid: false }); });
     return out;
   }
   const restore = () => { if (items) for (const it of items) if (it.hid) { it.o.layers.set(0); it.hid = false; } stats.hidden = 0; };
   // can a sphere (centre c in the house's frame, radius r) be seen from the eye E? Inside the house (or its pad) always; outside only through an opening
-  function seen(c, r, sim, E) {
+  function seen(c, r, sim, E, lo) {
     const C = CONFIG.lag.nightCull, FH = CONFIG.floorH, H = sim.H + C.housePad, top = sim.L * FH + C.roof, hw = CONFIG.openingHalf + C.pad, hh = FH / 2 + C.pad, B = sim.breaches;
-    if (Math.abs(c.x) - r < H && Math.abs(c.z) - r < H && c.y - r < top) return true;
+    if (Math.abs(c.x) - r < H && Math.abs(c.z) - r < H && c.y - r < top && !(C.roofCull && lo >= sim.L * FH - C.roofCull)) return true;
     for (let i = 0; i < B.length; i++) { const b = B[i], ox = b.x, oy = (b.floor || 0) * FH + FH / 2, oz = b.z, nx = b.nx, nz = b.nz;
       const de = (E.x - ox) * nx + (E.z - oz) * nz, dc = (c.x - ox) * nx + (c.z - oz) * nz; if (dc > r) continue;
       if (de < C.doorway) return true;
@@ -49,7 +51,7 @@ export function createNightCull() {
       if (!on) { on = true; g.traverse((l) => { if (l.isLight && l.shadow && l.shadow.camera) l.shadow.camera.layers.enable(L1); }); }
       let hidden = 0;
       for (const it of items) {
-        const vis = seen(it.c, it.r, sim, cam.position);
+        const vis = seen(it.c, it.r, sim, cam.position, it.lo);
         if (vis === it.hid) { it.hid = !vis; it.o.layers.set(vis ? 0 : L1); } if (it.hid) hidden++;
       }
       stats.hidden = hidden; return true;

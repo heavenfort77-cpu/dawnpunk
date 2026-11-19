@@ -1290,6 +1290,9 @@ function perfHud(ms) {
 // ?cards=1: the scripted checks get the real card work too (tools/perfcheck.cjs on the real GPU), not the quick bot card
 const CARDS_REAL = (() => { try { return new URLSearchParams(location.search).get('cards') === '1'; } catch (e) { return false; } })();
 const LCARD = { on: false, n: 0 }, BOTRUN = () => { if (CARDS_REAL) return false; try { return !!window.__dtMax || !!navigator.webdriver; } catch (e) { return false; } };
+// the scripted checks (a webdriver browser, not ?cards=1) fetch every Gloom model at page start as before the lag fix, so a check that starts a night at once meets the
+// models, not their stand-ins, and the night card does not hold its frames waiting for them (players and ?cards=1 runs load them per run)
+if (BOTRUN()) gloomPreload();
 // warm-up copies for the night card: one machine of every kind the ring can send and one of every device you carry, built and drawn into the shader cache under the card,
 // then kept hidden until the run ends (a disposed material would free its shader program), so the first machine of a kind or the first device placed does not stall a frame
 function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); drop(c); } scene.remove(warmG); }
@@ -1310,8 +1313,14 @@ async function sceneCard(kind) {
     if (QUALITY === 'high' && kind === 'night') { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
     if (kind === 'night') warmNight(); else dropWarm(); if (fx && fx.upgradeNow) fx.upgradeNow();
     fill(0.6); if (!bot && renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]);
+    // LAG FIX Nov 19 (real GPU: the first frame after the night card still took 1.7 s): the scene is drawn once UNDER the card, with the warm-up copies set out in front of
+    // the camera, so every shader's first use, every upload and the sun shadow map (whose depth shaders compileAsync does not build) happen here, not in play; then
+    // drawn again without them, so the shadow map play starts with is the real one. (Not in the scripted checks: they keep the old timing.)
+    if (!bot) { if (kind === 'night') { const n = warmG.children.length; warmG.children.forEach((o, i) => { const a = yaw + ((i + 0.5) / n - 0.5) * 0.9, d = 2.5 + (i % 3); o.position.set(cam.position.x - Math.sin(a) * d, cam.position.y - 1.2, cam.position.z - Math.cos(a) * d); }); warmG.visible = true; }
+      const draw1 = () => { renderer.shadowMap.needsUpdate = true; if (fx) fx.render(); else renderer.render(scene, cam); };
+      draw1(); warmG.visible = false; await nap(0); if (kind === 'night') draw1(); }
     warmG.visible = false;
-    fill(0.9); renderer.shadowMap.needsUpdate = true;
+    fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { /* the card never blocks the game */ }
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
   fill(1); if (id === LCARD.n) { LCARD.on = false; $('lcard').style.display = 'none'; perfRest(); }
