@@ -418,6 +418,7 @@ function lorePaperTex() {
 // first thing a ray meets in the world (null if nothing within far)
 function loreHit(ox, oy, oz, dx, dy, dz, far) { loreRay.set(loreV.set(ox, oy, oz), loreD.set(dx, dy, dz).normalize()); loreRay.far = far; loreRay.camera = cam; const h = loreRay.intersectObject(world.g, true); return h.length ? h[0] : null; }
 // where this house's note lies: a furniture top, else a free wall for the pinboard
+let loreWhy = [];
 function loreSpot(rnd) {
   const L = CONFIG.lore, s = sim; world.g.updateMatrixWorld(true);
   for (const q of s.furn.filter((o) => L.spots.includes(o.kind))) {
@@ -425,13 +426,14 @@ function loreSpot(rnd) {
     const h = loreHit(x, y0 + 1.6, z, 0, -1, 0, 1.6); if (!h || h.point.y - y0 < L.topY[0] || h.point.y - y0 > L.topY[1]) continue;
     return { top: true, x, y: h.point.y + 0.006, z, floor: q.floor, ry: q.rot + 0.5 };
   }
-  const H = s.H, y = L.boardY;
+  // (R3, lorecheck: with seeds 12 and 7 only 1 house of 6 got a note) loreWhy: why each wall place was turned down (test hook lore.why())
+  const H = s.H, y = L.boardY; loreWhy = [];
   for (let k = 0, tries = 0; k < 24 && tries < 6; k++) {
     const wall = Math.floor(rnd() * 4), u = (rnd() * 2 - 1) * (H - 1.3), nx = wall === 2 ? 1 : wall === 3 ? -1 : 0, nz = wall === 0 ? 1 : wall === 1 ? -1 : 0, wx = nx ? nx * H : u, wz = nz ? nz * H : u;
-    if (s.breaches.some((b) => b.floor === 0 && Math.hypot(b.x - wx, b.z - wz) < (b.type === 'door' ? L.doorKeep : 1.9))) continue;
-    if (s.furn.some((q) => q.floor === 0 && Math.hypot(q.x - wx, q.z - wz) < q.r + 0.9)) continue;
+    if (s.breaches.some((b) => b.floor === 0 && Math.hypot(b.x - wx, b.z - wz) < (b.type === 'door' ? L.doorKeep : 1.9))) { loreWhy.push('opening'); continue; }
+    if (s.furn.some((q) => q.floor === 0 && Math.hypot(q.x - wx, q.z - wz) < q.r + 0.9)) { loreWhy.push('furniture'); continue; }
     tries++;
-    const tx = nz, tz = -nx, ok = [0].every((a) => { const h = loreHit(wx - nx * 1.2 + tx * a, y, wz - nz * 1.2 + tz * a, nx, 0, nz, 1.3); return h && h.distance > 0.93; });
+    const tx = nz, tz = -nx, ok = [0].every((a) => { const h = loreHit(wx - nx * 1.2 + tx * a, y, wz - nz * 1.2 + tz * a, nx, 0, nz, 1.3); loreWhy.push(h ? 'ray ' + h.distance.toFixed(2) + ' ' + (h.object.name || h.object.type) : 'ray none'); return h && h.distance > 0.93; });
     if (!ok) continue;
     const d = H - 0.2 - L.board[2] / 2 - L.boardGap;
     return { top: false, x: nx ? nx * d : u, y, z: nz ? nz * d : u, floor: 0, ry: Math.atan2(-nx, -nz) };
@@ -1508,7 +1510,9 @@ function playProgs() { const k = renderer.info.programs ? renderer.info.programs
 function lfStart(now) { if (!PROGLOG) return; const gap = now - LF.prev; if (LF.prev && gap > CONFIG.lag.longFrame && LF.last && state !== 'end') { if (LF.list.length >= 400) LF.list.shift(); LF.list.push({ t: Math.round(now), gap: Math.round(gap), state, ...LF.last }); window.__longFrames = LF.list; }
   LF.prev = now; LF.s = performance.now(); LF.k = LF.s; LF.m.logic = LF.m.draw = LF.m.hands = 0; LF.p0 = PN.prog; LF.w0 = PN.why; LF.d0 = PN.draws; LF.u0 = UPL.n; LF.um0 = UPL.ms; LF.b0 = UPL.bn; LF.bm0 = UPL.bms; LF.last = null; }
 function lfMark(k) { if (!PROGLOG) return; const n = performance.now(); LF.m[k] += n - LF.k; LF.k = n; }
-function lfEnd() { if (!PROGLOG) return; LF.last = { js: Math.round(performance.now() - LF.s), logic: Math.round(LF.m.logic), draw: Math.round(LF.m.draw), hands: Math.round(LF.m.hands), draws: PN.draws - LF.d0, progs: PN.prog - LF.p0, whys: PN.why - LF.w0, up: UPL.n - LF.u0, upMs: Math.round(UPL.ms - LF.um0), buf: UPL.bn - LF.b0, bufMs: Math.round(UPL.bms - LF.bm0) }; }
+// (R3, boss vs hub) ?proglog=1: the frames' CPU cost summed for window.__game.frameCost(): JS per part, and inside the draw the shadow maps and the matrix pass
+const FC = { n: 0, js: 0, logic: 0, draw: 0, hands: 0, shadow: 0, matrix: 0, calls: 0 };
+function lfEnd() { if (!PROGLOG) return; LF.last = { js: Math.round(performance.now() - LF.s), logic: Math.round(LF.m.logic), draw: Math.round(LF.m.draw), hands: Math.round(LF.m.hands), draws: PN.draws - LF.d0, progs: PN.prog - LF.p0, whys: PN.why - LF.w0, up: UPL.n - LF.u0, upMs: Math.round(UPL.ms - LF.um0), buf: UPL.bn - LF.b0, bufMs: Math.round(UPL.bms - LF.bm0) };  FC.n++; FC.js += performance.now() - LF.s; FC.logic += LF.m.logic; FC.draw += LF.m.draw; FC.hands += LF.m.hands; }
 const PN = { prog: 0, why: 0, draws: 0 };
 if (PROGLOG) { const PL = window.__progLog = [], cur = { m: null, o: null }, rbd = renderer.renderBufferDirect;
   // (owner 13:10, the drill's and the fight's first long frames) also why a material's shader is looked up again (getParameters) without a new program: the scene's
@@ -1523,6 +1527,8 @@ if (PROGLOG) { const PL = window.__progLog = [], cur = { m: null, o: null }, rbd
     try { return rbd.call(this, c2, s2, g2, m2, o2, gr); } finally { cur.m = null; cur.o = null; PN.draws++;
       if (lv !== undefined && mp.lightsStateVersion !== lv) { PN.why++; if (WHY.lv !== mp.lightsStateVersion) { WHY.lv = mp.lightsStateVersion; why('lights', m2, o2); } } else if (mv !== undefined && mp.__version !== mv) { PN.why++; why('version', m2, o2); }
       else if (cp && mp.currentProgram !== cp) { PN.why++; why('switch', m2, o2, (cp.name || cp.id) + ' -> ' + (mp.currentProgram && (mp.currentProgram.name || mp.currentProgram.id)) + (o2.isInstancedMesh ? ' instanced' : '') + (o2.isSkinnedMesh ? ' skinned' : '') + (renderer.getRenderTarget() ? ' target' : '')); } } };
+  { const sr = renderer.shadowMap.render; renderer.shadowMap.render = function (...a) { const t = performance.now(); try { return sr.apply(this, a); } finally { FC.shadow += performance.now() - t; } };
+    const um = scene.updateMatrixWorld; scene.updateMatrixWorld = function (...a) { const t = performance.now(); try { return um.apply(this, a); } finally { FC.matrix += performance.now() - t; } }; }
   const PP = renderer.info.programs, push0 = PP.push;
   PP.push = function (...a) { PN.prog++; if (PL.length >= 300) PL.shift(); { const m = cur.m, o = cur.o, own = []; for (let q = o; q && own.length < 7; q = q.parent) own.push((q.name || q.type) + (q.userData && q.userData.kind ? '[' + q.userData.kind + ']' : ''));
       PL.push({ t: Math.round(performance.now()), state, card: LCARD.on, id: a[0] && a[0].id, name: a[0] && a[0].name, mat: m ? m.type + (m.name ? ' ' + m.name : '') + (m.color ? ' #' + m.color.getHexString() : '') + (m.map ? ' map' : '') + (m.transparent ? ' transparent' : '') + (m.vertexColors ? ' vcol' : '') + (m.side ? ' side' + m.side : '') + (m.map ? ' [' + (m.map.name || (m.map.image && (m.map.image.src || '').split('/').pop().slice(0, 30)) || (m.map.image ? m.map.image.width + 'x' + m.map.image.height : '')) + ']' : '') : '(compile)', owner: own.join(' < '), ud: o ? Object.keys(o.userData || {}).slice(0, 8).join(',') : '', shadow: !!(m && (m.isMeshDepthMaterial || m.isMeshDistanceMaterial)) }); }
@@ -1843,7 +1849,7 @@ window.__game.endNight = (win = true) => { if (!sim || sim.done || !sim.endNow) 
 window.__game.audioState = () => (ac ? ac.state : 'none');
 window.__game.basePeople = () => { const pk = bview.peek(), out = [], v = new THREE.Vector3(), one = (id, root) => { if (!root || !root.parent) return; root.getWorldPosition(v); let sum = 0; root.traverse((q) => { if (q.isBone) sum += q.quaternion.x + q.quaternion.y * 2 + q.quaternion.z * 3 + q.quaternion.w * 4; }); out.push({ id, x: +v.x.toFixed(3), z: +v.z.toFixed(3), pose: +sum.toFixed(4) }); };
   for (const [id, c] of Object.entries(pk.chars || {})) if (c) one(id, c.root); for (const q of pk.npcs || []) one('recruit ' + (q.p && q.p.id), q.ch ? q.ch.root : q.n); if (marla) one('marla', marla.root); return out; };
-window.__game.cardOn = () => LCARD.on; window.__game.uploads = () => ({ n: UPL.n, ms: Math.round(UPL.ms), bn: UPL.bn, bms: Math.round(UPL.bms), big: UPL.big.slice() }); window.__game.filmHold = () => !!(FILM.it || (intro && intro.hold)); window.__game.filmPrepInfo = () => ({ worst: Math.round(FILM.worst), ms: FILM.ms, err: FILM.err || null, compileMs: FILM.compileMs, compileCut: FILM.compileCut, modelWait: FILM.modelWait });
+window.__game.cardOn = () => LCARD.on; window.__game.frameCost = (reset) => { const n = Math.max(1, FC.n), o = { frames: FC.n }; for (const k of ['js', 'logic', 'draw', 'hands', 'shadow', 'matrix']) o[k] = +(FC[k] / n).toFixed(2); o.renderRest = +((FC.draw - FC.shadow - FC.matrix) / n).toFixed(2); if (reset) for (const k in FC) FC[k] = 0; return o; }; window.__game.uploads = () => ({ n: UPL.n, ms: Math.round(UPL.ms), bn: UPL.bn, bms: Math.round(UPL.bms), big: UPL.big.slice() }); window.__game.filmHold = () => !!(FILM.it || (intro && intro.hold)); window.__game.filmPrepInfo = () => ({ worst: Math.round(FILM.worst), ms: FILM.ms, err: FILM.err || null, compileMs: FILM.compileMs, compileCut: FILM.compileCut, modelWait: FILM.modelWait });
 // the impact sound proof (tools/perfcheck.cjs, local probes): each kind rendered live and as a rendered variant through a pooled chain, RMS difference / RMS
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);
 window.__game.impactPrerender = () => IMP.prerender();
@@ -1868,4 +1874,4 @@ window.__game.quality = () => { let shadow = 0, plaster = 0, plasterN = 0; const
 // test hooks for tools/lorecheck.cjs: this visit's note (where, and whether the prompt shows), read it, is it open, the notes found
 // test hook for tools/openingcheck.cjs: person stand-in figures visible in the base right now (the wake shot must show none)
 window.__game.standInsShown = () => { let n = 0; bview.group.traverse((o) => { if (!opStandIn(o)) return; for (let q = o; q; q = q.parent) if (!q.visible) return; n++; }); return n; };
-window.__game.lore = { note: () => (loreN && loreN.bp === bpGroup ? { i: loreN.i, x: loreN.x, z: loreN.z, floor: loreN.floor, top: loreN.top, prompt: loreOn } : null), read: () => openLoreNote(), open: () => loreOpen, found: () => LORE.foundList(save), ms: () => loreMs };
+window.__game.lore = { note: () => (loreN && loreN.bp === bpGroup ? { i: loreN.i, x: loreN.x, z: loreN.z, floor: loreN.floor, top: loreN.top, prompt: loreOn } : null), read: () => openLoreNote(), open: () => loreOpen, found: () => LORE.foundList(save), ms: () => loreMs, why: () => loreWhy.slice() };

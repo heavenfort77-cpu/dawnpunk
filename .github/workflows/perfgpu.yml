@@ -110,5 +110,5 @@ jobs:
           echo "JOB ref=${{ matrix.ref }} tier=${{ matrix.tier }} spot=${{ matrix.spot }}"
           # (H) the gates' FAIL lines do not fail the job (exit 1, measurements), a spot that could not run does (exit 3: crashed)
           set +e; node tools/perfcheck.cjs "${{ matrix.tier }}" > perf.log 2>&1; rc=$?; set -e
-          grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^REPORT|^LEDGER|^BREAK|^PROFILE|^  |^   \\.|^ BY|INFO (dist|.*during play|.*downloaded|.*files over|.*title usable|flow|drill on|run end|returning|programs built during.*page errors|Gloom present|boss view|combat)" perf.log || true
+          grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^REPORT|^LEDGER|^BREAK|^PROFILE|^  |^   \\.|^ BY|INFO (dist|cost |.* card (flow|enter) |.*GPU uploads|.*during play|.*downloaded|.*files over|.*title usable|flow|drill on|run end|returning|programs built during.*page errors|Gloom present|boss view|combat)" perf.log || true
           if [ "$rc" = 3 ]; then echo "perfcheck crashed (a spot could not run)"; exit 1; fi

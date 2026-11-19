@@ -113,7 +113,10 @@ const BREAKDOWN = (spot) => {
     async function measure(spot) {
       await p.evaluate((sp) => { window.__spot = sp; }, spot);
       await p.evaluate(() => { window.__fakeLock = true; window.__dtMax = 0.0005; }); await frames(2);
+      // (R3, boss vs hub) PROFILE: the frames' CPU cost by part (window.__game.frameCost: JS, logic, draw, of which shadow maps and the matrix pass), same runner
+      if (process.env.PROFILE) await p.evaluate(() => window.__game.frameCost && window.__game.frameCost(true));
       const c0 = await p.evaluate(() => ({ ...window.__pc, t: performance.now() })); await frames(FRAMES); const c1 = await p.evaluate(() => ({ ...window.__pc, t: performance.now() }));
+      if (process.env.PROFILE) console.log('INFO cost ' + tier + ' ' + spot + ' (ms a frame, CPU): ' + JSON.stringify(await p.evaluate(() => (window.__game.frameCost ? window.__game.frameCost(true) : null))));
       const r = { tier, spot, calls: Math.round((c1.calls - c0.calls) / FRAMES), tris: Math.round((c1.tris - c0.tris) / FRAMES), sCalls: Math.round((c1.sCalls - c0.sCalls) / FRAMES), sTris: Math.round((c1.sTris - c0.sTris) / FRAMES), ms: Math.round((c1.t - c0.t) / FRAMES), mb: MB(sumB()) };
       r.cam = await p.evaluate(() => { const c = window.__game.cam, n = window.__nightCull; return [c.position.x, c.position.y, c.position.z].map((v) => v.toFixed(1)).join(',') + ' yaw ' + window.__game.yaw.toFixed(2) + ' far ' + c.far.toFixed(0) + (n && n.hidden ? ' nightcull ' + n.hidden + '/' + n.items : ''); });
       if (process.env.BREAK) console.log(await p.evaluate(BREAKDOWN, spot));
@@ -344,7 +347,8 @@ const BREAKDOWN = (spot) => {
         let k = 0; const fr = () => { if (++k < 30) { requestAnimationFrame(fr); return; } const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10); let tot = 0; for (const v of cnt.values()) tot += v;
           res((tot / 30).toFixed(1) + ' a frame; top: ' + top.map(([m, v]) => (v / 30).toFixed(1) + 'x ' + m.type + (m.name ? ' ' + m.name : '') + (m.map && m.map.userData && m.map.userData.tex ? ' map ' + m.map.userData.tex : '') + ' fog ' + m.fog + ' users ' + [...users.get(m)].slice(0, 4).join('/')).join(' | ')); }; requestAnimationFrame(fr); })));
       if (process.env.PROFILE) { const cdp = await p.context().newCDPSession(p); await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 250 }); await p.evaluate(() => { window.__cb.on = true; });
-        await cdp.send('Profiler.start'); await p.waitForTimeout(5000); const { profile } = await cdp.send('Profiler.stop');
+        await p.evaluate(() => window.__game.frameCost && window.__game.frameCost(true)); await cdp.send('Profiler.start'); await p.waitForTimeout(5000); const { profile } = await cdp.send('Profiler.stop');
+        console.log('INFO cost ' + tier + ' ' + spot + ' (ms a frame, CPU, game alone): ' + JSON.stringify(await p.evaluate(() => (window.__game.frameCost ? window.__game.frameCost(true) : null))));
         const self = new Map(), byId = new Map(profile.nodes.map((q) => [q.id, q])); let tot = 0; profile.samples.forEach((id, i) => { const dt = (profile.timeDeltas[i] || 0) / 1000, cf = byId.get(id).callFrame; tot += dt; const k = (cf.functionName || '(anon)') + ' ' + (cf.url || '').split('/').pop() + ':' + (cf.lineNumber + 1); self.set(k, (self.get(k) || 0) + dt); });
         console.log('PROFILE ' + tier + ' ' + spot + ' (' + Math.round(tot) + ' ms sampled; the bot was stopped, so this is the game alone):\n' + [...self.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([k, v]) => '  ' + v.toFixed(0) + ' ms ' + (100 * v / tot).toFixed(1) + '% ' + k).join('\n')); await cdp.detach(); }
       if (OUT) { await p.screenshot({ path: path.join(OUT, tier + '_' + spot + '.png'), timeout: 900000 }); }
