@@ -1206,6 +1206,16 @@ export const CONFIG = {
     // lampsUsed (R4, card 22): the ride card builds the night's and the house-by-day shaders only for the lamp counts this run's houses have (false: every count
     // 0..most, as before; off until the coordinator approves the round)
     lampsUsed: false,
+    // houseLamps (R4 item A, card 26): the house ceiling lamps (one a floor) are drawn as shader data (src/houselamps.js: the same light math as a three.js point
+    // light), not as THREE lights, so the number of lamps is not part of any shader's key and one program per material serves every house; max: most lamps a house
+    // can have (floors: levelAt gives at most 3; one spare). off: the lamps are THREE.PointLights again and the ride card builds a shader set per lamp count
+    // (R4, lead area 2) also the night machines' screen lights (Q.lights of them, src/main.js glights) and the base's room lamps (src/baseview.js): max 7 = 3 house
+    // floors + 1 spare + 3 machine lights (the base has 3 room lamps)
+    houseLamps: { on: true, max: 7 },
+    // gpuPart (R4 items B/C, card 27): the film black's and the cards' parts wait for the GPU to finish the part before (a fence, src/main.js gpuDone) instead of
+    // queueing all of them and then gl.finish(); a part holds at most n pieces, n halved when the GPU took over ms for the part before and doubled (up to most)
+    // when it took under a third of that; cap: the most ms one wait lasts (a safety cap)
+    gpuPart: { on: true, ms: 60, most: 160, cap: 10000 },
     // filmModelWait (R3): the film's black waits at most this many s for the film's desktop Gloom models and sharp textures, now asked for when the film starts
     // (not with the page), so the film shows the same machines and pictures as before
     filmModelWait: 60,
@@ -1232,6 +1242,9 @@ export const CONFIG = {
     // glbMerge: desktop Gloom models drawn as one skinned mesh per material, each part a bone of it (src/glbmerge.js); on: the switch
     // bossPad: extra metres on the boss's merged mesh culling sphere (its broken plates fly a few metres off and stay drawn by it)
     glbMerge: { on: true, bossPad: 6 },
+    // glbFreeze (R4 item H, card 29): a merged desktop Gloom's parts that never move against the moving piece they hang from (probe poses) are skinned by that
+    // piece and leave the per-frame matrix pass (src/glbmerge.js freezeStillBones); the picture is unchanged
+    glbFreeze: { on: true },
     // transparent: see-through pieces (wear decals) of one material are merged too (only their drawing order among themselves can change)
     mergeGloom: { on: true, probes: 8, perFrame: 2, transparent: true },
     // smallCaster: a static piece smaller than this (bounding sphere radius, m) casts no sun shadow (owner's rule: small props castShadow off; their shadows were a few pixels)

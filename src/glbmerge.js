@@ -69,3 +69,32 @@ export function splitShared(root) {
     if (!c) { c = m.clone(); c.userData = { ...m.userData }; c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; copies.set(m, c); } o.material = c; n++; });
   return n;
 }
+
+// (R4 item H, card 29: boss night vs hub, the matrix pass 2.6 ms of 16.2 ms a frame, 806 of its 1209 nodes were Gloom; about 51 a machine) a part that never moves
+// against the moving piece it hangs from (found with probe poses, as src/mergestatic.js does for the code-built machines) is skinned by that piece instead: its
+// skeleton entry points at the moving ancestor (or the machine itself) with the constant offset folded into the entry's inverse matrix, so its triangles are
+// drawn exactly where they were (bone matrix = ancestor's world x (offset x old inverse) = the part's own world x old inverse). The part itself (a leaf, now
+// only the aimed shot's hit shape) leaves the per-frame matrix pass; the aimed shot (src/main.js drawnHit0) forces the machine's whole matrix update before it
+// tests it, as for the merged pieces. root: a machine copy; probe(i): poses it in the i-th test state; n: how many. Returns the parts taken out of the pass.
+const _mi = new THREE.Matrix4(), _mc = new THREE.Matrix4();
+export function freezeStillBones(root, probe, n) {
+  const F = CONFIG.lag.glbFreeze; if (!F || !F.on || !root) return 0;
+  try {
+    const meshes = []; root.traverse((o) => { if (o.isSkinnedMesh && o.userData.mergedDraw && o.skeleton) meshes.push(o); }); if (!meshes.length) return 0;
+    const bones = new Set(); for (const m of meshes) for (const b of m.skeleton.bones) bones.add(b);
+    const nodes = new Set(); for (const b of bones) for (let p = b; p && p !== root; p = p.parent) nodes.add(p);
+    const key = (o) => { o.updateMatrix(); return o.matrix.elements.map((v) => v.toFixed(5)).join(',') + (o.visible ? '' : '|h'); };
+    const k0 = new Map(); for (const o of nodes) k0.set(o, key(o));
+    const moving = new Set(); for (let i = 0; i < n; i++) { probe(i); for (const o of nodes) if (!moving.has(o) && key(o) !== k0.get(o)) moving.add(o); }
+    root.updateMatrixWorld(true);
+    // the moving ancestor of each still leaf part (null: the chain to the root is broken, leave the part as it is)
+    const anchor = new Map(); for (const b of bones) { if (moving.has(b) || b.children.length) continue; let a = b.parent; while (a && a !== root && !moving.has(a)) a = a.parent; if (a) anchor.set(b, a); }
+    if (!anchor.size) return 0;
+    for (const m of meshes) { const S = m.skeleton; let ch = false;
+      for (let i = 0; i < S.bones.length; i++) { const b = S.bones[i], a = anchor.get(b); if (!a) continue;
+        // offset = ancestor's world inverse x part's world (constant: nothing between them moves)
+        _mc.copy(a.matrixWorld).invert().multiply(b.matrixWorld); S.boneInverses[i] = _mi.copy(_mc).multiply(S.boneInverses[i]).clone(); S.bones[i] = a; ch = true; } }
+    let k = 0; for (const b of anchor.keys()) { b.updateMatrix(); b.matrixAutoUpdate = false; b.matrixWorldAutoUpdate = false; k++; }
+    glbMergeState.frozen = (glbMergeState.frozen || 0) + k; glbMergeState.frozenOf = (glbMergeState.frozenOf || 0) + bones.size; return k;
+  } catch (e) { glbMergeState.failed++; return 0; }
+}

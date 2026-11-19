@@ -78,7 +78,7 @@ export function createPerson(cfg, key) {
   const go = (buf, useScan) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => {
       o.userData.keep = true; if (o.isBone) bones[o.name] = o;
-      if (o.isMesh) { o.frustumCulled = false; o.castShadow = true; o.receiveShadow = true; const conv = (m) => (useScan && isHi ? peopleHiMat(m, o, HM) : lowMat(m)); o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material); }
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; const conv = (m) => (useScan && isHi ? peopleHiMat(m, o, HM) : lowMat(m)); o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material); }
     });
     // out of the build pose into a relaxed stand (arms down), as Marla's model
     const Q = P.pose, turn = (b, ax, ang) => { if (!b) return; sc.updateMatrixWorld(true); const pw = b.parent.getWorldQuaternion(new THREE.Quaternion()), rw = new THREE.Quaternion().setFromAxisAngle(ax, ang); b.quaternion.premultiply(pw.clone().invert().multiply(rw).multiply(pw)); };

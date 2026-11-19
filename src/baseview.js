@@ -1,4 +1,5 @@
 // Base renderer + walking logic (plain shapes). Built into the shared Three scene by main.js.
+import { houseLampsOn, houseLamp, addLamp } from './houselamps.js';
 import * as THREE from 'three';
 import { createSky } from './sky.js';
 import { BM, BLOOM, petal, stem, halo, lathe, collectorV2 } from './bloomtech.js';
@@ -214,7 +215,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
         if (!dense) { const gi = new THREE.Mesh(new THREE.CircleGeometry(wr * 0.95, 20), BM.glow(0xffe9b0)); gi.position.set(wx, wy, hd - tw - 0.012); gi.rotation.y = Math.PI; rg.add(gi); } }
       card(Math.min(2.2, I.d - 0.6), 2.4, vineM, -hw - 0.02, 1.4, 0.3, Math.PI / 2, rg); card(1.8, 2.2, vineM, hw + 0.02, 1.3, -0.5, Math.PI / 2, rg); card(2.4, 2.3, vineM, 0.8, 1.35, -hd - 0.02, 0, rg);
       for (let k = 0; k < 7; k++) { const x = -hw - 0.1 + k * (I.w + 0.2) / 6; if (Math.abs(x) > rw + 0.2) card(0.9, 0.6, tuftM, x, 0.3, hd + 0.12 + (k % 2) * 0.1, (k % 3) * 0.3, rg); }
-      const L = (HIBASE ? Lt.high : Lt.low); if (L && L[1] > 0) { const lamp = new THREE.PointLight(L[0], L[1], L[2]); lamp.position.set(0, h - 0.35, 0); rg.add(lamp); }
+      const L = (HIBASE ? Lt.high : Lt.low); if (L && L[1] > 0) { const lamp = houseLampsOn() ? addLamp(houseLamp(L[1], L[2], L[0])) : new THREE.PointLight(L[0], L[1], L[2]); lamp.position.set(0, h - 0.35, 0); rg.add(lamp); }
       if (HIBASE) { vaultHi(rg, { x: 0, z: 0, w: I.w, d: I.d, h, R, k: kk, front: 1, open: true, room: I.key, word: I.word, seed: I.seed, lampX: false, noBench: I.key !== 'workshop', flue: I.key === 'marla' ? [-0.6, -1.32] : undefined, door: [0, I.dw, I.dh], windows: I.windows, inside: dense ? (c) => (I.key === 'workshop' ? workshopHi : marlaHi)(c, I) : null });
         if (rg.userData.densityB) Object.assign(g.userData.densityB || (g.userData.densityB = {}), rg.userData.densityB); }
       if (!dense) { const lin = new THREE.Mesh(new THREE.CylinderGeometry(R - 0.05, R - 0.05, I.w - 2 * tw, 16, 1, true, 0, Math.PI), mat(0x8a5a3a)); lin.material.side = THREE.DoubleSide; lin.rotation.z = Math.PI / 2; lin.scale.set(kk, 1, 1); lin.position.set(0, h, 0); rg.add(lin);
@@ -295,7 +296,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       for (let k = -3; k <= 3; k += 0.9) { circle(hx + k, hz - 2, 0.35); }
       for (let k = -2; k <= 2; k += 0.9) { circle(hx - 3.2, hz + k, 0.35); circle(hx + 3.2, hz + k, 0.35); }
       for (const k of [-2.9, -2.2, -1.5, 1.5, 2.2, 2.9]) circle(hx + k, hz + 2, 0.35);
-      const lamp = new THREE.PointLight(0xffe0a0, 1.6, 9); lamp.position.set(hx, 2.6, hz); g.add(lamp);
+      // (R4, lead area 2: at most 2-3 real lights) the base's room lamps are shader lamps (src/houselamps.js; same light math), not THREE point lights
+      const lamp = houseLampsOn() ? addLamp(houseLamp(1.6, 9)) : new THREE.PointLight(0xffe0a0, 1.6, 9); lamp.position.set(hx, 2.6, hz); g.add(lamp);
       const hl = label('Your home', '#ffe9a0'); hl.position.set(hx, 4.9, hz); hl.userData.kind = 'station'; g.add(hl);
       if (HIBASE) vaultHi(g, { x: hx, z: hz, w: 6.8, d: 4.4, h: 3, R: 2.45, k: 0.55, front: 1, open: true, door: [0, 2.4, 2.4] });
       homeCats = HOME.slots.map(() => ({ cg: null })); refreshHome(); }

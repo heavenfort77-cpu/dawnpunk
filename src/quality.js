@@ -41,9 +41,14 @@ const askedHi = {};
 function askHi(name) {
   if (askedHi[name] || !Q.hiTex || typeof Image === 'undefined' || !TEXHI[name]) return; askedHi[name] = true;
   hiState.asked++; const img = new Image();
-  img.onload = () => { if (!readable(img)) { hiState.failed++; delete waiting[name]; return; } hiImg[name] = img; hiSrc[name] = new THREE.Source(img); hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
-  img.onerror = () => { hiState.failed++; delete waiting[name]; };
+  // (R4, diagnose 6 film profile: "3922 ms getImageData < readable < img.onload") the 1 px canvas check drew every whole picture on the main thread (a full decode
+  // there); a picture can only be unreadable when the page itself is a file:// page and the picture a file beside it, so only then is it checked (REMOVED elsewhere);
+  // the picture is decoded off the main thread first (img.decode) before it is used
+  const chk = typeof location !== 'undefined' && location.protocol === 'file:' && !String(TEXHI[name]).startsWith('data:');
+  const ok = () => { if (chk && !readable(img)) { hiState.failed++; delete waiting[name]; return; } hiImg[name] = img; hiSrc[name] = new THREE.Source(img); hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
+  const bad = () => { hiState.failed++; delete waiting[name]; };
   img.src = TEXHI[name];
+  if (img.decode) img.decode().then(ok, bad); else { img.onload = ok; img.onerror = bad; }
 }
 // every sharp picture asked for at once: at the film's start, the ride card and the player's first click or key in the base (so the street and the houses have
 // them before they are shown, as when they all came with the page)
