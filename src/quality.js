@@ -12,7 +12,9 @@ import { TEXHI } from './texhi.js';
 export const QPICK = (() => {
   const ok = (t) => t === 'high' || t === 'low' || t === 'medium';
   try { const u = new URLSearchParams(location.search).get('quality'); if (ok(u)) return { tier: u, by: 'address' }; } catch (e) { /* no address */ }
-  try { const s = localStorage.getItem('dawnpunk.quality'); if (ok(s)) return { tier: s, by: 'saved' }; } catch (e) { /* storage blocked */ }
+  // OWNER DECISION (lead 00:16, R4 worker 8, Card 47): players never get high: a save that stored high loads as medium (and is saved as medium); only the address
+  // (?quality=high: the scripted desktop checks, the owner's tests) still gives high
+  try { let s = localStorage.getItem('dawnpunk.quality'); if (s === 'high') { s = 'medium'; try { localStorage.setItem('dawnpunk.quality', s); } catch (e) { /* not kept */ } } if (ok(s)) return { tier: s, by: 'saved' }; } catch (e) { /* storage blocked */ }
   return { tier: 'medium', by: 'default' };
 })();
 export const TIER = QPICK.tier;
@@ -20,7 +22,7 @@ export const QUALITY = TIER === 'low' ? 'low' : 'high';
 // medium: its settings laid over the high block in place (every module that reads CONFIG.quality.high sees them); arrays and plain values replace, objects merge
 if (TIER === 'medium' && CONFIG.quality.medium) { const lay = (a, b) => { for (const k in b) { const v = b[k]; if (v && typeof v === 'object' && !Array.isArray(v) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k])) lay(a[k], v); else a[k] = v; } }; lay(CONFIG.quality.high, CONFIG.quality.medium); }
 export const Q = CONFIG.quality[QUALITY];
-export function saveQuality(tier) { try { localStorage.setItem('dawnpunk.quality', tier); return true; } catch (e) { return false; } }
+export function saveQuality(tier) { if (tier === 'high') tier = 'medium'; try { localStorage.setItem('dawnpunk.quality', tier); return true; } catch (e) { return false; } } // (Card 47) high is never saved
 
 // texture sharpness at a slant: the tier's value, capped by what the GPU can do (main.js tells us once the renderer exists)
 let gpuAniso = 1;

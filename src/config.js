@@ -1139,7 +1139,8 @@ export const CONFIG = {
     // crossWarm (R4 worker 6, Card 40): the crosshair's Gloom state is drawn first under each loading card (its drop-shadow filters cost 226 ms of GPU raster the first time)
     crossWarm: true,
     // glbDefer (R4 worker 6): a model that finishes loading while the film or play is shown gets its pictures and shaders prepared at the next held time (card, film black, title)
-    glbDefer: true,
+    // (R4 worker 8, Card 46) OFF: its proof failed (plain medium 44560403739: the 15 'intro' programs stayed; they were the film start's own compiles, Card 45)
+    glbDefer: false,
     // bossFreeze (R4 worker 5): the desktop boss model's still parts leave the per-frame matrix pass (src/bosshi.js buildGlb)
     bossFreeze: true,
     // skipCard (R4 worker 5): the film skipped before its base part shows the home card while the base's first frames are made

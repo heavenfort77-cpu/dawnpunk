@@ -661,7 +661,10 @@ function startIntro() { if (!BOTRUN() && CONFIG.lag.filmWarm && !startIntro.go &
   $('menu').style.display = 'none'; $('hud').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; $('cineCap').textContent = ''; opLids(0);
   if (!FILM.ready) run = RUN.createRun(CONFIG, 0, C.seed, {}); scene.fog = DESO.on ? new THREE.Fog(CONFIG.desolate.over.fogColor, CONFIG.desolate.over.fogNear, CONFIG.desolate.over.fogFar) : new THREE.Fog(0xbfe6f0, 20, 80);
   needWorld().frame(-1); skyK = G.night; applySky(skyK, 0); GK.nightGlow(1);
-  const I = intro = { t: 0, part: 'town', p: 0, grp: new THREE.Group(), walkers: [], skipT: 0 }; scene.add(I.grp);
+  // (R4 worker 8, Card 45: plain medium 44560403739 'programs in play' 15, one entry ['intro', 26.0 s]) the film's black (#cineFade opacity 1, set above) holds the
+  // picture from here, but I.hold was set only in filmWarm (end of this function), after the hidden machines' compileAsync below, so they were built in an
+  // un-held moment under the black; I.hold now starts when the black does, on the same condition filmWarm sets it on
+  const I = intro = { t: 0, part: 'town', p: 0, grp: new THREE.Group(), walkers: [], skipT: 0, hold: !BOTRUN() && !!CONFIG.lag.filmWarm }; scene.add(I.grp);
   Object.assign(I, opTarget()); opWindows(I); opLamps(I);
   const M = G.machine, mp = opAt(I, M[1], 0, M[2]); I.face = Math.atan2(-I.n.x, -I.n.z); I.mach = { kind: M[0], x: mp.x, z: mp.z, o: opMachine(M[0], true), awake: false };
   I.mach.o.position.copy(mp); I.mach.o.rotation.y = I.face + M[3]; I.grp.add(I.mach.o);
@@ -1110,8 +1113,9 @@ function tickHud(dt) { keysAuto(); tickBar(dt); tickWake(); tickDrillUi(); tickC
 function chime(v) { const a = audio(); if (!a) return; const t = a.currentTime; [1318, 1760].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t + i * 0.09); g.gain.exponentialRampToValueAtTime(0.14 * v, t + i * 0.09 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.5); o.connect(g); g.connect(a.destination); o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.55); }); }
 $('lookT').textContent = 'Look: ' + (GRITTY ? 'realistic worn' : 'painted (old)') + ' - tap to switch'; $('lookT').onclick = () => { try { localStorage.setItem('dawnpunk.look', GRITTY ? 'painted' : 'gritty'); } catch (e) { /* not kept */ } location.href = location.href.split('?')[0]; };
 // graphics tier (src/quality.js, CONFIG.quality): the title link and the pause-menu button switch it; the choice is saved and the page reloads, because edge smoothing and the texture set are fixed when the page starts
-// the button cycles medium (the default) -> high -> low -> medium (owner Nov 19: tiers by measured frame time; medium on every device by default)
-const GFX_OTHER = TIER === 'medium' ? 'high' : TIER === 'high' ? 'low' : 'medium', gfxGo = () => { saveQuality(GFX_OTHER); let u = location.href.split('#')[0]; try { const x = new URL(u); x.searchParams.set('quality', GFX_OTHER); if (x.searchParams.get('film') !== '0') x.searchParams.set('film', '1'); u = x.href; } catch (e) { /* keep the address */ } location.href = u; };
+// the button switches medium (the default) <-> low (owner Nov 19: tiers by measured frame time; medium on every device by default); OWNER DECISION (lead 00:16,
+// Card 47): no high for players: it is never offered; a page opened with ?quality=high (checks, tests) switches to medium
+const GFX_OTHER = TIER === 'medium' ? 'low' : 'medium', gfxGo = () => { saveQuality(GFX_OTHER); let u = location.href.split('#')[0]; try { const x = new URL(u); x.searchParams.set('quality', GFX_OTHER); if (x.searchParams.get('film') !== '0') x.searchParams.set('film', '1'); u = x.href; } catch (e) { /* keep the address */ } location.href = u; };
 const gfxPauseLabel = () => 'Graphics: ' + TIER + (TIER === 'medium' ? ' (default)' : '');
 let gfxArm = 0; $('gfxT').textContent = 'Graphics: ' + TIER + (TIER === 'medium' ? ' (default)' : '') + ' - tap to switch'; $('gfxT').onclick = gfxGo;
 $('bGfx').textContent = gfxPauseLabel(); $('bGfx').addEventListener('click', () => { if (!gfxArm) { gfxArm = 1; $('bGfx').textContent = 'Switch to ' + GFX_OTHER + '? Reloads: this night ends. Tap again'; return; } gfxGo(); });
@@ -1710,7 +1714,11 @@ async function sceneCard(kind) {
     // the impact sounds' variants are rendered ahead (src/impactsfx.js impactPrerender): started by the ride card and left to finish during the day; the night card
     // waits a moment (CONFIG.lag.card.sfxWait s) if they are not done yet; until they are, a sound is built live as before
     if (!bot && kind === 'ride') IMP.prerender(); else if (!bot && kind === 'night') await Promise.race([IMP.prerender(), nap(L.sfxWait * 1000)]);
-    mark('prepare'); fill(0.6); marlaSync(); if (!bot && renderer.compileAsync) await Promise.race([Promise.all([renderer.compileAsync(scene, cam), marlaCompile()]), nap(L.maxWait * 1000)]); mark('compile');
+    // (R4 worker 8, lead 00:12 item a) the compile step's two waits timed apart: LCARD.cw = [street sync part, street ready, Marla sync part, Marla ready] (ms from the
+    // step's start), in the card's proof as cw
+    mark('prepare'); fill(0.6); marlaSync(); LCARD.cw = null; if (!bot && renderer.compileAsync) { const cw = LCARD.cw = [0, -1, 0, -1], tw = performance.now(), dt = () => Math.round(performance.now() - tw);
+      const pS = renderer.compileAsync(scene, cam).then(() => { cw[1] = dt(); }); cw[0] = dt(); const pM = marlaCompile().then(() => { cw[3] = dt(); }); cw[2] = dt();
+      await Promise.race([Promise.all([pS, pM]), nap(L.maxWait * 1000)]); } mark('compile');
     // the ride card also builds the NIGHT's shaders: the night's machine lights on (every lit shader is built per light count), one machine of each kind and each device
     // in the scene, then all put back as they were. The night card then finds them built (the first night card took 6.8 s on the test GPU, the next ones 0.5 s).
     // A house adds one ceiling lamp per floor (buildRoom), so the night's light count also depends on the house: stand-in lamps for each floor count among this ring's
@@ -1784,7 +1792,7 @@ async function sceneCard(kind) {
       LCARD.settle = fr; mark('settle'); }
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
-  LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ id, kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, allParts: LCARD.allParts || null, lamps: LCARD.lampCounts || null, gpu: [GPUQ.waits - pf0[7], Math.round(GPUQ.ms - pf0[8]), Math.round(GPUQ.worst)], bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
+  LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ id, kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, cw: LCARD.cw || null, allParts: LCARD.allParts || null, lamps: LCARD.lampCounts || null, gpu: [GPUQ.waits - pf0[7], Math.round(GPUQ.ms - pf0[8]), Math.round(GPUQ.worst)], bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
   if (CONFIG.lag.crossWarm) { if (crS === null) crW.removeAttribute('style'); else crW.setAttribute('style', crS); crossK = '#'; setCross(crK); }
   fill(1); if (id === LCARD.n) { LCARD.on = false; LCARD.endT = Math.round(performance.now()); $('lcard').style.display = 'none'; perfRest(); }
