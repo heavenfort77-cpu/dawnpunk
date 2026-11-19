@@ -1320,9 +1320,11 @@ async function sceneCard(kind) {
     // houses are put in the scene in turn while the shaders are built, then removed.
     if (!bot && kind === 'ride' && run && renderer.compileAsync && glights.length) { for (const l of glights) l.visible = true; warmNight(); if (fx && fx.upgradeNow) fx.upgradeNow();
       // the night has no spot lights (Marla's and the people's key lights belong to the day street), so they are off while the night's shaders are built
-      const lamps = [...new Set(run.houses.map((h) => h.L || 1))].sort(), tmp = [], spots = []; scene.traverse((o) => { if (o.isSpotLight && o.visible) { o.visible = false; spots.push(o); } });
+      // every other point light of the day street is off too, and the house lamps are stood in for 0, 1, ... up to the most floors any house here has
+      const most = Math.max(1, ...run.houses.map((h) => h.L || 1)), lamps = [...Array(most + 1).keys()], tmp = [], spots = [];
+      scene.traverse((o) => { if ((o.isSpotLight || (o.isPointLight && !glights.includes(o))) && o.visible) { o.visible = false; spots.push(o); } });
       try { for (const n of lamps) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
-          fill(0.7 + 0.2 * tmp.length / lamps[lamps.length - 1]); await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
+          fill(0.7 + 0.2 * tmp.length / most); await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
       finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } for (const o of spots) o.visible = true; for (const l of glights) l.visible = false; warmG.visible = false; } }
     // LAG FIX Nov 19 (real GPU: the first frame after the night card still took 1.7 s): the scene is drawn once UNDER the card, with the warm-up copies set out in front of
     // the camera, so every shader's first use, every upload and the sun shadow map (whose depth shaders compileAsync does not build) happen here, not in play; then
