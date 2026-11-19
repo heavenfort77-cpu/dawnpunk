@@ -159,7 +159,9 @@ const flatGeo = new THREE.PlaneGeometry(1, 1); flatGeo.rotateX(-Math.PI / 2);
 function shadeUnder(o, size, y = 0.025) { depthMats(); const s = new THREE.Mesh(flatGeo, shadeMat); s.scale.set(size, 1, size); s.position.y = y; s.renderOrder = 1; s.userData.blob = true; o.add(s); return s; }
 function buildDepth() { if (!sim || !bpGroup) return; depthMats(); const D = CONFIG.depth, g = new THREE.Group(); bpGroup.add(g);
   for (const q of sim.furn || []) { const s = new THREE.Mesh(flatGeo, shadeMat); s.scale.set(q.r * D.furn, 1, q.r * D.furn); s.position.set(q.x, q.floor * FH + 0.075, q.z); s.rotation.y = q.rot || 0; s.renderOrder = 1; g.add(s); }
-  for (const b of sim.breaches) { const door = b.type === 'door', w = door ? D.doorW : D.poolW, l = door ? D.doorL : D.poolL, p = new THREE.Mesh(flatGeo, poolMat); p.scale.set(w, 1, l); p.position.set(b.x + b.nx * (l / 2 - 0.15), b.floor * FH + 0.085, b.z + b.nz * (l / 2 - 0.15)); p.rotation.y = Math.atan2(-b.nx, -b.nz); p.renderOrder = 2; g.add(p); } buildDirt(g); }
+  for (const b of sim.breaches) { const door = b.type === 'door', w = door ? D.doorW : D.poolW, l = door ? D.doorL : D.poolL, p = new THREE.Mesh(flatGeo, poolMat); p.scale.set(w, 1, l); p.position.set(b.x + b.nx * (l / 2 - 0.15), b.floor * FH + 0.085, b.z + b.nz * (l / 2 - 0.15)); p.rotation.y = Math.atan2(-b.nx, -b.nz); p.renderOrder = 2; g.add(p); } buildDirt(g);
+  // LAG FIX Nov 19: these floor shades, pools and dirt decals never move: drawn as one mesh per material (src/mergestatic.js; about 45 draws became a few). All tiers.
+  if (CONFIG.lag.mergeDecals) mergeStatic(g, () => {}, true); }
 const dirtMats = {}; function dirtMat(k) { if (!dirtMats[k]) { dirtMats[k] = new THREE.MeshLambertMaterial({ map: depthTex(k), color: k === 'dust' ? CONFIG.dirt.dustTint : 0xffffff, transparent: true, opacity: CONFIG.dirt.power * (k === 'dust' ? 0.6 : 1), depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, side: THREE.DoubleSide }); dirtMats[k].userData.shared = true; } return dirtMats[k]; }
 const wallGeo = new THREE.PlaneGeometry(1, 1);
 function buildDirt(g) { const D = CONFIG.dirt, H = sim.H; let q = ((run ? run.seed : 7) * 31 + (run ? run.inside : 0) * 977 + 5) >>> 0; const rn = () => ((q = (q * 1664525 + 1013904223) >>> 0) / 4294967296), ri = (a) => a[0] + Math.floor(rn() * (a[1] - a[0] + 1));
@@ -1491,6 +1493,8 @@ window.__game.wakeText = () => wakeT; window.__game.uiNow = () => ui; window.__g
 window.__game.wsTip = () => wsTipT;
 // the automatic step-down (tools/perfcheck.cjs): its state, and take the next step now
 window.__game.cardOn = () => LCARD.on;
+// the shader programs built so far (tools/perfcheck.cjs: which ones are first built after the night card); name and a short key each
+window.__game.programs = () => (renderer.info.programs || []).map((q) => q.id + ' ' + q.name + ' ' + String(q.cacheKey).replace(/,+/g, ',').slice(0, 160));
 window.__game.perfStep = () => (perf ? { ...perf.state } : null); window.__game.perfForce = () => (perf ? { ...perf.force() } : null);
 window.__game.baseEvening = (t) => bview.setEvening(t);
 window.__game.cfg = CONFIG;

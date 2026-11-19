@@ -1160,6 +1160,8 @@ export const CONFIG = {
     // run to find the pieces that never move; perFrame: machines merged per frame at most (a burst of arrivals is spread over a few frames)
     // shaderLog: true = always read each shader's compile log (three.js checkShaderErrors; costs a wait on the driver per shader); false = only in the scripted checks
     shaderLog: false,
+    // mergeDecals: the house's floor shades, door pools and dirt decals (static) drawn as one mesh per material (src/main.js buildDepth; all tiers)
+    mergeDecals: true,
     // glbMerge: desktop Gloom models drawn as one skinned mesh per material, each part a bone of it (src/glbmerge.js); on: the switch
     glbMerge: { on: true },
     // transparent: see-through pieces (wear decals) of one material are merged too (only their drawing order among themselves can change)

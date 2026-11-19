@@ -17,8 +17,9 @@ const keyOf = (o) => { o.updateMatrix(); return o.matrix.elements.map((v) => v.t
 const sigOf = (g) => Object.keys(g.attributes).sort().map((k) => k + g.attributes[k].itemSize + (g.attributes[k].normalized ? 'n' : '')).join(',') + (g.index ? '|i' : '|n') + (Object.keys(g.morphAttributes || {}).length ? '|m' : '');
 
 // root: a built machine; probe(i): poses it in the i-th test state (CONFIG.lag.mergeGloom.probes of them). Returns the number of meshes drawn in place of the pieces.
-export function mergeStatic(root, probe) {
-  const C = CONFIG.lag.mergeGloom; if (!C || !C.on) return 0;
+// still: the pieces are known never to move (a house's floor decals): no probe poses, and see-through pieces are merged whatever the Gloom setting says
+export function mergeStatic(root, probe, still) {
+  const C = still ? { on: true, probes: 0, transparent: true } : CONFIG.lag.mergeGloom; if (!C || !C.on) return 0;
   try {
     const leaves = [];
     root.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || o.children.length || !o.geometry || Array.isArray(o.material) || o.userData.blob || o.userData.mergedDraw) return;
@@ -34,6 +35,6 @@ export function mergeStatic(root, probe) {
       const geos = l.map((o) => { o.updateMatrix(); const g = o.geometry.clone(); g.applyMatrix4(o.matrix); return g; }), merged = mergeGeometries(geos, false); for (const g of geos) g.dispose(); if (!merged) { mergeState.failed++; continue; }
       const o0 = l[0], mesh = new THREE.Mesh(merged, o0.material); mesh.castShadow = o0.castShadow; mesh.receiveShadow = o0.receiveShadow; mesh.frustumCulled = o0.frustumCulled; mesh.renderOrder = o0.renderOrder; mesh.userData.mergedDraw = true; mesh.raycast = () => {}; o0.parent.add(mesh);
       for (const o of l) { o.layers.set(HIT_LAYER); o.userData.hitOnly = true; } made++; mergeState.pieces += l.length; }
-    mergeState.machines++; mergeState.meshes += made; return made;
+    if (!still) mergeState.machines++; mergeState.meshes += made; return made;
   } catch (e) { mergeState.failed++; return 0; }
 }

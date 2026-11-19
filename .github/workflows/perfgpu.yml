@@ -108,4 +108,4 @@ jobs:
           NOEXTRA: ${{ matrix.spot != 'hub' && '1' || '' }}
         run: |
           echo "JOB ref=${{ matrix.ref }} tier=${{ matrix.tier }} spot=${{ matrix.spot }}"
-          node tools/perfcheck.cjs "${{ matrix.tier }}" 2>&1 | grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^BREAK|^PROFILE|^  |^ BY|INFO (dist|.*downloaded|.*page errors|Gloom present|boss view|combat)" || true
+          node tools/perfcheck.cjs "${{ matrix.tier }}" 2>&1 | grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^BREAK|^PROFILE|^  |^   \\.|^ BY|INFO (dist|.*downloaded|.*page errors|Gloom present|boss view|combat)" || true
