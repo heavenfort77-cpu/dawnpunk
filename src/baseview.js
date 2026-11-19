@@ -121,7 +121,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // Marla back at her spot (she walks the street with you while you are out)
     if (marla && scoutG) marla.whenReady(() => { if (!scoutG || !g.parent) return; shadowDirty = true; if (scoutG.userData.stand) scoutG.remove(scoutG.userData.stand); marla.root.position.set(0, 0, 0); marla.root.rotation.set(0, 0, 0); scoutG.add(marla.root); });
     // the villagers' own turn-to-you and work-loop state starts over, as their nodes did in a fresh build (owner 12:49)
-    for (const n of Object.values(NPCS)) { const o = npcG[n.id]; if (o) { o.wt = 0; o.work = undefined; o.near = false; o.away = 0; o.lpx = null; o.lpz = null; o.facc = 0; o.pb = null; } }
+    for (const n of Object.values(NPCS)) { const o = npcG[n.id]; if (o) { o.wt = 0; o.work = undefined; o.near = false; o.away = 0; o.lpx = null; o.lpz = null; o.facc = 0; } }
     refreshNpcs(); refreshHome(); refreshJournal(); refreshAvians();
   }
   // the recruits' nodes (owner 11:27: also rebuilt alone, recruitsChanged)
@@ -340,7 +340,9 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     keptSig = sig; keptFog = scene.fog;
     // (owner 13:10, premortem A) what a fresh build leaves, kept for a kept base shown again: every piece's place, turn and size (pieces whose matrix is fixed are left
     // out), and the sun's colour and strength (the film's dawn shot changes them)
-    snap0 = []; g.traverse((o) => { if (o.matrixAutoUpdate) snap0.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone()]); }); sunC0 = sunL ? sunL.color.getHex() : 0;
+    // (the people's own models are left out: their motion keeps its own state, foot lock included, and restarts on its own)
+    { const ppl = new Set(), mark = (r) => { if (r) r.traverse((q) => ppl.add(q)); }; for (const c of Object.values(chars)) if (c) mark(c.root); if (marla) mark(marla.root); for (const q of npcs) if (q.ch) mark(q.ch.root);
+      snap0 = []; g.traverse((o) => { if (o.matrixAutoUpdate && !ppl.has(o)) snap0.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone()]); }); } sunC0 = sunL ? sunL.color.getHex() : 0;
   }
   let bg = null;
   // the rest of a background build of the same base first (it ends kept, so buildIter then only shows it again), else the whole build or the kept base shown again
@@ -463,17 +465,6 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   let viewCam = null; const FAR = cfg.lag && cfg.lag.farStep;
   const live = (x, z, px, pz) => { if (!FAR || !viewCam) return true; if (Math.hypot(x - px, z - pz) < FAR.dist) return true; FS.center.set(x, 0.9, z); FS.radius = 1.3; return FR.intersectsSphere(FS); };
   const stepDt = (o, on, dt) => { const a = (o.facc || 0) + dt; if (on || a >= 1 / FAR.hz) { o.facc = 0; return a; } o.facc = a; return 0; };
-  // (owner 13:10) a far villager keeps her farStep.hz motion steps, but the pose DRAWN each frame is blended between her last two stepped poses (slerp for turns, lerp for
-  // places), one step behind the motion, so a step never shows as a jump. The motion itself always goes on from its own last pose (o.pb.b), never from a blended one.
-  // poseNodes: the pieces blended (the holder the motion walks, the model root and its bones), found once per villager
-  const poseNodes = (o, ch) => { if (o.pn && o.pnR === ch.root) return o.pn; const l = []; if (ch.root.parent) l.push(ch.root.parent); ch.root.traverse((q) => { if (q === ch.root || q.isBone) l.push(q); }); o.pn = l; o.pnR = ch.root; o.pb = null; return l; };
-  const poseGrab = (l, into) => { for (let i = 0; i < l.length; i++) { const e = into[i] || (into[i] = { p: new THREE.Vector3(), q: new THREE.Quaternion() }); e.p.copy(l[i].position); e.q.copy(l[i].quaternion); } return into; };
-  const poseSet = (l, a) => { for (let i = 0; i < l.length; i++) { l[i].position.copy(a[i].p); l[i].quaternion.copy(a[i].q); } };
-  const poseBlend = (l, a, b, k) => { for (let i = 0; i < l.length; i++) { l[i].position.lerpVectors(a[i].p, b[i].p, k); l[i].quaternion.slerpQuaternions(a[i].q, b[i].q, k); } };
-  // before a villager's motion step: her own last pose back (it was blended); a far step also keeps the pose it starts from (o.pb.a)
-  const farPre = (o, ch, on) => { if (!FAR) return; const l = poseNodes(o, ch); if (o.pb) poseSet(l, o.pb.b); if (on) { o.pb = null; return; } const pb = o.pb || (o.pb = { a: [], b: [] }); poseGrab(l, pb.a); };
-  // after a far step: the pose it reached is kept (o.pb.b) and the drawn pose starts from the one before (blend 0)
-  const farPost = (o, ch, on) => { if (!FAR || on || !o.pb) return; const l = poseNodes(o, ch); poseGrab(l, o.pb.b); poseSet(l, o.pb.a); };
   function update(dt, px, pz, camY, posAt) {
     const pAt = (x0, z0, a) => (posAt ? posAt(a) : [x0 + (px - x0) * a, z0 + (pz - z0) * a]);
     sizeLabels(px, pz);
@@ -484,10 +475,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // each person decides inside the motion's fixed slices (ch.drive's plan), the player's spot taken on a line from last frame's: the same choices at any frame rate
     if (FAR && viewCam) { FM.multiplyMatrices(viewCam.projectionMatrix, viewCam.matrixWorldInverse); FR.setFromProjectionMatrix(FM); }
     for (const n of Object.values(NPCS)) { const o = npcG[n.id], ch = chars[n.id]; if (!o || !ch || !ch.drive) continue;
-      const dt0 = dt, on = !FAR || (n.inside && WS ? inRoom(WS, px, pz) || live(n.x, n.z, px, pz) : live(n.x, n.z, px, pz)), dtN = FAR ? stepDt(o, on, dt0) : dt0;
-      // a far villager between her steps: her drawn pose blended between her last two stepped poses
-      if (!dtN) { if (o.pb && o.pb.b.length) poseBlend(poseNodes(o, ch), o.pb.a, o.pb.b, Math.min(1, (o.facc || 0) * FAR.hz)); continue; }
-      farPre(o, ch, on);
+      const dt0 = dt, dtN = FAR ? stepDt(o, n.inside && WS ? inRoom(WS, px, pz) || live(n.x, n.z, px, pz) : live(n.x, n.z, px, pz), dt0) : dt0; if (!dtN) continue;
       { const dt = dtN; const jump = o.lpx == null || Math.hypot(px - o.lpx, pz - o.lpz) > 2, x0 = jump ? px : o.lpx, z0 = jump ? pz : o.lpz; o.lpx = px; o.lpz = pz;
       // Oko inside the workshop: bent over the bench (head down to the trays, small turns from one tray to the next), standing back now and then; she turns to you only inside the room.
       // (Not the arms-forward 'carry' pose: switching it flicked her hands at 427 deg/s in tools/animcheck.cjs. Her hands work through src/okowork.js, eased in and out.)
@@ -495,9 +483,9 @@ export function createBaseView(scene, cfg, marla, makeChar) {
         ch.drive(dt, { plan: (h, a) => { const pq = pAt(x0, z0, a), qx = pq[0], qz = pq[1], dx = qx - n.x, dz = qz - n.z, d = Math.hypot(dx, dz); o.near = inRoom(WS, qx, qz) && d < (o.near ? W.far : W.near); o.wt = (o.wt || 0) + h;
           const cyc = W.work[0] + W.work[1], turn = W.turns[Math.floor(o.wt / cyc) % W.turns.length]; working = !o.near && (o.wt % cyc) < W.work[0]; const fy = WS.ry + (working ? turn : 0);
           return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: fy, gaze: working ? [Math.sin(fy) * W.look[0], W.look[1] + WS.floor, Math.cos(fy) * W.look[0]] : null }; } });
-        okoWork(ch, o.work || (o.work = {}), dt, working); farPost(o, ch, on); continue; }
+        okoWork(ch, o.work || (o.work = {}), dt, working); continue; }
       ch.drive(dt, { plan: (h, a) => { const pq = pAt(x0, z0, a), dx = pq[0] - n.x, dz = pq[1] - n.z, d = Math.hypot(dx, dz); o.near = d < (o.near ? PT.far : PT.near); o.away = o.near ? 0 : (o.away || 0) + h;
-        return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: o.away > PT.back ? 0 : null }; } }); } farPost(o, ch, on); }
+        return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: o.away > PT.back ? 0 : null }; } }); } }
     // Marla turns to you in pivot steps (her own root, inside scoutG; src/people.js createStepper), her feet held where they stand
     if (marla && scoutG) { const dx = px - scoutG.position.x, dz = pz - scoutG.position.z, d = Math.hypot(dx, dz), near = d < 7; const m0 = scoutG.userData; const jump = m0.lpx == null || Math.hypot(px - m0.lpx, pz - m0.lpz) > 2, x0 = jump ? px : m0.lpx, z0 = jump ? pz : m0.lpz; m0.lpx = px; m0.lpz = pz;
       if (marla.turn) marla.turn(dt, (a) => { const pq = pAt(x0, z0, a), qx = pq[0] - scoutG.position.x, qz = pq[1] - scoutG.position.z; m0.near = Math.hypot(qx, qz) < 7; return m0.near ? Math.atan2(qx, qz) - scoutG.rotation.y : null; }); const ry = scoutG.rotation.y + marla.root.rotation.y, c = Math.cos(-ry), s = Math.sin(-ry); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near); }

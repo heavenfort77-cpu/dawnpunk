@@ -1174,9 +1174,10 @@ export const CONFIG = {
     // bodyIdleHz: standing still, the body shadow's idle chest sway is redrawn this many times a second (src/playershadow.js; it redrew every frame)
     bodyIdleHz: 10,
     // farStep: a base villager out of view and farther than dist m (Oko: also while you are outside the workshop) steps her motion hz times a second, time added up
-    // (Nov 19 12:45 it was OFF: tools/animcheck.cjs times the villagers' bones every frame wherever the player stands, and the summed steps showed as pose jumps.
-    // ON again 13:10: the drawn pose is blended every frame between the last two stepped poses, src/baseview.js farPre / farPost)
-    farStep: { dist: 15, hz: 5 },
+    // (Nov 19 12:45: OFF, null. tools/animcheck.cjs times the villagers' bones every frame wherever the player stands, and the summed steps showed as pose jumps.
+    // 13:10 a pose blend between the stepped poses was tried and REVERTED (owner 14:20): foot lock and leg IK need per-frame solving, the blend lifted the feet and
+    // broke the stride (animcheck 44468114928), and farStep never had a measured gain. Was { dist: 15, hz: 5 }.)
+    farStep: null,
     // modelRetry: a light character model whose fetch fails is fetched again n more times, ms x (try number) apart, before its script twin (src/modeldata.js liteModel)
     modelRetry: { n: 2, ms: 600 },
     // keepBase: the base is built once and kept while you are out; a visit with nothing changed that the build reads from the save shows it again (src/baseview.js)
@@ -1200,6 +1201,8 @@ export const CONFIG = {
     mergeBase: { on: true, cell: 16, hidePad: 1.5 },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind
     gloomPool: 10,
+    // gloomPrefill: machines of each kind the ring sends, built and merged under the ride / night card to start the pool (src/main.js warmNight); at most gloomPool
+    gloomPrefill: 3,
     // freezeWorld: the still street's matrices are worked out only when it is moved or added to, not every frame (src/main.js freezeWorld)
     freezeWorld: true,
     // sortByShader: solid things drawn grouped by the shader they need (src/main.js shaderKey; fewer shader switches, nothing changes on screen)

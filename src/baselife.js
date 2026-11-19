@@ -40,7 +40,11 @@ export function wheelFrame(cfg) { const W = cfg.baseWater, [i, j] = W.race, a = 
 // the generator housing beside the wheel (its front faces the stream)
 export function genFrame(cfg) { const W = cfg.baseWater, F = wheelFrame(cfg), [x, z] = toWorld(F, W.gen.side * W.gen.off, 0); return { x, z, ry: W.gen.ry !== undefined ? W.gen.ry : F.ry + (W.gen.side < 0 ? Math.PI / 2 : -Math.PI / 2), w: W.gen.size[0], d: W.gen.size[2], h: W.gen.size[1] }; }
 // footbridges: own +x runs across the stream (the deck), +z along the stream
-export function bridgeFrames(cfg) { if (!waterOn(cfg)) return []; return cfg.baseWater.bridges.map(([bx, bz, len, wd]) => { const n = nearStream(cfg, bx, bz), nx = -n.tz, nz = n.tx; return { x: n.x, z: n.z, ry: Math.atan2(-nz, nx), len, wd }; }); }
+// (owner 13:10, base walkers: "nearStream < bridgeFrames < deckY < ... < patrolStep", about 20 calls a walker a frame each searching the whole stream line) the
+// bridges' frames depend on the config only, so they are worked out once per config and kept (the same numbers every call)
+const BRF = new WeakMap();
+export function bridgeFrames(cfg) { if (!waterOn(cfg)) return []; let f = BRF.get(cfg); if (!f) { f = bridgeFrames0(cfg); BRF.set(cfg, f); } return f; }
+function bridgeFrames0(cfg) { return cfg.baseWater.bridges.map(([bx, bz, len, wd]) => { const n = nearStream(cfg, bx, bz), nx = -n.tz, nz = n.tx; return { x: n.x, z: n.z, ry: Math.atan2(-nz, nx), len, wd }; }); }
 // what you bump into near the water: [frame, cx, cz, hx, hz] boxes (the generator housing)
 export function waterSolids(cfg) { if (!waterOn(cfg)) return []; const G = genFrame(cfg); return [{ I: G, cx: 0, cz: 0, hx: G.w / 2 + 0.05, hz: G.d / 2 + 0.05 }]; }
 // the sunken channel (CONFIG.baseWater.bed): ground height at a distance d from the stream's middle; flat bed to 'floor', a smooth slope up to the bank top at 'top';

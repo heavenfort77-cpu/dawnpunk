@@ -183,6 +183,17 @@
    "timeout": 35
   },
   {
+   "name": "premortem",
+   "script": "tools/premortem.cjs",
+   "args": [
+    "{dist}"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 20,
+   "note": "batch H premortem A, C, D, G, H, I, J, K, L (owner 13:10): kept base reset, context loss, tier change, itch zip over http, old save, soak, resize, check audit, sound"
+  },
+  {
    "name": "hudcheck_desktop",
    "script": "tools/_high_hudcheck.cjs",
    "args": [],

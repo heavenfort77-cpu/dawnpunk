@@ -120,6 +120,10 @@ export function createHands(cfg) {
     render(renderer, aspect) {
       if (cam.aspect !== aspect) { cam.aspect = aspect; cam.updateProjectionMatrix(); }
       const ac = renderer.autoClear; renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, cam); renderer.autoClear = ac;
-    }
+    },
+    // (owner 13:10, the shader built during a fight: the seed-pod token, hidden until the first device throw, lives in this scene, which the main scene's shader
+    // build never sees) drawn once under a loading card with the token shown and not culled, then hidden again: its shader and upload happen there
+    warm(renderer, aspect) { const v = token.visible, f = []; token.visible = true; token.traverse((q) => { f.push([q, q.frustumCulled]); q.frustumCulled = false; });
+      try { this.render(renderer, aspect); } finally { token.visible = v; for (const [q, c] of f) q.frustumCulled = c; } }
   };
 }

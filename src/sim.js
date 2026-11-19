@@ -492,6 +492,8 @@ export function createSim(opts = {}) {
     addEnergy(cfg.day.handCharge * cfg.day.duration + s.devices.filter((q) => q.kind === 'collector').length * cfg.devices.collector.chargePerSec * cfg.day.botStay); // the hand all day, the collectors for the time spent in the last house
     s.log.length = 0; s.endDay();
   };
+  // (H, premortem test hook) the night ended now, as a win or a loss, by the same path as a real end
+  s.endNow = (win) => { if (!s.done) finish(!!win); };
   function finish(win) {
     s.done = true; s.win = win;
     const lasted = s.t;

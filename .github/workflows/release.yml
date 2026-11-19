@@ -65,6 +65,8 @@ jobs:
         run: |
           set -euo pipefail
           unzip -Z1 dist/solardg-itch.zip | grep -qx index.html || { echo "ABORT: index.html is not at the zip root"; exit 1; }
+          # (H) the files a player's page fetches must be in the zip too: a light character model and a desktop Gloom model
+          for f in models/lo_marla.glb models/gloom_walker_hi.glb; do unzip -Z1 dist/solardg-itch.zip | grep -qx "$f" || { echo "ABORT: $f is not in the zip"; exit 1; }; done
           echo "zip: $(unzip -Z1 dist/solardg-itch.zip | wc -l) entries, index.html at the root"
           SHA=$(git rev-parse HEAD)
           mkdir -p rel

@@ -1492,7 +1492,10 @@ function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); dr
 const warmKey = () => (run ? run.seed + '|' + run.ring + '|' + slotKinds().join(',') : '');
 function warmNight() { if (warmG.children.length && warmG.userData.run === run && warmG.userData.key === warmKey()) { warmG.visible = true; warmG.matrixWorldAutoUpdate = true; scene.add(warmG); return; }
   dropWarm(); if (!run) return; warmG.userData.run = run; warmG.userData.key = warmKey(); const K = CONFIG.gloom.kinds, ring = run.ring || 0;
-  for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); gloomBlob(m, k); m.position.set(0, -50, 0); warmG.add(m); }
+  // (owner 13:10, a new Gloom's merge at its spawn: 204 ms) CONFIG.lag.gloomPrefill machines of each kind are built AND merged here, under the card (one probe pass each,
+  // as mergeQ does at a spawn); after the card's draws they start the pool (gloomTake reuses them merged), so a spawn takes a ready machine
+  for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) for (let i = 0; i < Math.max(1, CONFIG.lag.gloomPrefill || 1); i++) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); gloomBlob(m, k); m.position.set(0, -50, 0);
+    if (CONFIG.lag.gloomPrefill && m.userData.anim && !m.userData.merged) { mergeStatic(m, (j) => m.userData.anim(-(1 + j * 0.73), { x: j * 0.11, z: j * 0.07 })); m.userData.merged = true; HITC.delete(m); } warmG.add(m); }
   for (const k of new Set(slotKinds())) { const m = deviceMesh(k); m.position.set(0, -50, 0); warmG.add(m); }
   // the shot, its splash, a kill's smoke and a broken device's splinters (their shaders), and the scrap pieces' physics file (desktop)
   for (const c of [0x7fd8ff, 0x9fd8ff, 0x9fffa0, 0xd0a0ff, 0xffe08a]) { warmG.add(PR.jet(new THREE.Vector3(0, -50, 0), new THREE.Vector3(1, -50, 0), c)); warmG.add(PR.droplet(c)); }
@@ -1540,7 +1543,10 @@ async function sceneCard(kind) {
       // the frame's own drawing (draw(): far plane, far copies, picture pass) and the hands; a last plain frame, then the GPU is made to finish all of it under the card
       // (real GPU: without the finish the first frame of play waited ~0.6 s for the card's queued work)
       const draw1 = (sh) => { if (sh) renderer.shadowMap.needsUpdate = true; draw(); if (sim && state === 'play' && !window.__noHands) hands.render(renderer, cam.aspect); }, raf = () => new Promise((r) => requestAnimationFrame(() => r()));
-      draw1(true); warmG.visible = false; await raf();
+      draw1(true); warmG.visible = false;
+      // the hands' seed-pod token (its own scene, hidden until a device is thrown) drawn once with the token shown: its shader is built here, not at the first throw
+      if ((kind === 'night' || kind === 'ride') && hands.warm) hands.warm(renderer, cam.aspect);
+      await raf();
       // then the view all round (four quarter turns), with the pieces the night cull hides (layer 1) drawn too: every piece's first draw (its normals, uvs and colours go
       // to the GPU then; the shadow pass only sent positions) happens under the card, not when you turn round or step to a window in the fight
       // and once more with EVERY piece shown and not culled (hidden effects such as the boss's summon bars and sparks included; lights left as they are, so no shader changes)
@@ -1751,6 +1757,13 @@ window.__game.marlaVoice = () => ({ n: MV.hook.n, last: MV.hook.last, lastText: 
 window.__game.wakeText = () => wakeT; window.__game.uiNow = () => ui; window.__game.isPaused = () => paused; window.__game.setPause = (v) => setPause(v);
 window.__game.wsTip = () => wsTipT;
 // the automatic step-down (tools/perfcheck.cjs): its state, and take the next step now
+// (H, test hooks for tools/premortem.cjs, read-only but endNight) endNight(win): the night ends now through the game's own end (sim.endNow; the end screen follows on
+// the next frame); audioState: the game's AudioContext state ('none' before the first click); basePeople: each base person (villagers, recruits, Marla) with id,
+// world place and a pose checksum (the sum of its bones' turns), for the kept-base reset check
+window.__game.endNight = (win = true) => { if (!sim || sim.done || !sim.endNow) return false; sim.endNow(win); return true; };
+window.__game.audioState = () => (ac ? ac.state : 'none');
+window.__game.basePeople = () => { const pk = bview.peek(), out = [], v = new THREE.Vector3(), one = (id, root) => { if (!root || !root.parent) return; root.getWorldPosition(v); let sum = 0; root.traverse((q) => { if (q.isBone) sum += q.quaternion.x + q.quaternion.y * 2 + q.quaternion.z * 3 + q.quaternion.w * 4; }); out.push({ id, x: +v.x.toFixed(3), z: +v.z.toFixed(3), pose: +sum.toFixed(4) }); };
+  for (const [id, c] of Object.entries(pk.chars || {})) if (c) one(id, c.root); for (const q of pk.npcs || []) one('recruit ' + (q.p && q.p.id), q.ch ? q.ch.root : q.n); if (marla) one('marla', marla.root); return out; };
 window.__game.cardOn = () => LCARD.on; window.__game.filmHold = () => !!(FILM.it || (intro && intro.hold)); window.__game.filmPrepInfo = () => ({ worst: Math.round(FILM.worst), ms: FILM.ms, err: FILM.err || null });
 // the impact sound proof (tools/perfcheck.cjs, local probes): each kind rendered live and as a rendered variant through a pooled chain, RMS difference / RMS
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);
@@ -1759,8 +1772,10 @@ window.__game.impactPrerender = () => IMP.prerender();
 window.__game.cardInfo = () => ({ proof: LCARD.proofs[LCARD.proofs.length - 1] || null, proofs: LCARD.proofs, title: { phase: TB.phase, calls: TB.calls || 0, ms: TB.ms || 0 }, ms: LCARD.ms, settle: LCARD.settle || null, steps: LCARD.steps || null, buildMs: LCARD.buildMs || null, err: window.__cardErr || '' });
 // the shader programs built so far (tools/perfcheck.cjs: which ones are first built after the night card); name and a short key each
 // (owner 12:35) which pieces use a given program id (perfcheck names the program built during a fight)
-window.__game.programUsers = (ids) => { const want = new Set(ids), out = {}; scene.traverse((o) => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { const pr = renderer.properties.get(m); const prog = pr && pr.currentProgram; if (prog && want.has(prog.id)) { const l = out[prog.id] || (out[prog.id] = []); if (l.length < 4) { let path = [], q = o; while (q && q !== scene && path.length < 4) { path.push(q.name || q.type); q = q.parent; } l.push(m.type + ' ' + (m.name || '') + ' col ' + (m.color ? m.color.getHexString() : '-') + (m.map ? ' map' : '') + ' on ' + path.join('<')); } } } }); return out; };
-window.__game.programs = (full) => (renderer.info.programs || []).map((q) => q.id + ' ' + q.name + ' ' + (full ? String(q.cacheKey) : String(q.cacheKey).replace(/,+/g, ',').slice(0, 160)));
+window.__game.programUsers = (ids) => { const want = new Set(ids), out = {}; const look = (o) => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { const pr = renderer.properties.get(m); const prog = pr && pr.currentProgram; if (prog && want.has(prog.id)) { const l = out[prog.id] || (out[prog.id] = []); if (l.length < 4) { let path = [], q = o; while (q && q !== scene && path.length < 4) { path.push(q.name || q.type); q = q.parent; } l.push(m.type + ' ' + (m.name || '') + ' col ' + (m.color ? m.color.getHexString() : '-') + (m.map ? ' map' : '') + ' on ' + path.join('<')); } } } };
+  // the main scene and the hands' own scene (owner 13:10: the fight's late shader was the hands' token)
+  scene.traverse(look); hands.scene.traverse(look); return out; };
+window.__game.programs = (full) => (renderer.info.programs || []).map((q) => q.id + ' ' + q.name + ' ' + (full ? String(q.cacheKey) : String(q.cacheKey).replace(/,+/g, ',')));
 window.__game.perfStep = () => (perf ? { ...perf.state } : null); window.__game.perfForce = () => (perf ? { ...perf.force() } : null);
 window.__game.baseEvening = (t) => bview.setEvening(t);
 window.__game.cfg = CONFIG;

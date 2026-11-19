@@ -38,12 +38,14 @@ const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s 
     if (PICK && !PICK.includes(name)) { info('skip ' + name); return; }
     // the mouse is taken (as for any player who has clicked the game once: no "Click to look" hint)
     await p.evaluate(() => { window.__fakeLock = true; window.__dtKeep = window.__dtMax; window.__dtMax = 0.0005; }); await frames(p, 2);
+    // never shoot a loading card or the film's warm-up black (hooks exist since the lag fix; older builds skip this wait)
+    await p.waitForFunction(() => { const g = window.__game; return !(g.cardOn && g.cardOn()) && !(g.filmHold && g.filmHold()); }, null, { timeout: 120000 }).catch(() => info(name + ': card or film hold still up after 120 s'));
     const h = await hud(p), cv = await catView(p), cam = await p.evaluate(() => { const c = window.__game.cam; return [c.position.x, c.position.y, c.position.z].map((v) => v.toFixed(2)).join(',') + ' yaw ' + window.__game.yaw.toFixed(3); });
     const f = path.join(OUT, name + '.png'); await p.screenshot({ path: f, timeout: 900000 }); info('wrote ' + f + ' (' + el() + ') cam ' + cam + ' | HUD ' + h); console.log('CATVIEW ' + name + ': ' + cv);
     if (clean) { await p.evaluate(() => { document.getElementById('hud').style.visibility = 'hidden'; }); await frames(p, 1); const f2 = path.join(OUT, name + '_clean.png'); await p.screenshot({ path: f2, timeout: 900000 }); info('wrote ' + f2); await p.evaluate(() => { document.getElementById('hud').style.visibility = ''; }); }
     await p.evaluate(() => { window.__dtMax = window.__dtKeep; });
   }
-  async function waitLoads(p, what) { for (let k = 0; k < 400; k++) { const s = await p.evaluate(() => { const q = window.__game.quality().hi, G = window.__gloomGlb || {}; return { hi: q.ok + q.failed >= q.asked, q, marla: window.__game.marla.ready, glb: Object.values(G).every((v) => v !== 'loading'), G }; }); if (s.hi && s.marla && s.glb) { info(what + ' loaded ' + el() + ' ' + JSON.stringify(s)); return; } await p.waitForTimeout(1000); } info(what + ': loads not all done'); }
+  async function waitLoads(p, what) { for (let k = 0; k < 400; k++) { const s = await p.evaluate(() => { const q = window.__game.quality().hi, G = window.__gloomGlb || {}; return { hi: q.ok + q.failed >= q.asked, q, marla: window.__game.marla.ready, glb: Object.values(G).every((v) => v !== 'loading'), people: !window.__game.standInsShown || window.__game.standInsShown() === 0, G }; }); if (s.hi && s.marla && s.glb && s.people) { info(what + ' loaded ' + el() + ' ' + JSON.stringify(s)); return; } await p.waitForTimeout(1000); } info(what + ': loads not all done'); }
   // a returning player's save: past the first two nights (no lessons, no drill, no job card), a 4th device slot from the Workshop
   async function midSave(p, o) {
     await p.evaluate((o) => { const g = window.__game; g.enterBase(); const s = g.save; s.day = o.day; s.nights = o.nights; s.trips = o.nights; s.food = o.food; s.essentials = o.ess; s.essTotal = o.ess + 14; s.killsTotal = o.nights * 9;
