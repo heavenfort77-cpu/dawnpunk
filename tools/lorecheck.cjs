@@ -22,8 +22,9 @@ const path = require('path');
   ok('a street house holds a note (chance 1)', pick, pick ? 'house ' + pick.house + ', note ' + pick.i + ' ' + (pick.top ? 'on a furniture top' : 'on a pinboard') : '');
   if (!pick) { await b.close(); process.exit(1); }
   console.log('INFO placing the note took ' + (await p.evaluate(() => window.__game.lore.ms())).toFixed(0) + ' ms (rays on the house)');
-  // stand 1.1 m from it toward the middle of the room and look at it
-  await p.evaluate((n) => { const g = window.__game, s = g.sim, d = Math.hypot(n.x, n.z) || 1, px = n.x - (n.x / d) * 1.1, pz = n.z - (n.z / d) * 1.1; s.player.x = px; s.player.z = pz; g.setYaw(Math.atan2(-(n.x - px), -(n.z - pz))); g.setPitch && g.setPitch(n.top ? -0.55 : -0.05); }, pick);
+  // stand 1.1 m from it toward the middle of the room, ON ITS FLOOR (R4 worker 8: 44567130249 put a furniture-top note on floor 1 and stood the player on floor 0:
+  // the prompt rightly never showed; a player reading an upstairs note stands upstairs), and look at it
+  await p.evaluate((n) => { const g = window.__game, s = g.sim, d = Math.hypot(n.x, n.z) || 1, px = n.x - (n.x / d) * 1.1, pz = n.z - (n.z / d) * 1.1; s.player.x = px; s.player.z = pz; s.player.floor = n.floor || 0; s.player.climb = null; g.setYaw(Math.atan2(-(n.x - px), -(n.z - pz))); g.setPitch && g.setPitch(n.top ? -0.55 : -0.05); }, pick);
   await p.waitForFunction(() => { const cs = document.getElementById('csay'), e = document.getElementById('loreRead'); return window.__game.lore.note() && window.__game.lore.note().prompt && ((cs && cs.textContent === 'E: read note') || (e && e.classList.contains('on'))); }, null, { timeout: 60000 }).catch(() => {});
   console.log('INFO ' + JSON.stringify(await p.evaluate(() => { const g = window.__game, c = g.cam.position, n = g.lore.note(); return { cam: [c.x, c.y, c.z].map((v) => +v.toFixed(2)), player: [g.sim.player.x, g.sim.player.z].map((v) => +v.toFixed(2)), note: n }; })));
   const pr = await p.evaluate(() => { const e = document.getElementById('loreRead'), cs = document.getElementById('csay'), btn = e && e.classList.contains('on') && getComputedStyle(e).display !== 'none', line = !!cs && cs.textContent === 'E: read note'; return { on: window.__game.lore.note().prompt && (btn || line), btn, line, day: window.__game.sim.phase }; });

@@ -17,8 +17,7 @@ const tier = process.argv[2] || 'low', dir = process.argv[3] || null, W = +(proc
   out.push(['boss rule: no boss on ring 5 before night 6 (night 5, an upgrade done)', rule.r5n5 === false]);
   out.push(['boss rule: no boss on another ring at night 5 or 6 (ring 4)', rule.r4n5 === false && rule.r4n6 === false]);
   out.push(['boss rule: no boss on ring 5 night 6 without a finished upgrade; boss with one', rule.r5n6none === false && rule.r5n6 === true]);
-  await p.evaluate(() => { const s = window.__game.save; s.nights = 5; s.trips = 5; const k = Object.keys(s.up)[0]; s.up[k] = Math.max(1, s.up[k] || 0); });
-  await p.evaluate(() => { window.__dtMax = 0.25; window.__noHands = true; const g = window.__game; g.enterBase(); const sel = document.getElementById('selRing'); [...sel.options].forEach((o) => { o.disabled = false; }); sel.value = '4'; g.startRun(); });
+  await p.evaluate(() => { window.__dtMax = 0.25; window.__noHands = true; const g = window.__game; g.enterBase(); const sel = document.getElementById('selRing'); [...sel.options].forEach((o) => { o.disabled = false; }); sel.value = '4'; { const s = g.save; s.nights = 5; s.trips = 5; const k = Object.keys(s.up)[0]; s.up[k] = Math.max(1, s.up[k] || 0); } g.startRun(); });
   await p.waitForTimeout(1500);
   const house = +(process.env.HOUSE || 0);
   await p.evaluate((hi) => { const g = window.__game, r = g.run, h = r.houses.slice().sort((a, b) => a.n - b.n)[hi === 9 ? 0 : 0]; const hh = hi === 9 ? h : r.houses[hi]; g.setTown(hh.doorX, hh.doorZ - hh.row * 0.4); }, house);
