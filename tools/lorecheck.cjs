@@ -89,6 +89,22 @@ const path = require('path');
   await p.reload(); await p.waitForFunction(() => window.__game && window.__game.lore, null, { timeout: 600000 }); await p.click('#enter'); await p.waitForTimeout(2500);
   const kept = await p.evaluate(() => window.__game.lore.found());
   ok('the found note is still found after a reload', kept.length === 1 && kept[0] === noteNo, JSON.stringify(kept));
+  // (R4 worker 10, item 4, player report 03:09 Nov 20: outside a house in mid-air, 'Floor 2 of 2') in each of the six houses: the street is drawn where the sim
+  // stands (every street piece's world matrix = its parent's x its own; the house's shell at the origin); on each upper floor the player walks 4 s at each of 8 walls,
+  // corners and windows and stays inside; back on the street the eye is at 1.6 m
+  const walls = await p.evaluate(async () => { const g = window.__game, until = async (f) => { const t0 = performance.now(); while (!f() && performance.now() - t0 < 120000) await new Promise((r) => setTimeout(r, 50)); };
+    if (!g.run) g.startRun(); await until(() => g.run && g.state === 'play' && !g.cardOn());
+    const out = []; for (let i = 0; i < g.run.houses.length; i++) { g.enterHouse(i); await until(() => g.sim && g.run.inside === i); await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const W = g.world, M = W.g.matrixWorld.constructor, t = new M(); let n = 0, bad = 0, worst = 0; W.g.traverse((o) => { if (o === W.g || !o.parent) return; n++; t.multiplyMatrices(o.parent.matrixWorld, o.matrix); let d = 0; for (let k = 0; k < 16; k++) d = Math.max(d, Math.abs(t.elements[k] - o.matrixWorld.elements[k])); if (d > 1e-3) bad++; worst = Math.max(worst, d); });
+      const v = W.g.position.clone(); W.houses[i].getWorldPosition(v); const S = g.sim, P = S.player, r = { i, L: S.L, H: +S.H.toFixed(2), n, bad, worst: +worst.toFixed(3), shell: +Math.hypot(v.x, v.z).toFixed(3), out: [] };
+      for (let f = 1; f < S.L; f++) for (let a = 0; a < 8; a++) { P.floor = f; P.x = 0; P.z = 0; P.climb = null; P.stairCd = 99; P.ladderCd = 99; const dx = Math.sin(a * Math.PI / 4), dz = Math.cos(a * Math.PI / 4); for (let k = 0; k < 240; k++) S.move(dx, dz, 1 / 60);
+        if (Math.abs(P.x) > S.H - 0.3 + 1e-6 || Math.abs(P.z) > S.H - 0.3 + 1e-6 || P.floor !== f) r.out.push([f, a, +P.x.toFixed(2), +P.z.toFixed(2), P.floor]); }
+      P.floor = 0; P.stairCd = 0; P.ladderCd = 0; out.push(r); }
+    if (g.sim) { const S = g.sim, P = S.player, d = S.breaches.find((b) => b.floor === 0 && b.type === 'door') || S.breaches.find((b) => b.floor === 0), sd = g.save.solarDone; P.floor = 0; P.x = d.inX; P.z = d.inZ; g.save.solarDone = true; try { g.leaveHouse(); } finally { g.save.solarDone = sd; } }
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); return { out, town: g.sim ? null : +g.cam.position.y.toFixed(2) }; });
+  for (const r of walls.out) ok('house ' + r.i + ' (' + r.L + ' floor' + (r.L > 1 ? 's' : '') + '): the street is drawn where the house is (shell at the origin, every piece moved with it)', r.bad === 0 && r.shell < 0.01, 'pieces ' + r.n + ', stale ' + r.bad + ' (worst ' + r.worst + '), shell ' + r.shell + ' m from the origin');
+  for (const r of walls.out) if (r.L > 1) ok('house ' + r.i + ': walking into every upper-floor wall, corner and window keeps the player inside', r.out.length === 0, 'half-size ' + r.H + (r.out.length ? ' out: ' + JSON.stringify(r.out) : ''));
+  ok('back on the street the eye is at 1.6 m (on the ground)', walls.town === 1.6, 'eye ' + walls.town);
   ok('no page errors', errs.length === 0, errs.join(' | ').slice(0, 300));
   const bad = res.filter((r) => !r[1]).length; console.log(bad ? 'SOME FAILED (' + bad + ')' : 'ALL PASS (' + res.length + ')'); await b.close(); process.exit(bad ? 1 : 0);
 })().catch((e) => { console.log('FAIL runner ' + String(e).slice(0, 300)); process.exit(2); });

@@ -483,6 +483,12 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // posAt (optional): a function of the share of this frame done (0..1] giving the player's [x, z] at that moment, for callers that know the path between frames
   // (without it the slices take the spot on a line from last frame's)
   const yawChk = (o, k) => { if (!o) return k; const y = o.rotation.y, was = bakedYaw[k] === undefined ? y : bakedYaw[k]; if (Math.abs(y - was) > 0.06) { shadowDirty = true; bakedYaw[k] = y; } else if (bakedYaw[k] === undefined) bakedYaw[k] = y; return k + 1; };
+  // (R4 worker 10, owner recording Nov 20: the box floated apart from the carrier's hands, also in a4bc250) the crate sits between the two hand bones, turned square to
+  // the line between them, every frame for every carrier (a model without hand bones keeps the fixed place in front); only the two arms' parent chains are worked out
+  const HV = [new THREE.Vector3(), new THREE.Vector3()];
+  const crateInHands = (o) => { if (o.hands === undefined) { let l = null, r = null; o.ch.root.traverse((q) => { if (q.isBone && q.name === 'hand_l') l = q; if (q.isBone && q.name === 'hand_r') r = q; }); o.hands = l && r ? [l, r] : null; }
+    if (!o.hands) return; const [a, b] = HV; o.hands[0].updateWorldMatrix(true, false); o.hands[1].updateWorldMatrix(true, false); a.setFromMatrixPosition(o.hands[0].matrixWorld); b.setFromMatrixPosition(o.hands[1].matrixWorld); o.n.worldToLocal(a); o.n.worldToLocal(b);
+    o.crate.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); o.crate.rotation.y = Math.atan2(b.x - a.x, b.z - a.z) + Math.PI / 2; };
   let viewCam = null; const FAR = cfg.lag && cfg.lag.farStep;
   const live = (x, z, px, pz) => { if (!FAR || !viewCam) return true; if (Math.hypot(x - px, z - pz) < FAR.dist) return true; FS.center.set(x, 0.9, z); FS.radius = 1.3; return FR.intersectsSphere(FS); };
   const stepDt = (o, on, dt) => { const a = (o.facc || 0) + dt; if (on || a >= 1 / FAR.hz) { o.facc = 0; return a; } o.facc = a; return 0; };
@@ -519,7 +525,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     for (const n of Object.values(NPCS)) { const o = npcG[n.id]; if (!o) continue; o.mk.position.y = 3.1 + Math.sin(t * 3 + n.z) * 0.12; }
     // recruits on patrol: the person's own motion decides the pace (eases in and out, slows in a bend, stops and turns on the spot in pivot steps at a sharp corner); the holder moves along their facing
     for (const o of npcs) {
-      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { plan: () => patrolStep(o) }); if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; continue; }
+      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { plan: () => patrolStep(o) }); if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; if (o.crate.visible) crateInHands(o); continue; }
       const tgt = o.wp[o.i], dx = tgt[0] - o.n.position.x, dz = tgt[1] - o.n.position.z, d = Math.hypot(dx, dz); if (d < 0.6) o.i = (o.i + 1) % o.wp.length;
       if (d >= 0.6) { o.n.position.x += (dx / d) * 1.2 * dt; o.n.position.z += (dz / d) * 1.2 * dt; o.n.rotation.y = Math.atan2(dx, dz); }
     }

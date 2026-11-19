@@ -412,11 +412,14 @@ export function* buildWorldIter(cfg, run) {
   // the night geometry is made with the world (owner 12:49: no build at the switch)
   let ntg = SH && Q.street.detail.tufts && CONFIG.lag && CONFIG.lag.nightTuftBlades ? tuftGeo(CONFIG.lag.nightTuftBlades, 7) : null, ntOn = false;
   const nightTufts = (on) => { on = !!on && !!(SH && Q.street.detail.tufts) && !!(CONFIG.lag && CONFIG.lag.nightTuftBlades); if (on === ntOn) return; ntOn = on; if (on && !ntg) ntg = tuftGeo(CONFIG.lag.nightTuftBlades, 7); for (const t of tuftParts) t.geometry = on ? ntg : tg; };
+  // (R4 worker 10, item 4) every piece's world matrix worked out again for the street's new place, also the pieces whose own pass is switched off (src/main.js
+  // freezeWorld): three r187's updateMatrixWorld(true) leaves those as they were, so inside a house the street and its shells stayed drawn where they stood on the street
+  const offs = [], worldAll = (r) => { r.traverse((o) => { if (!o.matrixWorldAutoUpdate) { o.matrixWorldAutoUpdate = true; offs.push(o); } }); try { r.updateMatrixWorld(true); } finally { for (const o of offs) o.matrixWorldAutoUpdate = false; offs.length = 0; } };
   return {
-    g, houses, marks, torn: tornN, sigs, sunDir, nightTufts,
+    worldAll, g, houses, marks, torn: tornN, sigs, sunDir, nightTufts,
     // house i becomes the origin (the sim's own coordinates); -1 puts the world back for the street
     // (LAG FIX Nov 19, owner 09:50: the street never moves while you play, so its matrices are worked out here once per move, not every frame: src/main.js freezeWorld)
-    frame(i) { if (i < 0) { g.position.set(0, 0, 0); g.rotation.y = 0; } else { const h = run.houses[i]; g.rotation.y = -houses[i].rotation.y; g.position.set(-(h.x * h.cs + h.z * h.sn), 0, -(-h.x * h.sn + h.z * h.cs)); } g.updateMatrix(); g.updateMatrixWorld(true); },
+    frame(i) { if (i < 0) { g.position.set(0, 0, 0); g.rotation.y = 0; } else { const h = run.houses[i]; g.rotation.y = -houses[i].rotation.y; g.position.set(-(h.x * h.cs + h.z * h.sn), 0, -(-h.x * h.sn + h.z * h.cs)); } g.updateMatrix(); worldAll(g); },
     light(k) { sun.intensity = W.sun * Math.max(0.06, 1 - k * 1.05); sun.color.setHex(k > 0.6 ? 0x9db4ff : 0xfff1d6); const dk = 1 - 0.55 * Math.min(1, k * 1.2); M.int.color.setHex(W.intTint).multiplyScalar(dk); M.wood.color.setHex(W.floorTint).multiplyScalar(dk); },
     // LAG FIX Nov 19: every picture a material holds is freed (not only .map: relief, cut-out and glow pictures piled up run after run), unless it is marked shared;
     // the sun's shadow map too (a new 2048 map stayed on the GPU after every run)

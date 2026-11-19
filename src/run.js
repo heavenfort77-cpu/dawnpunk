@@ -47,7 +47,7 @@ export function lootLeft(h) { let food = 0, ess = 0; for (const c of h.sim.crate
 export function enter(run, i) {
   const h = run.houses[i], s = h.sim, d = exitDoor(s), p = s.player;
   p.energy = Math.min(run.cfg.player.energyCap, run.energy); s.food = run.food; s.ess = run.ess; s.coins = run.coins; s.dayT = Math.max(0.05, run.dayT);
-  p.x = d.inX + d.nx * 1.4; p.z = d.inZ + d.nz * 1.4; p.floor = 0; p.climb = null; p.yaw = Math.atan2(-d.nx, -d.nz);
+  p.x = d.inX + d.nx * 1.4; p.z = d.inZ + d.nz * 1.4; p.floor = 0; p.climb = null; p.stairCd = 0; p.ladderCd = 0; p.yaw = Math.atan2(-d.nx, -d.nz);
   if (!h.seen) { h.seen = true; run.visited++; }
   run.inside = i; return s;
 }
@@ -67,12 +67,15 @@ export function nearest(run, x, z) { let best = run.houses[0], bd = 1e9; for (co
 export function pushOut(run, x, z) {
   const T = run.cfg.town, r = 0.45;
   x = Math.max(-T.boundX, Math.min(T.boundX, x)); z = Math.max(-T.boundZ, Math.min(T.boundZ, z));
-  for (const h of run.houses) {
+  const walls = () => { for (const h of run.houses) {
     const dx = x - h.x, dz = z - h.z, e = h.H + r;
     if (Math.abs(dx) < e && Math.abs(dz) < e) { if (e - Math.abs(dx) < e - Math.abs(dz)) x = h.x + Math.sign(dx || 1) * e; else z = h.z + Math.sign(dz || -h.row) * e; }
-  }
+  } };
+  walls();
   for (const h of run.houses) { const c = h.ext; if (!c) continue; const dx = x - c.x, dz = z - c.z, d = Math.hypot(dx, dz); if (d < c.r && d > 1e-6) { x = c.x + dx / d * c.r; z = c.z + dz / d * c.r; } }
   for (const c of run.cars) { const dx = x - c.x, dz = z - c.z, d = Math.hypot(dx, dz); if (d < c.r && d > 1e-6) { x = c.x + dx / d * c.r; z = c.z + dz / d * c.r; } }
+  // (R4 worker 10) a porch or car push can put you back inside a house's walls: the walls have the last word
+  walls();
   return [x, z];
 }
 // dusk on the street (bell ran out or DUSK held): you are moved into the nearest house, and that is the last house

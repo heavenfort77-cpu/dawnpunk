@@ -178,6 +178,9 @@ export const CONFIG = {
   // marla.lookHz: how fast her head turns to you (a critically damped spring, turns per second of its natural swing)
   marla: { lookHz: 0.6, expressions: false, walk: { stride: 0.42, stance: 0.6, knee: 0.9, arm: 0.7, elbow: 0.25, bob: 0.025 }, // how people walk: stride = leg swing each way in radians, stance = share of the step with the foot on the ground, knee = bend while the foot is in the air, arm = arm swing against the legs, bob = body dip in m
     guide: { x: 2.8, z: 2.4, open: 1.3, rearm: 2.6, wait: 0.6, hintAt: 3, clearDoor: 2.6 }, // wait: you must stand still this long beside her before the swap opens (walking past does not open it); hintAt: her prompt shows only this close; clearDoor: she never stands within this many m (sideways) of a house's door path // by day she stands at this spot on the street; walking within `open` m opens the device swap, and it can open again after you step `rearm` m away
+    // lowLamps (R4 worker 11, owner: Marla flat on LOW): low has no key/rim light; her own materials get the medium key spot and rim lamp worked out in their shader
+    // (no real light, no shadow). key: [colour, strength, reach m, cone rad, penumbra]; keyAt / rimAt: [x, y, z] in her frame; headY: the key's aim height (m); rim: [colour, strength, reach m]
+    lowLamps: { on: true, key: [0xfff2e6, 12, 7, 0.22, 0.6], keyAt: [-0.6, 1.9, 1.6], headY: 1.5, rim: [0xdfe8ff, 1.6, 6], rimAt: [0.8, 2.0, -1.2] },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 } }, // Marla's model in the base (src/marla.js): how far the arms come down from the build pose, in radians
   // The Gloom's look (src/gloomkit.js has each machine's own numbers in GLOOMKIT). machines: false brings back the hooded Gloom. 
   // dormant: how many stand switched off in the settlement by day.
@@ -1142,6 +1145,11 @@ export const CONFIG = {
     // (R4 worker 8, Card 46 then Card 48) ON: with it off (f7258a2, plain medium 44567127417) 3 programs were built in play, one each at page 99219 / 99235 / 99244 ms
     // (models of the run finishing their load in play: glbReady's compileAsync); the 15 'intro' ones were Card 45's, not glbDefer's
     glbDefer: true,
+    // warmFresh (R4 worker 11): the night card also draws one not-yet-merged machine of each kind and one breach mark (src/main.js warmNight)
+    warmFresh: true,
+    // logoWarm (R4 worker 11, OWNER DECISION lead 03:33): after the logo and every load, the scene's shaders built in the background and the scene drawn once under the
+    // loading page before the begin button (src/main.js SPLASH); ms: the most it may wait
+    logoWarm: { on: true, ms: 4000 },
     // bossFreeze (R4 worker 5): the desktop boss model's still parts leave the per-frame matrix pass (src/bosshi.js buildGlb)
     bossFreeze: true,
     // skipCard (R4 worker 5): the film skipped before its base part shows the home card while the base's first frames are made

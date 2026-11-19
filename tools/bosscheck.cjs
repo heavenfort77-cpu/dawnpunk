@@ -13,11 +13,15 @@ const tier = process.argv[2] || 'low', dir = process.argv[3] || null, W = +(proc
   // OWNER DECISION (lead 00:25): the boss comes only on ring 5 (index 4), on night 6 or later, once an upgrade is finished (src/base.js bossNight). Setup only: the save
   // is given 5 nights played (this is night 6) and one finished upgrade before the run starts; the rule's own lines below use the game's bossNight on copies of the save
   const rule = await p.evaluate(() => { const g = window.__game; g.enterBase(); const s = g.save, C = window.CONFIG, up1 = Object.fromEntries(Object.keys(s.up).map((k, i) => [k, i === 0 ? 1 : 0])), up0 = Object.fromEntries(Object.keys(s.up).map((k) => [k, 0]));
-    const at = (nights, up, ring) => g.B.bossNight(C, { ...s, nights, up }, ring); return { r5n5: at(4, up1, 4), r4n5: at(4, up1, 3), r4n6: at(5, up1, 3), r5n6none: at(5, up0, 4), r5n6: at(5, up1, 4) }; });
+    const at = (nights, up, ring) => g.B.bossNight(C, { ...s, nights, nightsMet: nights, up }, ring); const q = JSON.parse(JSON.stringify(s)); q.up = up1; q.nights = 0; q.nightsMet = 0; for (let i = 0; i < 5; i++) g.B.applyNight(C, q, { win: false, ring: 4, lasted: 0, left: true, food: 0, essentials: 0, coins: 0 }, 0);
+    const w = JSON.parse(JSON.stringify(s)); w.up = up1; w.nights = 0; w.nightsMet = 0; for (let i = 0; i < 5; i++) g.B.applyNight(C, w, { win: false, ring: 4, lasted: 30, food: 0, essentials: 0, coins: 0 }, 0);
+    return { r5n5: at(4, up1, 4), r4n5: at(4, up1, 3), r4n6: at(5, up1, 3), r5n6none: at(5, up0, 4), r5n6: at(5, up1, 4), quit5: g.B.bossNight(C, q, 4), quitN: [q.nights, q.nightsMet], fought5: g.B.bossNight(C, w, 4) }; });
   out.push(['boss rule: no boss on ring 5 before night 6 (night 5, an upgrade done)', rule.r5n5 === false]);
   out.push(['boss rule: no boss on another ring at night 5 or 6 (ring 4)', rule.r4n5 === false && rule.r4n6 === false]);
   out.push(['boss rule: no boss on ring 5 night 6 without a finished upgrade; boss with one', rule.r5n6none === false && rule.r5n6 === true]);
-  await p.evaluate(() => { window.__dtMax = 0.25; window.__noHands = true; const g = window.__game; g.enterBase(); const sel = document.getElementById('selRing'); [...sel.options].forEach((o) => { o.disabled = false; }); sel.value = '4'; { const s = g.save; s.nights = 5; s.trips = 5; const k = Object.keys(s.up)[0]; s.up[k] = Math.max(1, s.up[k] || 0); } g.startRun(); });
+  // (R4 worker 10, lead 04:01) five trips quit by day (no night reached) do not count as nights: no boss on ring 5 after them; five nights fought (lost) do
+  out.push(['boss rule: 5 daytime quits are not 5 nights (no boss on ring 5 after them, an upgrade done); 5 nights fought are (boss)  trips/nights ' + JSON.stringify(rule.quitN), rule.quit5 === false && rule.fought5 === true]);
+  await p.evaluate(() => { window.__dtMax = 0.25; window.__noHands = true; const g = window.__game; g.enterBase(); const sel = document.getElementById('selRing'); [...sel.options].forEach((o) => { o.disabled = false; }); sel.value = '4'; { const s = g.save; s.nights = 5; s.trips = 5; s.nightsMet = 5; const k = Object.keys(s.up)[0]; s.up[k] = Math.max(1, s.up[k] || 0); } g.startRun(); });
   await p.waitForTimeout(1500);
   const house = +(process.env.HOUSE || 0);
   await p.evaluate((hi) => { const g = window.__game, r = g.run, h = r.houses.slice().sort((a, b) => a.n - b.n)[hi === 9 ? 0 : 0]; const hh = hi === 9 ? h : r.houses[hi]; g.setTown(hh.doorX, hh.doorZ - hh.row * 0.4); }, house);

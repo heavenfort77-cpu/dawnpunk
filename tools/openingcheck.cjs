@@ -78,7 +78,7 @@ const path = require('path');
     ok('a key skips it into the base with Marla at your door, and the job card shows on top (no loading card over it)', ns.state === 'base' && ns.hint === 'at your door' && ns.card && ns.top && !ns.loading && ns.day === 1, JSON.stringify(ns));
     await p.evaluate(() => { window.__game.cfg.lore.jobCardSecs = window.__jobSecs2; });
     await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('jobCard'), null, { timeout: 120000 }).catch(() => {}); const seen = await p.evaluate(() => window.__game.save.jobCard === true && !document.getElementById('jobCard'));
-    await p.reload(); await p.waitForFunction(() => window.__game && window.__game.startIntro, null, { timeout: 900000 }); await p.evaluate(() => document.getElementById('enter').click()); await p.waitForFunction(() => window.__game.state === 'base', null, { timeout: 600000 }).catch(() => {}); await p.waitForTimeout(tier === 'high' ? 8000 : 3000);
+    await p.reload({ timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.startIntro, null, { timeout: 900000 }); await p.evaluate(() => document.getElementById('enter').click()); await p.waitForFunction(() => window.__game.state === 'base', null, { timeout: 600000 }).catch(() => {}); await p.waitForTimeout(tier === 'high' ? 8000 : 3000);
     const cont = await p.evaluate(() => ({ state: window.__game.state, card: !!document.getElementById('jobCard') }));
     ok('a continued save goes straight into the base: no film, no card again', seen && cont.state === 'base' && !cont.card, JSON.stringify(cont));
     await p.close();
@@ -87,6 +87,20 @@ const path = require('path');
   if (SK.includes('newgame')) {
     p = await open(); await p.evaluate(() => document.getElementById('enter').click()); await p.waitForTimeout(tier === 'high' ? 8000 : 3000);
     ok('Enter the base on an empty save starts the opening', await p.evaluate(() => window.__game.state) === 'intro'); await p.close();
+  }
+  // (R4 worker 11, owner: New game showed no opening on a phone) the player's path (?cards=1, the film's warm-up under the black): a page with a save -> Enter -> pause ->
+  // New game (twice: it asks to confirm) plays the opening; skipped back to the base, New game plays it again on the same page
+  if (SK.includes('newgame')) {
+    const p2 = await b.newPage({ viewport: { width: vw, height: vh }, hasTouch: true }); p2.on('pageerror', (e) => errs.push(String(e))); const pg = page.replace('&film=1', '') + '&cards=1';
+    await p2.goto(pg, { timeout: 900000 }); await p2.waitForFunction(() => window.__game && window.__game.B, null, { timeout: 900000 });
+    await p2.evaluate(() => { const g = window.__game, c = typeof g.cfg === 'function' ? g.cfg() : g.cfg, s = g.B.newSave(c); g.B.makeQuests(c, s); localStorage.setItem('solardg.save', JSON.stringify(s)); window.name = ''; });
+    await p2.reload({ timeout: 900000 }); await p2.waitForFunction(() => window.__game && window.__game.B && document.getElementById('enter') && !document.getElementById('enter').disabled, null, { timeout: 900000 });
+    await p2.evaluate(() => document.getElementById('enter').click()); await p2.waitForFunction(() => window.__game.state === 'base' && !window.__game.cardOn(), null, { timeout: 900000 }).catch(() => {});
+    const film = async () => { const t0 = Date.now(); while (Date.now() - t0 < 300000) { if (await p2.evaluate(() => window.__game.state) === 'intro') return true; await p2.waitForTimeout(1000); } return false; };
+    const newGame = () => p2.evaluate(() => { window.__game.setPause(true); document.getElementById('reset').click(); document.getElementById('reset').click(); });
+    await p2.waitForTimeout(1500); await newGame(); const f1 = await film();
+    let f2 = false; if (f1) { await p2.waitForTimeout(3000); await p2.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ' }))); await p2.waitForFunction(() => window.__game.state === 'base' && !window.__game.cardOn(), null, { timeout: 900000 }).catch(() => {}); await p2.waitForTimeout(2000); await newGame(); f2 = await film(); }
+    ok('New game always plays the opening (?cards=1: page with a save, then again after a film on the same page)', f1 && f2, 'first ' + f1 + ', after a film ' + f2); await p2.close();
   }
   // the wake shot shows no plain stand-in person (people wait for their models, or are hidden)
   if (SK.includes('standins')) {

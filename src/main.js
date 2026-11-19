@@ -96,7 +96,7 @@ const KIND_LINE = { lurcher: 'Lurcher. Fast one, Potts. Do not blink.', hauler: 
 // paused: the picture is drawn once and then held (the page keeps the last frame) until play resumes; a lost WebGL context draws nothing until it is restored
 // LAG FIX Nov 19 (owner 11:40, front/end audit): the title menu and the run-end screen are held like the pause: drawn once, then the picture is kept (and the run's
 // machines, devices, boss and scrap are not stepped under them)
-let holdDraw = false, pauseDrawn = false, ctxLost = false; const MENU_EL = document.getElementById('menu') || { style: {} };
+let holdDraw = false, pauseDrawn = false, ctxLost = false, ctxPaused = false; const MENU_EL = document.getElementById('menu') || { style: {} };
 // at night inside a house only what shows through its openings is drawn (src/nightcull.js, CONFIG.lag.nightCull)
 const nightCull = createNightCull();
 let perf = null; const perfRest = () => { if (perf) perf.rest(); };
@@ -177,7 +177,7 @@ const landAt = new Map(); // device id -> time its thrown pod lands: the device 
 // worked out again only when the street is moved or a child is added (CONFIG.lag.freezeWorld)
 let frozenN = -1, frozenG = null;
 function freezeWorld() { if (!CONFIG.lag.freezeWorld || !world) return; const g = world.g; if (g === frozenG && g.children.length === frozenN) return;
-  g.matrixAutoUpdate = false; g.updateMatrix(); for (const c of g.children) c.matrixWorldAutoUpdate = c === dormG; g.updateMatrixWorld(true); frozenG = g; frozenN = g.children.length; }
+  g.matrixAutoUpdate = false; g.updateMatrix(); world.worldAll(g); for (const c of g.children) c.matrixWorldAutoUpdate = c === dormG; frozenG = g; frozenN = g.children.length; }
 // the night card's warm-up copies (sceneCard, warmNight below)
 const warmG = new THREE.Group(); warmG.name = 'warm';
 // LAG FIX Nov 19 (owner 10:35): a destroyed Gloom machine is kept, hidden, in a pool per kind and used again for the next one of that kind (a new paint shade from the
@@ -653,7 +653,7 @@ function filmSlice() { if (!FILM.it) return; const S = CONFIG.lag.slice, t0 = pe
   for (;;) { let r; try { r = FILM.it.next(); } catch (e) { r = { done: true }; FILM.err = String(e && e.stack || e).slice(0, 300); }
     if (r.done) { FILM.it = null; FILM.ready = !FILM.err; try { startIntro(); } finally { FILM.ready = false; startIntro.go = false; FILM.ms = Math.round(performance.now() - FILM.t0); } return; }
     if (r.value === 'frame' || performance.now() - t0 >= S.film) { FILM.worst = Math.max(FILM.worst, performance.now() - t0); return; } } }
-function startIntro() { if (!BOTRUN() && CONFIG.lag.filmWarm && !startIntro.go && CONFIG.opening.on && save) { $('menu').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; startIntro.go = true; FILM.worst = 0; FILM.err = null; FILM.t0 = performance.now(); FILM.it = filmPrep(); return; }
+function startIntro() { if (!BOTRUN() && CONFIG.lag.filmWarm && !startIntro.go && CONFIG.opening.on && save) { $('menu').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; $('hud').style.display = 'none'; state = 'intro'; intro = { t: 0, hold: true, prep: true }; startIntro.go = true; FILM.worst = 0; FILM.err = null; FILM.t0 = performance.now(); FILM.it = filmPrep(); return; }
   if (!FILM.ready) { gloomPreload(FILM_KINDS); bview.preChars(); }
   if (!CONFIG.opening.on) { startIntroOld(); return; }
   if (!save) return; if (!FILM.ready) { introClear(); const it = introBase(); while (!it.next().done); }
@@ -752,10 +752,10 @@ function opWake(I, w) {
   opLids(lid); sty(cvs, 'filter', QUALITY === 'high' && w < K.blur[1] ? 'blur(' + (K.blur[0] * (1 - w / K.blur[1])).toFixed(2) + 'px)' : '');
 }
 function finishIntro() {
-  if (!intro) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } const skipTown = intro.part === 'town'; if (skipTown) introToBase(); const I0 = intro; intro = null; opLids(0); cvs.style.filter = '';
+  if (!intro || intro.prep) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } const skipTown = intro.part === 'town'; if (skipTown) introToBase(); const I0 = intro; intro = null; opLids(0); cvs.style.filter = '';
   for (const o of (I0.hide || []).concat(I0.stands || [])) o.visible = true; if (I0.fov0 && cam.fov !== I0.fov0) { cam.fov = I0.fov0; cam.updateProjectionMatrix(); }
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); hemi.intensity = CONFIG.baseLight.power; hemi.color.setHex(CONFIG.baseLight.sky); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
-  $('cine').style.display = 'none'; state = 'base'; ui = null; bp = { x: -0.6, z: -9.3 }; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 1; }); const sp = B.scoutPos(save); yaw = Math.atan2(-(sp.x - bp.x), -(sp.z - bp.z)); pitch = 0; camY = 1.6; cam.rotation.set(0, yaw, 0, 'YXZ');
+  $('cine').style.display = 'none'; state = 'base'; ui = null; bp = { x: -0.6, z: -9.3 }; baseCamY = 1.6; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 1; }); const sp = B.scoutPos(save); yaw = Math.atan2(-(sp.x - bp.x), -(sp.z - bp.z)); pitch = 0; camY = 1.6; cam.rotation.set(0, yaw, 0, 'YXZ');
   $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE'; save.seenIntro = true; persist(); flash('Dawn, day ' + save.day + '. Marla is ' + sp.hint + '. Talk to her to ride out. They say a lucky cat hides somewhere in the base.', 2);
   // (R4 worker 5, held frame of 7567 ms in diagnose 10: the film skipped in its street part built and drew the whole base in ONE frame: 1714 draws, 159 texture
   // uploads 6018 ms, 11 programs) the base's first frames are made under the home card instead (sliced parts, each waiting for the GPU), as Enter does
@@ -763,7 +763,7 @@ function finishIntro() {
   if (skipTown && CONFIG.lag.skipCard) sceneCard('home').then(() => jobCard(), () => jobCard()); else jobCard(); }
 function introFrame(dt) {
   if (!CONFIG.opening.on) { introFrameOld(dt); return; }
-  const I = intro, C = CONFIG.opening, P = C.parts; if (I.hold) return; I.t += dt; const t = I.t; // I.hold: filmWarm is still preparing under the black
+  const I = intro, C = CONFIG.opening, P = C.parts; if (I.hold || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) return; I.t += dt; const t = I.t; // I.hold: filmWarm is still preparing under the black
   let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
   const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
   // the film's last frame still moves the base's people (from the bed, where the wake's camera is), so they do not stand still for one frame as you take over
@@ -851,7 +851,7 @@ function enterHouse(i, quiet) { perfRest();
 // the first-collector flash names the real control (CONFIG.firstSolar: desktop key Q, phone SOLAR button)
 function solarBlock() { return FINE ? CONFIG.firstSolar.blockD : CONFIG.firstSolar.blockP; }
 function mustSolar() { return !!(run && sim && fromBase && save && !save.solarDone && !(save.nights > 0) && sim.phase === 'day'); }
-function leaveHouse() { if (!run || !sim || state !== 'play' || paused) return; if (mustSolar()) { flash(solarBlock(), 1); return; } const h = run.houses[run.inside]; if (!RUN.leave(run)) return; if (save && (save.nights || 0) < 2 && !run.toldPick) { run.toldPick = true; queueHint(1, 'More openings, more Gloom. Pick where you stand.'); } sim = null; yaw = h.row < 0 ? Math.PI : 0; pitch = 0; enterTown(); } // step out facing the street
+function leaveHouse() { if (!run || !sim || state !== 'play' || paused) return; if (mustSolar()) { flash(solarBlock(), 1); return; } const h = run.houses[run.inside], hp = sim.player.hp; if (!RUN.leave(run)) return; run.hurt = Math.max(0, CONFIG.player.hp - hp); if (save && (save.nights || 0) < 2 && !run.toldPick) { run.toldPick = true; queueHint(1, 'More openings, more Gloom. Pick where you stand.'); } sim = null; yaw = h.row < 0 ? Math.PI : 0; pitch = 0; enterTown(); } // step out facing the street
 function nightfall(byHold) { if (!run) return; perfRest(); if (byHold && mustSolar()) { flash(solarBlock(), 1); return; } if (!sim) { const h = facedHouse() || RUN.nearest(run, run.px, run.pz); run.caught = !byHold; enterHouse(byHold ? h.i : RUN.nearest(run, run.px, run.pz).i, true); } sim.endDay(); }
 // the house whose door you are looking at (within range and a narrow angle), else null
 function facedHouse() { const T = CONFIG.town, fx = -Math.sin(yaw), fz = -Math.cos(yaw); let best = null, ba = T.faceAngle; for (const h of run.houses) { const dx = h.doorX - run.px, dz = h.doorZ - run.pz, d = Math.hypot(dx, dz); if (d > T.infoRange || d < 0.01) continue; const a = Math.acos(Math.max(-1, Math.min(1, (dx * fx + dz * fz) / d))); if (a < ba) { ba = a; best = h; } } return best; }
@@ -946,7 +946,7 @@ function impactEvents(list) { if (!sim) return; const pops = list.filter((e) => 
     if (ev.boss !== undefined && ev.x !== undefined) impCall('hit', panOf(ev), false);
     if (ev.charged) { for (const q of ev.hits || []) if (!gone(q)) impCall('charged', panOf(q)); } else if (ev.boss === undefined && ev.x !== undefined && !gone(ev)) impCall('hit', panOf(ev), ev.head); } }
 const persist = () => B.writeSave(save, storage);
-function enterBase(intro) { perfRest();
+function enterBase(intro) { perfRest(); baseCamY = 1.6;
   clearScene(); dropWorld(); sim = null; run = null; hintQ.length = 0; ui = null; state = 'base'; hemi.intensity = CONFIG.baseLight.power; hemi.color.setHex(CONFIG.baseLight.sky); hemi.groundColor.setHex(CONFIG.baseLight.ground);
   if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   sky.mesh.visible = false; scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95);
@@ -980,7 +980,7 @@ function drawLoadout(id) {
 const UP_MIN = Math.min(...Object.values(CONFIG.base.upgrades).map((u) => u.cost[0]));
 function whereIs(q) { const dx = q.x - bp.x, dz = q.z - bp.z, d = Math.hypot(dx, dz), fx = -Math.sin(yaw), fz = -Math.cos(yaw), dot = (dx * fx + dz * fz) / (d || 1), cr = (dx * fz - dz * fx) / (d || 1); return d < 4 ? '' : ' · ' + Math.round(d) + ' m ' + (dot > 0.7 ? 'ahead' : dot < -0.7 ? 'behind you' : cr > 0 ? 'to your left' : 'to your right'); }
 function doUse() {
-  if (state !== 'base' || ui || paused || !curTarget) return;
+  if (state !== 'base' || ui || paused || !curTarget || FILM.it) return;
   const t = curTarget;
   if (t.kind === 'cat') { if (B.foundCat(save, t.id)) { bview.hideCat(); persist(); chime(1); flash('You found a lucky cat! Carry it home and set it on the shelf to see what it does.', true); } return; }
   if (t.kind === 'slot') {
@@ -1065,7 +1065,7 @@ function openPanel(kind, after) {
     else if (a === 'role') { B.cycleRole(save, +id); (bview.recruitsChanged(save), applyRelief(bview.group), noSmallCasters(bview.group), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); }
     else if (a === 'buy') flash(B.startResearch(CONFIG, save, id).msg, true);
     else if (a === 'help') flash(B.helpResearch(CONFIG, save).msg, true);
-    else if (a === 'egg') { flash(B.placeEgg(CONFIG, save).msg, true); bview.refreshAvians(); }
+    else if (a === 'egg') { flash(B.placeEgg(CONFIG, save).msg, true); bview.refreshAvians(); persist(); }
     persist(); bview.refreshNpcs(); openPanel(kind);
   }; });
   $('qclose').onclick = closePanel;
@@ -1178,7 +1178,7 @@ function setText(id, t) { const e = $(id); if (!e) return; const shown = FINE &&
 if (CONFIG.mouse.fakeLockWhenAutomated && typeof window.__fakeLock !== 'boolean' && typeof navigator !== 'undefined' && navigator.webdriver === true) window.__fakeLock = false;
 const fakeLock = () => typeof window.__fakeLock === 'boolean';
 const mouseHeld = () => (fakeLock() ? window.__fakeLock : document.pointerLockElement === cvs); let lockWanted = false, lockAt = -1e9;
-function lockMouse() { if (!FINE || mouseHeld() || !cvs.requestPointerLock) return false; lockAt = performance.now(); if (fakeLock()) { window.__lockAsks = (window.__lockAsks || 0) + 1; window.__fakeLock = true; lockWanted = true; $('mlook').style.display = 'none'; return true; } try { const pr = cvs.requestPointerLock(); if (pr && pr.catch) pr.catch(() => {}); lockWanted = true; return true; } catch (e) { return false; } }
+function lockMouse() { if (!FINE || mouseHeld() || !cvs.requestPointerLock) return false; lockAt = performance.now(); if (fakeLock()) { window.__lockAsks = (window.__lockAsks || 0) + 1; window.__fakeLock = true; lockWanted = true; $('mlook').style.display = 'none'; return true; } try { const pr = cvs.requestPointerLock(); lockWanted = true; if (pr && pr.catch) pr.catch(() => { lockWanted = false; }); return true; } catch (e) { return false; } }
 function freeMouse() { lockWanted = false; if (fakeLock()) { window.__fakeLock = false; return; } if (mouseHeld()) document.exitPointerLock(); }
 addEventListener('mousemove', (e) => { if (!mouseHeld() || !(state === 'play' || state === 'base') || paused) return; yaw -= e.movementX * CONFIG.mouse.sens; pitch = Math.max(-1.2, Math.min(1.2, pitch - e.movementY * CONFIG.mouse.sens)); });
 document.addEventListener('pointerlockchange', () => { $('mlook').style.display = 'none'; if (!mouseHeld() && lockWanted) { lockWanted = false; if (state === 'play' && !paused) setPause(true); } });
@@ -1216,6 +1216,7 @@ function showVoice() { $('bVoice').textContent = 'Voice: ' + (MV.on ? 'on' : 'of
 showVoice();
 function showMusic() { $('bMusic').textContent = 'Music: ' + (mus.on ? 'on' : 'off'); $('bMus').classList.toggle('off', !mus.on); }
 // rotate screen: a phone with rotation lock on never turns; offer full screen locked sideways (Android), or playing upright anyway
+if (!document.documentElement.requestFullscreen || !(screen.orientation && screen.orientation.lock)) $('rotFs').style.display = 'none';
 $('rotFs').addEventListener('click', () => { const d = document.documentElement, go = d.requestFullscreen ? d.requestFullscreen() : null; Promise.resolve(go).then(() => screen.orientation && screen.orientation.lock ? screen.orientation.lock('landscape') : null).catch(() => {}); });
 $('rotAny').addEventListener('click', () => { document.body.classList.add('portraitOk'); setPause(false); });
 let quitArm = 0;
@@ -1435,7 +1436,7 @@ function baseSlice0() { const S = CONFIG.lag.slice; if (!TB.phase || TB.phase ==
     if (!TB.cq.length) { TB.phase = 'done'; TB.ms = Math.round(performance.now() - TB.t0); pauseDrawn = false; } } }
 const SPLASH = (() => {
   const S = CONFIG.splash, el = $('spl'), q = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })(), quick = q.has('quality') && q.get('splash') !== '1';
-  const t0 = performance.now(), st = { scripts: [1, 1], assets: [0, 0], fonts: [0, 1], music: [0, 0], warm: [0, 1] }, began = {}, label = { scripts: 'Scripts', assets: 'Models and textures', fonts: 'Handwriting fonts', music: 'Music', warm: 'First scene (shaders)' };
+  const t0 = performance.now(), st = { scripts: [1, 1], assets: [0, 0], fonts: [0, 1], music: [0, 0], warm: [0, CONFIG.lag.logoWarm && CONFIG.lag.logoWarm.on ? 2 : 1] }, began = {}, label = { scripts: 'Scripts', assets: 'Models and textures', fonts: 'Handwriting fonts', music: 'Music', warm: 'First scene (shaders)' };
   const root = document.documentElement.style; root.setProperty('--sp-bg0', S.bg[0]); root.setProperty('--sp-bg1', S.bg[1]); root.setProperty('--sp-w0', S.word[0]); root.setProperty('--sp-w1', S.word[1]); root.setProperty('--sp-glow', S.glow); root.setProperty('--sp-tag', S.tagline);
   root.setProperty('--sp-b0', S.bar[0]); root.setProperty('--sp-b1', S.bar[1]); root.setProperty('--sp-b2', S.bar[2]); root.setProperty('--sp-b3', S.bar[3]); root.setProperty('--sp-fade', S.fade + 's'); $('stag').textContent = S.tag;
   if (FINE && S.particles) { const pz = $('spart'); for (let i = 0; i < S.particles; i++) { const d = document.createElement('i'); d.style.left = (5 + ((i * 53) % 90)) + '%'; d.style.animationDelay = (-(i * 0.73) % 9) + 's'; d.style.animationDuration = (7 + (i % 5)) + 's'; pz.appendChild(d); } }
@@ -1455,7 +1456,14 @@ const SPLASH = (() => {
   const frac = () => { const W = S.weights; let a = 0, b = 0; for (const k in W) { const [d, t] = st[k], f = t > 0 ? Math.min(1, d / t) : (k === 'assets' && (began.assetsDone || performance.now() - t0 > 1500) ? 1 : 0); a += W[k] * f; b += W[k]; } return a / b; };
   const tick = () => { const now = performance.now(), age = (now - t0) / 1000;
     for (const k in st) if (st[k][0] < st[k][1] && age > S.stageCap) st[k][0] = st[k][1];
-    if (!began.warm && (began.assetsDone || st.assets[1] === 0 || age > S.stageCap) && st.fonts[0] >= 1) { began.warm = true; requestAnimationFrame(() => { try { renderer.compile(scene, cam); renderer.render(scene, cam); } catch (e) { /* nothing to warm */ } st.warm = [1, 1]; }); }
+    if (!began.warm && (began.assetsDone || st.assets[1] === 0 || age > S.stageCap) && st.fonts[0] >= 1) { began.warm = true; requestAnimationFrame(() => { try { renderer.compile(scene, cam); renderer.render(scene, cam); } catch (e) { /* nothing to warm */ } st.warm[0] = 1; }); }
+    // (R4 worker 11, OWNER DECISION lead 03:33, CONFIG.lag.logoWarm { on, ms }) right after the logo, once every model, texture, font and track has arrived: the scene
+    // as the title will draw it (the models that came after the first warm-up included) has its shaders built in the background (compileAsync: the GPU's parallel
+    // compile) and is drawn once on screen under the opaque loading page, its shadows too, the GPU made to finish it (fence); at most ms ms, then the begin button
+    { const LW = CONFIG.lag.logoWarm; if (LW && LW.on && st.warm[0] === 1 && !began.warm2 && (quick || age >= S.logoSecs) && ['assets', 'fonts', 'music'].every((k) => st[k][0] >= st[k][1]) && (began.assetsDone || age > S.stageCap)) {
+      began.warm2 = true; const tw = performance.now(), cap = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(r, Math.max(0, ms)))]);
+      (async () => { try { if (renderer.compileAsync) await cap(renderer.compileAsync(scene, cam), LW.ms); renderer.shadowMap.needsUpdate = true; renderer.render(scene, cam); await cap(gpuDone(LW.ms), LW.ms - (performance.now() - tw)); } catch (e) { /* nothing to warm */ }
+        SPW.logoWarmMs = Math.round(performance.now() - tw); st.warm[0] = 2; })(); } }
     // (owner 11:40) the bar, the percent and the stage line are written only when they change
     const f = frac(); setText('spct', Math.floor(100 * f) + '%'); sty($('sfill'), 'width', (100 * f).toFixed(1) + '%');
     const cur = Object.keys(S.weights).find((k) => st[k][1] > 0 ? st[k][0] < st[k][1] : false) || (f < 1 ? 'assets' : ''); setText('sstage', f >= 1 ? 'Ready' : 'Loading: ' + label[cur] + (cur === 'assets' && st.assets[1] ? ' (' + st.assets[0] + ' of ' + st.assets[1] + ')' : cur === 'music' ? ' (' + st.music[0] + ' of ' + st.music[1] + ')' : ''));
@@ -1564,11 +1572,11 @@ addEventListener('resize', resize); resize();
 // The game is held still meanwhile (frame() returns at once), so no rule or timer changes: the change itself (startRun, dusk, enterBase) has already happened as before.
 // Work: wait for the night's Gloom models and the boss model (they load from startRun; capped at maxWait s), build every shader the scene uses (renderer.compileAsync;
 // skipped in the scripted checks, whose software GPU builds them on the first frame as before), and draw the sun shadow map once on the first frame after.
-cvs.addEventListener('webglcontextlost', (e) => { e.preventDefault(); ctxLost = true; }, false);
+cvs.addEventListener('webglcontextlost', (e) => { e.preventDefault(); ctxLost = true; if (!paused && (state === 'play' || state === 'base')) { setPause(true); ctxPaused = true; } }, false);
 // (owner 13:10, premortem C) after a restore three.js uploads every geometry, texture and shader again on its next use (pools, the kept base, the baked ground, merged
 // meshes: their data stays in memory); what the game drew only once is drawn again: the held picture under a pause or run-end screen (pauseDrawn) and the
 // shadow map; the run-end blur is taken again from the new picture
-cvs.addEventListener('webglcontextrestored', () => { ctxLost = false; renderer.shadowMap.needsUpdate = true; pauseDrawn = false; ENDS.re = true;
+cvs.addEventListener('webglcontextrestored', () => { ctxLost = false; if (ctxPaused) { ctxPaused = false; if (paused) setPause(false); } renderer.shadowMap.needsUpdate = true; pauseDrawn = false; ENDS.re = true;
 }, false);
 // ---- PERF OVERLAY (owner Nov 19 05:55): ?perf=1 shows real frame rates on a real device in a corner: FPS, average and worst frame (ms) over the last ~2 s, draw calls and
 // triangles per frame (every render of the frame summed), tier, pixel ratio and the automatic step-downs taken. Off (and costing nothing) without ?perf=1.
@@ -1670,6 +1678,11 @@ function warmNight() { if (warmG.children.length && warmG.userData.run === run &
   // as mergeQ does at a spawn); after the card's draws they start the pool (gloomTake reuses them merged), so a spawn takes a ready machine
   for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) for (let i = 0; i < Math.max(1, CONFIG.lag.gloomPrefill || 1); i++) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); gloomBlob(m, k); m.position.set(0, -50, 0);
     if (CONFIG.lag.gloomPrefill && m.userData.anim && !m.userData.merged) { const pr = (j) => m.userData.anim(-(1 + j * 0.73), { x: j * 0.11, z: j * 0.07 }); mergeStatic(m, pr); freezeStillBones(m, pr, CONFIG.lag.mergeGloom.probes); m.userData.merged = true; HITC.delete(m); } warmG.add(m); }
+  // (R4 worker 11, Mac afa1ffc 44571930050: 3 programs built at each fight start; ledger names: Gloom worn.jpg DoubleSide and gloom_lens DoubleSide on pieces not
+  // yet merged, breach marks black additive DoubleSide) CONFIG.lag.warmFresh: one machine of each kind as a spawn builds it when the pool is empty (not merged; it
+  // joins the pool after the card and is merged when taken) and one breach mark (same material and geometry as buildBreaches), drawn under the card
+  if (CONFIG.lag.warmFresh) { for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); gloomBlob(m, k); m.position.set(0, -50, 0); warmG.add(m); }
+    const hw = CONFIG.openingHalf, bm = new THREE.Mesh(new THREE.PlaneGeometry(2 * hw, 2.6), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); bm.position.set(0, -50, 0); warmG.add(bm); }
   for (const k of new Set(slotKinds())) { const m = deviceMesh(k); m.position.set(0, -50, 0); warmG.add(m); }
   // the shot, its splash, a kill's smoke and a broken device's splinters (their shaders), and the scrap pieces' physics file (desktop)
   for (const c of [0x7fd8ff, 0x9fd8ff, 0x9fffa0, 0xd0a0ff, 0xffe08a]) { warmG.add(PR.jet(new THREE.Vector3(0, -50, 0), new THREE.Vector3(1, -50, 0), c)); warmG.add(PR.droplet(c)); }
@@ -1827,7 +1840,7 @@ function frame(now) {
   if (state === 'base') {
     let mx = stick.x, mz = stick.y;
     if (keys.KeyW) mz -= 1; if (keys.KeyS) mz += 1; if (keys.KeyA) mx -= 1; if (keys.KeyD) mx += 1;
-    if (!ui && !paused) { const l = Math.hypot(mx, mz); if (l > 1) { mx /= l; mz /= l; } const sy = Math.sin(yaw), cy = Math.cos(yaw), v = CONFIG.base.speed * dt; [bp.x, bp.z] = bview.pushOut(bp.x + (mx * cy + mz * sy) * v, bp.z + (-mx * sy + mz * cy) * v); }
+    if (!ui && !paused && !FILM.it) { const l = Math.hypot(mx, mz); if (l > 1) { mx /= l; mz /= l; } const sy = Math.sin(yaw), cy = Math.cos(yaw), v = CONFIG.base.speed * dt; [bp.x, bp.z] = bview.pushOut(bp.x + (mx * cy + mz * sy) * v, bp.z + (-mx * sy + mz * cy) * v); }
     // (owner 10:50) paused: the base is not stepped (its people and animals hold still, as the picture does); the last result is kept
     const u = paused && baseU ? baseU : bview.update(dt, bp.x, bp.z, 1.6); curTarget = u.target; baseU = u;
     // base evening (CONFIG.avians.evening / eveLight): the sky light and exposure go down with the sun
@@ -1977,7 +1990,7 @@ function endScreen() {
   if (sim.result && sim.result.boss) $('endBody').textContent += bossEndLine(sim.result, lm); // the boss's bonus (src/bosshi.js)
   $('hud').style.display = 'none'; $('end').style.display = 'flex';
   // bank the night at once (so a reload on this screen cannot lose or replay it)
-  if (fromBase && save && !sim.banked) { sim.banked = true; const f0 = save.food, e0 = save.essentials, r = B.applyNight(CONFIG, save, sim.result, sim.killed); persist(); $('endBody').textContent += ' ' + B.nightFoodLine(CONFIG, save.food, sim.eaten || 0); homeMsg = 'Day ' + save.day + '. Home: +' + (save.food - f0) + ' food, +' + (save.essentials - e0) + ' essentials (run plus ' + r.passive.food + ' food from gatherers, ' + r.passive.essentials + ' essentials from hunters).' + (sim.result.win && (save.ringOpen || 1) > sim.result.ring + 1 ? ' Ring ' + Math.min(CONFIG.ring.mult.length, sim.result.ring + 2) + ' is open.' : '') + (r.research ? ' Research finished: ' + r.research + '!' : ''); { const lvl = Math.min(CONFIG.base.growth.max, (save.ringOpen || 1) - 1 + (save.cleared ? 1 : 0)); if (lvl > (save.grown || 0)) { save.grown = lvl; persist(); homeMsg += ' The settlement grows: a new solar sapling and flower bed stand by the plaza (' + lvl + ' of ' + CONFIG.base.growth.max + ').'; } } }
+  if (fromBase && save && !sim.banked) { sim.banked = true; const f0 = save.food, e0 = save.essentials, ro0 = save.ringOpen || 1, r = B.applyNight(CONFIG, save, sim.result, sim.killed); persist(); $('endBody').textContent += ' ' + B.nightFoodLine(CONFIG, save.food, sim.eaten || 0); homeMsg = 'Day ' + save.day + '. Home: +' + (save.food - f0) + ' food, +' + (save.essentials - e0) + ' essentials (run plus ' + r.passive.food + ' food from gatherers, ' + r.passive.essentials + ' essentials from hunters).' + (sim.result.win && (save.ringOpen || 1) > ro0 ? ' Ring ' + Math.min(CONFIG.ring.mult.length, sim.result.ring + 2) + ' is open.' : '') + (r.research ? ' Research finished: ' + r.research + '!' : ''); { const lvl = Math.min(CONFIG.base.growth.max, (save.ringOpen || 1) - 1 + (save.cleared ? 1 : 0)); if (lvl > (save.grown || 0)) { save.grown = lvl; persist(); homeMsg += ' The settlement grows: a new solar sapling and flower bed stand by the plaza (' + lvl + ' of ' + CONFIG.base.growth.max + ').'; } } }
 }
 requestAnimationFrame(frame);
 // (worker 7, guidecheck TimeoutError 44529552521) setBase also takes the USE target at the new spot at once: a slow frame (1.2-1.7 s in software GL) left the old spot's target for USE

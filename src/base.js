@@ -61,12 +61,12 @@ export function newSave(cfg, seed = (Math.random() * 1e9) | 0) {
     personnel: b.start.personnel.map((p, i) => ({ id: i + 1, name: p.name, role: p.role })),
     cats: makeCats(cfg, rnd), revealed: { energy: false, lure: false }, noteSeen: false, up: Object.fromEntries(Object.keys(cfg.base.upgrades).map((k) => [k, 0])), loadout: cfg.loadout.first.slice(), project: null, helped: 0,
     scoutSpot: (rnd(), 3), // day 1: Marla waits by the pond, a few steps from where you wake, so the first ride-out is quick
-    quests: [], nextId: 100, nights: 0, essTotal: 0, killsTotal: 0, trips: 0, mjRead: 0, avians: cfg.avians ? newFlock(cfg) : undefined,
+    quests: [], nextId: 100, nights: 0, nightsMet: 0, essTotal: 0, killsTotal: 0, trips: 0, mjRead: 0, avians: cfg.avians ? newFlock(cfg) : undefined,
   };
 }
 
 // newer fields get their defaults, so older saves keep working
-function fill(cfg, s) { if (cfg.avians) fillFlock(cfg, s); if (typeof s.trips !== 'number') s.trips = s.nights || 0; if (typeof s.mjRead !== 'number') s.mjRead = 0; if (!s.up) return true; for (const k of Object.keys(cfg.base.upgrades)) if (typeof s.up[k] !== 'number') s.up[k] = 0; if (!Array.isArray(s.loadout)) s.loadout = cfg.loadout.first.slice(); return true; }
+function fill(cfg, s) { if (cfg.avians) fillFlock(cfg, s); for (const k of ['nights', 'killsTotal', 'essTotal']) if (typeof s[k] !== 'number' || !isFinite(s[k])) s[k] = 0; if (typeof s.nightsMet !== 'number' || !isFinite(s.nightsMet)) s.nightsMet = s.nights; if (Array.isArray(s.quests)) s.quests = s.quests.filter((q) => q && (!q.giver || NPCS[q.giver])); if (typeof s.trips !== 'number') s.trips = s.nights || 0; if (typeof s.mjRead !== 'number') s.mjRead = 0; if (!s.up) return true; for (const k of Object.keys(cfg.base.upgrades)) if (typeof s.up[k] !== 'number') s.up[k] = 0; if (!Array.isArray(s.loadout)) s.loadout = cfg.loadout.first.slice(); return true; }
 // devices you know, and how many you can carry into the night
 export const unlocked = (cfg, save) => Object.keys(cfg.devices).filter((k) => cfg.loadout.start.includes(k) || (save.up['dev_' + k] || 0) > 0);
 export const slots = (cfg, save) => cfg.loadout.slots + (save.up.slots || 0);
@@ -83,7 +83,7 @@ export const gloomMult = (cfg, save) => (1 - Math.min(cfg.base.passive.hunterCap
 export const placedCats = (save, type) => save.cats.filter((c) => c.state === 'placed' && (!type || c.type === type)).length;
 export const carriedCats = (save) => save.cats.filter((c) => c.state === 'carried').length;
 // OWNER DECISION (lead 00:25, Card 50): the boss's night = the boss ring AND night >= CONFIG.boss.fromNight AND at least CONFIG.boss.minUpgrades upgrades finished
-export const bossNight = (cfg, save, ring) => !!(cfg.boss && cfg.boss.on && ring === cfg.boss.ring && save && (save.nights || 0) + 1 >= (cfg.boss.fromNight || 1) && Object.values(save.up || {}).reduce((a, v) => a + (+v || 0), 0) >= (cfg.boss.minUpgrades || 0));
+export const bossNight = (cfg, save, ring) => !!(cfg.boss && cfg.boss.on && ring === cfg.boss.ring && save && (save.nightsMet || 0) + 1 >= (cfg.boss.fromNight || 1) && Object.values(save.up || {}).reduce((a, v) => a + (+v || 0), 0) >= (cfg.boss.minUpgrades || 0));
 export const nightEnergyBonus = (cfg, save) => placedCats(save, 'energy') * cfg.cat.energyBonus + save.up.energy * cfg.base.upgrades.energy.per; // only cats that sit in your home count
 export const lootMult = (cfg, save) => 1 + placedCats(save, 'lure') * cfg.cat.lureLoot;
 // the sim config for a night: research upgrades change panels and turbines
@@ -213,7 +213,7 @@ export function applyNight(cfg, save, result, kills) {
   const passive = left ? { essentials: 0, food: 0 } : { essentials: hun * pa.hunterEss, food: gat * pa.gatherFood };
   const research = left ? null : advance(cfg, save, count(save, 'researcher') * pa.researchPerDay);
   save.essentials += passive.essentials; save.food += passive.food;
-  save.nights++; save.trips = (save.trips || 0) + 1; save.killsTotal += kills; save.essTotal += win ? result.essentials : 0;
+  save.nights++; save.trips = (save.trips || 0) + 1; if (win || (result.lasted || 0) > 0) save.nightsMet = (save.nightsMet || 0) + 1; save.killsTotal += kills; save.essTotal += win ? result.essentials : 0;
   for (const q of save.quests) {
     if (q.state !== 'active') continue;
     if (q.type === 'hunt') { q.got = Math.min(q.target, q.got + kills); if (q.got >= q.target) complete(save, q); }
