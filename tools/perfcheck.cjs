@@ -156,6 +156,7 @@ const BREAKDOWN = (spot) => {
       await midSave(C.boss ? { day: 14, nights: 11, food: 31, ess: 18, ringOpen: 5, scout: 2, cats: [0, 2, 3] } : { day: 7, nights: 5, food: 19, ess: 11, ringOpen: 3, scout: 2, cats: [0, 2, 3] });
       const r = await startRun(C.ring); await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null);
       if (C.boss) for (let k = 0; k < 300; k++) { if (await p.evaluate(() => !window.__boss || ['ready', 'failed', 'none'].includes(window.__boss.model))) break; await p.waitForTimeout(1000); }
+      const progR = await p.evaluate(() => (window.__game.programs ? window.__game.programs(true) : []));
       const hi = pickHouse(r, 4); await p.evaluate((i) => { const g = window.__game; g.enterHouse(i); g.sim.player.energy = 62; }, hi); await waitGame(1.5, 0.3);
       // PROFILE=1: a CPU profile from nightfall to the end of the settle (the first-use hitches after the night card), reported after the timing
       let cdpH = null;
@@ -163,6 +164,11 @@ const BREAKDOWN = (spot) => {
       // the boss night: on until THE BECKONER is up and acting (summoning or striking), in the sim alone (as the boss spot does)
       if (C.boss) for (let k = 0; k < 240; k++) { const v = await p.evaluate(() => { const s = window.__game.sim; s.player.hp = 1e6; for (let i = 0; i < 5 && !s.done; i++) { const B = s.boss; if (B && B.act) return true; s.step(0.1); } return false; }); if (v) break; }
       const progs0 = await p.evaluate(() => (window.__game.programs ? window.__game.programs() : []));
+      // the shader programs first built after the ride card (in the house by day and under the night card), each shown by how its key differs from the closest earlier one
+      { const progN = await p.evaluate(() => (window.__game.programs ? window.__game.programs(true) : [])), had = new Set(progR.map((x) => x.split(' ')[0])), fresh = progN.filter((x) => !had.has(x.split(' ')[0]));
+        const toks = (x) => x.split(' ').slice(2).join(' ').split(','), diff = (x) => { const a = toks(x), nm = x.split(' ')[1]; let best = null; for (const y of progR) { if (y.split(' ')[1] !== nm) continue; const b = toks(y); const d = []; for (let i = 0; i < Math.max(a.length, b.length); i++) if (a[i] !== b[i]) d.push(i + ':' + b[i] + '>' + a[i]); if (!best || d.length < best.length) best = d; } return nm + ' ' + (best ? best.slice(0, 6).join(' ') : 'no earlier ' + nm); };
+        const by = new Map(); for (const x of fresh) { const k = diff(x); by.set(k, (by.get(k) || 0) + 1); }
+        console.log('INFO combat ' + tier + ' ' + spot + ' shader programs built after the ride card: ' + fresh.length + '\n' + [...by.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, n]) => '   . ' + n + 'x ' + k.slice(0, 220)).join('\n')); }
       info('combat ' + tier + ' ' + spot + ' night card: ' + JSON.stringify(await p.evaluate(() => (window.__game.cardInfo ? window.__game.cardInfo() : null))));
       // PROFILE=1: the CPU profile of the first 5 s of the fight (where the long first frames were), started just before the bot
       if (process.env.PROFILE) { cdpH = await p.context().newCDPSession(p); await cdpH.send('Profiler.enable'); await cdpH.send('Profiler.setSamplingInterval', { interval: 200 }); await cdpH.send('Profiler.start'); setTimeout(async () => { try { const { profile } = await cdpH.send('Profiler.stop'); cdpH.prof = profile; } catch (e) { /* closed */ } }, 5000); }

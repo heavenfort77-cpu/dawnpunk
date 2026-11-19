@@ -1333,7 +1333,10 @@ async function sceneCard(kind) {
       draw1(true); warmG.visible = false; await raf();
       // then the view all round (four quarter turns), with the pieces the night cull hides (layer 1) drawn too: every piece's first draw (its normals, uvs and colours go
       // to the GPU then; the shadow pass only sent positions) happens under the card, not when you turn round or step to a window in the fight
+      // and once more with EVERY piece shown and not culled (hidden effects such as the boss's summon bars and sparks included; lights left as they are, so no shader changes)
       { const ry = cam.rotation.y; cam.layers.enable(1); try { for (let k = 1; k <= 4; k++) { cam.rotation.y = ry + k * Math.PI / 2; cam.updateMatrixWorld(); draw1(false); } } finally { cam.layers.disable(1); cam.rotation.y = ry; cam.updateMatrixWorld(); } await raf(); }
+      { const was = []; cam.layers.enable(1); try { scene.traverse((o) => { if (o.isLight || o === sky.mesh) return; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; }); renderer.render(scene, cam); }
+        finally { for (const [o, v, f] of was) { o.visible = v; o.frustumCulled = f; } cam.layers.disable(1); } await raf(); }
       if (kind === 'night') { draw1(true); await raf(); } draw1(false); try { renderer.getContext().finish(); } catch (e2) { /* no context */ } }
     warmG.visible = false;
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
@@ -1522,7 +1525,7 @@ window.__game.cardOn = () => LCARD.on;
 // the last card's work time (ms) and any error it swallowed (tools/perfcheck.cjs prints them)
 window.__game.cardInfo = () => ({ ms: LCARD.ms, err: window.__cardErr || '' });
 // the shader programs built so far (tools/perfcheck.cjs: which ones are first built after the night card); name and a short key each
-window.__game.programs = () => (renderer.info.programs || []).map((q) => q.id + ' ' + q.name + ' ' + String(q.cacheKey).replace(/,+/g, ',').slice(0, 160));
+window.__game.programs = (full) => (renderer.info.programs || []).map((q) => q.id + ' ' + q.name + ' ' + (full ? String(q.cacheKey) : String(q.cacheKey).replace(/,+/g, ',').slice(0, 160)));
 window.__game.perfStep = () => (perf ? { ...perf.state } : null); window.__game.perfForce = () => (perf ? { ...perf.force() } : null);
 window.__game.baseEvening = (t) => bview.setEvening(t);
 window.__game.cfg = CONFIG;
