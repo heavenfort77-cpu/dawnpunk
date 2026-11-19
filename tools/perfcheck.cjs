@@ -242,7 +242,7 @@ const BREAKDOWN = (spot) => {
           const R = { paused: await rateOn(p, 2) }; R.pausedOnePixelChangedEachFrame = await rateOn(p, 2, true);
           await p.evaluate(() => { const st = document.createElement('style'); st.id = 'pauseCtl'; st.textContent = '#hud #marla{display:none!important}'; document.head.appendChild(st); }); R.pausedNoMarla = await rateOn(p, 2); await p.evaluate(() => { const st = document.getElementById('pauseCtl'); if (st) st.remove(); });
           const pa = await ctx.newPage(); await pa.setViewportSize(p.viewportSize()); await pa.setContent('<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#0b2620"></body></html>'); await pa.waitForTimeout(300); R.emptyPage = await rateOn(pa, 2); await pa.close();
-          info('pause controls (rAF fps, 2 s each): ' + JSON.stringify(R) + '; timed pause ' + fPa.fps + ' fps');
+          info('flow ' + tier + ' pause controls (rAF fps, 2 s each): ' + JSON.stringify(R) + '; timed pause ' + fPa.fps + ' fps');
           if (GPU && tier === TT) out.push([TT + ' pause: ' + R.paused + ' fps vs an empty page ' + R.emptyPage + ' fps in the same job (target within 5 % or >= ' + CGATE.fps + ')', R.paused >= Math.min(CGATE.fps, R.emptyPage * 0.95)]); } catch (e) { err(e); }
         await p.evaluate(() => window.__game.setPause && window.__game.setPause(false));
         await p.evaluate(() => { const s = window.__game.sim; s.player.hp = 0; }); await p.waitForFunction(() => window.__game.state === 'end', null, { timeout: 30000 }).catch(() => null); info('run end screen: ' + await p.evaluate(() => window.__game.state)); await flow('end', 6); if (process.env.PROFILE) await prof('run-end screen', async () => null, 3000);
@@ -458,7 +458,7 @@ const BREAKDOWN = (spot) => {
     { const pp = await p.evaluate(() => (window.__game.playPrograms ? window.__game.playPrograms() : null)), cp = await p.evaluate(() => (window.__game.cardInfo ? window.__game.cardInfo().proofs : null));
       info(tier + ' shader programs built during play: ' + JSON.stringify(pp).slice(0, 3000) + ' | cards (kind, renders, calls, programs): ' + JSON.stringify((cp || []).map((q) => [q.kind, q.renders, q.calls, q.programs])));
       // (R4 worker 5, item 6) printed as a gate line on high too
-      if (GPU && (tier === TT || tier === 'high') && pp) out.push([tier + ': shader programs built during play after the cards ' + pp.n + ' (target 0)', pp.n === 0]);
+      if (GPU && (tier === TT || tier === 'high') && pp) out.push([tier + ': shader programs built during play after the cards ' + pp.n + ' (target 0; old count, the list\'s growth: ' + pp.old + ')', pp.n === 0]);
       // (R3, owner) the card time budget: each card's time (its proof's ms) and what it did (uploads, programs, its steps); medium <= 3 s, high <= 4 s, per card
       const ce = await p.evaluate(() => window.__enterCards || []), all = [...(cp || []).filter((q) => !q.bot).map((q) => ['flow', q]), ...ce.filter((q) => !q.bot).map((q) => ['enter', q])];
       // (R4 worker 5, item 2) PROFILE: the held frames over 1 s (film black, cards) with the page's catcher entry (JS by part, draws, slowest WebGL call: glw)
@@ -512,6 +512,9 @@ const BREAKDOWN = (spot) => {
       if (hub && GPU) out.push([t + r.fps + ' fps vs hub ' + hub + ' fps in the same job (the night must not be slower)', r.fps >= hub]);
       out.push([t + r.calls + ' draw calls per frame on average (target < 500; max ' + r.callsMax + ')', r.calls < 500]); triGate(out, t + (r.tris / 1e6).toFixed(2) + ' M triangles per frame on average (target < 0.50 M; max ' + (r.trisMax / 1e6).toFixed(2) + ' M)', r.tris < 0.5e6);
       const c = r.combat || {}; if (GPU) out.push([t + 'the fight was real: ' + c.quick + ' quick and ' + c.charged + ' charged shots, ' + c.kills + ' kills, ' + c.placeOk + ' devices placed, ' + c.avgAlive + ' Gloom alive on average (' + c.avgInside + ' inside)' + (COMBAT[r.spot].boss ? ', boss acting ' + c.boss : ''), c.kills > 0 && c.charged > 0 && c.avgAlive >= COMBAT[r.spot].n * 0.6 && (!COMBAT[r.spot].boss || c.boss)]); } }
+  // (R4 worker 6, lead 21:15 item 6) the second samples (hub2, combat2, bosscombat2) are printed against the same gates, report only, so one sample does not decide in the noise band
+  { const g = (sp, tr) => rows.find((r) => r.tier === tr && r.spot === sp); for (const tr of [...new Set(rows.map((r) => r.tier))]) for (const sp of ['combat2', 'bosscombat2']) { const r = g(sp, tr); if (!r || !r.fps || !GPU) continue; const h = (g('hub', tr) || {}).fps, h2 = (g('hub2', tr) || {}).fps;
+    console.log('REPORT ' + tr + ' ' + sp + ' (second sample): ' + r.fps + ' fps ' + (r.fps >= CGATE.fps ? 'ok' : 'UNDER') + ' (>= ' + CGATE.fps + '), p95 ' + r.p95 + ' ms ' + (r.p95 <= CGATE.p95 ? 'ok' : 'OVER') + ' (<= ' + CGATE.p95 + '), worst from the card on ' + r.worstAll + ' ms ' + (r.worstAll <= CGATE.worst ? 'ok' : 'OVER') + ' (<= ' + CGATE.worst + '), vs hub ' + h + ' / hub2 ' + h2 + ' fps ' + (r.fps >= Math.max(h || 0, h2 || 0) ? 'ok' : 'SLOWER')); } }
   // owner Nov 19 06:43: the night house and the boss night are the most intense play, so on the default tier their real frame rate (GPU=1) must be at least the hub's
   { const f = (sp) => (rows.find((r) => r.tier === TT && r.spot === sp) || {}).fps; const hub = f('hub');
     if (hub) for (const sp of ['house', 'boss']) if (f(sp)) out.push([TT + ' ' + sp + ': ' + f(sp) + ' fps, hub ' + hub + ' fps (the night must not be slower than the hub)', f(sp) >= hub]); }

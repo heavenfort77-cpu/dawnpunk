@@ -72,8 +72,10 @@ const path = require('path');
     const ng = await p.evaluate(() => window.__game.state); ok('New game plays the opening first', ng === 'intro', ng);
     await p.evaluate(() => { window.__jobSecs2 = window.__game.cfg.lore.jobCardSecs; window.__game.cfg.lore.jobCardSecs = 600; });
     await p.keyboard.press('KeyX'); await p.waitForFunction(() => window.__game.state === 'base' && !!document.getElementById('jobCard'), null, { timeout: 600000, polling: 100 }).catch(() => {});
-    const ns = await p.evaluate(() => { const g = window.__game; return { state: g.state, hint: g.B.scoutPos(g.save).hint, card: !!document.getElementById('jobCard'), day: g.save.day }; });
-    ok('a key skips it into the base with Marla at your door, and the job card shows', ns.state === 'base' && ns.hint === 'at your door' && ns.card && ns.day === 1, JSON.stringify(ns));
+    // (R4 worker 6, lead 21:15) the job card shows ON TOP once the loading card is gone: the element at its middle is the job card, and no loading card is up
+    await p.waitForFunction(() => !window.__game.cardOn || !window.__game.cardOn(), null, { timeout: 600000, polling: 100 }).catch(() => {});
+    const ns = await p.evaluate(() => { const g = window.__game, jc = document.getElementById('jobCard'); let top = false; if (jc) { const r = jc.getBoundingClientRect(), e = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); top = !!e && (e === jc || jc.contains(e)); } return { state: g.state, hint: g.B.scoutPos(g.save).hint, card: !!jc, top, loading: !!(g.cardOn && g.cardOn()), day: g.save.day }; });
+    ok('a key skips it into the base with Marla at your door, and the job card shows on top (no loading card over it)', ns.state === 'base' && ns.hint === 'at your door' && ns.card && ns.top && !ns.loading && ns.day === 1, JSON.stringify(ns));
     await p.evaluate(() => { window.__game.cfg.lore.jobCardSecs = window.__jobSecs2; });
     await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('jobCard'), null, { timeout: 120000 }).catch(() => {}); const seen = await p.evaluate(() => window.__game.save.jobCard === true && !document.getElementById('jobCard'));
     await p.reload(); await p.waitForFunction(() => window.__game && window.__game.startIntro, null, { timeout: 900000 }); await p.evaluate(() => document.getElementById('enter').click()); await p.waitForFunction(() => window.__game.state === 'base', null, { timeout: 600000 }).catch(() => {}); await p.waitForTimeout(tier === 'high' ? 8000 : 3000);

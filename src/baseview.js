@@ -197,7 +197,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // a room you walk into (src/rooms.js): the station house's look (plaster walls, a barrel vault that is a garden on one side and solar petals on the other, round windows that glow),
     // with an arched doorway you walk through, walls you bump into (boxes, not one circle round the house), a plank floor and a dressed room inside (phones: workshopLow / marlaLow;
     // desktop: the DENSITY pass of src/basehi.js with workshopHi / marlaHi). Built in the room's own frame (door at +z), turned and placed by its group.
-    const vaultRoom = (I, col, lab, labCol, Lt) => {
+    // (R4 worker 6, title worst frame) a generator, so the sliced build can stop inside a room (its parts were 100-200 ms on the Mac); vaultRoom runs it at once
+    function* vaultRoomIter(I, col, lab, labCol, Lt) {
       const rg = new THREE.Group(); rg.position.set(I.x, 0, I.z); rg.rotation.y = I.ry; g.add(rg);
       const hw = I.w / 2, hd = I.d / 2, tw = I.t, h = I.h, rw = I.dw / 2, R = I.R, kk = I.k;
       bx(I.w, h, tw, col, 0, h / 2, -hd + tw / 2, rg); bx(tw, h, I.d - 2 * tw, col, -hw + tw / 2, h / 2, 0, rg); bx(tw, h, I.d - 2 * tw, col, hw - tw / 2, h / 2, 0, rg);
@@ -207,6 +208,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       bx(I.w - 2 * tw, I.floor, I.d - 2 * tw, 0x8a6a3a, 0, I.floor / 2, 0, rg); bx(I.dw, I.floor, tw, 0x8a6a3a, 0, I.floor / 2, hd - tw / 2, rg);
       const vault = new THREE.Mesh(new THREE.CylinderGeometry(R, R, I.w + 0.5, 18, 1, false, 0, Math.PI), mat(0x4aa84a)); vault.material.side = THREE.DoubleSide; vault.rotation.z = Math.PI / 2; vault.scale.set(kk, 1, 1); vault.position.set(0, h, 0); rg.add(vault);
       for (const sx of [-1, 1]) { const end = new THREE.Mesh(new THREE.CircleGeometry(R, 18, 0, Math.PI), mat(col)); end.scale.y = kk; end.position.set(sx * (hw + 0.25), h, 0); end.material.side = THREE.DoubleSide; end.rotation.y = sx * Math.PI / 2; rg.add(end); }
+      yield;
       const nc = Math.floor((I.w - 0.5) / 0.75) + 1; for (let r = 0; r < 3; r++) for (let c = 0; c < nc; c++) { const a = 0.35 + r * 0.38, pg = new THREE.Group(); pg.position.set(-hw + 0.25 + c * 0.75 + (r % 2) * 0.37, h + Math.sin(a) * R * kk + 0.03, -Math.cos(a) * R); pg.rotation.x = -(Math.PI / 2 - a) - 0.5; rg.add(pg); petal(pg, 0.95, 0.62, BM.cell); }
       const nf = Math.floor((I.w - 0.6) / 0.85) + 1, fy = h + Math.sqrt(Math.max(0, 1 - (0.9 / R) * (0.9 / R))) * R * kk - 0.04; for (let k = 0; k < nf; k++) for (let c = 0; c < 2; c++) card(1.0, 0.9, flM[(k + 2) % 5], -hw + 0.3 + k * 0.85 + (c ? 0.2 : 0), fy - Math.abs(k - nf / 2) * 0.03, 0.9 + (c ? 0.25 : 0), c * 1.57 + k * 0.7, rg);
       { const pts = [[-rw - 0.07, 0, hd + 0.03], [-rw - 0.07, I.dh, hd + 0.03]]; for (let k = 1; k < 8; k++) { const a = Math.PI - k / 8 * Math.PI; pts.push([Math.cos(a) * (rw + 0.07), I.dh + Math.sin(a) * (rw + 0.07), hd + 0.03]); } pts.push([rw + 0.07, I.dh, hd + 0.03], [rw + 0.07, 0, hd + 0.03]); rg.add(stem(pts, 0.05, BM.verdigris)); }
@@ -216,6 +218,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       card(Math.min(2.2, I.d - 0.6), 2.4, vineM, -hw - 0.02, 1.4, 0.3, Math.PI / 2, rg); card(1.8, 2.2, vineM, hw + 0.02, 1.3, -0.5, Math.PI / 2, rg); card(2.4, 2.3, vineM, 0.8, 1.35, -hd - 0.02, 0, rg);
       for (let k = 0; k < 7; k++) { const x = -hw - 0.1 + k * (I.w + 0.2) / 6; if (Math.abs(x) > rw + 0.2) card(0.9, 0.6, tuftM, x, 0.3, hd + 0.12 + (k % 2) * 0.1, (k % 3) * 0.3, rg); }
       const L = (HIBASE ? Lt.high : Lt.low); if (L && L[1] > 0) { const lamp = houseLampsOn() ? addLamp(houseLamp(L[1], L[2], L[0])) : new THREE.PointLight(L[0], L[1], L[2]); lamp.position.set(0, h - 0.35, 0); rg.add(lamp); }
+      yield;
       if (HIBASE) { vaultHi(rg, { x: 0, z: 0, w: I.w, d: I.d, h, R, k: kk, front: 1, open: true, room: I.key, word: I.word, seed: I.seed, lampX: false, noBench: I.key !== 'workshop', flue: I.key === 'marla' ? [-0.6, -1.32] : undefined, door: [0, I.dw, I.dh], windows: I.windows, inside: dense ? (c) => (I.key === 'workshop' ? workshopHi : marlaHi)(c, I) : null });
         if (rg.userData.densityB) Object.assign(g.userData.densityB || (g.userData.densityB = {}), rg.userData.densityB); }
       if (!dense) { const lin = new THREE.Mesh(new THREE.CylinderGeometry(R - 0.05, R - 0.05, I.w - 2 * tw, 16, 1, true, 0, Math.PI), mat(0x8a5a3a)); lin.material.side = THREE.DoubleSide; lin.rotation.z = Math.PI / 2; lin.scale.set(kk, 1, 1); lin.position.set(0, h, 0); rg.add(lin);
@@ -224,19 +227,25 @@ export function createBaseView(scene, cfg, marla, makeChar) {
         (I.key === 'workshop' ? workshopLow : marlaLow)(rg, I); }
       for (const q of roomSolids(I).reverse()) boxes.push({ I, cx: q[0], cz: q[1], hx: q[2], hz: q[3] });
       const l = label(lab, labCol); l.position.set(I.x, h + R * kk + 0.9, I.z); l.userData.kind = 'station'; g.add(l);
-      return rg; };
-    house(st.storage, 0x4a8f8a, 0x2f4f9a); if (WS) vaultRoom(WS, 0xb08a4a, 'Workshop', '#fff', cfg.workshop.light); else house(st.workshop, 0xb08a4a, 0x2f4f9a);
+      return rg; }
+    // (R4 worker 6, title worst 271 ms: base build parts of 100-360 ms on the Mac, cardInfo title.slow; this part 1483 ms locally) a stop between the houses and
+    // between the scenery pieces below (the same pieces, built in more, shorter parts: SPREAD)
+    house(st.storage, 0x4a8f8a, 0x2f4f9a);
+    yield;
+    if (WS) yield* vaultRoomIter(WS, 0xb08a4a, 'Workshop', '#fff', cfg.workshop.light); else house(st.workshop, 0xb08a4a, 0x2f4f9a);
     yield;
     // Marla's house (owner Nov 16 23:35): her journal lies on the desk; a ribbon and a warm glow show while a line is unread (refreshJournal)
-    if (MH) { const rg = vaultRoom(MH, 0x9a8a6a, "Marla's place", '#ffd080', cfg.marlaHouse.light), dk = cfg.marlaHouse.desk, y = MH.floor + 0.785, jg = new THREE.Group(); jg.position.set(dk[0], y, dk[1]); jg.rotation.y = 0.18; rg.add(jg);
+    if (MH) { const rg = yield* vaultRoomIter(MH, 0x9a8a6a, "Marla's place", '#ffd080', cfg.marlaHouse.light), dk = cfg.marlaHouse.desk, y = MH.floor + 0.785, jg = new THREE.Group(); jg.position.set(dk[0], y, dk[1]); jg.rotation.y = 0.18; rg.add(jg);
       const cover = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.035, 0.32), new THREE.MeshLambertMaterial({ color: 0x5a3424 })); cover.position.y = 0.0175; jg.add(cover); const pages = new THREE.Mesh(new THREE.BoxGeometry(0.225, 0.025, 0.305), new THREE.MeshLambertMaterial({ color: 0xf0e6cc })); pages.position.set(0.006, 0.018, 0); jg.add(pages);
       const strap = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.038, 0.33), new THREE.MeshLambertMaterial({ color: 0x3a2018 })); strap.position.set(0.07, 0.018, 0); jg.add(strap);
       const ribbon = new THREE.Group(), rm = new THREE.MeshLambertMaterial({ color: 0xc0302a, emissive: 0x401008 }); { const a = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.004, 0.1), rm); a.position.set(-0.05, 0.037, 0.13); ribbon.add(a); const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.09, 0.004), rm); b2.position.set(-0.05, -0.008, 0.182); b2.rotation.x = 0.15; ribbon.add(b2); } jg.add(ribbon);
       const glow = halo(jg, 0, 0.12, 0, cfg.marlaHouse.ribbon[1], 0xffc871); glow.material.opacity = Math.min(1, glow.material.opacity * cfg.marlaHouse.ribbon[0]); glow.userData.kind = 'mark';
       jn = { ribbon, glow, at: toWorld(MH, dk[0], dk[1]) }; refreshJournal(); }
+    yield;
     // garden: planters
     for (let i = 0; i < 4; i++) bx(1.6, 0.5, 1.6, 0x5a3d28, st.garden.x - 2.4 + i * 1.6, 0.25, st.garden.z, g), bx(1.44, 0.06, 1.44, 0x4a3a2a, st.garden.x - 2.4 + i * 1.6, 0.5, st.garden.z, g), [0, 1, 2, 3, 4, 5].forEach((k) => card(0.8 + (i % 2) * 0.3, 0.7 + (i % 3) * 0.25, [tuftM, vineM, flM[1], canM][i], st.garden.x - 2.4 + i * 1.6 + ((k % 3) - 1) * 0.42, 0.85 + (i % 3) * 0.1, st.garden.z + (k < 3 ? -0.3 : 0.3), k * 0.9 + i, g)); // soil and a different crop in each planter
     circle(st.garden.x, st.garden.z, 2.6); { const l = label('Garden', '#fff'); l.position.set(st.garden.x, 2.6, st.garden.z); l.userData.kind = 'station'; g.add(l); }
+    yield;
     // quest board, beside the Workshop's door (owner Nov 17 15:59): built in its own frame (x along the board, +z its painted face), turned to face the plaza; a solar petal shades it,
     //   leaning back away from the plaza so it stays clear of the workshop's vault; you bump into its footprint (BOARD_BOX) instead of a round disc
     { const bg = new THREE.Group(); bg.position.set(st.board.x, 0, st.board.z); bg.rotation.y = boardYaw(); g.add(bg);
@@ -255,6 +264,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       for (const [y, r] of [[1.15, 1.1], [1.75, 1.08]]) { const w = new THREE.Mesh(new THREE.TorusGeometry(r, 0.03, 6, 30), BM.glow(0x7fe8ff)); w.rotation.x = Math.PI / 2; w.position.set(tx, y, tz); g.add(w); } const wb = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.12, 0.56, 24, 1, true), new THREE.MeshPhongMaterial({ color: 0x6fd8f0, transparent: true, opacity: 0.55, shininess: 120, specular: 0xffffff, side: THREE.DoubleSide })); wb.position.set(tx, 1.45, tz); g.add(wb);
       for (let k = 0; k < 3; k++) { const a = k * 2.094; g.add(stem([[tx + Math.cos(a) * 0.6, 0.4, tz + Math.sin(a) * 0.6], [tx + Math.cos(a) * 0.95, 0.25, tz + Math.sin(a) * 0.95], [tx + Math.cos(a) * 1.05, 0.03, tz + Math.sin(a) * 1.05]], 0.07, BM.verdigris)); }
       const ring = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.04, 6, 20), BM.copper); ring.rotation.x = Math.PI / 2; ring.position.set(tx, 2.76, tz); g.add(ring); card(1.6, 2.2, vineM, tx - 0.2, 1.4, tz + 1.14, 0.1, g); card(1.3, 1.8, vineM, tx + 1.12, 1.2, tz, Math.PI / 2, g); halo(g, tx, 1.45, tz, 3.2, 0x7fe8ff); circle(tx, tz, 1.3); }
+    yield;
     // desktop scenery (src/scenehi.js): the tree is drawn there (trunk and a crown of leaf clusters); its spot and collision stay here
     const sceneTrees = [];
     const tree = (x, z, s) => { if (SCENERY) { sceneTrees.push({ x, z, s }); circle(x, z, 0.8 * s); return; } let q = Math.abs(Math.round(x * 31 + z * 17)) + 3; const rn = () => ((q = (q * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff); // trunk, a few limbs, and a crown of leaf cards: each tree's own shape from its place
@@ -263,12 +273,15 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       for (let k = 0; k < 16; k++) { const a = rn() * 6.28, r = rn() * 2.1 * s, y = (3.0 + rn() * 2.4) * s, sz = (1.7 + rn() * 1.3) * s; for (let c = 0; c < 2; c++) { const o = card(sz, sz, k % 3 ? canM : canD, x + Math.cos(a) * r, y, z + Math.sin(a) * r, rn() * 3 + c * 1.57, g); o.rotation.x = (rn() - 0.5) * 0.9; } }
       circle(x, z, 0.8 * s); };
     tree(CAT_SPOTS[1].x, CAT_SPOTS[1].z, 1.8); tree(-17, 14, 1.2); tree(17, 12, 1.3); tree(-18, -3, 1);
+    yield;
     for (let i = 0; i < 3; i++) { const f = collectorV2(); if (HIBASE) detailDevice(f); f.scale.setScalar(2.1 + (i % 2) * 0.35); f.position.set(CAT_SPOTS[2].x + i * 2.7 - 2.7, 0, CAT_SPOTS[2].z); f.rotation.y = i * 1.1; g.add(f); circle(CAT_SPOTS[2].x + i * 2.7 - 2.7, CAT_SPOTS[2].z, 1.2); }
+    yield;
     const tower = (x, z) => { const m = lathe([[0.0, 0], [0.5, 0.03], [0.36, 0.3], [0.22, 1.5], [0.15, 6.9], [0.2, 7.05]], BM.ceramic, g, 12); m.position.set(x, 0, z); const rg = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.025, 6, 24), BM.glow(BLOOM.glowPower)); rg.rotation.x = Math.PI / 2; rg.position.set(x, 0.1, z); g.add(rg);
       for (const y of [1.6, 4.2]) { const c = new THREE.Mesh(new THREE.TorusGeometry(y < 2 ? 0.23 : 0.19, 0.02, 6, 16), BM.copper); c.rotation.x = Math.PI / 2; c.position.set(x, y, z); g.add(c); }
       const bl = new THREE.Group(); for (let k = 0; k < 3; k++) { const yaw = new THREE.Group(); yaw.rotation.z = (k * Math.PI * 2) / 3; bl.add(yaw); const pg = new THREE.Group(); pg.position.y = 0.2; pg.rotation.y = 0.35; yaw.add(pg); petal(pg, 3.1, 0.8, BM.ceramic2); const in2 = new THREE.Group(); in2.position.set(0, 0.25, 0.03); pg.add(in2); petal(in2, 2.2, 0.42, BM.cell); const tip = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), BM.glow(BLOOM.glowPower)); tip.position.set(0, 3.1, 0.06); pg.add(tip); }
       const hub = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), BM.glow(BLOOM.glowPower)); bl.add(hub); const hg = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 10), BM.glass); bl.add(hg); bl.position.set(x, 7.05, z + 0.4); g.add(bl); towers.push(bl); g.add(stem([[x, 6.9, z], [x, 7.1, z + 0.15], [x, 7.05, z + 0.4]], 0.07, BM.verdigris)); circle(x, z, 0.6); };
     tower(CAT_SPOTS[3].x, CAT_SPOTS[3].z); tower(-4, 15); tower(16, -16);
+    yield;
     // with the layered plants rolled out (desktop, src/baseplants.js) the two cat-cover bushes are clusters of leafy bushes, not leaf-wrapped balls; the same cover and the same circle you bump into
     if (LIFE_PLANTS.kit) { const c = CAT_SPOTS[4], K = LIFE_PLANTS.kit; circle(c.x, c.z, 1.2); for (const [dx, dz, s] of [[-0.45, 0.1, 1.35], [0.4, -0.25, 1.2], [0.15, 0.45, 1.05], [-0.2, -0.45, 0.95], [0.5, 1.75, 1.25], [0.25, 2.2, 1.0], [0.85, 2.05, 0.9]]) K.add('bush', c.x + dx, 0, c.z + dz, s); }
     else { mound(CAT_SPOTS[4].x, 0.5, CAT_SPOTS[4].z, 1.25, 0.72, 0.95, 0x3a9a4a, 0.3); circle(CAT_SPOTS[4].x, CAT_SPOTS[4].z, 1.2); mound(CAT_SPOTS[4].x + 0.5, 0.7, CAT_SPOTS[4].z + 1.9, 0.85, 0.9, 0.85, 0x2f8a40, 0); leafy(CAT_SPOTS[4].x, 0.7, CAT_SPOTS[4].z, 2.2, 1.1, 1.6, 12, 0, 11); leafy(CAT_SPOTS[4].x + 0.5, 0.9, CAT_SPOTS[4].z + 1.9, 1.4, 1.5, 1.4, 10, 0, 17); }
@@ -357,8 +370,9 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // returns true once it is built (and taken out of the scene again, kept hidden)
   function bgStart(sv) { const sig = keySig(sv); if (!sig || (keptSig === sig && g.children.length) || (bg && bg.sig === sig)) return false; bg = { sig, it: buildIter(sv) }; return true; }
   // bgWorst: the longest single part so far and its number (for perfcheck: a part too long for a slice is named, then cut)
-  const bgWorst = { ms: 0, part: -1, n: 0 };
-  function bgStep(ms) { if (!bg) return false; const t0 = performance.now(); do { const p0 = performance.now(), dn = bg.it.next().done, pm = performance.now() - p0; bgWorst.n++; if (pm > bgWorst.ms) { bgWorst.ms = Math.round(pm); bgWorst.part = bgWorst.n; } if (dn) { bg = null; scene.remove(g); return true; } } while (performance.now() - t0 < ms); return false; }
+  // (R4 worker 6, lead 21:15: title worst 271 ms) long: every part over 40 ms [part number, ms], so each long part is named and cut
+  const bgWorst = { ms: 0, part: -1, n: 0, long: [] };
+  function bgStep(ms) { if (!bg) return false; const t0 = performance.now(); do { const p0 = performance.now(), dn = bg.it.next().done, pm = performance.now() - p0; bgWorst.n++; if (pm > bgWorst.ms) { bgWorst.ms = Math.round(pm); bgWorst.part = bgWorst.n; } if (pm > 40 && bgWorst.long.length < 40) bgWorst.long.push([bgWorst.n, Math.round(pm)]); if (dn) { bg = null; scene.remove(g); return true; } } while (performance.now() - t0 < ms); return false; }
 
   // ---- solarpunk dressing: sky, solar tree, pond, greenhouse, canopy, paths, flowers, lanterns
   const sky = createSky(cfg);

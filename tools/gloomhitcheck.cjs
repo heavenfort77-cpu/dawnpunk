@@ -11,8 +11,9 @@
 // MEASURE=1 also prints each kind's drawn box in its own frame (union over every trial), the numbers for CONFIG.cannon.shapes.
 const { chromium } = require('playwright');
 const path = require('path');
-const tier = process.argv[2] === 'high' ? 'high' : 'low';
-const page0 = process.argv[3] || path.resolve(__dirname, '../dist/' + (tier === 'high' ? 'index_single.html' : 'index.html'));
+// (R4 worker 6, lead 21:15) medium (the default desktop tier) runs as desktop too
+const tier = ['high', 'medium'].includes(process.argv[2]) ? process.argv[2] : 'low', desk = tier !== 'low';
+const page0 = process.argv[3] || path.resolve(__dirname, '../dist/' + (desk ? 'index_single.html' : 'index.html'));
 // KINDS=a,b / DISTS=2,5 (env) narrow a local run
 const KINDS = process.env.KINDS ? process.env.KINDS.split(',') : ['walker', 'lurcher', 'ticks', 'hauler', 'stilt', 'lantern', 'warden'], DISTS = process.env.DISTS ? process.env.DISTS.split(',').map(Number) : [2, 5, 10, 15];
 (async () => {
@@ -22,7 +23,7 @@ const KINDS = process.env.KINDS ? process.env.KINDS.split(',') : ['walker', 'lur
   const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e))); p.on('console', (m) => { if (m.text().startsWith('trial ')) console.error(m.text()); });
   await p.addInitScript(() => { window.__dtMax = 0.5; window.__noHands = true; try { localStorage.clear(); localStorage.setItem('dawnpunk.drill', '{"skip":true}'); } catch (e) { /* none */ } });
   await p.goto('file://' + page0 + '?quality=' + tier + '&seed=777', { timeout: 300000 }); await p.waitForFunction(() => window.__game && window.__game.startRun, null, { timeout: 300000 });
-  if (tier === 'high') { const st = await p.waitForFunction(() => { const s = window.__gloomGlb || {}; const ks = Object.keys(s); return ks.length && ks.every((k) => s[k] !== 'loading') ? s : null; }, null, { timeout: 240000 }).then((h) => h.jsonValue()).catch(() => null); out.push('INFO desktop models: ' + JSON.stringify(st)); }
+  if (desk) { const st = await p.waitForFunction(() => { const s = window.__gloomGlb || {}; const ks = Object.keys(s); return ks.length && ks.every((k) => s[k] !== 'loading') ? s : null; }, null, { timeout: 240000 }).then((h) => h.jsonValue()).catch(() => null); out.push('INFO desktop models: ' + JSON.stringify(st)); }
   await p.evaluate(() => { const g = window.__game; g.enterBase(); g.save.nights = 3; document.getElementById('selRing').value = '0'; g.startRun(0); g.enterHouse(0); }); await p.waitForTimeout(2000);
   await p.evaluate(() => window.__game.endDay()); await p.waitForFunction(() => window.__game.sim && window.__game.sim.phase === 'night', null, { timeout: 60000 });
   await p.evaluate(() => { const s = window.__game.sim; s.step = () => {}; s.gloom.length = 0; const P = s.player; P.x = 0; P.z = 0; P.floor = 0; P.hp = 1e6; });
@@ -90,8 +91,8 @@ const KINDS = process.env.KINDS ? process.env.KINDS.split(',') : ['walker', 'lur
     for (const k in local) { const L = local[k]; for (const [bk, pk] of [['body', 'pb'], ['head', 'ph']]) { const B = L[bk]; if (!B || !L[pk].length) continue; const cx = (B[0] + B[1]) / 2, cz = (B[4] + B[5]) / 2, rx = (B[1] - B[0]) / 2 || 1, rz = (B[5] - B[4]) / 2 || 1;
       const v = L[pk].filter((q) => q[1] > 0.02).map((q) => Math.sqrt(((q[0] - cx) / rx) ** 2 + ((q[2] - cz) / rz) ** 2)).sort((a, b) => a - b); L[bk + 'S'] = v.length ? [+v[v.length - 1].toFixed(3), +v[Math.floor(v.length * 0.95)].toFixed(3)] : null; } delete L.pb; delete L.ph; }
     return { rows, local, shapesOn: !!SH0, range: C.range };
-  }, [KINDS, DISTS, tier === 'high' ? 2 : 3]);
-  const T = tier === 'low' ? 'phone/low' : 'desktop/high';
+  }, [KINDS, DISTS, desk ? 2 : 3]);
+  const T = tier === 'low' ? 'phone/low' : 'desktop/' + tier;
   out.push('INFO ' + T + ': cell = before/after; h = hit, H = head shot, - = miss; cannon range ' + res.range + ' m');
   if (!res.shapesOn) out.push('INFO CONFIG.cannon.shapes is not set: "after" equals "before"');
   for (const r of res.rows) { if (r.err) { add(T + ' ' + r.kind + ' ' + r.d + ' m ' + r.facing + ': ' + r.err, false); continue; } out.push('ROW ' + T + ' ' + r.kind.padEnd(8) + String(r.d).padStart(3) + ' m ' + r.facing.padEnd(5) + ' ' + Object.entries(r.aims).map(([n, v]) => n + ' ' + v.join('/')).join('  ')); }
@@ -104,7 +105,7 @@ const KINDS = process.env.KINDS ? process.env.KINDS.split(',') : ['walker', 'lur
     add(T + ' ' + kind + ': the drawn head counts as a head shot, the body centre does not (where the line to the centre passes the head first, ' + inWay + ' of ' + inR.length + ', a head shot is right; head hidden behind its body in ' + inR.filter((r) => r.headHidden).length + ')' + (headMiss.length ? ' (head not counted: ' + headMiss.join(', ') + ')' : '') + (ctrHead.length ? ' (centre counted as head: ' + ctrHead.join(', ') + ')' : ''), !headMiss.length && !ctrHead.length);
     const loose = inR.flatMap((r) => ['beside', 'over'].filter((n) => r.aims[n][1] !== '-').map((n) => r.d + 'm ' + r.facing + ' ' + n));
     // phones get leeway (owner Nov 18 12:11): there the shapes are a little larger than the phone's models, so this line is information only
-    if (tier === 'high') add(T + ' ' + kind + ': aiming 0.3 m beside or over the drawn body misses' + (loose.length ? ' (hits: ' + loose.join(', ') + ')' : ''), !loose.length); else out.push('INFO ' + T + ' ' + kind + ': aiming 0.3 m beside or over the phone model (leeway allowed) hits ' + loose.length + ' of ' + inR.length * 2 + (loose.length ? ': ' + loose.join(', ') : ''));
+    if (desk) add(T + ' ' + kind + ': aiming 0.3 m beside or over the drawn body misses' + (loose.length ? ' (hits: ' + loose.join(', ') + ')' : ''), !loose.length); else out.push('INFO ' + T + ' ' + kind + ': aiming 0.3 m beside or over the phone model (leeway allowed) hits ' + loose.length + ' of ' + inR.length * 2 + (loose.length ? ': ' + loose.join(', ') : ''));
     add(T + ' ' + kind + ': out of range (' + outR.map((r) => r.d).join(',') + ' m) never hits', outR.every((r) => Object.values(r.aims).every((v) => v[1] === '-')));
   }
   if (process.env.MEASURE) for (const k of KINDS) { const L = res.local[k]; out.push('BOX ' + T + ' ' + k + ' body ' + JSON.stringify(L.body && L.body.map((v) => +v.toFixed(3))) + ' head ' + JSON.stringify(L.head && L.head.map((v) => +v.toFixed(3))) + ' ovalScale body ' + JSON.stringify(L.bodyS) + ' head ' + JSON.stringify(L.headS)); }

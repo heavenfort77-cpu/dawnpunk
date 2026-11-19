@@ -751,10 +751,11 @@ function finishIntro() {
   for (const o of (I0.hide || []).concat(I0.stands || [])) o.visible = true; if (I0.fov0 && cam.fov !== I0.fov0) { cam.fov = I0.fov0; cam.updateProjectionMatrix(); }
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); hemi.intensity = CONFIG.baseLight.power; hemi.color.setHex(CONFIG.baseLight.sky); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   $('cine').style.display = 'none'; state = 'base'; ui = null; bp = { x: -0.6, z: -9.3 }; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 1; }); const sp = B.scoutPos(save); yaw = Math.atan2(-(sp.x - bp.x), -(sp.z - bp.z)); pitch = 0; camY = 1.6; cam.rotation.set(0, yaw, 0, 'YXZ');
-  $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE'; save.seenIntro = true; persist(); flash('Dawn, day ' + save.day + '. Marla is ' + sp.hint + '. Talk to her to ride out. They say a lucky cat hides somewhere in the base.', 2); jobCard();
+  $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE'; save.seenIntro = true; persist(); flash('Dawn, day ' + save.day + '. Marla is ' + sp.hint + '. Talk to her to ride out. They say a lucky cat hides somewhere in the base.', 2);
   // (R4 worker 5, held frame of 7567 ms in diagnose 10: the film skipped in its street part built and drew the whole base in ONE frame: 1714 draws, 159 texture
   // uploads 6018 ms, 11 programs) the base's first frames are made under the home card instead (sliced parts, each waiting for the GPU), as Enter does
-  if (skipTown && CONFIG.lag.skipCard) sceneCard('home'); }
+  // (R4 worker 6, lead 21:15) the first-time job card comes after the home card ends (both are z-index 40: under the card it closed unseen after jobCardSecs)
+  if (skipTown && CONFIG.lag.skipCard) sceneCard('home').then(() => jobCard(), () => jobCard()); else jobCard(); }
 function introFrame(dt) {
   if (!CONFIG.opening.on) { introFrameOld(dt); return; }
   const I = intro, C = CONFIG.opening, P = C.parts; if (I.hold) return; I.t += dt; const t = I.t; // I.hold: filmWarm is still preparing under the black
@@ -1546,7 +1547,7 @@ const UPL = { n: 0, ms: 0, bn: 0, bms: 0, big: [] };
   for (const k of ['texImage2D', 'texSubImage2D', 'compressedTexImage2D', 'compressedTexSubImage2D', 'texImage3D', 'texSubImage3D', 'generateMipmap']) wrap(k, false); for (const k of ['bufferData', 'bufferSubData']) wrap(k, true); }
 // (owner 14:25, the warm-up gate) shader programs made while you play (base, street, night, film shown; not under a card, the film's black or at the title), counted every
 // frame from three.js's own list: window.__game.playPrograms() -> { n, at: [[state, page ms, count]] }; must stay 0
-const PLAYP = { last: -1, n: 0, at: [] };
+const PLAYP = { last: -1, n: 0, at: [], old: 0, k0: undefined };
 // (R4 worker 5, item 1) KEEP BUILT PROGRAMS: three.js frees a shader program when the last material using it is freed (a run's street at the run's end, the base when
 // you ride out), and the next card builds the same program again: plain 44512310503 medium, programs per card: ride 172 then 78, 76, 76; home 8 then 15, 17, 17,
 // while the count at the end of each night card stayed at 389-398. Each program now gets one extra use when it is made, so it is never freed: a program is built
@@ -1559,7 +1560,8 @@ const PLAYP = { last: -1, n: 0, at: [] };
 // black / the title, at the moment it is built (each push into the list)
 const playHeld = () => LCARD.on || !!FILM.it || !!(intro && intro.hold) || state === 'menu' || state === 'end';
 { const PA = renderer.info.programs, push2 = PA.push; PA.push = function (...a) { if (PLAYP.last >= 0 && !playHeld()) { PLAYP.n += a.length; if (PLAYP.at.length < 30) PLAYP.at.push([state, Math.round(performance.now()), a.length, PROGLOG ? (window.__progLog || []).slice(-1).map((q) => q.mat + ' @ ' + q.owner + ' {' + q.geo + (q.tgt ? ' target' : '') + '}') : null]); } return push2.apply(this, a); }; }
-function playProgs() { PLAYP.last = 0; }
+// (lead 21:15) the old count (the list's growth outside the held times) is kept beside it as PLAYP.old, printed next to the new one
+function playProgs() { const k = nProg(); if (PLAYP.k0 !== undefined && k > PLAYP.k0 && !playHeld()) PLAYP.old += k - PLAYP.k0; PLAYP.k0 = k; PLAYP.last = 0; }
 // (R3) the run-end screen's frames (Card 8, accepted: the runner's pacing) are not kept: 214 of them pushed the film's entries out of the 400-entry ring
 // (R4 worker 5, items 2 and 4) GLS: the slowest single WebGL call between two frame starts (name, ms, the material being drawn), timed only while a card or the
 // film's black holds the picture or for CONFIG.lag.glSlowAfter s after a card (?proglog=1 pages); a long frame's entry carries it as glw
@@ -1966,7 +1968,7 @@ window.__game.twoPassPixelTest = () => { const grab = () => { const c = document
   return { change: cmp(a, b), groupsOnly: cmp(a, bg), singleOnly: cmp(a, bs), noise: cmp(a, a2), groups: undo.length, single: ms.size, size: [cvs.width, cvs.height] }; };
 // (H, test hook) the base the player's way, as the run-end screen's Back does: enterBase under the home card
 window.__game.homeCard = () => { enterBase(); sceneCard('home'); };
-window.__game.playPrograms = () => ({ n: PLAYP.n, at: PLAYP.at });
+window.__game.playPrograms = () => ({ n: PLAYP.n, old: PLAYP.old, at: PLAYP.at });
 window.__game.endNight = (win = true) => { if (!sim || sim.done || !sim.endNow) return false; sim.endNow(win); return true; };
 window.__game.audioState = () => (ac ? ac.state : 'none');
 window.__game.basePeople = () => { const pk = bview.peek(), out = [], v = new THREE.Vector3(), one = (id, root) => { if (!root || !root.parent) return; root.getWorldPosition(v); let sum = 0; root.traverse((q) => { if (q.isBone) sum += q.quaternion.x + q.quaternion.y * 2 + q.quaternion.z * 3 + q.quaternion.w * 4; }); out.push({ id, x: +v.x.toFixed(3), z: +v.z.toFixed(3), pose: +sum.toFixed(4) }); };
