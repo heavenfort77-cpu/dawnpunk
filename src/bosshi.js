@@ -9,6 +9,7 @@ import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
 import { say } from './hud2.js';
 import { lodPrepare, lodCopy } from './lod.js';
+import { mergeGlb, rebindMerged } from './glbmerge.js';
 
 const BC = CONFIG.boss, VW = BC.view, PH = BC.physics, S = BC.scale;
 const fxOff = (() => { try { return new URLSearchParams(location.search).get('fx') === '0'; } catch (e) { return false; } })();
@@ -248,7 +249,9 @@ function loadModel() {
   if (bossState.model !== 'none') return; bossState.model = 'loading';
   if (!MODEL.startsWith('data:') && location.protocol === 'file:') { bossState.model = 'failed'; return; }
   const fail = (e) => { bossState.model = 'failed'; console.warn('boss model not loaded', e); };
-  fetch(MODEL).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (g) => { tpl = g.scene; bossState.model = 'ready'; tpl.traverse((o) => { if (o.isMesh) o.geometry.userData.shared = true; }); lodPrepare(tpl, 'boss', false); if (bossHooks.ready) try { bossHooks.ready(tpl); } catch (e) { /* warm-up only */ } }, fail)).catch(fail);
+  fetch(MODEL).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().parse(buf, '', (g) => { tpl = g.scene; bossState.model = 'ready'; tpl.traverse((o) => { if (o.isMesh) o.geometry.userData.shared = true; });
+    // LAG FIX Nov 19: the parts drawn as one skinned mesh per material (src/glbmerge.js; the lens parts keep their own glow materials), before the far copies are made
+    mergeGlb(tpl, (o) => o.material.name !== 'gloom_lens', CONFIG.lag.glbMerge.bossPad); lodPrepare(tpl, 'boss', false); if (bossHooks.ready) try { bossHooks.ready(tpl); } catch (e) { /* warm-up only */ } }, fail)).catch(fail);
 }
 // desktop: start loading the Blender model when a run on the boss ring starts (main.js startRun), so it is ready before the boss rises 1 s into the night
 // (a night begun straight from the street, or with Dusk at once, left too little time and the code-built stand-in stayed all night)
@@ -256,17 +259,19 @@ export function bossPreload() { if (DESK && VW.glb) loadModel(); }
 // bossHooks.ready(scene): main.js uploads the model's maps while it loads (LAG FIX Nov 19), not at the boss's first frame
 export const bossHooks = { ready: null };
 function buildGlb() {
-  const sc = tpl.clone(true), nodes = {}, mats = [], glows = {};
+  const sc = tpl.clone(true), nodes = {}, mats = [], glows = {}, byBase = new Map(); rebindMerged(tpl, sc);
   sc.traverse((o) => { if (o.name && PIV[o.name] !== undefined && !nodes[o.name]) nodes[o.name] = o; });
   const lensFor = (name) => { const m = new THREE.MeshBasicMaterial({ color: 0x111111, fog: false, toneMapped: false }); glows[name] = m; return m; };
   // LAG FIX Nov 19: the model's parts are rigid (moved by their nodes), so they are culled again like any mesh (they were drawn even when off screen)
   sc.traverse((o) => { if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true;
     const m0 = o.material; if (m0.name === 'gloom_lens') { let p = o.parent, key = 'lamp'; while (p) { if (['eyeL', 'eyeR', 'beckonCore', 'slamCore', 'coin', 'bell'].includes(p.name)) { key = p.name; break; } p = p.parent; } o.material = glows[key] || lensFor(key); return; }
-    if (!o.userData.bossMat) { const m = m0.clone(); m.fog = !VW.fogOff; if (m.map) { m.emissiveMap = m.map; m.emissive = new THREE.Color(0x000000); } o.material = m; mats.push(m); o.userData.bossMat = true; } });
+    // one copy per model material (LAG FIX Nov 19; was one per part): every change the boss makes to them (m.mats) is the same for all, so nothing looks different,
+    // and the merged mesh and its parts share it
+    if (!o.userData.bossMat) { let m = byBase.get(m0); if (!m) { m = m0.clone(); m.fog = !VW.fogOff; if (m.map) { m.emissiveMap = m.map; m.emissive = new THREE.Color(0x000000); } byBase.set(m0, m); mats.push(m); } o.material = m; o.userData.bossMat = true; } });
   // small red standby lights on the body (the code-built cat has them in its glow mesh)
   if (nodes.body) { const sm = lensFor('standby'), sg = new THREE.SphereGeometry(0.014, 6, 4); for (const [x, y, z] of [[0.2, 1.1, -0.2], [-0.25, 0.62, -0.27], [0.33, 0.4, 0.15], [-0.18, 0.95, 0.27]]) { const me = new THREE.Mesh(sg, sm); me.position.set(x - PIV.body[0], y - PIV.body[1], z - PIV.body[2]); nodes.body.add(me); } }
   const setGlow = (key, c, k) => { const m = glows[key]; if (m) m.color.set(c).multiplyScalar(k); };
-  let n = 0; sc.traverse((o) => { if (o.isMesh) n += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; }); bossState.tris = n;
+  let n = 0; sc.traverse((o) => { if (o.isMesh && !o.userData.hitOnly) n += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; }); bossState.tris = n;
   // v2 model (owner 18:51): the CRT face plate is 0.42 x 0.24 and the screen draws the eyes, like the approved phone build
   lodCopy(sc, 'boss');
   return { root: sc, nodes, setGlow, kind: 'glb', mats, screenEyes: true, screenSize: [0.42, 0.24] };

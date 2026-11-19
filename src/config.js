@@ -1168,7 +1168,8 @@ export const CONFIG = {
     // mergeDecals: the house's floor shades, door pools and dirt decals (static) drawn as one mesh per material (src/main.js buildDepth; all tiers)
     mergeDecals: true,
     // glbMerge: desktop Gloom models drawn as one skinned mesh per material, each part a bone of it (src/glbmerge.js); on: the switch
-    glbMerge: { on: true },
+    // bossPad: extra metres on the boss's merged mesh culling sphere (its broken plates fly a few metres off and stay drawn by it)
+    glbMerge: { on: true, bossPad: 6 },
     // transparent: see-through pieces (wear decals) of one material are merged too (only their drawing order among themselves can change)
     mergeGloom: { on: true, probes: 8, perFrame: 2, transparent: true },
     // smallCaster: a static piece smaller than this (bounding sphere radius, m) casts no sun shadow (owner's rule: small props castShadow off; their shadows were a few pixels)

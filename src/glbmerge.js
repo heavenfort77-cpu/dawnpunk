@@ -28,11 +28,12 @@ const noRay = () => {};
 const isRam = (o) => { for (let p = o; p; p = p.parent) if (p.name && p.name.startsWith('ram')) return true; return false; };
 
 // sc: a loaded model (not in the scene, its root at rest). Adds the skinned draw meshes and hides the parts' draws.
-export function mergeGlb(sc) {
+// keep(o): optional, false leaves that part as it is (the boss's lens parts, which each copy gives its own glow material); pad: extra metres on the culling sphere
+export function mergeGlb(sc, keep, pad) {
   const C = CONFIG.lag.glbMerge; if (!C || !C.on || !sc) return;
   try {
     sc.updateMatrixWorld(true); const parts = [];
-    sc.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || !o.geometry || Array.isArray(o.material) || o.morphTargetInfluences || !o.visible || isRam(o)) return; const m = o.material; if (!m || m.transparent) return; parts.push(o); });
+    sc.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || !o.geometry || Array.isArray(o.material) || o.morphTargetInfluences || !o.visible || isRam(o)) return; const m = o.material; if (!m || m.transparent || (keep && !keep(o))) return; parts.push(o); });
     if (parts.length < 2) return;
     const byMat = new Map(); for (const o of parts) { const l = byMat.get(o.material) || []; l.push(o); byMat.set(o.material, l); }
     for (const [m, l] of byMat) { if (l.length < 2) continue;
@@ -42,7 +43,7 @@ export function mergeGlb(sc) {
       mesh.name = 'glbMerged'; mesh.userData.mergedDraw = true; mesh.raycast = noRay; mesh.castShadow = l.some((o) => o.castShadow); mesh.receiveShadow = l.some((o) => o.receiveShadow);
       sc.add(mesh); mesh.bind(skel, new THREE.Matrix4());
       // culling: the sphere of the whole model at rest, grown (as src/lod.js cullSkinned does for the people), so a swing never pokes out of it
-      const b = geo.boundingSphere.clone(); b.radius = b.radius * CONFIG.lag.cull.grow + CONFIG.lag.cull.pad; mesh.boundingSphere = b; mesh.frustumCulled = true;
+      const b = geo.boundingSphere.clone(); b.radius = b.radius * CONFIG.lag.cull.grow + CONFIG.lag.cull.pad + (pad || 0); mesh.boundingSphere = b; mesh.frustumCulled = true;
       for (const o of l) { o.layers.set(HIT_LAYER); o.userData.hitOnly = true; }
       glbMergeState.parts += l.length; glbMergeState.meshes++; }
     glbMergeState.models++;
