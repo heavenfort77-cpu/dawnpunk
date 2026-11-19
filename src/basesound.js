@@ -29,15 +29,19 @@ export function createWaterSound(cfg) {
   function slap(t) { const s = ac.createBufferSource(), f = ac.createBiquadFilter(), e = ac.createGain(); s.buffer = N.noise; f.type = 'bandpass'; f.frequency.value = 900 + Math.random() * 500; f.Q.value = 1.2; e.gain.setValueAtTime(0.5, t); e.gain.exponentialRampToValueAtTime(0.001, t + 0.12); s.connect(f); f.connect(e); e.connect(N.gw); s.start(t, Math.random() * 1.5, 0.15); }
   // every frame: ctx = a running AudioContext or null; st = the state for waterTarget. Levels ease toward the target (about S.fade seconds of game or wall-clock time, whichever is longer,
   // so a frame stalled by loading the street still fades it) and are exactly 0 once faded out.
+  // the last targets sent to the audio graph
+  const SENT = { s: NaN, w: NaN, lp: NaN };
   function tick(dt, ctx, st) {
     const nowMs = Date.now(), real = last ? Math.min(1, (nowMs - last) / 1000) : 0, T = waterTarget(cfg, st), k = Math.min(1, Math.max(dt, real) * 3 / Math.max(0.05, S.fade)); last = nowMs;
     for (const key of ['stream', 'wheel']) { cur[key] += (T[key] - cur[key]) * k; if (T[key] === 0 && cur[key] < 0.002) cur[key] = 0; }
-    if (!ctx) return; if (!N) { if (!cur.stream && !cur.wheel) return; build(ctx); }
-    const now = ctx.currentTime; N.gs.gain.setTargetAtTime(cur.stream, now, 0.05); N.gw.gain.setTargetAtTime(cur.wheel, now, 0.05); N.gg.gain.setTargetAtTime(cur.stream * 0.5, now, 0.05); N.lp.frequency.setTargetAtTime(T.lp, now, 0.2);
+    if (!ctx) return; if (!N) { if (!cur.stream && !cur.wheel) return; build(ctx); SENT.s = SENT.w = SENT.lp = NaN; }
+    // (LAG FIX Nov 19, owner 10:50) a level or the filter is aimed again only when its target changed (the same target aimed every frame left the same curve)
+    const now = ctx.currentTime; if (cur.stream !== SENT.s) { SENT.s = cur.stream; N.gs.gain.setTargetAtTime(cur.stream, now, 0.05); N.gg.gain.setTargetAtTime(cur.stream * 0.5, now, 0.05); }
+    if (cur.wheel !== SENT.w) { SENT.w = cur.wheel; N.gw.gain.setTargetAtTime(cur.wheel, now, 0.05); } if (T.lp !== SENT.lp) { SENT.lp = T.lp; N.lp.frequency.setTargetAtTime(T.lp, now, 0.2); }
     if (cur.stream > 0.002) { tricT -= dt; while (tricT < 0) { grain(now + Math.random() * 0.05); tricT += (0.3 + Math.random() * 1.4) / Math.max(0.1, S.trickle); } }
     if (cur.wheel > 0.002) { creakT -= dt; slapT -= dt; if (creakT < 0) { creak(now); creakT += S.creak[0] * (0.85 + Math.random() * 0.3); } if (slapT < 0) { slap(now); const p = (cfg.baseWater.wheel && cfg.baseWater.wheel.paddles) || 16; slapT += S.creak[0] / p * 2 * (0.7 + Math.random() * 0.6); } }
   }
   // if the game loop stops calling tick (tab hidden, page torn down), go quiet at once
-  if (typeof setInterval === 'function' && typeof window !== 'undefined') setInterval(() => { if (Date.now() - last > 400) { cur.stream = 0; cur.wheel = 0; } if (N && Date.now() - last > 400) { const now = ac.currentTime; N.gs.gain.setTargetAtTime(0, now, 0.05); N.gw.gain.setTargetAtTime(0, now, 0.05); N.gg.gain.setTargetAtTime(0, now, 0.05); } }, 300);
+  if (typeof setInterval === 'function' && typeof window !== 'undefined') setInterval(() => { if (Date.now() - last > 400) { cur.stream = 0; cur.wheel = 0; } if (N && Date.now() - last > 400) { SENT.s = SENT.w = SENT.lp = NaN; const now = ac.currentTime; N.gs.gain.setTargetAtTime(0, now, 0.05); N.gw.gain.setTargetAtTime(0, now, 0.05); N.gg.gain.setTargetAtTime(0, now, 0.05); } }, 300);
   return { tick, gain: () => cur.stream + cur.wheel, levels: () => Object.assign({}, cur) };
 }
