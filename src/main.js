@@ -747,11 +747,14 @@ function opWake(I, w) {
   opLids(lid); sty(cvs, 'filter', QUALITY === 'high' && w < K.blur[1] ? 'blur(' + (K.blur[0] * (1 - w / K.blur[1])).toFixed(2) + 'px)' : '');
 }
 function finishIntro() {
-  if (!intro) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } if (intro.part === 'town') introToBase(); const I0 = intro; intro = null; opLids(0); cvs.style.filter = '';
+  if (!intro) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } const skipTown = intro.part === 'town'; if (skipTown) introToBase(); const I0 = intro; intro = null; opLids(0); cvs.style.filter = '';
   for (const o of (I0.hide || []).concat(I0.stands || [])) o.visible = true; if (I0.fov0 && cam.fov !== I0.fov0) { cam.fov = I0.fov0; cam.updateProjectionMatrix(); }
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); hemi.intensity = CONFIG.baseLight.power; hemi.color.setHex(CONFIG.baseLight.sky); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   $('cine').style.display = 'none'; state = 'base'; ui = null; bp = { x: -0.6, z: -9.3 }; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 1; }); const sp = B.scoutPos(save); yaw = Math.atan2(-(sp.x - bp.x), -(sp.z - bp.z)); pitch = 0; camY = 1.6; cam.rotation.set(0, yaw, 0, 'YXZ');
-  $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE'; save.seenIntro = true; persist(); flash('Dawn, day ' + save.day + '. Marla is ' + sp.hint + '. Talk to her to ride out. They say a lucky cat hides somewhere in the base.', 2); jobCard(); }
+  $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE'; save.seenIntro = true; persist(); flash('Dawn, day ' + save.day + '. Marla is ' + sp.hint + '. Talk to her to ride out. They say a lucky cat hides somewhere in the base.', 2); jobCard();
+  // (R4 worker 5, held frame of 7567 ms in diagnose 10: the film skipped in its street part built and drew the whole base in ONE frame: 1714 draws, 159 texture
+  // uploads 6018 ms, 11 programs) the base's first frames are made under the home card instead (sliced parts, each waiting for the GPU), as Enter does
+  if (skipTown && CONFIG.lag.skipCard) sceneCard('home'); }
 function introFrame(dt) {
   if (!CONFIG.opening.on) { introFrameOld(dt); return; }
   const I = intro, C = CONFIG.opening, P = C.parts; if (I.hold) return; I.t += dt; const t = I.t; // I.hold: filmWarm is still preparing under the black
@@ -1551,20 +1554,24 @@ const PLAYP = { last: -1, n: 0, at: [] };
 { const K = CONFIG.lag.keepPrograms, PA = renderer.info.programs, push1 = PA.push; let kept = 0;
   if (K && K.on) PA.push = function (...a) { for (const pr of a) if (pr && kept < K.max) { pr.usedTimes++; kept++; } return push1.apply(this, a); };
   window.__game_kept = () => kept; }
-function playProgs() { const k = renderer.info.programs ? renderer.info.programs.length : 0, held = LCARD.on || FILM.it || (intro && intro.hold) || state === 'menu' || state === 'end';
-  if (PLAYP.last >= 0 && k > PLAYP.last && !held) { PLAYP.n += k - PLAYP.last; if (PLAYP.at.length < 30) PLAYP.at.push([state, Math.round(performance.now()), k - PLAYP.last, PROGLOG ? (window.__progLog || []).slice(-(k - PLAYP.last)).map((q) => q.mat + ' @ ' + q.owner + ' {' + q.geo + (q.tgt ? ' target' : '') + '}').slice(0, 8) : null]); } PLAYP.last = k; }
+// (R4 worker 6, A.2: programs in play 0 in 44512310503 -> 11 medium / 7 high in c120c3b, all at 'base' after the film skip) the gate counted the GROWTH of three.js's
+// program list; before Card 32 the programs freed at the skip (releaseProgram) hid the ones built there. It now counts every program BUILT outside a card / the film's
+// black / the title, at the moment it is built (each push into the list)
+const playHeld = () => LCARD.on || !!FILM.it || !!(intro && intro.hold) || state === 'menu' || state === 'end';
+{ const PA = renderer.info.programs, push2 = PA.push; PA.push = function (...a) { if (PLAYP.last >= 0 && !playHeld()) { PLAYP.n += a.length; if (PLAYP.at.length < 30) PLAYP.at.push([state, Math.round(performance.now()), a.length, PROGLOG ? (window.__progLog || []).slice(-1).map((q) => q.mat + ' @ ' + q.owner + ' {' + q.geo + (q.tgt ? ' target' : '') + '}') : null]); } return push2.apply(this, a); }; }
+function playProgs() { PLAYP.last = 0; }
 // (R3) the run-end screen's frames (Card 8, accepted: the runner's pacing) are not kept: 214 of them pushed the film's entries out of the 400-entry ring
 // (R4 worker 5, items 2 and 4) GLS: the slowest single WebGL call between two frame starts (name, ms, the material being drawn), timed only while a card or the
 // film's black holds the picture or for CONFIG.lag.glSlowAfter s after a card (?proglog=1 pages); a long frame's entry carries it as glw
 const GLS = { on: false, worst: 0, name: '', mat: '', till: 0 };
 function lfStart(now) { if (!PROGLOG) return; const gap = now - LF.prev; if (LF.prev && gap > CONFIG.lag.longFrame && LF.last && state !== 'end') { if (LF.list.length >= 400) LF.list.shift(); LF.list.push({ t: Math.round(now), gap: Math.round(gap), state, ...LF.last, glw: GLS.name ? [GLS.name, Math.round(GLS.worst), GLS.mat] : null }); window.__longFrames = LF.list; }
   { const held = LCARD.on || !!FILM.it || !!(intro && intro.hold); if (held) GLS.till = now + CONFIG.lag.glSlowAfter * 1000; GLS.on = held || now < GLS.till || now < (window.__glsTill || 0); GLS.worst = 0; GLS.name = ''; GLS.mat = ''; }
-  LF.prev = now; LF.s = performance.now(); LF.k = LF.s; LF.m.logic = LF.m.draw = LF.m.hands = 0; LF.p0 = PN.prog; LF.w0 = PN.why; LF.d0 = PN.draws; LF.u0 = UPL.n; LF.um0 = UPL.ms; LF.b0 = UPL.bn; LF.bm0 = UPL.bms; LF.last = null; }
+  LF.prev = now; LF.s = performance.now(); LF.k = LF.s; LF.m.logic = LF.m.draw = LF.m.hands = 0; LF.p0 = PN.prog; LF.fd0 = PN.fd; LF.w0 = PN.why; LF.d0 = PN.draws; LF.u0 = UPL.n; LF.um0 = UPL.ms; LF.b0 = UPL.bn; LF.bm0 = UPL.bms; LF.last = null; }
 function lfMark(k) { if (!PROGLOG) return; const n = performance.now(); LF.m[k] += n - LF.k; LF.k = n; }
 // (R3, boss vs hub) ?proglog=1: the frames' CPU cost summed for window.__game.frameCost(): JS per part, and inside the draw the shadow maps and the matrix pass
 const FC = { n: 0, js: 0, logic: 0, draw: 0, hands: 0, shadow: 0, matrix: 0, calls: 0 };
-function lfEnd() { if (!PROGLOG) return; LF.last = { js: Math.round(performance.now() - LF.s), logic: Math.round(LF.m.logic), draw: Math.round(LF.m.draw), hands: Math.round(LF.m.hands), draws: PN.draws - LF.d0, progs: PN.prog - LF.p0, whys: PN.why - LF.w0, up: UPL.n - LF.u0, upMs: Math.round(UPL.ms - LF.um0), buf: UPL.bn - LF.b0, bufMs: Math.round(UPL.bms - LF.bm0) };  FC.n++; FC.js += performance.now() - LF.s; FC.logic += LF.m.logic; FC.draw += LF.m.draw; FC.hands += LF.m.hands; }
-const PN = { prog: 0, why: 0, draws: 0 };
+function lfEnd() { if (!PROGLOG) return; LF.last = { js: Math.round(performance.now() - LF.s), logic: Math.round(LF.m.logic), draw: Math.round(LF.m.draw), hands: Math.round(LF.m.hands), draws: PN.draws - LF.d0, progs: PN.prog - LF.p0, fd: PN.fd - LF.fd0, whys: PN.why - LF.w0, up: UPL.n - LF.u0, upMs: Math.round(UPL.ms - LF.um0), buf: UPL.bn - LF.b0, bufMs: Math.round(UPL.bms - LF.bm0) };  FC.n++; FC.js += performance.now() - LF.s; FC.logic += LF.m.logic; FC.draw += LF.m.draw; FC.hands += LF.m.hands; }
+const PN = { prog: 0, why: 0, draws: 0, fd: 0 };
 if (PROGLOG) { const PL = window.__progLog = [], cur = { m: null, o: null }, rbd = renderer.renderBufferDirect;
   // (owner 13:10, the drill's and the fight's first long frames) also why a material's shader is looked up again (getParameters) without a new program: the scene's
   // light set changed (every lit material then redoes it; logged once per change, with the lights shown) or the material itself changed (needsUpdate); window.__progWhy
@@ -1574,8 +1581,13 @@ if (PROGLOG) { const PL = window.__progLog = [], cur = { m: null, o: null }, rbd
   // (a material whose program switches between draws, 'switch', is counted with the two program names), reset with __progAggReset
   const AGG = window.__progAgg = new Map(); window.__progAggReset = () => AGG.clear(); const agg = (k) => AGG.set(k, (AGG.get(k) || 0) + 1);
   const why = (k, m, o, extra) => { agg(k + ' | ' + m.type + (m.name ? ' ' + m.name : '') + (m.color ? ' #' + m.color.getHexString() : '') + ' | ' + ownOf(o).split(' < ').slice(0, 3).join(' < ') + (extra ? ' | ' + extra : '')); if (k === 'switch') return; if (PW.length >= 300) PW.shift(); PW.push({ t: Math.round(performance.now()), state, card: LCARD.on, why: k, mat: m.type + (m.name ? ' ' + m.name : '') + (m.color ? ' #' + m.color.getHexString() : ''), owner: ownOf(o), lights: k === 'lights' ? lightSig() : '' }); };
+  // (R4 worker 6, advisor item 1) FIRST-DRAW LEDGER: every draw state never drawn before (program id x vertex layout x render target format x blend), counted when it
+  // is first drawn: window.__fd = { n, list (last 600: page ms, state, card id or 0, key, material @ piece) }; the long-frame catcher entry carries the count (fd)
+  const FD = window.__fd = { n: 0, seen: new Set(), list: [] }, gsig = new WeakMap(), tsig = (t) => (!t ? 'screen' : (t.isWebGLCubeRenderTarget ? 'cube' : '') + (t.samples || 0) + 's' + (t.texture && (t.texture.type + ':' + t.texture.format)) + (t.depthBuffer ? 'd' : '') + (t.stencilBuffer ? 's' : '') + (t.depthTexture ? 'T' : ''));
+  const layout = (g, o) => { let k = gsig.get(g); if (!k) { k = Object.keys(g.attributes).sort().map((n) => { const a = g.attributes[n], ar = a.isInterleavedBufferAttribute ? a.data.array : a.array; return n + a.itemSize + (ar && ar.constructor.name.slice(0, 3)) + (a.normalized ? 'n' : '') + (a.isInterleavedBufferAttribute ? 'i' + a.data.stride : ''); }).join(','); gsig.set(g, k); } return k + (o.isInstancedMesh ? '+inst' : ''); };
   renderer.renderBufferDirect = function (c2, s2, g2, m2, o2, gr) { cur.m = m2; cur.o = o2; const mp = renderer.properties.get(m2), lv = mp.lightsStateVersion, mv = mp.__version, cp = mp.currentProgram;
     try { return rbd.call(this, c2, s2, g2, m2, o2, gr); } finally { cur.m = null; cur.o = null; PN.draws++;
+      { const pr = mp.currentProgram; if (pr) { const k = pr.id + '|' + layout(g2, o2) + '|' + tsig(renderer.getRenderTarget()) + '|' + (m2.transparent ? m2.blending : 0) + (m2.colorWrite === false ? 'nc' : ''); if (!FD.seen.has(k)) { FD.seen.add(k); FD.n++; PN.fd++; if (FD.list.length >= 600) FD.list.shift(); FD.list.push([Math.round(performance.now()), state, LCARD.on ? LCARD.n : 0, k, m2.type + (m2.name ? ' ' + m2.name : '') + ' @ ' + (o2.name || o2.type) + (o2.parent ? ' < ' + (o2.parent.name || o2.parent.type) : '')]); } } }
       if (lv !== undefined && mp.lightsStateVersion !== lv) { PN.why++; if (WHY.lv !== mp.lightsStateVersion) { WHY.lv = mp.lightsStateVersion; why('lights', m2, o2); } } else if (mv !== undefined && mp.__version !== mv) { PN.why++; why('version', m2, o2); }
       else if (cp && mp.currentProgram !== cp) { PN.why++; why('switch', m2, o2, (cp.name || cp.id) + ' -> ' + (mp.currentProgram && (mp.currentProgram.name || mp.currentProgram.id)) + (o2.isInstancedMesh ? ' instanced' : '') + (o2.isSkinnedMesh ? ' skinned' : '') + (renderer.getRenderTarget() ? ' target' : '')); } } };
   { const sr = renderer.shadowMap.render; renderer.shadowMap.render = function (...a) { const t = performance.now(); try { return sr.apply(this, a); } finally { FC.shadow += performance.now() - t; } };
@@ -2023,6 +2035,19 @@ window.__game.psoTest = async () => { const out = {}, gl = renderer.getContext()
       const g3 = new THREE.BufferGeometry(); g3.setAttribute('position', new THREE.InterleavedBufferAttribute(ib, 3, 0)); g3.setAttribute('normal', new THREE.InterleavedBufferAttribute(ib, 3, 3)); g3.setAttribute('uv', new THREE.InterleavedBufferAttribute(ib, 2, 6)); g3.setIndex(g.index); box.geometry = g3; await go('interleaved'); await go('interleaved2'); }
     { const cv = document.createElement('canvas'); cv.width = cv.height = 2048; const x = cv.getContext('2d'); x.fillStyle = '#7a5'; x.fillRect(0, 0, 2048, 2048); const tx = new THREE.CanvasTexture(cv); const m2 = mat.clone(); m2.map = tx; m2.customProgramCacheKey = () => key + 'm'; box.material = m2; box.geometry = new THREE.BoxGeometry(1, 1, 1); await renderer.compileAsync(sc, cm); await go('newMapProgram1'); await go('newMapProgram2'); const tx2 = new THREE.CanvasTexture(cv); m2.map = tx2; await go('newPicture'); tx.dispose(); tx2.dispose(); m2.dispose(); } }
   catch (e) { out.err = String(e).slice(0, 120); } finally { renderer.setRenderTarget(pt); renderer.autoClear = ac; mat.dispose(); } return out; };
+// (R4 worker 6, advisor item 1) SAME-FORMAT control (PROFILE pages): psoTest's 64 px target is plain RGBA8; the screen (or the picture pass's target) has its own
+// samples and depth/stencil. A new program is drawn first into a 64 px target with the SCREEN's samples, depth and stencil, then the same program to the screen,
+// then again to the screen; then a second new program straight to the screen (the reference). If the screen draw after the small same-format draw is as cheap as a
+// second draw, the first-draw work can be done in idle time into a small target (SPREAD); if it costs a first draw again, it cannot.
+window.__game.psoSameFmt = async () => { const out = {}, gl = renderer.getContext(), sc = new THREE.Scene(), cm = new THREE.PerspectiveCamera(50, 1, 0.1, 10); cm.position.set(0, 0, 3);
+  sc.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1)); const key = 'psoSame' + Math.random(), mat = new THREE.MeshStandardMaterial({ color: 0x6688aa }); mat.customProgramCacheKey = () => key;
+  const box = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat); sc.add(box); const pt = renderer.getRenderTarget();
+  let samples = 0; try { gl.bindFramebuffer(gl.FRAMEBUFFER, null); samples = gl.getParameter(gl.SAMPLES) || 0; } catch (e) { samples = 0; } const ca = gl.getContextAttributes() || {}; out.screen = { samples, depth: !!ca.depth, stencil: !!ca.stencil, fx: !!(fx && fx.render) };
+  const go = async (k, tg) => { renderer.setRenderTarget(tg || null); renderer.render(sc, cm); renderer.setRenderTarget(pt); out[k] = Math.round(await gpuDone(20000)); };
+  try { await renderer.compileAsync(sc, cm); const rt = new THREE.WebGLRenderTarget(64, 64, { samples, depthBuffer: !!ca.depth, stencilBuffer: !!ca.stencil });
+    await go('sameFmtTarget1', rt); await go('screenAfter', null); await go('screen2', null); rt.dispose();
+    const m2 = mat.clone(); const k2 = key + 'b'; m2.customProgramCacheKey = () => k2; box.material = m2; await renderer.compileAsync(sc, cm); await go('newProgramScreen1', null); await go('newProgramScreen2', null); m2.dispose(); }
+  catch (e) { out.err = String(e).slice(0, 120); } finally { renderer.setRenderTarget(pt); mat.dispose(); } return out; };
 // (R4 worker 5, item 1) GPU ms of each card's steps: [{ kind, ms, steps: [[step, CPU ms, GPU ms]] }] for the cards still in LCARD.proofs
 window.__game.gpuCardSteps = () => LCARD.proofs.map((q) => ({ kind: q.kind, ms: q.ms, steps: (q.steps || []).map(([k, ms], i) => [k, ms, Math.round(GT.cs[q.id + '.' + i] || 0)]) }));
 // (R4 worker 5, item 4) the frames whose rAF time is in [t0, t1] (page ms): time, gap to the frame before (ms), GPU ms in all and by pass, under a card or not

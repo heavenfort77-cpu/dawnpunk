@@ -6,10 +6,12 @@ const DIST = process.argv[2], OUT = process.argv[3], CAM_D = +(process.env.CAM_D
 (async () => { const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const errs = [];
   const p = await b.newPage({ viewport: { width: 900, height: 600 } }); p.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
   await p.goto('file://' + path.resolve(DIST, 'index_single.html') + '?quality=high&seed=777', { timeout: 300000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 300000 });
-  await p.evaluate(() => { try { localStorage.clear(); } catch (e) { /* none */ } window.__noHands = true; window.__game.enterBase(); const h = document.getElementById('hud'); if (h) h.style.visibility = 'hidden'; });
+  await p.evaluate(() => { try { localStorage.clear(); } catch (e) { /* none */ } window.__noHands = true; }); await p.waitForFunction(() => window.__splash && window.__splash.phase === 'ready', null, { timeout: 300000 }).catch(() => null);
+  await p.click('#enter', { timeout: 300000 }); await p.waitForTimeout(5000);
+  await p.evaluate(() => { const g = window.__game; g.save.day = 3; g.save.nights = 2; g.save.talkedMarla = true; g.save.seenIntro = true; g.reBase(); const h = document.getElementById('hud'); if (h) h.style.visibility = 'hidden'; });
   await p.waitForTimeout(+(process.env.WAIT || 45000));
   const who = await p.evaluate(() => { const g = window.__game; let sc = g.marla.root; while (sc.parent) sc = sc.parent; const V = sc.position.constructor, rigs = [];
-    sc.traverse((o) => { if (/^cornea_?l/i.test(o.name || '')) { let r = o; while (r.parent && r.parent !== sc && !(r.userData && r.userData.person) && r.name !== 'rig') r = r.parent; rigs.push(o); } });
+    sc.traverse((o) => { if (/cornea_?l$|eye_?l$|^eyel/i.test(o.name || '') && !rigs.some((q) => q.parent === o.parent)) { let r = o; while (r.parent && r.parent !== sc && !(r.userData && r.userData.person) && r.name !== 'rig') r = r.parent; rigs.push(o); } });
     const inMarla = (o) => { for (let q = o; q; q = q.parent) if (q === g.marla.root) return true; return false; };
     const face = (cl) => { const cr = cl.parent.getObjectByName(cl.name.replace(/l$/i, 'r')) || cl; cl.updateWorldMatrix(true, false); cr.updateWorldMatrix(true, false); const a = new V(), c = new V(); cl.geometry.computeBoundingBox(); cr.geometry.computeBoundingBox(); cl.geometry.boundingBox.getCenter(a); cr.geometry.boundingBox.getCenter(c);
       // skinned (quantized) corneas: their place is the skeleton's; use the head bone when there is one

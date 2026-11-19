@@ -1129,6 +1129,8 @@ export const CONFIG = {
     nightNoMarla: true,
     // bossFreeze (R4 worker 5): the desktop boss model's still parts leave the per-frame matrix pass (src/bosshi.js buildGlb)
     bossFreeze: true,
+    // skipCard (R4 worker 5): the film skipped before its base part shows the home card while the base's first frames are made
+    skipCard: true,
     // lod: a reduced copy of big meshes for far away (src/lod.js; meshoptimizer simplifier). on: the switch; minTris: meshes with fewer triangles than this keep only their full mesh;
     // kinds: per kind of model, near = metres from the camera within which the full mesh is drawn, ratio = share of triangles the far copy aims for, error = largest change of shape
     // allowed as a share of that mesh part's size (the simplifier stops there even if the ratio is not reached, so the far copy keeps the silhouette)
