@@ -153,7 +153,7 @@ function buildGrounding() { depthMats(); const D = CONFIG.depth, g = new THREE.G
   for (const h of run.houses) { const th = -Math.atan2(h.sn, h.cs), R = h.H + D.wallOut; for (const [lx, lz, q] of [[0, R, 0], [0, -R, 0], [R, 0, Math.PI / 2], [-R, 0, Math.PI / 2]]) put(h.x + lx * h.cs - lz * h.sn, h.z + lx * h.sn + lz * h.cs, 2 * h.H * D.wallLen, D.wallW, th + q); }
   for (const cr of run.cars || []) put(cr.x, cr.z, D.car[0], D.car[1], cr.yaw);
   world.g.add(g); }
-function buildTrim() { const T = CONFIG.trim, foot = new THREE.MeshLambertMaterial({ color: T.footColor }), em = new THREE.MeshLambertMaterial({ map: depthTex('edge'), transparent: true, opacity: T.cornerPower, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, side: THREE.DoubleSide });
+function buildTrim() { const T = CONFIG.trim, foot = new THREE.MeshLambertMaterial({ color: T.footColor }), em = new THREE.MeshLambertMaterial({ map: depthTex('edge'), transparent: true, opacity: T.cornerPower, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, side: THREE.DoubleSide }); em.userData.decal = true;
   for (const h of run.houses) { const hg = new THREE.Group(); hg.position.set(h.x, 0, h.z); hg.rotation.y = -Math.atan2(h.sn, h.cs); world.g.add(hg); const R = h.H + 0.2, top = h.L * FH;
     for (const [nx, nz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const cuts = h.sim.breaches.filter((b) => b.floor === 0 && b.type !== 'window' && Math.abs(b.nx + nx) < 0.1 && Math.abs(b.nz + nz) < 0.1).map((b) => (nx ? b.z : b.x)).sort((a, c) => a - c); let a0 = -R - T.footOut;
       const seg = (a, b2) => { if (b2 - a < 0.15) return; const o = new THREE.Mesh(new THREE.BoxGeometry(nx ? T.footOut * 2 : b2 - a, T.footH, nx ? b2 - a : T.footOut * 2), foot); o.position.set(nx ? nx * R : (a + b2) / 2, T.footH / 2, nz ? nz * R : (a + b2) / 2); o.castShadow = true; o.receiveShadow = true; hg.add(o); };
@@ -1480,14 +1480,14 @@ const LCARD = { on: false, n: 0, proofs: [] }, BOTRUN = () => { if (CARDS_REAL) 
 const PROGLOG = (() => { try { return new URLSearchParams(location.search).get('proglog') === '1'; } catch (e) { return false; } })();
 // (owner 13:10, item 7: the drill's and the fight's long frames) ?proglog=1: a frame that starts more than CONFIG.lag.longFrame ms after the one before is logged with
 // what the frame before it did: its JS time per part (logic, draw, hands), its draw calls, the programs built and shader look-ups redone in it; the rest of the gap
-// is outside the page's JS (GPU, compositor, garbage collection). window.__longFrames, the last 40.
+// is outside the page's JS (GPU, compositor, garbage collection). window.__longFrames, the last 400.
 const LF = { s: 0, prev: 0, m: { logic: 0, draw: 0, hands: 0 }, last: null, p0: 0, w0: 0, d0: 0, list: [] };
 // (owner 14:25, the warm-up gate) shader programs made while you play (base, street, night, film shown; not under a card, the film's black or at the title), counted every
 // frame from three.js's own list: window.__game.playPrograms() -> { n, at: [[state, page ms, count]] }; must stay 0
 const PLAYP = { last: -1, n: 0, at: [] };
 function playProgs() { const k = renderer.info.programs ? renderer.info.programs.length : 0, held = LCARD.on || FILM.it || (intro && intro.hold) || state === 'menu' || state === 'end';
-  if (PLAYP.last >= 0 && k > PLAYP.last && !held) { PLAYP.n += k - PLAYP.last; if (PLAYP.at.length < 30) PLAYP.at.push([state, Math.round(performance.now()), k - PLAYP.last]); } PLAYP.last = k; }
-function lfStart(now) { if (!PROGLOG) return; const gap = now - LF.prev; if (LF.prev && gap > CONFIG.lag.longFrame && LF.last) { if (LF.list.length >= 40) LF.list.shift(); LF.list.push({ t: Math.round(now), gap: Math.round(gap), state, ...LF.last }); window.__longFrames = LF.list; }
+  if (PLAYP.last >= 0 && k > PLAYP.last && !held) { PLAYP.n += k - PLAYP.last; if (PLAYP.at.length < 30) PLAYP.at.push([state, Math.round(performance.now()), k - PLAYP.last, PROGLOG ? (window.__progLog || []).slice(-(k - PLAYP.last)).map((q) => q.mat + ' @ ' + q.owner).slice(0, 8) : null]); } PLAYP.last = k; }
+function lfStart(now) { if (!PROGLOG) return; const gap = now - LF.prev; if (LF.prev && gap > CONFIG.lag.longFrame && LF.last) { if (LF.list.length >= 400) LF.list.shift(); LF.list.push({ t: Math.round(now), gap: Math.round(gap), state, ...LF.last }); window.__longFrames = LF.list; }
   LF.prev = now; LF.s = performance.now(); LF.k = LF.s; LF.m.logic = LF.m.draw = LF.m.hands = 0; LF.p0 = PN.prog; LF.w0 = PN.why; LF.d0 = PN.draws; LF.last = null; }
 function lfMark(k) { if (!PROGLOG) return; const n = performance.now(); LF.m[k] += n - LF.k; LF.k = n; }
 function lfEnd() { if (!PROGLOG) return; LF.last = { js: Math.round(performance.now() - LF.s), logic: Math.round(LF.m.logic), draw: Math.round(LF.m.draw), hands: Math.round(LF.m.hands), draws: PN.draws - LF.d0, progs: PN.prog - LF.p0, whys: PN.why - LF.w0 }; }
@@ -1514,7 +1514,7 @@ if (PROGLOG) { const PL = window.__progLog = [], cur = { m: null, o: null }, rbd
 if (BOTRUN()) gloomPreload();
 // warm-up copies for the night card: one machine of every kind the ring can send and one of every device you carry, built and drawn into the shader cache under the card,
 // then kept hidden until the run ends (a disposed material would free its shader program), so the first machine of a kind or the first device placed does not stall a frame
-function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); drop(c); } scene.remove(warmG); }
+function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); drop(c); } scene.remove(warmG); warmG.userData.day = false; }
 // (owner 11:40) the night card keeps the ride card's set when it is for the same run and the same devices (warmKey), instead of building it again
 const warmKey = () => (run ? run.seed + '|' + run.ring + '|' + slotKinds().join(',') : '');
 function warmNight() { if (warmG.children.length && warmG.userData.run === run && warmG.userData.key === warmKey()) { warmG.visible = true; warmG.matrixWorldAutoUpdate = true; scene.add(warmG); return; }
@@ -1548,7 +1548,7 @@ async function sceneCard(kind) {
     // one material copy per kind of piece that draws it (src/mergestatic.js splitVariants), before the shaders are built
     if (CONFIG.lag.splitVariants) splitVariants(scene);
     // (H round 2) flat see-through two-sided pieces drawn in one pass, same pixels (src/mergestatic.js singlePassFlat); LCARD.twoPass: what is left in two passes
-    if (CONFIG.lag.singlePassFlat && CONFIG.lag.singlePassFlat.on) { const gN = twoPassGroups(scene); LCARD.twoPass = CONFIG.lag.singlePassFlat.flat ? singlePassFlat(scene) : { set: 0 }; LCARD.twoPass.groups = gN; }
+    if (CONFIG.lag.singlePassFlat && CONFIG.lag.singlePassFlat.on) { const gN = twoPassGroups(scene); LCARD.twoPass = singlePassFlat(scene, !CONFIG.lag.singlePassFlat.flat); LCARD.twoPass.groups = gN; }
     // the impact sounds' variants are rendered ahead (src/impactsfx.js impactPrerender): started by the ride card and left to finish during the day; the night card
     // waits a moment (CONFIG.lag.card.sfxWait s) if they are not done yet; until they are, a sound is built live as before
     if (!bot && kind === 'ride') IMP.prerender(); else if (!bot && kind === 'night') await Promise.race([IMP.prerender(), nap(L.sfxWait * 1000)]);
@@ -1565,6 +1565,14 @@ async function sceneCard(kind) {
       try { for (const n of lamps) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); }
           fill(0.7 + 0.2 * tmp.length / most); await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
       finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } for (const o of spots) o.visible = true; for (const l of glights) l.visible = false; warmG.visible = false; warmG.matrixWorldAutoUpdate = false; } }
+    // (H round 2, warm-up gate: 8-23 shader programs built on entering a house by day, no card there) a house by day: the day's lights with one ceiling lamp per floor
+    // (1 up to the most floors among this ring's houses; buildRoomDyn), Marla off the street (she stays out of the house), and the room's own pieces (a food and an
+    // essentials crate, the cat), built and kept hidden in the warm-up set until the run ends (a freed material would free its shader); their shaders built here
+    if (!bot && kind === 'ride' && run && renderer.compileAsync) { const most = Math.max(1, ...run.houses.map((h) => h.L || 1)), tmp = [], mp = marla.root.parent;
+      if (!warmG.userData.day) { warmG.userData.day = true; for (const k of ['food', 'ess']) { const c = (LOOK_OLD ? PR.crateMesh : BT.crateV2)(k); shadeUnder(c, CONFIG.depth.crate, 0.02); c.position.set(0, -50, 0); warmG.add(c); } const cat = PR.catMesh(CONFIG.catStyles[0]); cat.g.position.set(0, -50, 0); warmG.add(cat.g); }
+      warmG.visible = true; if (mp) mp.remove(marla.root);
+      try { for (let n = 1; n <= most; n++) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); } await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
+      finally { for (const lp of tmp) { scene.remove(lp); lp.dispose(); } if (mp) mp.add(marla.root); warmG.visible = false; } }
     // LAG FIX Nov 19 (real GPU: the first frame after the night card still took 1.7 s): the scene is drawn once UNDER the card, with the warm-up copies set out in front of
     // the camera, so every shader's first use, every upload and the sun shadow map (whose depth shaders compileAsync does not build) happen here, not in play; then
     // drawn again without them, so the shadow map play starts with is the real one. (Not in the scripted checks: they keep the old timing.)
@@ -1716,7 +1724,7 @@ function frame(now) {
       if (m.userData.anim) { if (!skip) { m.userData.anim(performance.now() / 1000, g); m.userData.stale = null; } else m.userData.stale = g; } else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
     }
     // every tier (desktop too since owner 09:50): a new machine's still pieces are merged a few machines a frame (CONFIG.lag.mergeGloom.perFrame); the probe poses use times before 0 (no caption line starts)
-    for (let k = 0; k < CONFIG.lag.mergeGloom.perFrame && mergeQ.length; k++) { const [mm, mx, mz] = mergeQ.shift(); if (!mm.parent) continue; mergeStatic(mm, (i) => mm.userData.anim(-(1 + i * 0.73), { x: mx + i * 0.11, z: mz + i * 0.07 })); mm.userData.merged = true; HITC.delete(mm); }
+    for (let k = 0; k < CONFIG.lag.mergeGloom.perFrame && mergeQ.length; k++) { const [mm, mx, mz] = mergeQ.shift(); if (!mm.parent) continue; mergeStatic(mm, (i) => mm.userData.anim(-(1 + i * 0.73), { x: mx + i * 0.11, z: mz + i * 0.07 })); mm.userData.merged = true; HITC.delete(mm); if (CONFIG.lag.singlePassFlat && CONFIG.lag.singlePassFlat.on) twoPassGroups(mm); }
     tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000); freezeWorld(); nightCull.tick(world, sim, cam, dormG);
     bossTick(paused ? 0 : dt, sim, { scene, cam, audio }); scrapTick(paused ? 0 : dt, { scene }); // paused: 0 (owner 11:40: the boss pose, scrap and dawn collapse held still) // the final-night boss (src/bosshi.js): after the camera is set, before the frame is drawn
     if (run && sim.L > 1 && !run.toldStairs && save && (save.nights || 0) < 2 && [...sim.stairs.map((q) => [q.bx, q.bz]), ...sim.stairs.map((q) => [q.tx, q.tz]), ...sim.ladders.map((q) => [q.x, q.z])].some((q) => Math.hypot(q[0] - sim.player.x, q[1] - sim.player.z) < 3)) { run.toldStairs = true; marlaHint('Stairs: the Gloom use them too. The ladder: only you can climb it.'); }
@@ -1801,6 +1809,8 @@ window.__game.twoPassPixelTest = () => { const grab = () => { const c = document
   // also the same frame drawn twice with nothing changed (noise: anything that differs between two draws by itself), and where the changed pixels are
   const cmp = (x, y) => { let sum = 0, mx = 0, n = 0, x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1; const W = cvs.width; for (let i = 0; i < x.length; i++) { const d = Math.abs(x[i] - y[i]); sum += d; if (d > mx) mx = d; if (d > 8 && i % 4 !== 3) { n++; const px = (i >> 2) % W, py = Math.floor((i >> 2) / W); x0 = Math.min(x0, px); y0 = Math.min(y0, py); x1 = Math.max(x1, px); y1 = Math.max(y1, py); } } return { mean: +(sum / x.length).toFixed(4), max: mx, over8: n, box: n ? [x0, y0, x1, y1] : null }; };
   return { change: cmp(a, b), groupsOnly: cmp(a, bg), singleOnly: cmp(a, bs), noise: cmp(a, a2), groups: undo.length, single: ms.size, size: [cvs.width, cvs.height] }; };
+// (H, test hook) the base the player's way, as the run-end screen's Back does: enterBase under the home card
+window.__game.homeCard = () => { enterBase(); sceneCard('home'); };
 window.__game.playPrograms = () => ({ n: PLAYP.n, at: PLAYP.at });
 window.__game.endNight = (win = true) => { if (!sim || sim.done || !sim.endNow) return false; sim.endNow(win); return true; };
 window.__game.audioState = () => (ac ? ac.state : 'none');

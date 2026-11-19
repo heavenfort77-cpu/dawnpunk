@@ -73,8 +73,9 @@ function flatOneWay(g) { let r = FLAT.get(g); if (r !== undefined) return r; r =
       if (!have) { n0.copy(nm); d0 = n0.dot(a); have = true; continue; } if (nm.dot(n0) < 0.9999) ok = false;
       for (const v of [a, b, c]) if (Math.abs(n0.dot(v) - d0) > 1e-4) ok = false; }
     r = ok && have; } } catch (e) { r = false; } FLAT.set(g, r); return r; }
-export function singlePassFlat(root) { const users = new Map(); let set = 0, left = 0;
-  root.traverse((o) => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; const m = o.material; if (!m.transparent || m.side !== THREE.DoubleSide || m.forceSinglePass) return; let u = users.get(m); if (!u) users.set(m, u = { flat: true }); if (!o.geometry || o.isInstancedMesh || o.isSkinnedMesh || !flatOneWay(o.geometry)) u.flat = false; });
+// basicOnly: only unlit materials (MeshBasicMaterial: no normals, so the one-pass shader gives the same colour on either side); the lit ones showed changed pixels
+export function singlePassFlat(root, basicOnly) { const users = new Map(); let set = 0, left = 0;
+  root.traverse((o) => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; const m = o.material; if (!m.transparent || m.side !== THREE.DoubleSide || m.forceSinglePass || (basicOnly && !m.isMeshBasicMaterial)) return; let u = users.get(m); if (!u) users.set(m, u = { flat: true }); if (!o.geometry || o.isInstancedMesh || o.isSkinnedMesh || !flatOneWay(o.geometry)) u.flat = false; });
   for (const [m, u] of users) { if (u.flat) { m.forceSinglePass = true; m.userData.singlePassFlat = true; set++; } else left++; }
   return { set, left }; }
 
@@ -87,7 +88,11 @@ function sidesOf(m) { let p = SIDES.get(m); if (p) return p; const mk = (side) =
     if (Object.prototype.hasOwnProperty.call(m, 'onBeforeCompile')) c.onBeforeCompile = m.onBeforeCompile; if (Object.prototype.hasOwnProperty.call(m, 'customProgramCacheKey')) c.customProgramCacheKey = m.customProgramCacheKey; return c; };
   p = [mk(THREE.BackSide), mk(THREE.FrontSide)]; m.addEventListener('dispose', () => { p[0].dispose(); p[1].dispose(); }); SIDES.set(m, p); return p; }
 export function twoPassGroups(root) { let n = 0;
-  root.traverse((o) => { if (!o.isMesh || !(o.userData.mergedDraw || o.userData.ownGeo) || o.isSkinnedMesh || Array.isArray(o.material)) return; const m = o.material, g = o.geometry; if (!m || !m.transparent || m.side !== THREE.DoubleSide || m.forceSinglePass || !g || g.groups.length) return;
-    const cnt = g.index ? g.index.count : g.attributes.position.count, p = sidesOf(m); g.addGroup(0, cnt, 0); g.addGroup(0, cnt, 1); o.material = p; o.userData.twoPassOf = m;
+  // also the Gloom wear decals and the houses' corner shading (their material is marked decal: src/gloomkit.js, src/main.js buildTrim; nothing writes to it while it
+  // plays), not their hidden hit shapes
+  root.traverse((o) => { if (!o.isMesh || !(o.userData.mergedDraw || o.userData.ownGeo || (o.material && o.material.userData && o.material.userData.decal && !o.userData.hitOnly)) || o.isSkinnedMesh || Array.isArray(o.material)) return; const m = o.material, g = o.geometry; if (!m || !m.transparent || m.side !== THREE.DoubleSide || m.forceSinglePass || !g || (g.groups.length && !g.userData.twoPass)) return;
+    const cnt = g.index ? g.index.count : g.attributes.position.count, p = sidesOf(m);
+    // a geometry shared by several such meshes gets its two groups once (the first mesh); the others then use them as they are
+    if (!g.userData.twoPass) { g.addGroup(0, cnt, 0); g.addGroup(0, cnt, 1); g.userData.twoPass = true; } o.material = p; o.userData.twoPassOf = m;
     const ob = o.onBeforeRender; o.onBeforeRender = function (...a) { p[0].opacity = p[1].opacity = m.opacity; p[0].visible = p[1].visible = m.visible; return ob.apply(this, a); }; n++; });
   return n; }

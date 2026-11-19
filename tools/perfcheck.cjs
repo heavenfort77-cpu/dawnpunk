@@ -37,6 +37,7 @@ let served = [], T0 = Date.now();
 const srv = http.createServer((q, r) => { const f = path.join(DIST, decodeURIComponent(q.url.split('?')[0])); if (!f.startsWith(DIST) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); r.end(); return; }
   const n = fs.statSync(f).size; served.push({ f: path.relative(DIST, f), n, t: Date.now() }); r.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream', 'Content-Length': n }); fs.createReadStream(f).pipe(r); });
 const info = (m) => console.log('INFO ' + m), el = () => Math.round((Date.now() - T0) / 1000) + ' s', MB = (b) => +(b / 1048576).toFixed(1);
+const CRASH = [];
 const sumB = () => served.reduce((a, s) => a + s.n, 0);
 // OWNER DECISION Nov 19 11:45 ("cuts only if boss fails"): for v0.9.1 the triangle budget is printed (REPORT lines), not a pass line (CONFIG.lag.trisReportOnly)
 const TRO = /trisReportOnly: true/.test(fs.readFileSync(path.join(__dirname, '..', 'src', 'config.js'), 'utf8'));
@@ -126,10 +127,11 @@ const BREAKDOWN = (spot) => {
       await p.evaluate(() => { window.__dtMax = 0.3; });
       return r;
     }
-    const midSave = async (o) => { await p.evaluate((o) => { const g = window.__game; g.enterBase(); const s = g.save; s.day = o.day; s.nights = o.nights; s.trips = o.nights; s.food = o.food; s.essentials = o.ess; s.essTotal = o.ess + 14; s.killsTotal = o.nights * 9;
+    const midSave = async (o) => { await p.evaluate((o) => { const g = window.__game; if (g.homeCard) g.homeCard(); else g.enterBase(); const s = g.save; s.day = o.day; s.nights = o.nights; s.trips = o.nights; s.food = o.food; s.essentials = o.ess; s.essTotal = o.ess + 14; s.killsTotal = o.nights * 9;
       s.talkedMarla = true; s.solarDone = true; s.jobCard = true; s.noteSeen = true; s.toldCharge = true; s.ringOpen = o.ringOpen; s.scoutSpot = o.scout; s.up.slots = 1; s.loadout = ['turbine', 'lance', 'panel', 'mine'];
       s.met = { walker: true, lurcher: true, ticks: true, hauler: true, stilt: true }; if (o.cats) s.cats.forEach((c, i) => { c.spot = o.cats[i]; }); g.reBase(); }, o); await waitLoads('base'); };
-    const startRun = async (ring) => { await p.evaluate((ring) => { document.getElementById('selRing').value = String(ring); window.__game.startRun(); }, ring); await p.waitForTimeout(300); await p.waitForFunction(() => !window.__game.cardOn || !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null); await waitGame(1, 0.3); await waitLoads('run');
+    // (H) the base is entered the player's way (the home card, as after the run-end screen's Back), so a run starts only after that card
+    const startRun = async (ring) => { await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null); await p.evaluate((ring) => { document.getElementById('selRing').value = String(ring); window.__game.startRun(); }, ring); await p.waitForTimeout(300); await p.waitForFunction(() => !window.__game.cardOn || !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null); await waitGame(1, 0.3); await waitLoads('run');
       return p.evaluate(() => { const r = window.__game.run; return { ring: r.ring, cat: r.catHouse, houses: r.houses.map((h) => ({ i: h.i, n: h.n, L: h.sim.L })) }; }); };
     const pickHouse = (r, want) => { const ok = r.houses.filter((h) => h.i !== r.cat); ok.sort((a, b) => (a.L - b.L) || (Math.abs(a.n - want) - Math.abs(b.n - want))); return ok[0].i; };
     const stand = (x, z, tx, ty, tz) => p.evaluate(([x, z, tx, ty, tz]) => { const g = window.__game, s = g.sim, P = s.player; P.x = x; P.z = z; P.floor = 0; P.climb = null; const dx = tx - x, dz = tz - z, y = Math.atan2(-dx, -dz), pi = Math.atan2(ty - 1.6, Math.hypot(dx, dz)); g.setYaw(y); g.setPitch(pi); P.yaw = y; P.pitch = pi; }, [x, z, tx, ty, tz]);
@@ -149,7 +151,8 @@ const BREAKDOWN = (spot) => {
         rows.push({ tier, spot, fps: f.fps, p95: f.p95, worst: f.worst });
         if (GPU && tier === TT) { const t = TT + ' ' + spot + ' (whole run): '; out.push([t + f.fps + ' fps (target >= ' + CGATE.fps + ')', f.fps >= CGATE.fps]); out.push([t + 'p95 ' + f.p95 + ' ms (target <= ' + CGATE.p95 + ')', f.p95 <= CGATE.p95]); out.push([t + 'worst frame ' + f.worst + ' ms (target <= ' + CGATE.worst + ')', f.worst <= CGATE.worst]); }
         return f; };
-      const err = (e) => info('flow ' + tier + ': ' + String(e && e.message || e).slice(0, 200));
+      // (coordinator 14:58) a spot that cannot run is a crash, never a quiet INFO line: it fails the run (exit 3, perfgpu turns red)
+      const err = (e) => { info('flow ' + tier + ': ' + String(e && e.message || e).slice(0, 200)); CRASH.push(tier + ' flow: ' + String(e && e.message || e).slice(0, 160)); };
       // PROFILE=1: a CPU profile of the film's first 4 s, the drill fight's first 3 s and 3 s of the run-end screen (what runs in their long frames): self time and call chains
       const showProf = (pr, label) => { const self = new Map(), byId = new Map(pr.nodes.map((q) => [q.id, q])), par = new Map(), chain = new Map(); let tot = 0; for (const q of pr.nodes) for (const c of q.children || []) par.set(c, q.id);
         pr.samples.forEach((id, i) => { const dt = (pr.timeDeltas[i] || 0) / 1000, cf = byId.get(id).callFrame; tot += dt; const k = (cf.functionName || '(anon)') + ':' + (cf.lineNumber + 1); self.set(k, (self.get(k) || 0) + dt); let q = byId.get(id), key = [], n = 0; while (q && n < 7) { const c2 = q.callFrame; if (c2.functionName) key.push(c2.functionName + ':' + (c2.lineNumber + 1)); q = byId.get(par.get(q.id)); n++; } const kk = key.join(' < '); chain.set(kk, (chain.get(kk) || 0) + dt); });
@@ -167,7 +170,7 @@ const BREAKDOWN = (spot) => {
         if (GPU && tier === TT) out.push([TT + ' film: first visible frame ' + ff.firstVis + ' ms (target < 100)', ff.firstVis !== null && ff.firstVis < 100]);
         await p.evaluate(() => { const b = document.getElementById('cineSkip'); if (b) b.click(); }); await p.waitForTimeout(500); } catch (e) { err(e); }
       // night 1 with the drill on (a fresh save's first night from the base)
-      try { await p.evaluate(() => { try { localStorage.setItem('dawnpunk.drill', '{}'); } catch (e) { /* none */ } const g = window.__game; g.enterBase(); g.save.nights = 0; g.save.day = 1; });
+      try { await p.evaluate(() => { try { localStorage.setItem('dawnpunk.drill', '{}'); } catch (e) { /* none */ } const g = window.__game; if (g.homeCard) g.homeCard(); else g.enterBase(); g.save.nights = 0; g.save.day = 1; });
         await startRun(0); const r0 = await p.evaluate(() => window.__game.run.houses.map((h) => h.i)); await p.evaluate((i) => window.__game.enterHouse(i), r0[0]); await waitGame(1, 0.3);
         await p.evaluate(() => window.__game.nightfall()); await p.waitForFunction(() => !window.__game.cardOn || !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null);
         await p.evaluate(() => { const s = window.__game.sim; if (s) s.player.hp = 1e6; }); info('drill on: ' + JSON.stringify(await p.evaluate(() => window.__game.drillInfo ? window.__game.drillInfo() : null)).slice(0, 160)); const tD = await p.evaluate(() => { if (window.__progAggReset) window.__progAggReset(); return performance.now(); }); if (process.env.PROFILE) await prof('drill start', async () => null, 3000); await flow('drill', 20); await whyLog('drill (from the end of its card)', tD);
@@ -348,7 +351,7 @@ const BREAKDOWN = (spot) => {
     if (tier === TT) out.push([TT + ': no page errors' + (errs.length ? ': ' + [...new Set(errs)].slice(0, 2).join(' | ') : ''), errs.length === 0]);
     // (owner 14:25) the warm-up gate: no shader program built during play after any card, across the whole run; and the cards' proof counts
     { const pp = await p.evaluate(() => (window.__game.playPrograms ? window.__game.playPrograms() : null)), cp = await p.evaluate(() => (window.__game.cardInfo ? window.__game.cardInfo().proofs : null));
-      info(tier + ' shader programs built during play: ' + JSON.stringify(pp) + ' | cards (kind, renders, calls, programs): ' + JSON.stringify((cp || []).map((q) => [q.kind, q.renders, q.calls, q.programs])));
+      info(tier + ' shader programs built during play: ' + JSON.stringify(pp).slice(0, 3000) + ' | cards (kind, renders, calls, programs): ' + JSON.stringify((cp || []).map((q) => [q.kind, q.renders, q.calls, q.programs])));
       if (GPU && tier === TT && pp) out.push([TT + ': shader programs built during play after the cards ' + pp.n + ' (target 0)', pp.n === 0]); }
     // (owner 14:25) the long-frame ledger of this tier: every page of the run, each frame over 100 ms with its spot, held or not, and the game's catcher entry
     { const L = []; for (const pg of ctx.pages()) { try { L.push(...await pg.evaluate(() => (window.__ledger || []).map((q) => ({ ...q, c: (window.__longFrames || []).find((x) => x.t === q.t) || null })).concat(window.__ledgerEnter || []))); } catch (e) { /* page gone */ } }
@@ -398,5 +401,6 @@ const BREAKDOWN = (spot) => {
   console.log('PERFJSON ' + JSON.stringify(rows));
   let bad = 0; for (const [n, ok] of out) { if (!ok) bad++; console.log((ok ? 'PASS ' : 'FAIL ') + n); }
   console.log(bad ? 'PERF CHECK FAILED (' + bad + ')' : 'ALL PERF CHECKS PASS');
-  await b.close(); srv.close(); process.exit(bad ? 1 : 0);
-})().catch((e) => { console.log('FAIL crashed: ' + String(e && e.stack || e).slice(0, 800)); process.exit(1); });
+  for (const c of CRASH) console.log('FAIL crashed (a spot could not run): ' + c);
+  await b.close(); srv.close(); process.exit(CRASH.length ? 3 : bad ? 1 : 0);
+})().catch((e) => { console.log('FAIL crashed: ' + String(e && e.stack || e).slice(0, 800)); process.exit(3); });
