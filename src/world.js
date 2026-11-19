@@ -254,7 +254,13 @@ export function buildWorld(cfg, run) {
       const x = (R2() * 2 - 1) * (T.boundX + 14), z = (R2() * 2 - 1) * (T.boundZ + 14), road = Math.abs(z) < 3.5; if (!free(x, z, 0.3) || (road && R2() < 0.82) || run.houses.some((h) => Math.abs(x - h.doorX) < 0.9 && Math.abs(z) < Math.abs(h.doorZ) && Math.sign(z) === Math.sign(h.doorZ))) continue;
       const sc = road ? 0.5 + 0.4 * R2() : 0.7 + 1.3 * R2(), ry = R2() * Math.PI;
       for (const a of [0, Math.PI / 2]) { dm.position.set(x, 0.0, z); dm.rotation.set(0, ry + a, 0); dm.scale.set(sc * 1.3, sc, 1); dm.updateMatrix(); tufts.setMatrixAt(ti++, dm.matrix); } } }
-  tufts.count = ti; tufts.receiveShadow = true; add(tufts);
+  tufts.count = ti; tufts.receiveShadow = true;
+  // LAG FIX Nov 19 (owner 11:25): the tufts go in square chunks (CONFIG.lag.tuftChunk m), one instanced draw each, so chunks out of view (or past the night's scenery
+  // distance, src/nightcull.js) are not drawn; same tufts in the same places. tuftParts: the drawn chunks (or the one mesh as before)
+  const tuftParts = []; { const cell = CONFIG.lag && CONFIG.lag.tuftChunk; if (!cell) { add(tufts); tuftParts.push(tufts); } else { const by = new Map(), m4 = new THREE.Matrix4();
+    for (let i = 0; i < ti; i++) { tufts.getMatrixAt(i, m4); const k = Math.floor(m4.elements[12] / cell) + ',' + Math.floor(m4.elements[14] / cell); let a = by.get(k); if (!a) by.set(k, a = []); a.push(m4.clone()); }
+    for (const a of by.values()) { const im = new THREE.InstancedMesh(tg, tufts.material, a.length); for (let i = 0; i < a.length; i++) im.setMatrixAt(i, a[i]); im.receiveShadow = true; im.userData.scenery = true; im.computeBoundingSphere(); add(im); tuftParts.push(im); }
+    tufts.dispose(); } }
   // a tree: leaning trunk, real branches, and a crown made of many leaf sprays on twigs (not one green ball)
   const RL = rng(((run.seed || 1) ^ 0x1eaf) >>> 0);
   // high graphics tier: leafMore smaller extra cards round each spray (own random stream, so nothing else moves)
@@ -364,7 +370,7 @@ export function buildWorld(cfg, run) {
   if (SH) SH.finish();
   // ---------------------------------------------------------------- batching: everything static is merged per material (about 1,100 draw calls become a few dozen)
   {
-    g.updateMatrixWorld(true); const keep = new Set(marks.map((q) => q.mark)); keep.add(tufts); const buckets = new Map(), dead = [], v = new THREE.Vector3(), nm = new THREE.Matrix3(), WHITE = new THREE.Color(1, 1, 1);
+    g.updateMatrixWorld(true); const keep = new Set(marks.map((q) => q.mark)); for (const t of tuftParts) keep.add(t); const buckets = new Map(), dead = [], v = new THREE.Vector3(), nm = new THREE.Matrix3(), WHITE = new THREE.Color(1, 1, 1);
     const CELL = QUALITY === 'high' ? CONFIG.lag.mergeCell : 0;
     // which house's footprint (its half size from the house's own sim, plus CONFIG.lag.housePad m) a piece stands in, or -1
     const hInv = houses.map((hg) => hg.matrixWorld.clone().invert()), hv = new THREE.Vector3();

@@ -65,6 +65,10 @@ const SPV = { b: -1, n: -1, k: 0, list: [], c: new THREE.Vector3(), w: new THREE
 const ROLE_COL = { hunter: 0xc0583a, gatherer: 0xc8b43a, researcher: 0x3a7ac0 };
 const PATROL = { hunter: [[-15, -15], [15, -15], [15, 15], [-15, 15]], gatherer: [[-9, -8], [0, -16], [-9, -8]], researcher: [[6.0, 3.9], [9, 3.4], [9.55, 2.2], [9, 3.4]] }; // researchers walk past the workshop door (it faces the plaza since Nov 17), clear of its step and urns, and stop to read the quest board beside it
 
+// LAG FIX Nov 19 (owner 11:27, CONFIG.lag.farStep): a villager out of view AND farther than farStep.dist m (Oko: also while you are not in the workshop) takes her motion
+// steps farFrom.hz times a second with the time added up (the motion decides in fixed slices, so the same choices); in view or near, every frame as before.
+// The view is the camera given by setView. Module-level temporary maths objects.
+const FR = new THREE.Frustum(), FM = new THREE.Matrix4(), FS = new THREE.Sphere();
 export function createBaseView(scene, cfg, marla, makeChar) {
   let buildN = 0, shadowDirty = false; const chars = {}, bakedYaw = []; // the villagers' real models, made once and kept (bram, oko, pip)
   const g = new THREE.Group(), obst = [], npcs = [];
@@ -359,6 +363,10 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     return { face: Math.atan2(dx, dz), go: true, move: true, carry: o.p.role === 'researcher', slow: Math.min(1 - (1 - keep) * near, rise), groundAt: o.gAt || (o.gAt = (x, z) => (life ? life.deckY(x, z) : 0)) }; }
   // posAt (optional): a function of the share of this frame done (0..1] giving the player's [x, z] at that moment, for callers that know the path between frames
   // (without it the slices take the spot on a line from last frame's)
+  const yawChk = (o, k) => { if (!o) return k; const y = o.rotation.y, was = bakedYaw[k] === undefined ? y : bakedYaw[k]; if (Math.abs(y - was) > 0.06) { shadowDirty = true; bakedYaw[k] = y; } else if (bakedYaw[k] === undefined) bakedYaw[k] = y; return k + 1; };
+  let viewCam = null; const FAR = cfg.lag && cfg.lag.farStep;
+  const live = (x, z, px, pz) => { if (!FAR || !viewCam) return true; if (Math.hypot(x - px, z - pz) < FAR.dist) return true; FS.center.set(x, 0.9, z); FS.radius = 1.3; return FR.intersectsSphere(FS); };
+  const stepDt = (o, on, dt) => { const a = (o.facc || 0) + dt; if (on || a >= 1 / FAR.hz) { o.facc = 0; return a; } o.facc = a; return 0; };
   function update(dt, px, pz, camY, posAt) {
     const pAt = (x0, z0, a) => (posAt ? posAt(a) : [x0 + (px - x0) * a, z0 + (pz - z0) * a]);
     sizeLabels(px, pz);
@@ -367,7 +375,10 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // villagers turn to you when you come close (eyes and head first, then shoulders, hips, and the feet in small pivot steps: src/people.js), and back to their own spot a while after you leave
     const PT = cfg.people.turn;
     // each person decides inside the motion's fixed slices (ch.drive's plan), the player's spot taken on a line from last frame's: the same choices at any frame rate
-    for (const n of Object.values(NPCS)) { const o = npcG[n.id], ch = chars[n.id]; if (!o || !ch || !ch.drive) continue; const jump = o.lpx == null || Math.hypot(px - o.lpx, pz - o.lpz) > 2, x0 = jump ? px : o.lpx, z0 = jump ? pz : o.lpz; o.lpx = px; o.lpz = pz;
+    if (FAR && viewCam) { FM.multiplyMatrices(viewCam.projectionMatrix, viewCam.matrixWorldInverse); FR.setFromProjectionMatrix(FM); }
+    for (const n of Object.values(NPCS)) { const o = npcG[n.id], ch = chars[n.id]; if (!o || !ch || !ch.drive) continue;
+      const dt0 = dt, dtN = FAR ? stepDt(o, n.inside && WS ? inRoom(WS, px, pz) || live(n.x, n.z, px, pz) : live(n.x, n.z, px, pz), dt0) : dt0; if (!dtN) continue;
+      { const dt = dtN; const jump = o.lpx == null || Math.hypot(px - o.lpx, pz - o.lpz) > 2, x0 = jump ? px : o.lpx, z0 = jump ? pz : o.lpz; o.lpx = px; o.lpz = pz;
       // Oko inside the workshop: bent over the bench (head down to the trays, small turns from one tray to the next), standing back now and then; she turns to you only inside the room.
       // (Not the arms-forward 'carry' pose: switching it flicked her hands at 427 deg/s in tools/animcheck.cjs. Her hands work through src/okowork.js, eased in and out.)
       if (n.inside && WS) { const W = cfg.workshop.oko; let working = false;
@@ -376,7 +387,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
           return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: fy, gaze: working ? [Math.sin(fy) * W.look[0], W.look[1] + WS.floor, Math.cos(fy) * W.look[0]] : null }; } });
         okoWork(ch, o.work || (o.work = {}), dt, working); continue; }
       ch.drive(dt, { plan: (h, a) => { const pq = pAt(x0, z0, a), dx = pq[0] - n.x, dz = pq[1] - n.z, d = Math.hypot(dx, dz); o.near = d < (o.near ? PT.far : PT.near); o.away = o.near ? 0 : (o.away || 0) + h;
-        return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: o.away > PT.back ? 0 : null }; } }); }
+        return o.near ? { face: Math.atan2(dx, dz), gaze: [dx, camY, dz] } : { face: o.away > PT.back ? 0 : null }; } }); } }
     // Marla turns to you in pivot steps (her own root, inside scoutG; src/people.js createStepper), her feet held where they stand
     if (marla && scoutG) { const dx = px - scoutG.position.x, dz = pz - scoutG.position.z, d = Math.hypot(dx, dz), near = d < 7; const m0 = scoutG.userData; const jump = m0.lpx == null || Math.hypot(px - m0.lpx, pz - m0.lpz) > 2, x0 = jump ? px : m0.lpx, z0 = jump ? pz : m0.lpz; m0.lpx = px; m0.lpz = pz;
       if (marla.turn) marla.turn(dt, (a) => { const pq = pAt(x0, z0, a), qx = pq[0] - scoutG.position.x, qz = pq[1] - scoutG.position.z; m0.near = Math.hypot(qx, qz) < 7; return m0.near ? Math.atan2(qx, qz) - scoutG.rotation.y : null; }); const ry = scoutG.rotation.y + marla.root.rotation.y, c = Math.cos(-ry), s = Math.sin(-ry); marla.update(dt, dx * c + dz * s, -dx * s + dz * c, near); }
@@ -424,7 +435,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     if (jn && inRoom(MH, px, pz) && Math.hypot(px - jn.at[0], pz - jn.at[1]) < cfg.marlaHouse.read) { target = { kind: 'mjournal' }; prompt = "USE: read Marla's journal (private)"; }
     const sp = scoutG.position; if (Math.hypot(px - sp.x, pz - sp.z) < 2.6) { target = { kind: 'scout' }; prompt = 'USE: talk to Marla, the Scout'; }
     let catDist = 1e9; for (const o of hiddenCats) { if (!o.cg.visible) continue; const d = Math.hypot(px - o.cg.position.x, pz - o.cg.position.z); if (d < catDist) catDist = d; if (d <= cfg.cat.baseRadius) target = { kind: 'cat', id: o.c.id }; }
-    { let k = 0; for (const o of [scoutG, ...Object.keys(NPCS).map((k) => chars[k] && chars[k].root)]) { if (!o) continue; const y = o.rotation.y, was = bakedYaw[k] === undefined ? y : bakedYaw[k]; if (Math.abs(y - was) > 0.06) { shadowDirty = true; bakedYaw[k] = y; } else if (bakedYaw[k] === undefined) bakedYaw[k] = y; k++; } } // a figure that has turned gets its shadow drawn again
+    { let k = yawChk(scoutG, 0); for (const id in NPCS) k = yawChk(chars[id] && chars[id].root, k); } // a figure that has turned gets its shadow drawn again (no list made each frame: owner 11:27)
     const shadow = shadowDirty; shadowDirty = false; // a model that has just arrived must get into the (static) shadow map
     // deck: height of a footbridge deck under you (your view rides over it); water: how far the stream and the wheel are; indoor: inside a room or your home (the water sound is muffled there)
     const indoor = (WS && inRoom(WS, px, pz)) || (MH && inRoom(MH, px, pz)) || (Math.abs(px - HOME.x) < 3.2 && Math.abs(pz - HOME.z) < 2.2);
@@ -439,5 +450,6 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // meshes and triangles under some objects (for the cost report of the hatchery, its birds and the village cats)
   const meshCost = (roots) => { let meshes = 0, tris = 0; for (const r of roots) r.traverse((o) => { if (!o.isMesh) return; meshes++; const gq = o.geometry; tris += (gq.index ? gq.index.count : gq.attributes.position.count) / 3; }); return { meshes, tris: Math.round(tris) }; };
   const peek = () => ({ cost: { hatchery: hatch ? meshCost([hatch.group]) : null, birds: flock ? meshCost(flock.birds.map((b) => b.root)) : null, cats: vcats ? meshCost(vcats.cats.map((c) => c.root)) : null }, chars, npcG, npcs, scoutG, rooms: { WS, MH }, journal: jn && { ribbon: jn.ribbon.visible, glow: !!jn.glow.userData.show, at: jn.at }, avians: flock && { shown: flock.shown(), birds: flock.birds.map((b) => ({ id: b.id, kind: b.kind, st: b.st, x: b.x, z: b.z, gone: b.gone })), eveT, layout: AV }, vcats: vcats && vcats.cats.map((c) => ({ x: c.b.x, y: c.b.y, z: c.b.z, mode: c.b.mode, act: c.b.act })), life: life && { cost: life.cost, plots: life.plots, wheel: life.water ? life.water.angle() : null } });
-  return { build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
+  // preChars (owner 11:40): the villagers' models are made ahead (during the opening film), so the base's first build does not load and parse them in the dawn shot
+  return { preChars: () => { if (makeChar) for (const n of Object.values(NPCS)) if (!chars[n.id]) chars[n.id] = makeChar(n.id); }, setView: (c) => { viewCam = c; }, build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
 }

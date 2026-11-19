@@ -102,6 +102,7 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
   if (T.blob) { blob = blobMesh(C.blob); blob.visible = false; scene.add(blob); }
   // ---- desktop body shadow
   let PS = null, body = null, bodyScene = null, fresh = false, cleared = false, sun = null, lastCam = null;
+  const SIG = new Float64Array(13), SIG0 = new Float64Array(13).fill(NaN);
   if (T.body && patchShader()) {
     const S = C.body;
     PS = new THREE.DirectionalLight(0xffffff, 0); PS.name = 'playerShadowLight'; PS.castShadow = true;
@@ -146,14 +147,16 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
     const cad = M.cadence[0] + M.cadence[1] * spd; phase += dt * Math.PI * cad * Math.min(1, spd / 0.4) * back;
     amp = Math.min(1, spd / M.full); const run = Math.max(0, Math.min(1, (spd - M.full) / 2));
     const A = amp * (M.legSwing[0] + (M.legSwing[1] - M.legSwing[0]) * run), K = amp * (M.knee[0] + (M.knee[1] - M.knee[0]) * run), sL = Math.sin(phase), cL = Math.cos(phase);
-    const B = body, idle = 1 - amp;
+    // LAG FIX Nov 19 (owner 11:27): standing still, the chest's idle sway moves the shadow in steps of 1 / CONFIG.lag.bodyIdleHz s (the sway is a few millimetres of
+    // shadow), so a still player's shadow map is not drawn again every frame
+    const B = body, idle = 1 - amp, tq = amp < 1e-3 ? Math.floor(t * CONFIG.lag.bodyIdleHz) / CONFIG.lag.bodyIdleHz : t;
     B.root.position.set(x + Math.sin(yawS) * M.eyeFwd, y - M.bob * amp * Math.abs(sL), z + Math.cos(yawS) * M.eyeFwd); B.root.rotation.y = yawS;
     B.hips.rotation.y = twist;
     B.thL.rotation.x = A * sL; B.thR.rotation.x = -A * sL;
     B.knL.rotation.x = -(K * Math.pow(Math.max(0, cL), 1.5) + 0.08 * amp); B.knR.rotation.x = -(K * Math.pow(Math.max(0, -cL), 1.5) + 0.08 * amp);
-    B.chest.rotation.x = -M.lean * run - 0.03 * amp; B.chest.rotation.z = M.sway * idle * Math.sin(t * 1.3) + 0.03 * amp * sL; B.chest.rotation.y = 0.05 * amp * sL;
+    B.chest.rotation.x = -M.lean * run - 0.03 * amp; B.chest.rotation.z = M.sway * idle * Math.sin(tq * 1.3) + 0.03 * amp * sL; B.chest.rotation.y = 0.05 * amp * sL;
     // left arm swings against the left leg; the right arm holds the cannon forward, follows the aim up and down, and bobs a little
-    B.shL.rotation.set(-0.8 * A * sL + M.armRest[0] + idle * 0.02 * Math.sin(t * 1.3), 0, -0.1);
+    B.shL.rotation.set(-0.8 * A * sL + M.armRest[0] + idle * 0.02 * Math.sin(tq * 1.3), 0, -0.1);
     B.elL.rotation.x = M.armRest[1] + 0.25 * amp * Math.max(0, -sL);
     const aim = Math.max(-0.7, Math.min(0.9, pitch * M.aimFollow));
     B.shR.rotation.set(M.gunArm[0] + aim + 0.06 * amp * sL, 0, M.gunArm[2]); B.elR.rotation.x = M.gunArm[1];
@@ -162,7 +165,10 @@ export function createPlayerShadow(renderer, scene, CONFIG, tier) {
     if (sun) { sun.getWorldPosition(v1); sun.target.getWorldPosition(v2); sunDir.copy(v1).sub(v2).normalize(); }
     v1.set(B.root.position.x, B.root.position.y + C.body.centre, B.root.position.z);
     PS.target.position.copy(v1); PS.position.copy(v1).addScaledVector(sunDir, T.back); PS.updateMatrixWorld(); PS.target.updateMatrixWorld();
-    fresh = true;
+    // the body's shadow is drawn again only when something it depends on changed: place, turn, walk phase and swing, twist, aim, idle sway step, sun direction
+    SIG[0] = B.root.position.x; SIG[1] = B.root.position.y; SIG[2] = B.root.position.z; SIG[3] = yawS; SIG[4] = phase; SIG[5] = amp; SIG[6] = twist; SIG[7] = aim; SIG[8] = tq; SIG[9] = sunDir.x; SIG[10] = sunDir.y; SIG[11] = sunDir.z; SIG[12] = spd;
+    let ch = false; for (let i = 0; i < SIG.length; i++) if (!(Math.abs(SIG[i] - SIG0[i]) <= 1e-5)) { ch = true; SIG0[i] = SIG[i]; }
+    if (ch) fresh = true;
   };
   api.info = () => ({ on: true, tier, body: !!body, blob: !!blob, active: want, feet: +feet.toFixed(3), hang, blobOn, blobVis: blob ? blob.visible : null, blobAt: blob ? blob.position.toArray().map((q) => +q.toFixed(3)) : null, bodyVis: body ? body.root.visible : null, at: body ? body.root.position.toArray().map((q) => +q.toFixed(3)) : null, sunI: sun ? +sun.intensity.toFixed(3) : 0, psI: PS ? PS.shadow.intensity : 0, speed: +spd.toFixed(3), amp: +amp.toFixed(3), phase: +phase.toFixed(3), twist: +twist.toFixed(3), sun: sunDir.toArray().map((q) => +q.toFixed(4)), passes, passMs: +passMs.toFixed(1), map: body ? T.map : 0 });
   // test helper for tools/playershadowshot.cjs: a flat, sunlit front wall beside a door, where to stand (stand m off it) and where to look to see your own shadow on it

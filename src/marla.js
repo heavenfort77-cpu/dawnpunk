@@ -12,16 +12,17 @@ import { cullSkinned, lodPrepare } from './lod.js';
 
 // `key` picks the model in src/modeldata.js: 'marla', or a villager ('bram', 'oko', 'pip'). Villagers have a neutral face only.
 export function createMarla(cfg, key = 'marla') {
-  const root = new THREE.Group(); root.userData.keep = true; let ready = false, bones = {}, faces = [], mood = 0, moodTo = 0, look = 0, t = 0, onReady = null;
+  const root = new THREE.Group(); root.userData.keep = true; let ready = false, bones = {}, faces = [], faceW = {}, mood = 0, moodTo = 0, look = 0, t = 0, onReady = null;
   // desktop closed smile (owner approved Nov 16 23:29): hiModel = the desktop model loaded (it carries expr_smileClosed and expr_smileClosedSym); smile = its eased weight, 0..1 of CONFIG.marlaHi.smile.strength
   let hiModel = false, smile = 0, stepper = null, lookV = 0, lookAcc = 0;
-  const bin = Uint8Array.from(atob(MODELS[key]), (c) => c.charCodeAt(0)).buffer;
+  // LAG FIX Nov 19 (owner 11:40): the light model (a file, src/modeldata.js) is fetched only when it is used (phones, or the desktop model failing), not decoded at every start
+  const lite = () => fetch(MODELS[key]).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, false)).catch((e) => console.error(key + ' light model failed to load', e));
   const HI = QUALITY === 'high' && cfg.marlaHi && cfg.marlaHi.files[key];      // desktops and laptops: her own high model and materials (src/marlahi.js); phones: the packed light model
   const go = (buf, isHi) => new GLTFLoader().parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => {
       o.userData.keep = true; if (o.isBone) bones[o.name] = o;
       if (o.isMesh) { o.frustumCulled = false; o.castShadow = true; o.receiveShadow = true; const conv = (m) => { if (isHi) return hiMat(m, o, cfg.marlaHi); const cut = m.alphaTest > 0 || m.transparent; const skin = /skin|face|head|body|hand|lip|eye/i.test(m.name || ''), col = m.color.clone(); if (GRITTY && !skin) { const h = {}; col.getHSL(h); col.setHSL(h.h, h.s * GRIT.clothSat, h.l * GRIT.clothLight); } const n = GRITTY ? new THREE.MeshPhongMaterial({ map: m.map || null, color: col, shininess: skin ? GRIT.skinShine : GRIT.clothShine, specular: skin ? 0x2a211d : 0x0c0c0c, alphaTest: cut ? Math.max(m.alphaTest, 0.4) : 0, side: cut ? THREE.DoubleSide : THREE.FrontSide }) : new THREE.MeshLambertMaterial({ map: m.map || null, color: m.color, alphaTest: cut ? Math.max(m.alphaTest, 0.4) : 0, side: cut ? THREE.DoubleSide : THREE.FrontSide }); n.name = m.name; n.userData.keep = true; m.dispose(); return n; }; // same simple lighting as the rest of the game
-        o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material); if (o.morphTargetDictionary) faces.push(o); }
+        o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material); if (o.morphTargetDictionary) { faces.push(o); faceW = {}; } }
     });
     // out of the build's A-pose into a relaxed stand: arms down, a little weight on one leg
     const P = cfg.marla.pose, turn = (b, ax, ang) => { if (!b) return; sc.updateMatrixWorld(true); const pw = b.parent.getWorldQuaternion(new THREE.Quaternion()), rw = new THREE.Quaternion().setFromAxisAngle(ax, ang); b.quaternion.premultiply(pw.clone().invert().multiply(rw).multiply(pw)); }; // a turn about a world axis, whatever the bone's parents are doing
@@ -34,12 +35,13 @@ export function createMarla(cfg, key = 'marla') {
     sc.traverse((q) => { if (q.isMesh) cullSkinned(q); }); if (QUALITY === 'high') lodPrepare(sc, 'people', true);
     if (isHi) hiLights(root, cfg.marlaHi); hiModel = !!isHi; ready = true; if (onReady) onReady();
   }, (e) => console.error(key + ' model failed to load', e));
-  // a page opened straight from a folder (file://) cannot fetch the model file beside it: it then keeps the packed model (the single-file build carries the desktop model inside and is not affected)
-  if (HI && (HI.startsWith('data:') || location.protocol !== 'file:')) fetch(HI).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, true)).catch(() => go(bin, false)); else go(bin, false);
+  // a page opened straight from a folder (file://) cannot fetch a model file beside it: play index_single.html from a folder (it carries every model inside)
+  if (HI && (HI.startsWith('data:') || location.protocol !== 'file:')) fetch(HI).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, true)).catch(() => lite()); else lite();
   // swing a bone about the model's own left-right axis, from its rest pose
   const rest = {}, qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), qr = new THREE.Quaternion(), XA = new THREE.Vector3(1, 0, 0); let step = 0, legLen = 0.8, scn = null;
   const swing = (k, ang) => { const b = bones[k]; if (!b || !rest[k]) return; root.getWorldQuaternion(qr); b.parent.getWorldQuaternion(qa); qa.premultiply(qr.invert()); qb.setFromAxisAngle(XA, ang); b.quaternion.copy(qa).invert().multiply(qb).multiply(qa).multiply(rest[k]); };
-  const setFace = (name, v) => { for (const m of faces) { const i = m.morphTargetDictionary['expr_' + name]; if (i !== undefined) m.morphTargetInfluences[i] = v; } };
+  // LAG FIX Nov 19 (owner 11:27): a face shape is set only when its weight changed (it was looked up by name on every face mesh, three times a frame)
+  const setFace = (name, v) => { if (faceW[name] === v) return; faceW[name] = v; for (const m of faces) { const i = m.morphTargetDictionary['expr_' + name]; if (i !== undefined) m.morphTargetInfluences[i] = v; } };
   return {
     root, get ready() { return ready; }, whenReady(f) { if (ready) f(); else onReady = f; },
     talk(on) { moodTo = on ? 1 : 0; },

@@ -28,7 +28,7 @@ import { createFx } from './fx.js';
 import { createPerfStep } from './perfstep.js';
 import { lodTick, lodFull, lodCopy } from './lod.js';
 import { createNightCull } from './nightcull.js';
-import { mergeStatic, HIT_LAYER } from './mergestatic.js';
+import { mergeStatic, HIT_LAYER, splitVariants } from './mergestatic.js';
 import { gloomPreload, glbHooks, glbCopy } from './gloomglb.js';
 import { openBook, loadBookFonts, closeBook } from './book.js';
 import { MODELS } from './modeldata.js';
@@ -90,7 +90,9 @@ const KIND_LINE = { lurcher: 'Lurcher. Fast one, Potts. Do not blink.', hauler: 
 // real light from the nearest screens: a fixed pool of lights (made once, so nothing is recompiled), moved each frame to the closest machines
 // perf: the automatic step-down (made after the renderer's first resize, below); perfRest(): a new scene starts, wait before measuring frames again
 // paused: the picture is drawn once and then held (the page keeps the last frame) until play resumes; a lost WebGL context draws nothing until it is restored
-let holdDraw = false, pauseDrawn = false, ctxLost = false;
+// LAG FIX Nov 19 (owner 11:40, front/end audit): the title menu and the run-end screen are held like the pause: drawn once, then the picture is kept (and the run's
+// machines, devices, boss and scrap are not stepped under them)
+let holdDraw = false, pauseDrawn = false, ctxLost = false; const MENU_EL = document.getElementById('menu') || { style: {} };
 // at night inside a house only what shows through its openings is drawn (src/nightcull.js, CONFIG.lag.nightCull)
 const nightCull = createNightCull();
 let perf = null; const perfRest = () => { if (perf) perf.rest(); };
@@ -116,13 +118,18 @@ function needDormant() {
     for (let k = 0; k < 200 && run.dormant.length < CONFIG.gloomLook.dormant; k++) { const x = (rn() * 2 - 1) * (T.boundX - 6), z = (rn() < 0.5 ? -1 : 1) * (4 + rn() * 7);
       if (Math.hypot(x, z) < 7 || Math.hypot(x - G.x, z - G.z) < 5 || run.houses.some((h) => (Math.abs(x - h.x) < h.H + 1.8 && Math.abs(z - h.z) < h.H + 1.8) || Math.hypot(x - h.doorX, z - h.doorZ) < 4 || (h.ext && Math.hypot(x - h.ext.x, z - h.ext.z) < h.ext.r + 1.2)) || run.cars.some((c) => Math.hypot(x - c.x, z - c.z) < 3.4) || run.dormant.some((d) => Math.hypot(x - d.x, z - d.z) < 9)) continue;
       const kind = kinds.splice(Math.floor(rn() * kinds.length), 1)[0]; run.dormant.push({ x, z, ry: rn() * 6.28, kind, r: kind === 'warden' ? 1.4 : kind === 'hauler' ? 1.0 : 0.6 }); } }
-  dormM = []; for (const d of run.dormant) { d.awake = 0; const o = GK.gloomMachine(d.kind, { dormant: true }); dormM.push(o); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.traverse((m) => { if (m.isMesh && !m.material.transparent) m.castShadow = true; }); dormG.add(o); }
+  dormM = []; for (const d of run.dormant) { d.awake = 0; const o = GK.gloomMachine(d.kind, { dormant: true }); dormM.push(o); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.traverse((m) => { if (m.isMesh && !m.material.transparent) m.castShadow = true; }); dormG.add(o);
+    // LAG FIX Nov 19 (owner 11:27): its awake and its spent (powered-down) machines are built now, under the ride card, and kept out of the scene until it wakes or
+    // powers down (they were built at that moment); dropped with the run (dropSleeperPre)
+    d.pre = { a: sleeperBuild(d, true), s: sleeperBuild(d, false) }; }
   renderer.shadowMap.needsUpdate = true;
 }
 function tickDormant(night) { if (!dormG) return; dormG.visible = !night; dormG.matrixWorldAutoUpdate = !night; if (night) return; const t = performance.now() / 1000, f2 = cam.far * cam.far; for (const o of dormG.children) if (!o.userData.awake && o.position.distanceToSquared(SLV.copy(cam.position).sub(world.g.position)) < f2) o.userData.anim(t, null); } // (owner 10:50) only the sleepers within the far plane are animated
 const SLV = new THREE.Vector3();
 // light sleepers: by day a dormant machine wakes if you pass close with a heavy pack, lurches after you, can hit once, then powers down in the sun
-function sleeperMesh(i, awake) { const d = run.dormant[i], old = dormM[i]; if (old) { dormG.remove(old); drop(old); } const o = GK.gloomMachine(d.kind, { dormant: !awake }); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.userData.awake = !!awake; o.traverse((q) => { if (q.isMesh && !q.material.transparent) q.castShadow = true; }); dormG.add(o); dormM[i] = o; renderer.shadowMap.needsUpdate = true; }
+function sleeperBuild(d, awake) { const o = GK.gloomMachine(d.kind, { dormant: !awake }); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.userData.awake = !!awake; o.traverse((q) => { if (q.isMesh && !q.material.transparent) q.castShadow = true; }); return o; }
+function dropSleeperPre() { if (run && run.dormant) for (const d of run.dormant) if (d.pre) { for (const k of ['a', 's']) if (d.pre[k] && !d.pre[k].parent) drop(d.pre[k]); d.pre = null; } }
+function sleeperMesh(i, awake) { const d = run.dormant[i], old = dormM[i]; if (old) { dormG.remove(old); drop(old); } const k = awake ? 'a' : 's', o = d.pre && d.pre[k] ? d.pre[k] : sleeperBuild(d, awake); if (d.pre) d.pre[k] = null; dormG.add(o); o.updateMatrixWorld(true); dormM[i] = o; renderer.shadowMap.needsUpdate = true; }
 function tickSleepers(dt) { const S = CONFIG.sleepers; if (!S.on || !run || sim || !dormG || state !== 'play') return; const heavy = RUN.speedMult(run) <= S.pace, t = performance.now() / 1000;
   hurtT = Math.max(0, hurtT - dt); sty($('hurt'), 'opacity', String(hurtT * 2.5));
   run.dormant.forEach((d, i) => { const dx = run.px - d.x, dz = run.pz - d.z, dd = Math.hypot(dx, dz);
@@ -141,7 +148,7 @@ function wakeDormant(i, how) { const D = CONFIG.dormant, d = run && run.dormant 
 function tickStir(dt) { if (!run || !run.dormant || !dormG) return; const D = CONFIG.dormant, t = performance.now() / 1000; run.dormant.forEach((d, i) => { if (!(d.stir > 0)) return; d.stir = Math.max(0, d.stir - dt); const o = dormM[i]; if (!o) return; const k = d.stir > 0 ? 1 : 0, w = t * D.shakeHz * Math.PI * 2;
   o.rotation.y = d.ry + k * D.shake * Math.sin(w); o.rotation.z = k * D.shake * 0.5 * Math.sin(w * 1.3); for (const m of o.userData.scr || []) m.color.setScalar(k && Math.sin(t * D.flick * Math.PI * 2) > 0 ? D.lit : 0.03); }); }
 function aimedDormant(cs, reach) { if (!run || !run.dormant) return -1; const fx = -Math.sin(yaw), fz = -Math.cos(yaw); let best = cs, bi = -1; run.dormant.forEach((d, i) => { const dx = d.x - run.px, dz = d.z - run.pz, dd = Math.hypot(dx, dz); if (dd < 0.3 || dd > reach) return; const c = (dx * fx + dz * fz) / dd; if (c > best) { best = c; bi = i; } }); return bi; }
-function dropWorld() { nightCull.reset(); dropWarm(); if (dormG) { if (world) world.g.remove(dormG); drop(dormG); dormG = null; } if (world) { scene.remove(world.g); world.dispose(); world = null; } }
+function dropWorld() { nightCull.reset(); dropWarm(); dropSleeperPre(); if (dormG) { if (world) world.g.remove(dormG); drop(dormG); dormG = null; } if (world) { scene.remove(world.g); world.dispose(); world = null; } }
 function buildGrounding() { depthMats(); const D = CONFIG.depth, g = new THREE.Group(), put = (x, z, w, l, ry) => { const s = new THREE.Mesh(flatGeo, shadeMat); s.scale.set(w, 1, l); s.position.set(x, 0.035, z); s.rotation.y = ry; s.renderOrder = 1; s.userData.blob = true; g.add(s); };
   for (const h of run.houses) { const th = -Math.atan2(h.sn, h.cs), R = h.H + D.wallOut; for (const [lx, lz, q] of [[0, R, 0], [0, -R, 0], [R, 0, Math.PI / 2], [-R, 0, Math.PI / 2]]) put(h.x + lx * h.cs - lz * h.sn, h.z + lx * h.sn + lz * h.cs, 2 * h.H * D.wallLen, D.wallW, th + q); }
   for (const cr of run.cars || []) put(cr.x, cr.z, D.car[0], D.car[1], cr.yaw);
@@ -491,20 +498,22 @@ function introFrameOld(dt) { const I = intro, C = CONFIG.intro; I.t += dt; const
       else { const k = sm((u - h) / h), x = 7 - 3.5 * k, z = 14 - 4.5 * k; cam.position.set(x, 1.7, z); cam.rotation.set(0.05, Math.atan2(x, z) - 0.1, 0, 'YXZ'); fade = Math.max(1 - (u - h) / (C.fade * 0.6), 1 - (C.base - u) / C.fade, 0); } }
     else { const w = u - C.base, k = sm((w - 1.6) / 3.2), sp = B.scoutPos(save), ex = -0.6, ez = -9.3, ty = Math.atan2(-(sp.x - ex), -(sp.z - ez)); cam.position.set(-2.3 + 1.7 * k, 0.95 + 0.65 * k, -9.6 + 0.3 * k); cam.rotation.set(1.15 * (1 - k), ty * k + (1 - k) * 0.4, 0.5 * (1 - k), 'YXZ'); fade = w < 0.5 ? 1 : w < 1.3 ? 1 - (w - 0.5) / 0.8 : w < 1.7 ? (w - 1.3) / 0.4 * 0.85 : w < 2.3 ? 0.85 * (1 - (w - 1.7) / 0.6) : 0; if (w >= C.wake) { finishIntroOld(); return; } }
     bview.update(dt, cam.position.x, cam.position.z, cam.position.y); }
-  $('cineFade').style.opacity = Math.max(0, Math.min(1, fade)); musicTick(dt); sky.follow(cam, 0, dt); draw(); }
+  sty($('cineFade'), 'opacity', String(Math.max(0, Math.min(1, fade)))); musicTick(dt); sky.follow(cam, 0, dt); draw(); }
 // ---- opening cutscene (owner Nov 17 16:25): the game's own street, machines, base and light (every time, path and caption in CONFIG.opening)
 // 1 grid: the street at night; house lights and street lamps die one by one; a dormant Gloom's screen wakes and it turns to the last lit window.
 // 2 turning: inside that house in the dark, your ring and a device glowing; machines walk past the window, screens lit. 3 dawn: the camera rises over the base at sunrise.
 // 4 wake: your own bed, eyelids opening, Marla at the door. Any key, click or tap, or Skip, ends it; it always ends exactly as before: you stand in the base with Marla.
 const OP_SM = (v) => { v = Math.max(0, Math.min(1, v)); return v * v * (3 - 2 * v); };
 // camera keys [t, x, y, z, lx, ly, lz] at time t -> [x, y, z, lx, ly, lz]
+// (owner 11:40) the film's per-frame maths write into kept objects: one result array per key list (OPO), scratch vectors for opAt, scratch colours for opDawn
+const OPO = new WeakMap(), OPV = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], OPC = [new THREE.Color(), new THREE.Color()];
 function opPath(keys, t) {
   let i = 0; while (i < keys.length - 2 && t > keys[i + 1][0]) i++;
   const a = keys[i], b = keys[Math.min(i + 1, keys.length - 1)], k = b[0] > a[0] ? OP_SM((t - a[0]) / (b[0] - a[0])) : 1;
-  return a.slice(1).map((v, j) => v + (b[j + 1] - v) * k);
+  let o = OPO.get(keys); if (!o) OPO.set(keys, o = new Array(a.length - 1)); for (let j = 1; j < a.length; j++) o[j - 1] = a[j] + (b[j] - a[j]) * k; return o;
 }
 // the target window's frame: x along the wall, y up, z out from the wall -> world
-function opAt(I, x, y, z) { return new THREE.Vector3(I.W.x + I.u.x * x + I.n.x * z, y, I.W.z + I.u.z * x + I.n.z * z); }
+function opAt(I, x, y, z, out) { return (out || new THREE.Vector3()).set(I.W.x + I.u.x * x + I.n.x * z, y, I.W.z + I.u.z * x + I.n.z * z); }
 // pick the target window: ground floor, facing the street, nothing standing where the camera crouches inside; the house nearest the street's middle wins
 function opTarget() {
   let best = null; world.g.updateMatrixWorld(true);
@@ -554,7 +563,7 @@ function opMachine(kind, dormant) { const o = GK.gloomMachine(kind, { dormant })
   // an awake machine gets a soft glow on its screen (phones have no screen lights; CONFIG.opening.grid.screenGlow)
   if (!dormant && o.userData.lamp) { const G = CONFIG.opening.grid.screenGlow, s = opGlow(o.userData.lampColor, G[0], G[1]); s.position.copy(o.userData.lamp); o.add(s); }
   return o; }
-function startIntro() { gloomPreload(FILM_KINDS);
+function startIntro() { gloomPreload(FILM_KINDS); bview.preChars();
   if (!CONFIG.opening.on) { startIntroOld(); return; }
   if (!save) return; clearScene(); dropWorld(); bview.dispose(); sim = null; ui = null; paused = false;
   if (save.day === 1 && !save.nights) save.scoutSpot = 4; // she is at your door when you wake
@@ -566,7 +575,13 @@ function startIntro() { gloomPreload(FILM_KINDS);
   Object.assign(I, opTarget()); opWindows(I); opLamps(I);
   const M = G.machine, mp = opAt(I, M[1], 0, M[2]); I.face = Math.atan2(-I.n.x, -I.n.z); I.mach = { kind: M[0], x: mp.x, z: mp.z, o: opMachine(M[0], true), awake: false };
   I.mach.o.position.copy(mp); I.mach.o.rotation.y = I.face + M[3]; I.grp.add(I.mach.o);
+  // (owner 11:40) the awake machine is built now, hidden at the same spot (its shaders built in the background), and shown at the wake, not built at 10.3 s
+  { const o = opMachine(M[0], false); o.position.copy(mp); o.rotation.y = I.face + M[3]; I.mach.pre = o; I.grp.add(o); if (renderer.compileAsync) renderer.compileAsync(o, cam, scene).catch(() => {}); o.visible = false; }
   const T2 = C.turning, dp = opAt(I, T2.device[1], 0, T2.device[2]); I.dev = deviceMesh(T2.device[0]); I.dev.position.copy(dp); I.dev.rotation.y = I.face + T2.device[3]; I.dev.visible = false; I.grp.add(I.dev);
+  // (owner 11:40) the machines that pass the window are built now, hidden (they were built when the shot moved inside); their shaders built in the background
+  for (const w of T2.walkers) { if (QUALITY !== 'high' && !w[8]) continue; const o = opMachine(w[0], false); I.grp.add(o); if (renderer.compileAsync) renderer.compileAsync(o, cam, scene).catch(() => {}); o.visible = false; I.walkers.push({ w, o }); }
+  // (owner 11:40) the night's machine lights are in the scene (dark) from the start of the film, so the light count does not change mid-film (which rebuilt the shaders)
+  for (const l of glights) { l.visible = true; l.intensity = 0; }
   if (C[QUALITY === 'high' ? 'high' : 'low'].lights) { I.devL = new THREE.PointLight(T2.light[0], 0, T2.light[2], 2); I.devL.position.set(dp.x, 0.6, dp.z); I.grp.add(I.devL); }
   { const R = G.rim, rp = opAt(I, M[1] + R[3], R[4], M[2] + R[5]); I.rim = new THREE.PointLight(R[0], 0, R[2], 2); I.rim.position.copy(rp); I.grp.add(I.rim); }
   I.fov0 = cam.fov; renderer.shadowMap.needsUpdate = true;
@@ -574,42 +589,44 @@ function startIntro() { gloomPreload(FILM_KINDS);
 // the eyelids (part 4): closed share 0..1 (made once, inside #cine)
 function opLids(closed) {
   let a = $('cineLidT'); if (!a) { for (const id of ['cineLidT', 'cineLidB']) { const d = document.createElement('div'); d.id = id; d.style.cssText = 'position:absolute;left:-5%;right:-5%;height:58%;pointer-events:none;background:#000;' + (id === 'cineLidT' ? 'top:0;border-radius:0 0 50% 50%/0 0 30% 30%;box-shadow:0 10px 40px 20px #000' : 'bottom:0;border-radius:50% 50% 0 0/30% 30% 0 0;box-shadow:0 -10px 40px 20px #000'); $('cine').insertBefore(d, $('cineCap')); } a = $('cineLidT'); }
-  const k = Math.max(0, Math.min(1, closed)), b = $('cineLidB'); a.style.transform = 'translateY(' + (-115 * (1 - k)) + '%)'; b.style.transform = 'translateY(' + (115 * (1 - k)) + '%)';
+  const k = Math.max(0, Math.min(1, closed)), b = $('cineLidB'); sty(a, 'transform', 'translateY(' + (-115 * (1 - k)) + '%)'); sty(b, 'transform', 'translateY(' + (115 * (1 - k)) + '%)'); // (owner 11:40) written only on change
 }
 // screen light on the nearest awake machines (the same pool of lights the night uses)
-function opScreens(list) { const use = list.filter((o) => o && o.userData.lamp && o.visible).map((o) => [o.position.distanceToSquared(cam.position), o]).sort((a, b) => a[0] - b[0]);
-  glights.forEach((l, i) => { l.visible = true; const q = use[i]; if (!q) { l.intensity = 0; return; } const m = q[1]; gl_v.copy(m.userData.lamp); if (!m.matrixWorldAutoUpdate) m.updateWorldMatrix(false, false); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
+// (owner 11:40) without lists made each frame: OPS (kept) holds the lit machines, nearest first
+const OPS = [], opsCmp = (a, b) => a.userData.opD2 - b.userData.opD2;
+function opScreens(list) { OPS.length = 0; for (const o of list) if (o && o.userData.lamp && o.visible) { o.userData.opD2 = o.position.distanceToSquared(cam.position); OPS.push(o); } OPS.sort(opsCmp);
+  glights.forEach((l, i) => { l.visible = true; const m = OPS[i]; if (!m) { l.intensity = 0; return; } gl_v.copy(m.userData.lamp); if (!m.matrixWorldAutoUpdate) m.updateWorldMatrix(false, false); m.localToWorld(gl_v); l.position.copy(gl_v); l.color.set(m.userData.lampColor); l.intensity = CONFIG.gloomLook.lightPower * (m.userData.glow === undefined ? 1 : m.userData.glow); }); }
 // part 1: lights die, the machine wakes and turns
 function opGrid(I, t) {
   const C = CONFIG.opening, G = C.grid, c = opPath(G.cam, t), tt = performance.now() / 1000;
-  { const p = opAt(I, c[0], 0, c[2]); cam.position.set(p.x, c[1], p.z); cam.lookAt(opAt(I, c[3], c[4], c[5])); }
+  { const p = opAt(I, c[0], 0, c[2], OPV[0]); cam.position.set(p.x, c[1], p.z); cam.lookAt(opAt(I, c[3], c[4], c[5], OPV[1])); }
   for (const w of I.wins) { const on = opFlick(t, w.off, G.winOff[2]); w.pl.material.color.setHex(G.warm).multiplyScalar(on ? 1 : 0.02); w.gl.material.opacity = 0.55 * on; if (w.dev) w.dev.material.opacity = t > w.off + 0.4 ? 0.5 + 0.12 * Math.sin(t * 2.1) : 0; }
   for (const l of I.lamps) { const on = opFlick(t, l.off, G.lampOff[2]); l.bulb.material.color.setHex(G.lampColor).multiplyScalar(on ? 1 : 0.05); l.gl.material.opacity = 0.75 * on; if (l.light) l.light.intensity = G.lampLight[0] * on; }
   const m = I.mach;
-  if (!m.awake && t >= G.wakeAt + G.flick) { const o = opMachine(m.kind, false); o.position.copy(m.o.position); o.rotation.y = m.o.rotation.y; I.grp.remove(m.o); drop(m.o); m.o = o; I.grp.add(o); m.awake = true; }
+  if (!m.awake && t >= G.wakeAt + G.flick) { const o = m.pre || opMachine(m.kind, false); m.pre = null; o.position.copy(m.o.position); o.rotation.y = m.o.rotation.y; o.visible = true; I.grp.remove(m.o); drop(m.o); m.o = o; if (o.parent !== I.grp) I.grp.add(o); m.awake = true; }
   const [t0, dur, steps] = G.turn, k = Math.max(0, Math.min(1, (t - t0) / dur)), st = Math.floor(k * steps), fr = k * steps - st, kk = Math.min(1, (st + OP_SM(Math.min(1, fr * 4))) / steps);
   m.o.rotation.y = I.face + G.machine[3] * (1 - kk); if (I.rim) I.rim.intensity = t >= G.wakeAt ? G.rim[1] : 0;
   if (m.awake) m.o.userData.anim(tt, { x: m.o.position.x, z: m.o.position.z }); else m.o.userData.anim(tt, null);
   // the dormant screen flickers awake (after its own idle pose, which keeps it dark)
   if (!m.awake && t >= G.wakeAt) { if (!m.scr) { m.scr = []; m.o.traverse((q) => { if (q.isMesh && q.material && q.material.isMeshBasicMaterial && q.material.map && q.material.color.r < 0.1) m.scr.push(q.material); }); } for (const s of m.scr) s.color.setScalar(Math.sin(tt * 31) > 0.2 ? 0.6 : 0.03); }
-  opScreens([m.awake ? m.o : null]);
+  (I.scr1 || (I.scr1 = [null]))[0] = m.awake ? m.o : null; opScreens(I.scr1);
 }
 // part 2: inside the target house; the machines pass the window
 function opTurning(I, t, dt) {
   const C = CONFIG.opening, T = C.turning, hi = QUALITY === 'high', tt = performance.now() / 1000;
   if (!I.inside) { I.inside = true; for (const w of I.wins) { w.pl.visible = false; w.gl.visible = false; if (w.dev) w.dev.visible = false; } for (const l of I.lamps) { l.g.visible = false; if (l.light) l.light.intensity = 0; }
     I.dev.visible = true; if (I.devL) I.devL.intensity = T.light[1];
-    { const m = I.mach; if (!m.awake) { const o = opMachine(m.kind, false); o.position.copy(m.o.position); I.grp.remove(m.o); drop(m.o); m.o = o; I.grp.add(o); m.awake = true; } m.o.rotation.y = I.face; }
-    for (const w of T.walkers) { if (!hi && !w[8]) continue; const o = opMachine(w[0], false); o.visible = false; I.grp.add(o); I.walkers.push({ w, o }); } }
-  const c = opPath(T.cam, t), sw = T.sway, p = opAt(I, c[0] + sw[0] * Math.sin(t * sw[1] * 6.28), c[1] + sw[0] * 0.6 * Math.sin(t * sw[1] * 4.1 + 1), c[2]);
-  cam.position.copy(p); cam.lookAt(opAt(I, c[3], c[4], c[5]));
+    { const m = I.mach; if (!m.awake) { const o = m.pre || opMachine(m.kind, false); m.pre = null; o.visible = true; o.position.copy(m.o.position); I.grp.remove(m.o); drop(m.o); m.o = o; I.grp.add(o); m.awake = true; } m.o.rotation.y = I.face; }
+    if (!I.walkers.length) for (const w of T.walkers) { if (!hi && !w[8]) continue; const o = opMachine(w[0], false); o.visible = false; I.grp.add(o); I.walkers.push({ w, o }); } }
+  const c = opPath(T.cam, t), sw = T.sway, p = opAt(I, c[0] + sw[0] * Math.sin(t * sw[1] * 6.28), c[1] + sw[0] * 0.6 * Math.sin(t * sw[1] * 4.1 + 1), c[2], OPV[0]);
+  cam.position.copy(p); cam.lookAt(opAt(I, c[3], c[4], c[5], OPV[1]));
   for (const q of I.walkers) { const [, t0, sp, z, x0, x1, stopX, stopS] = q.w, dir = Math.sign(x1 - x0), run0 = t - t0; let x = x0 + dir * sp * Math.max(0, run0), still = false;
     if (stopX !== null && dir * (x - stopX) > 0) { const reach = Math.abs(stopX - x0) / sp; x = run0 < reach + stopS ? stopX : x0 + dir * sp * (run0 - stopS); still = run0 >= reach && run0 < reach + stopS; }
-    q.o.visible = run0 > 0 && dir * (x1 - x) > 0; if (!q.o.visible) continue; const wp = opAt(I, x, 0, z); q.o.position.copy(wp);
+    q.o.visible = run0 > 0 && dir * (x1 - x) > 0; if (!q.o.visible) continue; const wp = opAt(I, x, 0, z, OPV[2]); q.o.position.copy(wp);
     q.o.rotation.y = still ? I.face : Math.atan2(I.u.x * dir, I.u.z * dir); q.o.userData.anim(tt, { x: wp.x, z: wp.z }); }
   const m = I.mach; m.o.userData.anim(tt, { x: m.o.position.x, z: m.o.position.z });
   if (I.dev.userData.tick) { try { I.dev.userData.tick(tt, { kind: C.turning.device[0], hp: CONFIG.devices[C.turning.device[0]].hp, x: I.dev.position.x, z: I.dev.position.z, floor: 0 }); } catch (e) { I.dev.userData.tick = null; } }
-  opScreens([m.o, ...I.walkers.map((q) => q.o)]);
+  if (!I.scr || I.scr[0] !== m.o) I.scr = [m.o, ...I.walkers.map((q) => q.o)]; opScreens(I.scr);
 }
 // leave the street: the base at dawn is built while the screen is black
 function introToBase() {
@@ -624,7 +641,7 @@ function opStandIn(o) { const q = o.isMesh && o.geometry && o.geometry.type === 
 function opStands(I) { let n = 0; for (const g of I.stands || []) if (g.parent) { g.visible = false; n++; } return n; }
 // part 3: sunrise light over the base (after bview.update, which sets the day sun)
 function opDawn(I, t) {
-  const D = CONFIG.opening.dawn, c = opPath(D.cam, t), k = OP_SM((t - D.cam[0][0]) / (D.cam[D.cam.length - 1][0] - D.cam[0][0])), mix = (a, b) => new THREE.Color(a).lerp(new THREE.Color(b), k);
+  const D = CONFIG.opening.dawn, c = opPath(D.cam, t), k = OP_SM((t - D.cam[0][0]) / (D.cam[D.cam.length - 1][0] - D.cam[0][0])), mix = (a, b) => OPC[0].set(a).lerp(OPC[1].set(b), k);
   cam.position.set(c[0], c[1], c[2]); cam.lookAt(c[3], c[4], c[5]);
   if (I.sun) { I.sun.color.copy(mix(D.sun[0], D.sun[1])); I.sun.intensity *= D.sun[2] + (D.sun[3] - D.sun[2]) * k; }
   hemi.intensity = CONFIG.baseLight.power * (D.hemi[0] + (D.hemi[1] - D.hemi[0]) * k); hemi.color.copy(mix(D.hemiCol[0], D.hemiCol[1])); scene.background.copy(mix(D.sky[0], D.sky[1])); scene.fog.color.copy(mix(D.fog[0], D.fog[1])); scene.fog.near = D.fogNear; scene.fog.far = D.fogFar;
@@ -639,7 +656,7 @@ function opWake(I, w) {
   const mg = marla.root.parent; if (mg && mg !== scene && mg !== bview.group) { mg.rotation.y = Math.atan2(cam.position.x - mg.position.x, cam.position.z - mg.position.z); for (const c of mg.children) if (c !== marla.root && c.visible) { c.visible = false; I.hide.push(c); } }
   if (!I.pot) { I.pot = true; const H = K.hide, v = new THREE.Vector3(); bview.group.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const r = o.geometry.boundingSphere.radius * o.getWorldScale(v).x; if (r > H[2]) return; o.getWorldPosition(v); if (Math.hypot(v.x - H[0], v.z - H[1]) < H[2] && v.y < 1.6) { o.visible = false; I.hide.push(o); } }); }
   let lid = 0; const L = K.lids; for (let i = 0; i < L.length - 1; i++) if (w >= L[i][0] && w <= L[i + 1][0]) lid = L[i][1] + (L[i + 1][1] - L[i][1]) * OP_SM((w - L[i][0]) / (L[i + 1][0] - L[i][0])); if (w > L[L.length - 1][0]) lid = L[L.length - 1][1];
-  opLids(lid); cvs.style.filter = QUALITY === 'high' && w < K.blur[1] ? 'blur(' + (K.blur[0] * (1 - w / K.blur[1])).toFixed(2) + 'px)' : '';
+  opLids(lid); sty(cvs, 'filter', QUALITY === 'high' && w < K.blur[1] ? 'blur(' + (K.blur[0] * (1 - w / K.blur[1])).toFixed(2) + 'px)' : '');
 }
 function finishIntro() {
   if (!intro) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } if (intro.part === 'town') introToBase(); const I0 = intro; intro = null; opLids(0); cvs.style.filter = '';
@@ -658,13 +675,13 @@ function introFrame(dt) {
   // the wake waits (eyes shut) for the people's models, at most CONFIG.opening.wake.waitModels s; stand-ins left are hidden (opStands)
   if (part === 3 && t - P[3] < 0.5 && opStands(I) > 0 && (I.waitT = (I.waitT || 0) + dt) < C.wake.waitModels) { I.t = P[3]; }
   if (part === 0) opGrid(I, t); else if (part === 1) opTurning(I, t, dt);
-  if (part <= 1) { sky.follow(cam, 0, dt); $('cineFade').style.opacity = Math.max(0, Math.min(1, fade)); musicTick(dt); draw(); if (part === 1 && C.turning.hands > 0) { hands.update(dt, false, C.turning.hands, true); hands.render(renderer, cam.aspect); } return; }
+  if (part <= 1) { sky.follow(cam, 0, dt); sty($('cineFade'), 'opacity', String(Math.max(0, Math.min(1, fade)))); musicTick(dt); draw(); if (part === 1 && C.turning.hands > 0) { hands.update(dt, false, C.turning.hands, true); hands.render(renderer, cam.aspect); } return; }
   // the people decide inside the motion's slices on where the camera is at each moment of the frame (dawn path, then the bed at the wake), the same at any frame rate
   const filmAt = (a) => { const tt = t - dt + a * dt; if (tt >= P[3]) return [-0.6, -9.3]; const c = opPath(CONFIG.opening.dawn.cam, Math.max(P[2], tt)); return [c[0], c[2]]; };
   if (part === 2) { bview.update(dt, cam.position.x, cam.position.z, cam.position.y, filmAt); opDawn(I, t); opLids(0); for (const o of I.hide || []) o.visible = false; opStands(I); }
   else { if (!I.home) { I.home = true; hemi.color.setHex(CONFIG.baseLight.sky); scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); hemi.intensity = CONFIG.baseLight.power; if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure; }
     bview.update(dt, -0.6, -9.3, 1.6, filmAt); opWake(I, t - P[3]); for (const o of I.hide) o.visible = false; opStands(I); }
-  $('cineFade').style.opacity = Math.max(0, Math.min(1, part === 3 ? Math.max(0, 1 - (t - P[3]) / 0.4) : fade)); musicTick(dt); draw();
+  sty($('cineFade'), 'opacity', String(Math.max(0, Math.min(1, part === 3 ? Math.max(0, 1 - (t - P[3]) / 0.4) : fade)))); musicTick(dt); draw();
 }
 // ---- the panel-tender's job (owner Nov 17 16:56; texts in src/lore.js): Marla's one line the first time you talk to her, and the one-time "Your job" card after the opening
 function loreScoutLine() { const j = LORE.jobLine(save); if (j) { persist(); return j; } return B.scoutLine(save); }
@@ -786,7 +803,7 @@ function start(viaBase) {
 }
 // ---- base (dawn): explorable, personnel, quests, the Scout, the hidden cat
 const marla = createMarla(CONFIG);
-const bview = createBaseView(scene, CONFIG, marla, (id) => (MODELS[id] ? createPerson(CONFIG, id) : null));
+const bview = createBaseView(scene, CONFIG, marla, (id) => (MODELS[id] ? createPerson(CONFIG, id) : null)); bview.setView(cam);
 let save = null, carry = null, ui = null, bp = { x: 0, z: 4 }, curTarget = null, chimeT = 0, storage = null;
 try { storage = window.localStorage; storage.getItem('x'); } catch (e) { storage = null; }
 // a first visit (no save yet) plays the opening film on Enter: its Gloom models start loading now, behind the title (desktop only; src/gloomglb.js)
@@ -963,7 +980,7 @@ function tickCentre() { const P = CONFIG.ui.centre, q = H2.topSaid(), cs = $('cs
 function tickCentre2(q) { const P = CONFIG.ui.centre, cs = $('csay'); let win = q ? 'say' : null, wp = q ? q.prio : -1e9;
   for (const k in CENTRE_EL) { const el = $(CENTRE_EL[k]), has = k === 'mlook' ? el.style.display === 'block' && !document.body.classList.contains('nohints') : !!el.textContent; if (has && P[k] > wp) { wp = P[k]; win = k; } }
   for (const k in CENTRE_EL) { const el = $(CENTRE_EL[k]), hide = win !== k; if (el.classList.contains('hq') !== hide) el.classList.toggle('hq', hide); }
-  const t = win === 'say' && q.kind !== 'card' ? q.text : ''; if (cs.textContent !== t) cs.textContent = t; cs.dataset.k = win === 'say' ? q.kind : ''; }
+  const t = win === 'say' && q.kind !== 'card' ? q.text : ''; if (cs.textContent !== t) cs.textContent = t; { const nk = win === 'say' ? q.kind : ''; if (cs.dataset.k !== nk) cs.dataset.k = nk; } }
 let aimT = 0; function tickAim(dt) { aimT -= dt; if (aimT > 0) return; aimT = 0.2; const el = $('aim'); let tx = '', dorm = ''; if (!sim && run && state === 'play' && run.dormant) { const fx = -Math.sin(yaw), fz = -Math.cos(yaw); let best = CONFIG.gloomLook.aimCos; for (const d of run.dormant) { const dx = d.x - run.px, dz = d.z - run.pz, dd = Math.hypot(dx, dz); if (dd < 0.3 || dd > CONFIG.gloomLook.aimReach) continue; const cs = (dx * fx + dz * fz) / dd; if (cs > best) { best = cs; const k = CONFIG.gloom.kinds[d.kind]; dorm = FINE && k && !d.awake ? k.name : ''; tx = k ? k.name + (d.awake ? ' (awake!): ' : d.spent ? ' (spent, asleep until dark): ' : ' (asleep until dark): ') + k.text : ''; } } } if (sim && !sim.done && sim.phase === 'night') { const p = sim.player, fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw); let best = CONFIG.gloomLook.aimCos; for (const g of sim.gloom) { const dx = g.x - p.x, dz = g.z - p.z, d = Math.hypot(dx, dz); if (d < 0.3 || d > CONFIG.gloomLook.aimReach || !sim.canSee(g)) continue; const c = (dx * fx + dz * fz) / d; if (c > best) { best = c; const k = CONFIG.gloom.kinds[gloomKind(g)]; tx = k ? k.name + ': ' + k.text : ''; } } } setCross(tx || dorm ? 'gloom' : state === 'base' && curTarget && !ui ? 'use' : ''); if (dorm) { const h = '<b>' + dorm + ' \u00b7 dormant \u00b7 power saver</b><span>Leave it. Waking it costs you: more of them tonight.</span>'; if (el.dataset.h !== h) { el.innerHTML = h; el.dataset.h = h; } el.classList.add('dorm'); return; } if (el.dataset.h) { el.dataset.h = ''; el.textContent = ''; } el.classList.remove('dorm'); if (el.textContent !== tx) el.textContent = tx; }
 // red arc round the crosshair toward the nearest machine that is off screen (desktop, night; CONFIG.hud2.arc)
 function tickArc() { const el = $('arc'), A = CONFIG.hud2.arc; let on = false; if (FINE && A.on && sim && sim.phase === 'night' && state === 'play' && !paused) { const P = sim.player, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), rx = Math.cos(P.yaw), rz = -Math.sin(P.yaw); let best = 1e9, ang = 0;
@@ -1024,7 +1041,7 @@ const STY = new WeakMap();
 function sty(el, prop, v) { if (!el) return; let m = STY.get(el); if (!m) { m = {}; STY.set(el, m); } const q = m[prop]; if (q && q.v === v && el.style[prop] === q.n) return; el.style[prop] = v; m[prop] = { v, n: el.style[prop] }; }
 // device counts by kind and by group ('g:' + group), counted once a frame for the device buttons (was a filter per button per frame)
 const DEVN = {};
-function setText(id, t) { const e = $(id); if (!e) return; const shown = FINE && id === 'bprompt' && t.startsWith('USE:') ? 'E:' + t.slice(4) : t; if (e.textContent !== shown) e.textContent = t; }
+function setText(id, t) { const e = $(id); if (!e) return; const shown = FINE && id === 'bprompt' && t.startsWith('USE:') ? 'E:' + t.slice(4) : t; if (e.textContent !== shown) e.textContent = shown; } // (owner 11:40) writes what it compares (it wrote 'USE:' and draw() turned it into 'E:': two writes a frame)
 // window.__fakeLock: TEST ONLY (tools/mousecheck.cjs). The headless test browser runs out of memory while it really holds the pointer, so tests set it to false before loading;
 // the game then pretends to hold the pointer instead of asking the browser, and counts the requests it would have made in window.__lockAsks. Players never have it set.
 // MEMFIX (Nov 18): a browser driven by a test tool (navigator.webdriver is true) gets the same pretend hold by itself, so a test that only clicks (the fresh-player driver)
@@ -1080,7 +1097,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) { for
 // upright or sideways is measured from the real visible size, rechecked on every resize and twice a second (player on an iPhone 16 Pro Max, Safari, on itch.io: the phone turned
 // but the rotate screen stayed: inside itch's frame the CSS orientation test did not follow the turn). iPhones cannot lock the screen sideways, so that button is hidden there.
 const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); document.body.classList.toggle('ios', IOS);
-function checkTall() { const vv = window.visualViewport, w = vv ? vv.width : innerWidth, h = vv ? vv.height : innerHeight, coarse = matchMedia('(pointer: coarse)').matches, tall = coarse && h > w * CONFIG.rotate.ratio, was = document.body.classList.contains('tall');
+function checkTall() { const vv = window.visualViewport, w = vv ? vv.width : innerWidth, h = vv ? vv.height : innerHeight, coarse = COARSE.now, tall = coarse && h > w * CONFIG.rotate.ratio, was = document.body.classList.contains('tall');
   document.body.classList.toggle('tall', tall); if (tall && !was && !document.body.classList.contains('portraitOk')) setPause(true); }
 addEventListener('resize', checkTall); addEventListener('orientationchange', () => { checkTall(); setTimeout(checkTall, 300); setTimeout(checkTall, 1000); }); if (window.visualViewport) visualViewport.addEventListener('resize', checkTall); setInterval(checkTall, CONFIG.rotate.pollMs); checkTall();
 let chargeHeld = false, chargeT = 0;
@@ -1115,7 +1132,7 @@ function drillDid(id) { if (!drill || !drill.held) return false; const q = drill
 function drillEnd(skip) { if (!drill) return; if (skip) { const st = drillStore(); st.skip = true; drillKeep(st); } if (sim && drill.held) { sim.spawns.push(...drill.held); sim.spawns.sort((a, b) => a.t - b.t); } drill = null; H2.say('marla', skip ? CONFIG.drill.skipped : CONFIG.drill.done, CONFIG.ui.centre.marla, 4); }
 // the key chip (desktop) or pulsing button (phone) for the current step, plus the Skip button; also the Q chip while day 1 asks for the first collector
 function tickDrillUi() { if (drill && (!sim || sim.phase !== 'night' || (state !== 'play' && state !== 'end'))) { drill = null; H2.unsay('marla'); } const q = drill && drill.held ? drill.todo[drill.i] : null, solar = !q && sim && state === 'play' && mustSolar(), chip = q ? q.chip : solar ? 'Q' : '', btn = q ? (q.btn === 'sel' ? 'b' + (selSlot + 1) : q.btn) : solar ? 'b0' : wakeUse() ? 'bFire' : '';
-  const c = $('dchip'); if (c.textContent !== chip) c.textContent = chip; if (chip && FINE) { const mr = $('marla').getBoundingClientRect(); c.style.top = (mr.height ? Math.round(mr.bottom + 6) : 112) + 'px'; c.style.right = (mr.width ? Math.round(innerWidth - mr.right) : 22) + 'px'; } for (const id of ['bFire', 'bEat', 'bSwitch', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5']) { const on = !FINE && id === btn; if ($(id).classList.contains('pulse') !== on) $(id).classList.toggle('pulse', on); }
+  const c = $('dchip'); if (c.textContent !== chip) c.textContent = chip; if (chip && FINE) { const mr = $('marla').getBoundingClientRect(); sty(c, 'top', (mr.height ? Math.round(mr.bottom + 6) : 112) + 'px'); sty(c, 'right', (mr.width ? Math.round(innerWidth - mr.right) : 22) + 'px'); } for (const id of ['bFire', 'bEat', 'bSwitch', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5']) { const on = !FINE && id === btn; if ($(id).classList.contains('pulse') !== on) $(id).classList.toggle('pulse', on); }
   document.body.classList.toggle('drill', !!drill); drillSub(q, c, chip); drillMark(q); drillTab(); }
 // ---- FRESH-PLAYER FIXES (owner Nov 18, desktop player test; CONFIG.fresh and CONFIG.drill)
 // the drill machine's opening: on your floor, its start point (CONFIG.drill.spawnOut m outside) seen through an opening, within CONFIG.drill.viewDeg of your view (the nearest such one); else the one closest to your view
@@ -1125,7 +1142,7 @@ function drillOpening() { const D = CONFIG.drill, P = sim.player, fx = -Math.sin
   return best || { bp: 0, x: sim.breaches[0].outX, z: sim.breaches[0].outZ, ang: 180, score: 0 }; }
 // the plain second line under Marla's drill order (desktop names the key, a phone the button): under her card, below the key chip on desktop
 function drillSub(q, chipEl, chip) { const el = $('dsub'), mm = $('marla'), t = q && mm.textContent && !mm.classList.contains('hq') ? (FINE ? q.subD : q.subP) || '' : ''; if (el.textContent !== t) el.textContent = t; if (el.classList.contains('on') !== !!t) el.classList.toggle('on', !!t); if (!t) return;
-  const mr = mm.getBoundingClientRect(), cr = FINE && chip ? chipEl.getBoundingClientRect() : null, top = cr && cr.height ? cr.bottom : mr.bottom; el.style.top = Math.round(top + 6) + 'px'; el.style.right = Math.round(innerWidth - mr.right) + 'px'; }
+  const mr = mm.getBoundingClientRect(), cr = FINE && chip ? chipEl.getBoundingClientRect() : null, top = cr && cr.height ? cr.bottom : mr.bottom; sty(el, 'top', Math.round(top + 6) + 'px'); sty(el, 'right', Math.round(innerWidth - mr.right) + 'px'); }
 // a pulsing ring on the drill machine while the step needs it (steps[].mark), or an arrow at the screen edge pointing to it when it is out of view
 const dmV = new THREE.Vector3();
 // phones (owner Nov 18): when the machine walks close its ring would sit on the touch buttons; it is lifted to just above the ones it would cover (same column, still over the machine)
@@ -1136,11 +1153,11 @@ function ringClear(sx, sy) { if (FINE) return sy; const h = CONFIG.drill.mark.px
 function drillMark(q) { const mk = $('dmark'), ar = $('darrow'), M = CONFIG.drill.mark; let ring = false, arrow = false;
   if (q && q.mark && sim && state === 'play' && !paused && !ui) { const P = sim.player; let g = null, gd = 1e9; for (const x of sim.gloom) { if (!x.drillKind) continue; const d = Math.hypot(x.x - P.x, x.z - P.z); if (d < gd) { gd = d; g = x; } } const m = g && gMesh.get(g.id);
     if (m) { cam.updateMatrixWorld(); dmV.copy(m.position); dmV.y += M.y; dmV.project(cam); const W = innerWidth, H = innerHeight, e = M.edge, sx = ((dmV.x + 1) / 2) * W, sy = ((1 - dmV.y) / 2) * H, front = dmV.z < 1;
-      if (front && sx > e && sx < W - e && sy > e && sy < H - e) { ring = true; mk.style.left = Math.round(sx) + 'px'; mk.style.top = Math.round(ringClear(sx, sy)) + 'px'; }
+      if (front && sx > e && sx < W - e && sy > e && sy < H - e) { ring = true; sty(mk, 'left', Math.round(sx) + 'px'); sty(mk, 'top', Math.round(ringClear(sx, sy)) + 'px'); }
       else { let ux, uy; if (front) { ux = sx - W / 2; uy = sy - H / 2; } else { const dx = g.x - P.x, dz = g.z - P.z, f = -dx * Math.sin(P.yaw) - dz * Math.cos(P.yaw), r = dx * Math.cos(P.yaw) - dz * Math.sin(P.yaw), a = Math.atan2(r, f); ux = Math.sin(a); uy = -Math.cos(a); }
         const l = Math.hypot(ux, uy) || 1; ux /= l; uy /= l; const k = Math.min((W / 2 - e) / Math.max(1e-6, Math.abs(ux)), (H / 2 - e) / Math.max(1e-6, Math.abs(uy))); arrow = true;
-        ar.style.left = Math.round(W / 2 + ux * k) + 'px'; ar.style.top = Math.round(H / 2 + uy * k) + 'px'; ar.style.transform = 'rotate(' + Math.atan2(ux, -uy).toFixed(3) + 'rad)'; } } }
-  if (mk.classList.contains('on') !== ring) mk.classList.toggle('on', ring); if (ar.classList.contains('on') !== arrow) ar.classList.toggle('on', arrow); window.__drillMark = { ring, arrow, x: mk.style.left, y: mk.style.top }; }
+        sty(ar, 'left', Math.round(W / 2 + ux * k) + 'px'); sty(ar, 'top', Math.round(H / 2 + uy * k) + 'px'); sty(ar, 'transform', 'rotate(' + Math.atan2(ux, -uy).toFixed(3) + 'rad)'); } } }
+  if (mk.classList.contains('on') !== ring) mk.classList.toggle('on', ring); if (ar.classList.contains('on') !== arrow) ar.classList.toggle('on', arrow); { const D = window.__drillMark || (window.__drillMark = {}); D.ring = ring; D.arrow = arrow; D.x = mk.style.left; D.y = mk.style.top; } } // (owner 11:40) the drill's marks: positions written only on change, one kept object for the checks
 // phones: during the drill the full bar shows, and the switch tab sits just left of it (the switch step needs it)
 function drillTab() { if (FINE) return; const sw = $('bSwitch'), on = !!(drill && drill.held) && state === 'play' && !!sim; if (sw.classList.contains('dshow') !== on) sw.classList.toggle('dshow', on); if (!on) { if (sw.style.right) sw.style.right = ''; return; }
   let left = 1e9; for (const el of document.querySelectorAll('#slots .b.dev')) { const r = el.getBoundingClientRect(); if (r.width) left = Math.min(left, r.left); } if (left < 1e9) { const v = Math.round(innerWidth - left + 8) + 'px'; if (sw.style.right !== v) sw.style.right = v; } }
@@ -1174,7 +1191,10 @@ function escClose() { if ($('keys').style.display === 'flex') { closeKeys(); ret
 let barOpenT = 0; function barOpen() { barOpenT = CONFIG.devBar.openSecs; }
 function tickBar(dt) { barOpenT = Math.max(0, barOpenT - dt); $('hud').classList.toggle('devc', !(barOpenT > 0 || document.body.classList.contains('hkeys') || !!(drill && drill.held))); }
 // context chips from night 2 on (desktop): hold H keys always, F eat when hurt at night, Q solar by day in a house while the Sun is not full, E leave at the door
-function tickChips() { if (!FINE) return; const P = sim && sim.player, ch = []; if (P && sim.phase === 'night' && P.hp < CONFIG.player.hp * CONFIG.chips.eatBelow && sim.food > 0) ch.push(['F', 'eat · ' + sim.food + ' to bring home']); if (P && sim.phase === 'day' && P.energy < CONFIG.player.energyCap) ch.push(['Q', 'solar']); if ($('bLeave').style.display === 'flex') ch.push(['E', 'leave']);
+// (owner 11:40) the chips' text is built only when what it says changes (CHK: food to eat, solar, leave)
+let CHK = '';
+function tickChips() { if (!FINE) return; const P = sim && sim.player, eat = P && sim.phase === 'night' && P.hp < CONFIG.player.hp * CONFIG.chips.eatBelow && sim.food > 0 ? sim.food : -1, sol = !!(P && sim.phase === 'day' && P.energy < CONFIG.player.energyCap), lv = $('bLeave').style.display === 'flex', key = eat + '|' + sol + '|' + lv; if (key === CHK) return; CHK = key;
+  const ch = []; if (P && sim.phase === 'night' && P.hp < CONFIG.player.hp * CONFIG.chips.eatBelow && sim.food > 0) ch.push(['F', 'eat · ' + sim.food + ' to bring home']); if (P && sim.phase === 'day' && P.energy < CONFIG.player.energyCap) ch.push(['Q', 'solar']); if ($('bLeave').style.display === 'flex') ch.push(['E', 'leave']);
   const h = '<span class="k">hold H</span> keys' + ch.map((q) => ' <span class="k">' + q[0] + '</span> ' + q[1]).join(''), el = $('hchip'); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } }
 // ---- BASE MINIMAP (owner Nov 17 19:43, CONFIG.miniMap): a round top-down map in the quest corner, the player in the middle facing up, Marla as a bright dot (an arrow on the rim when she is
 // farther than the radius), faint landmark letters, a north tick; a 2D canvas redrawn at CONFIG.miniMap.hz; shown in the base by day outside rooms and panels (holding H shows it in a room too)
@@ -1183,7 +1203,11 @@ function mapMarks() { const S = B.STATIONS, m = [['W', S.workshop.x, S.workshop.
   const BW = CONFIG.baseWater; if (BW && BW.on && BW.stream && BW.race) { const a = BW.stream[BW.race[0]], c = BW.stream[BW.race[1]]; if (a && c) m.push(['wheel', (a[0] + c[0]) / 2, (a[1] + c[1]) / 2]); } return m; }
 function tickMap(dt) { const M = CONFIG.miniMap, cv = $('mmap'); const indoor = !!bview.rooms && (inRoom(bview.rooms.WS, bp.x, bp.z) || inRoom(bview.rooms.MH, bp.x, bp.z));
   const show = M.on && state === 'base' && !ui && !paused && save && (!indoor || document.body.classList.contains('hkeys')); if (cv.classList.contains('on') !== show) cv.classList.toggle('on', show); $('hud').classList.toggle('hasmap', show); if (!show) { mapInfo = null; return; }
-  mapT -= dt; if (mapT > 0) return; mapT = 1 / M.hz; mapInfo = drawMap(cv, FINE ? M.px[0] : M.px[1], M.radius, 1e9); }
+  mapT -= dt; if (mapT > 0) return; mapT = 1 / M.hz;
+  // LAG FIX Nov 19 (owner 11:27): drawn again only when what it shows changed (your place and facing, Marla's spot, the marks; every time while the first night's goal pulses)
+  { const sp = B.scoutPos(save), mk = mapMarks(), k = bp.x.toFixed(2) + ',' + bp.z.toFixed(2) + ',' + yaw.toFixed(3) + ',' + sp.x.toFixed(2) + ',' + sp.z.toFixed(2) + ',' + (save.nights ? 0 : performance.now()) + ',' + (FINE ? 1 : 0) + ',' + mk.map((q) => q.join(':')).join(';'); if (k === mapKey && mapInfo) return; mapKey = k; }
+  mapInfo = drawMap(cv, FINE ? M.px[0] : M.px[1], M.radius, 1e9); }
+let mapKey = '';
 // the round map drawn into a canvas: css size (px), metres from you to its rim, largest glyph (px); the corner map and the big pause-menu map (fresh-player fix, owner Nov 18) share it; returns where Marla and the marks were drawn
 function drawMap(cv, css, rad, gMax) { const M = CONFIG.miniMap, dpr = Math.min(2, devicePixelRatio || 1); if (cv.width !== Math.round(css * dpr)) { cv.width = cv.height = Math.round(css * dpr); cv.style.width = cv.style.height = css + 'px'; }
   const x = cv.getContext('2d'), C = M.col, r = css / 2, k = (r - 8) / rad, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw), at = (wx, wz) => { const dx = wx - bp.x, dz = wz - bp.z; return [r + (dx * rx + dz * rz) * k, r - (dx * fx + dz * fz) * k]; };
@@ -1253,7 +1277,7 @@ function musicUnlock() { if (mus.ready) return; mus.ready = true; try { mus.on =
 // The scripted checks (?quality= in the address) skip the logo and title time unless &splash=1. window.__loadMs = milliseconds from navigation to the begin button.
 const SPLASH = (() => {
   const S = CONFIG.splash, el = $('spl'), q = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })(), quick = q.has('quality') && q.get('splash') !== '1';
-  const t0 = performance.now(), st = { scripts: [1, 1], assets: [0, 0], fonts: [0, 1], music: [0, Object.keys(MUSIC).length], warm: [0, 1] }, began = {}, label = { scripts: 'Scripts', assets: 'Models and textures', fonts: 'Handwriting fonts', music: 'Music', warm: 'First scene (shaders)' };
+  const t0 = performance.now(), st = { scripts: [1, 1], assets: [0, 0], fonts: [0, 1], music: [0, 0], warm: [0, 1] }, began = {}, label = { scripts: 'Scripts', assets: 'Models and textures', fonts: 'Handwriting fonts', music: 'Music', warm: 'First scene (shaders)' };
   const root = document.documentElement.style; root.setProperty('--sp-bg0', S.bg[0]); root.setProperty('--sp-bg1', S.bg[1]); root.setProperty('--sp-w0', S.word[0]); root.setProperty('--sp-w1', S.word[1]); root.setProperty('--sp-glow', S.glow); root.setProperty('--sp-tag', S.tagline);
   root.setProperty('--sp-b0', S.bar[0]); root.setProperty('--sp-b1', S.bar[1]); root.setProperty('--sp-b2', S.bar[2]); root.setProperty('--sp-b3', S.bar[3]); root.setProperty('--sp-fade', S.fade + 's'); $('stag').textContent = S.tag;
   if (FINE && S.particles) { const pz = $('spart'); for (let i = 0; i < S.particles; i++) { const d = document.createElement('i'); d.style.left = (5 + ((i * 53) % 90)) + '%'; d.style.animationDelay = (-(i * 0.73) % 9) + 's'; d.style.animationDuration = (7 + (i % 5)) + 's'; pz.appendChild(d); } }
@@ -1262,19 +1286,24 @@ const SPLASH = (() => {
   // fonts: the journal's handwriting fonts and the page's own
   Promise.all([Promise.resolve(loadBookFonts()).catch(() => {}), document.fonts ? document.fonts.ready : null]).then(() => { st.fonts = [1, 1]; });
   // music: each track preloaded until the browser can play it through (the same elements are used once sound is allowed)
-  mus.pre = {}; for (const k in MUSIC) { try { const a = new Audio(); a.preload = 'auto'; a.loop = true; a.volume = 0; const done = () => { if (!a.__ok) { a.__ok = true; st.music[0]++; } }; a.addEventListener('canplaythrough', done, { once: true }); a.addEventListener('error', done, { once: true }); a.src = MUSIC[k]; a.load(); mus.pre[k] = a; } catch (e) { st.music[0]++; } }
-  let phase = '', ready = false, loreI = 0, loreT = 0; const lore = CONFIG.intro.lines.map((l) => l[2]).filter((t) => !/^MARLA/.test(t)).concat(LORE.OLD_NOTICES.filter((t) => t.length < 90));
+  // LAG FIX Nov 19 (owner 11:40): the begin button waits only for the tracks the first minutes play (the base's, and the night's for a first visit: the opening film);
+  // the others keep loading behind
+  const firstVisit = (() => { try { return !(storage && storage.getItem('solardg.save')); } catch (e) { return true; } })(), needT = (k) => k === 'base' || (k === 'night' && firstVisit) || !MUSIC.base;
+  for (const k in MUSIC) if (needT(k)) st.music[1]++;
+  mus.pre = {}; for (const k in MUSIC) { try { const a = new Audio(); a.preload = 'auto'; a.loop = true; a.volume = 0; const done = () => { if (!a.__ok) { a.__ok = true; if (needT(k)) st.music[0]++; } }; a.addEventListener('canplaythrough', done, { once: true }); a.addEventListener('error', done, { once: true }); a.src = MUSIC[k]; a.load(); mus.pre[k] = a; } catch (e) { if (needT(k)) st.music[0]++; } }
+  const SPW = {}; let phase = '', ready = false, loreI = 0, loreT = 0; const lore = CONFIG.intro.lines.map((l) => l[2]).filter((t) => !/^MARLA/.test(t)).concat(LORE.OLD_NOTICES.filter((t) => t.length < 90));
   const set = (ph) => { if (phase === ph) return; phase = ph; el.className = 'ph-' + ph; };
   const frac = () => { const W = S.weights; let a = 0, b = 0; for (const k in W) { const [d, t] = st[k], f = t > 0 ? Math.min(1, d / t) : (k === 'assets' && (began.assetsDone || performance.now() - t0 > 1500) ? 1 : 0); a += W[k] * f; b += W[k]; } return a / b; };
   const tick = () => { const now = performance.now(), age = (now - t0) / 1000;
     for (const k in st) if (st[k][0] < st[k][1] && age > S.stageCap) st[k][0] = st[k][1];
     if (!began.warm && (began.assetsDone || st.assets[1] === 0 || age > S.stageCap) && st.fonts[0] >= 1) { began.warm = true; requestAnimationFrame(() => { try { renderer.compile(scene, cam); renderer.render(scene, cam); } catch (e) { /* nothing to warm */ } st.warm = [1, 1]; }); }
-    const f = frac(); $('sfill').style.width = (100 * f).toFixed(1) + '%'; $('spct').textContent = Math.floor(100 * f) + '%';
-    const cur = Object.keys(S.weights).find((k) => st[k][1] > 0 ? st[k][0] < st[k][1] : false) || (f < 1 ? 'assets' : ''); $('sstage').textContent = f >= 1 ? 'Ready' : 'Loading: ' + label[cur] + (cur === 'assets' && st.assets[1] ? ' (' + st.assets[0] + ' of ' + st.assets[1] + ')' : cur === 'music' ? ' (' + st.music[0] + ' of ' + st.music[1] + ')' : '');
+    // (owner 11:40) the bar, the percent and the stage line are written only when they change
+    const f = frac(); setText('spct', Math.floor(100 * f) + '%'); sty($('sfill'), 'width', (100 * f).toFixed(1) + '%');
+    const cur = Object.keys(S.weights).find((k) => st[k][1] > 0 ? st[k][0] < st[k][1] : false) || (f < 1 ? 'assets' : ''); setText('sstage', f >= 1 ? 'Ready' : 'Loading: ' + label[cur] + (cur === 'assets' && st.assets[1] ? ' (' + st.assets[0] + ' of ' + st.assets[1] + ')' : cur === 'music' ? ' (' + st.music[0] + ' of ' + st.music[1] + ')' : ''));
     if (now > loreT) { loreT = now + S.loreSecs * 1000; $('slore').textContent = lore[loreI++ % lore.length] || ''; }
     if (f >= 1 && !ready) { ready = true; window.__loadMs = Math.round(now); }
     if (quick) set(ready ? 'ready' : 'load'); else if (age < S.logoSecs) set('logo'); else if (age < S.logoSecs + S.titleSecs) set('title'); else set(ready ? 'ready' : 'load');
-    window.__splash = { phase, frac: f, stages: JSON.parse(JSON.stringify(st)), loadMs: window.__loadMs || null };
+    SPW.phase = phase; SPW.frac = f; SPW.stages = st; SPW.loadMs = window.__loadMs || null; window.__splash = SPW; // one object, updated in place (owner 11:40: no copy each tick)
     if (!(phase === 'ready' && ready) || $('menu').style.display !== 'none') setTimeout(tick, 150); };
   tick(); return { get phase() { return phase; } };
 })();
@@ -1360,7 +1389,10 @@ if (BOTRUN()) gloomPreload();
 // warm-up copies for the night card: one machine of every kind the ring can send and one of every device you carry, built and drawn into the shader cache under the card,
 // then kept hidden until the run ends (a disposed material would free its shader program), so the first machine of a kind or the first device placed does not stall a frame
 function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); drop(c); } scene.remove(warmG); }
-function warmNight() { dropWarm(); if (!run) return; const K = CONFIG.gloom.kinds, ring = run.ring || 0;
+// (owner 11:40) the night card keeps the ride card's set when it is for the same run and the same devices (warmKey), instead of building it again
+const warmKey = () => (run ? run.seed + '|' + run.ring + '|' + slotKinds().join(',') : '');
+function warmNight() { if (warmG.children.length && warmG.userData.run === run && warmG.userData.key === warmKey()) { warmG.visible = true; warmG.matrixWorldAutoUpdate = true; scene.add(warmG); return; }
+  dropWarm(); if (!run) return; warmG.userData.run = run; warmG.userData.key = warmKey(); const K = CONFIG.gloom.kinds, ring = run.ring || 0;
   for (const k of Object.keys(K)) if ((K[k].minRing || 0) <= ring && K[k].share > 0) { const m = gloomMesh({ kind: k, hp: 1, maxhp: 1 }); gloomBlob(m, k); m.position.set(0, -50, 0); warmG.add(m); }
   for (const k of new Set(slotKinds())) { const m = deviceMesh(k); m.position.set(0, -50, 0); warmG.add(m); }
   // the shot, its splash, a kill's smoke and a broken device's splinters (their shaders), and the scrap pieces' physics file (desktop)
@@ -1377,6 +1409,8 @@ async function sceneCard(kind) {
     // (Nov 19 09:00) For a player the RIDE card waits for them too and builds the night's shaders already (below), so the night card stays short.
     if (QUALITY === 'high' && (kind === 'night' || (kind === 'ride' && !bot))) { const G = window.__gloomGlb || {}, B = window.__boss || {}; for (let t = 0; t < L.maxWait * 10; t++) { if (Object.values(G).every((v) => v !== 'loading') && B.model !== 'loading') break; await nap(100); } }
     if (kind === 'night') warmNight(); else dropWarm(); if (fx && fx.upgradeNow) fx.upgradeNow();
+    // one material copy per kind of piece that draws it (src/mergestatic.js splitVariants), before the shaders are built
+    if (CONFIG.lag.splitVariants) splitVariants(scene);
     // the impact sounds' variants are rendered ahead (src/impactsfx.js impactPrerender): started by the ride card and left to finish during the day; the night card
     // waits a moment (CONFIG.lag.card.sfxWait s) if they are not done yet; until they are, a sound is built live as before
     if (!bot && kind === 'ride') IMP.prerender(); else if (!bot && kind === 'night') await Promise.race([IMP.prerender(), nap(L.sfxWait * 1000)]);
@@ -1412,6 +1446,11 @@ async function sceneCard(kind) {
     // skipping the per-frame pass too (owner 09:50)
     if (kind === 'night') for (const c of [...warmG.children]) if (c.userData.kind && c.userData.anim) { warmG.remove(c); gloomPut(c); }
     warmG.visible = false; warmG.matrixWorldAutoUpdate = false;
+    // LAG FIX Nov 19 (owner 11:25): the real frame is drawn under the card until CONFIG.lag.card.settle.n frames in a row come in under settle.ms (cap settle.cap s), so a
+    // scene's slow first frames are not the first frames of play; their times are kept in LCARD.settle (perfcheck logs them)
+    if (!bot && L.settle) { const S = L.settle, ts = performance.now(), raf = () => new Promise((r) => requestAnimationFrame(() => r())), fr = []; let ok = 0, tp = performance.now();
+      while (ok < S.n && performance.now() - ts < S.cap * 1000) { draw(); if (sim && state === 'play' && !window.__noHands) hands.render(renderer, cam.aspect); await raf(); const t = performance.now(), ms = t - tp; tp = t; fr.push(Math.round(ms)); ok = ms < S.ms ? ok + 1 : 0; }
+      LCARD.settle = fr; }
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
   LCARD.ms = Math.round(performance.now() - t0);
@@ -1431,7 +1470,7 @@ function frame(now) {
   // a loading card is up (sceneCard): the game is held still and nothing is drawn under it
   if (LCARD.on) { last = now; return; }
   // window.__dtMax is set only by the slow headless checks (software renderer, under 1 frame a second) so game time keeps up; players never set it.
-  const rawMs = now - last, dt = Math.min(window.__dtMax || CONFIG.lag.dtMax, rawMs / 1000); last = now; holdDraw = (paused && pauseDrawn) || ctxLost; pauseDrawn = paused; perfHud(rawMs); perf.tick(rawMs, (state === 'base' || state === 'play') && !paused);
+  const rawMs = now - last, dt = Math.min(window.__dtMax || CONFIG.lag.dtMax, rawMs / 1000); last = now; const holdNow = paused || state === 'end' || (state === 'menu' && MENU_EL.style.display !== 'none'); holdDraw = (holdNow && pauseDrawn) || ctxLost; pauseDrawn = holdNow; perfHud(rawMs); perf.tick(rawMs, (state === 'base' || state === 'play') && !paused);
   if (shadowT > 0) { shadowT -= dt; if (shadowT <= 0) renderer.shadowMap.needsUpdate = true; }
   if (catArm) catArm.rotation.x = -0.5 + Math.sin(now / 280) * 0.45; // the lucky cat beckons
   // the scene's dark under-plane (y -0.08) would show through the base's sunken stream channel: while the base is in the scene it lies below the channel bed (CONFIG.baseWater.under)
@@ -1509,7 +1548,7 @@ function frame(now) {
     }
     if (sim.done) endScreen();
   }
-  if (sim) {
+  if (sim && !holdDraw) {
     const p = sim.player;
     if (p.climb) camY = (p.floor + (p.climb.to - p.floor) * (1 - p.climb.t / CONFIG.ladderTime)) * FH + 1.6; else camY += (p.floor * FH + 1.6 - camY) * Math.min(1, dt * 8);
     cam.position.set(p.x, camY, p.z); cam.rotation.set(pitch, yaw, 0, 'YXZ');
@@ -1526,7 +1565,7 @@ function frame(now) {
     // every tier (desktop too since owner 09:50): a new machine's still pieces are merged a few machines a frame (CONFIG.lag.mergeGloom.perFrame); the probe poses use times before 0 (no caption line starts)
     for (let k = 0; k < CONFIG.lag.mergeGloom.perFrame && mergeQ.length; k++) { const [mm, mx, mz] = mergeQ.shift(); if (!mm.parent) continue; mergeStatic(mm, (i) => mm.userData.anim(-(1 + i * 0.73), { x: mx + i * 0.11, z: mz + i * 0.07 })); mm.userData.merged = true; HITC.delete(mm); }
     tickGloomLights(sim.phase === 'night'); tickPanelGhost(now / 1000); freezeWorld(); nightCull.tick(world, sim, cam, dormG);
-    bossTick(dt, sim, { scene, cam, audio }); scrapTick(dt, { scene }); // the final-night boss (src/bosshi.js): after the camera is set, before the frame is drawn
+    bossTick(paused ? 0 : dt, sim, { scene, cam, audio }); scrapTick(paused ? 0 : dt, { scene }); // paused: 0 (owner 11:40: the boss pose, scrap and dawn collapse held still) // the final-night boss (src/bosshi.js): after the camera is set, before the frame is drawn
     if (run && sim.L > 1 && !run.toldStairs && save && (save.nights || 0) < 2 && [...sim.stairs.map((q) => [q.bx, q.bz]), ...sim.stairs.map((q) => [q.tx, q.tz]), ...sim.ladders.map((q) => [q.x, q.z])].some((q) => Math.hypot(q[0] - sim.player.x, q[1] - sim.player.z) < 3)) { run.toldStairs = true; marlaHint('Stairs: the Gloom use them too. The ladder: only you can climb it.'); }
     if (kindQ.length && sim.phase === 'night' && marlaT <= 0.01 && sim.t > CONFIG.gloomLook.kindLineAfter && !paused) marlaHint(kindQ.shift());
     for (const [id, m] of gMesh) if (!sim.gloom.find((g) => g.id === id)) { gloomPut(m); gMesh.delete(id); }
@@ -1567,8 +1606,8 @@ function frame(now) {
       }
       const et = '<i class="ic"></i>' + B.eatLabel(sim.food, !FINE), eb = $('bEat'); if (eb.dataset.t !== et) { eb.innerHTML = et; eb.dataset.t = et; } }
   }
-  for (let i = debris.length - 1; i >= 0; i--) { const q = debris[i]; q.t -= dt; q.vy -= 9 * dt; q.m.position.x += q.vx * dt; q.m.position.y = Math.max(q.y0, q.m.position.y + q.vy * dt); q.m.position.z += q.vz * dt; q.m.rotation.x += dt * 6; if (q.grow) { q.vy += 9 * dt * 0.94; q.m.scale.multiplyScalar(1 + q.grow * dt); } if (q.t <= 0) { opDone(q.m); debris.splice(i, 1); } }
-  for (let i = tracers.length - 1; i >= 0; i--) { tracers[i].t -= dt; if (tracers[i].t <= 0) { opDone(tracers[i].l); tracers.splice(i, 1); } }
+  if (!paused && state !== 'end') for (let i = debris.length - 1; i >= 0; i--) { const q = debris[i]; q.t -= dt; q.vy -= 9 * dt; q.m.position.x += q.vx * dt; q.m.position.y = Math.max(q.y0, q.m.position.y + q.vy * dt); q.m.position.z += q.vz * dt; q.m.rotation.x += dt * 6; if (q.grow) { q.vy += 9 * dt * 0.94; q.m.scale.multiplyScalar(1 + q.grow * dt); } if (q.t <= 0) { opDone(q.m); debris.splice(i, 1); } }
+  if (!paused && state !== 'end') for (let i = tracers.length - 1; i >= 0; i--) { tracers[i].t -= dt; if (tracers[i].t <= 0) { opDone(tracers[i].l); tracers.splice(i, 1); } }
   hurtT = Math.max(0, hurtT - dt); sty($('hurt'), 'opacity', String(hurtT * 2.5));
   tickHud(dt); tickAim(dt); tickCharge(dt);
   sky.follow(cam, world ? world.g.rotation.y : 0, dt); draw();
@@ -1593,7 +1632,7 @@ window.__game.basePos = () => ({ x: bp.x, z: bp.z, yaw });
 window.__game.drillFrom = () => (drill && drill.from ? { bp: drill.from.bp, ang: drill.from.ang } : null);
 // Marla's voice for the checks (tools/voicecheck.cjs): clips started (n), the last clip id and its shown text, how it played, playing now, Voice on
 window.__game.marlaVoice = () => ({ n: MV.hook.n, last: MV.hook.last, lastText: MV.hook.lastText, via: MV.hook.via, playing: MV.hook.playing, on: MV.on, allowed: MV.allowed, duck: MV.duck() });
-window.__game.wakeText = () => wakeT; window.__game.uiNow = () => ui; window.__game.isPaused = () => paused;
+window.__game.wakeText = () => wakeT; window.__game.uiNow = () => ui; window.__game.isPaused = () => paused; window.__game.setPause = (v) => setPause(v);
 window.__game.wsTip = () => wsTipT;
 // the automatic step-down (tools/perfcheck.cjs): its state, and take the next step now
 window.__game.cardOn = () => LCARD.on;
@@ -1601,7 +1640,7 @@ window.__game.cardOn = () => LCARD.on;
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);
 window.__game.impactPrerender = () => IMP.prerender();
 // the last card's work time (ms) and any error it swallowed (tools/perfcheck.cjs prints them)
-window.__game.cardInfo = () => ({ ms: LCARD.ms, err: window.__cardErr || '' });
+window.__game.cardInfo = () => ({ ms: LCARD.ms, settle: LCARD.settle || null, err: window.__cardErr || '' });
 // the shader programs built so far (tools/perfcheck.cjs: which ones are first built after the night card); name and a short key each
 window.__game.programs = (full) => (renderer.info.programs || []).map((q) => q.id + ' ' + q.name + ' ' + (full ? String(q.cacheKey) : String(q.cacheKey).replace(/,+/g, ',').slice(0, 160)));
 window.__game.perfStep = () => (perf ? { ...perf.state } : null); window.__game.perfForce = () => (perf ? { ...perf.force() } : null);

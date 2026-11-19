@@ -93,8 +93,9 @@ export function createPerson(cfg, key) {
     { const qS = sc.getWorldQuaternion(new THREE.Quaternion()); for (const [i, k] of [[0, 'thigh_l'], [1, 'thigh_r']]) if (bones[k]) hinge[i].copy(XA).applyQuaternion(qS).applyQuaternion(bones[k].getWorldQuaternion(new THREE.Quaternion()).invert()); }
     if (useScan && isHi) { keyBid = peopleHiLight(root, P.hiMat.key, cfg.marlaHi && cfg.marlaHi.keyBias); if (hiCopy) peopleHiCornea(sc, HM); } ready = true; const w0 = wait; wait = []; for (const f of w0) f();
   }, (e) => console.error(key + ' model failed to load', e));
-  const packed = () => go(Uint8Array.from(atob(MODELS[key]), (c) => c.charCodeAt(0)).buffer, false);
-  // a page opened straight from a folder (file://) cannot fetch a file beside it: it then keeps the packed (approved) model
+  // LAG FIX Nov 19 (owner 11:40): the light model is a file beside the page (src/modeldata.js; inside index_single.html as a data: address)
+  const packed = () => fetch(MODELS[key]).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, false)).catch((e) => console.error(key + ' light model failed to load', e));
+  // a page opened straight from a folder (file://) cannot fetch a file beside it: play index_single.html from a folder (every model inside it)
   if (file && (file.startsWith('data:') || location.protocol !== 'file:')) fetch(file).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, true)).catch(() => packed()); else packed();
 
   // ---- motion state

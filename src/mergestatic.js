@@ -38,3 +38,17 @@ export function mergeStatic(root, probe, still) {
     if (!still) mergeState.machines++; mergeState.meshes += made; return made;
   } catch (e) { mergeState.failed++; return 0; }
 }
+
+// LAG FIX Nov 19 (owner 11:25, CONFIG.lag.splitVariants): a material drawn by different kinds of piece (instanced or plain, with or without instance colours, skinned
+// or not, with or without morphs) needs a different shader for each kind, and three.js looks its shader up again every time the kind changes between two draws in a frame
+// (seen: about 60 lookups a frame on medium). Each extra kind gets its own copy of the material, sharing its colour objects and maps, so the look is the same.
+// Materials with their own shader hook (onBeforeCompile) are left alone, as their hook may keep per-material state. Returns how many copies were made.
+const VAR = new WeakMap();
+const varKey = (o) => (o.isInstancedMesh ? 1 : 0) + (o.instanceColor ? 2 : 0) + (o.isSkinnedMesh ? 4 : 0) + (o.morphTargetInfluences && o.morphTargetInfluences.length ? 8 : 0) + (o.isBatchedMesh ? 16 : 0);
+export function splitVariants(root) { let made = 0; const first = new Map();
+  root.traverse((o) => { if (!o.isMesh || !o.material || Array.isArray(o.material) || o.userData.hitOnly) return; const m = o.material; if (Object.prototype.hasOwnProperty.call(m, 'onBeforeCompile')) return;
+    const k = varKey(o), f = first.has(m) ? first.get(m) : (VAR.has(m) ? VAR.get(m).k : null); if (f === null) { first.set(m, k); return; } if (f === k) return;
+    let v = VAR.get(m); if (!v) VAR.set(m, v = { k: f, c: {} }); let c = v.c[k];
+    if (!c) { try { c = m.clone(); } catch (e) { return; } for (const p of ['color', 'emissive', 'specularColor', 'sheenColor', 'attenuationColor']) if (m[p] && m[p].isColor) c[p] = m[p]; v.c[k] = c; VAR.set(c, { k, c: v.c }); m.addEventListener('dispose', () => c.dispose()); made++; }
+    o.material = c; });
+  return made; }

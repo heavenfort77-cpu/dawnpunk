@@ -26,9 +26,9 @@ tar -C "$SRC" -cf - \
   --exclude='*.npz' --exclude='*.blend' --exclude='*.blend1' --exclude='*.log' \
   src tools | tar -xf -
 
-# 3. art the build reads (build.mjs: art/music, art/texhi, art/models_hi, art/voice/mp3); src/ imports no art files
+# 3. art the build reads (build.mjs: art/music, art/texhi, art/models_hi, art/models (the light character models, files since the lag fix Nov 19), art/voice/mp3)
 tar -C "$SRC" -cf - --exclude='*_before_*' --exclude='*_batch*' --exclude='*_backup*' \
-  art/models_hi art/music art/texhi art/voice/mp3 | tar -xf -
+  art/models art/models_hi art/music art/texhi art/voice/mp3 | tar -xf -
 
 # 4. single files: build, tests, and the two text docs test.js reads
 mkdir -p docs

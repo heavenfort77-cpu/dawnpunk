@@ -104,14 +104,35 @@ function mottleOwn(mesh) {
   ge.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); mesh.material.vertexColors = true; mesh.material.needsUpdate = true; mesh.userData.scenery = true; mesh.receiveShadow = true; mesh.castShadow = false;
   return (ge.index ? ge.index.count : P.count) / 3;
 }
-function mottle(mesh, w, d, uvRep) {
+export function mottle(mesh, w, d, uvRep) {
   if (mesh.userData.ownGround) return mottleOwn(mesh);
+  if (CONFIG.lag && CONFIG.lag.groundBake) return mottleBaked(mesh, w, d, uvRep);
   const K = S().ground, sx = Math.max(1, Math.round(w * K.seg)), sz = Math.max(1, Math.round(d * K.seg)), ge = new THREE.PlaneGeometry(w, d, sx, sz), P = ge.attributes.position, U = ge.attributes.uv, cl = [], c = new THREE.Color(), dk = new THREE.Color(K.dark), lt = new THREE.Color(K.light), dry = new THREE.Color(K.dry);
   for (let i = 0; i < P.count; i++) { const x = P.getX(i) + mesh.position.x, z = mesh.position.z - P.getY(i), n = fbm(x * K.scale, z * K.scale), f = vnoise(x * K.fine + 3.1, z * K.fine - 7.7), dz = fbm(x * K.scale * 0.5 + 17, z * K.scale * 0.5 - 5);
     c.copy(dk).lerp(lt, Math.max(0, Math.min(1, (n - 0.25) * 2))); if (dz > K.dryFrom) c.lerp(dry, Math.min(1, (dz - K.dryFrom) * 4) * K.dryMax); c.multiplyScalar(1 - K.fineK * 0.5 + K.fineK * f); cl.push(c.r, c.g, c.b); }
   if (uvRep) for (let i = 0; i < U.count; i++) U.setXY(i, U.getX(i) * w / uvRep, U.getY(i) * d / uvRep);
   ge.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); mesh.geometry.dispose(); mesh.geometry = ge; mesh.material.vertexColors = true; mesh.material.needsUpdate = true; mesh.userData.scenery = true; mesh.receiveShadow = true; mesh.castShadow = false;
   return ge.index.count / 3;
+}
+
+// LAG FIX Nov 19 (owner 11:25, CONFIG.lag.groundBake): the same mottle, kept in a texture with one texel per point of the old 1 m grid (texel centres on the grid
+// points, filtered linearly between them) on a 2-triangle sheet, instead of 57k coloured triangles. The sheet's own material (only this sheet uses it) multiplies its
+// colour by the texture where it multiplied by the grid's point colours.
+function mottleBaked(mesh, w, d, uvRep) {
+  const K = S().ground, sx = Math.max(1, Math.round(w * K.seg)), sz = Math.max(1, Math.round(d * K.seg)), W = sx + 1, H = sz + 1, px = new Uint8Array(W * H * 4), c = new THREE.Color(), dk = new THREE.Color(K.dark), lt = new THREE.Color(K.light), dry = new THREE.Color(K.dry), e = new THREE.Color();
+  for (let iy = 0; iy <= sz; iy++) for (let ix = 0; ix <= sx; ix++) { const x = ix * w / sx - w / 2 + mesh.position.x, z = mesh.position.z - (d / 2 - iy * d / sz), n = fbm(x * K.scale, z * K.scale), f = vnoise(x * K.fine + 3.1, z * K.fine - 7.7), dz = fbm(x * K.scale * 0.5 + 17, z * K.scale * 0.5 - 5);
+    c.copy(dk).lerp(lt, Math.max(0, Math.min(1, (n - 0.25) * 2))); if (dz > K.dryFrom) c.lerp(dry, Math.min(1, (dz - K.dryFrom) * 4) * K.dryMax); c.multiplyScalar(1 - K.fineK * 0.5 + K.fineK * f);
+    e.copy(c).convertLinearToSRGB(); const o = ((sz - iy) * W + ix) * 4; px[o] = Math.round(Math.min(1, e.r) * 255); px[o + 1] = Math.round(Math.min(1, e.g) * 255); px[o + 2] = Math.round(Math.min(1, e.b) * 255); px[o + 3] = 255; }
+  const tx = new THREE.DataTexture(px, W, H, THREE.RGBAFormat, THREE.UnsignedByteType); tx.colorSpace = THREE.SRGBColorSpace; tx.magFilter = THREE.LinearFilter; tx.minFilter = THREE.LinearFilter; tx.generateMipmaps = false; tx.needsUpdate = true;
+  const ge = new THREE.PlaneGeometry(w, d, 1, 1), U = ge.attributes.uv, mu = new Float32Array(U.count * 2);
+  for (let i = 0; i < U.count; i++) { const u = U.getX(i), v = U.getY(i); mu[i * 2] = (u * sx + 0.5) / W; mu[i * 2 + 1] = (v * sz + 0.5) / H; if (uvRep) U.setXY(i, u * w / uvRep, v * d / uvRep); }
+  ge.setAttribute('mUv', new THREE.Float32BufferAttribute(mu, 2)); mesh.geometry.dispose(); mesh.geometry = ge;
+  const m = mesh.material; if (!m.userData.mottleOn) { m.userData.mottleOn = true; m.addEventListener('dispose', () => { if (m.__mot) m.__mot.dispose(); }); m.__motPrev = m.onBeforeCompile; } else if (m.__mot) m.__mot.dispose();
+  const prev = m.__motPrev; m.vertexColors = false; m.__mot = tx;
+  m.onBeforeCompile = (sh, r) => { if (prev) prev.call(m, sh, r); sh.uniforms.mMot = { value: tx }; sh.vertexShader = 'attribute vec2 mUv;\nvarying vec2 vMUv;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n\tvMUv = mUv;');
+    sh.fragmentShader = 'uniform sampler2D mMot;\nvarying vec2 vMUv;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n\tdiffuseColor.rgb *= texture2D(mMot, vMUv).rgb;'); };
+  m.customProgramCacheKey = () => 'mottle'; m.needsUpdate = true; mesh.userData.scenery = true; mesh.receiveShadow = true; mesh.castShadow = false;
+  return 2;
 }
 
 // ---------------------------------------------------------------- leaf masses: clusters of real leaves round a dark core, shaded as one soft round mass

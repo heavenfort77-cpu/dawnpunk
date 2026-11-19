@@ -1171,6 +1171,10 @@ export const CONFIG = {
     pbrWalk: 15,
     // shadowSettle: on the street, Marla's shadow is drawn again once she has stood still this long (s) after turning (owner 10:50; was every 0.1 s while she turned)
     shadowSettle: 0.25,
+    // bodyIdleHz: standing still, the body shadow's idle chest sway is redrawn this many times a second (src/playershadow.js; it redrew every frame)
+    bodyIdleHz: 10,
+    // farStep: a base villager out of view and farther than dist m (Oko: also while you are outside the workshop) steps her motion hz times a second, time added up
+    farStep: { dist: 15, hz: 5 },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind
     gloomPool: 10,
     // freezeWorld: the still street's matrices are worked out only when it is moved or added to, not every frame (src/main.js freezeWorld)
@@ -1191,6 +1195,19 @@ export const CONFIG = {
     // dtMax: longest game step one frame may take (s; was 0.1): after a long frame the game slows for a moment instead of jumping (all tiers; the checks set their own)
     dtMax: 0.05,
     // card.sfxWait: the night card waits at most this long (s) for the impact sound variants still being rendered
-    card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' } },
+    // card.settle: before a card lifts, the real frame is drawn under it until settle.n frames in a row come in under settle.ms milliseconds (or settle.cap s pass), so the
+    // first slow frames of a new scene (uploads, first draws) happen under the card, not in play
+    card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' }, settle: { n: 3, ms: 25, cap: 1.5 } },
+    // tuftChunk: the street's grass tufts are split into square chunks this many metres wide (one instanced draw each), so chunks out of view or past the night's
+    // scenery distance are not drawn (they were one draw over the whole street, never culled); same tufts, same places
+    tuftChunk: 12,
+    // groundBake: the street's mottled grass sheet keeps its colours in a small texture (one texel per old grid point, filtered between them) on a 2-triangle sheet,
+    // instead of a 1 m grid of coloured points (57k triangles); false: the old grid
+    groundBake: true,
+    // splitVariants: a material drawn by both instanced and plain pieces (or with and without instance colours, or skinned and not) gets one copy per kind of piece,
+    // so its shader is not looked up again each time the kind changes in a frame (seen: about 60 lookups a frame on medium); colours and maps stay shared
+    splitVariants: true,
+    // OWNER DECISION Nov 19 11:45 ("cuts only if boss fails"): for v0.9.1 the triangle budget (0.5 M a frame) is reported, not a pass line; tools/perfcheck.cjs reads this
+    trisReportOnly: true,
   },
 };

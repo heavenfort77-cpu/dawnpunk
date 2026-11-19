@@ -38,6 +38,9 @@ const srv = http.createServer((q, r) => { const f = path.join(DIST, decodeURICom
   const n = fs.statSync(f).size; served.push({ f: path.relative(DIST, f), n, t: Date.now() }); r.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream', 'Content-Length': n }); fs.createReadStream(f).pipe(r); });
 const info = (m) => console.log('INFO ' + m), el = () => Math.round((Date.now() - T0) / 1000) + ' s', MB = (b) => +(b / 1048576).toFixed(1);
 const sumB = () => served.reduce((a, s) => a + s.n, 0);
+// OWNER DECISION Nov 19 11:45 ("cuts only if boss fails"): for v0.9.1 the triangle budget is printed (REPORT lines), not a pass line (CONFIG.lag.trisReportOnly)
+const TRO = /trisReportOnly: true/.test(fs.readFileSync(path.join(__dirname, '..', 'src', 'config.js'), 'utf8'));
+const triGate = (out, m, ok) => { if (TRO) console.log('REPORT ' + (ok ? 'within ' : 'OVER ') + m + ' (report only, owner Nov 19)'); else out.push([m, ok]); };
 // counts every draw on the WebGL context (installed before the page's own scripts run)
 const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   window.__fakeLock = true; try { localStorage.clear(); localStorage.setItem('dawnpunk.drill', '{"skip":true}'); } catch (e) { /* none */ }
@@ -84,7 +87,7 @@ const BREAKDOWN = (spot) => {
     served = []; T0 = Date.now(); const errs = [];
     const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); await ctx.addInitScript(INIT, { seed: SEED });
     const p = await ctx.newPage(); p.setDefaultTimeout(900000); p.on('pageerror', (e) => errs.push(String(e).slice(0, 200))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 200)); });
-    await p.goto(URL0 + '?quality=' + tier + '&seed=' + SEED + (GPU ? '&cards=1' : ''), { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info(tier + ': page up ' + el() + ', ' + MB(sumB()) + ' MB so far');
+    const tGo = Date.now(); await p.goto(URL0 + '?quality=' + tier + '&seed=' + SEED + (GPU ? '&cards=1' : ''), { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info(tier + ': page up ' + el() + ', ' + MB(sumB()) + ' MB so far');
     const frames = (n) => p.evaluate((n) => new Promise((res) => { let k = 0; const f = () => (++k >= n ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
     const waitGame = (secs, cap) => p.evaluate(([secs, cap]) => new Promise((res) => { window.__dtMax = cap; let acc = 0, last = performance.now(), n = 0; const f = (now) => { acc += Math.min(cap, (now - last) / 1000); last = now; if (acc >= secs || ++n > 400) res(n); else requestAnimationFrame(f); }; requestAnimationFrame(f); }), [secs, cap || 0.3]);
     async function waitLoads(what) { for (let k = 0; k < 400; k++) { const s = await p.evaluate(() => { const q = window.__game.quality().hi, G = window.__gloomGlb || {}, B = window.__boss || {}; return { hi: q.ok + q.failed >= q.asked, marla: window.__game.marla.ready, glb: Object.values(G).every((v) => v !== 'loading'), boss: B.model !== 'loading' }; }); if (s.hi && s.marla && s.glb && s.boss) { info(what + ' loaded ' + el() + ' ' + MB(sumB()) + ' MB so far'); return; } await p.waitForTimeout(1000); } info(what + ': loads not all done'); }
@@ -118,10 +121,34 @@ const BREAKDOWN = (spot) => {
     const stand = (x, z, tx, ty, tz) => p.evaluate(([x, z, tx, ty, tz]) => { const g = window.__game, s = g.sim, P = s.player; P.x = x; P.z = z; P.floor = 0; P.climb = null; const dx = tx - x, dz = tz - z, y = Math.atan2(-dx, -dz), pi = Math.atan2(ty - 1.6, Math.hypot(dx, dz)); g.setYaw(y); g.setPitch(pi); P.yaw = y; P.pitch = pi; }, [x, z, tx, ty, tz]);
     const step = (test, maxS, arg) => p.evaluate(([f, maxS, a]) => { const s = window.__game.sim, T = new Function('s', 'a', 'return (' + f + ')(s, a)'); for (let k = 0; k < maxS * 20; k++) { s.player.hp = Math.max(s.player.hp, 60); if (T(s, a)) return { ok: true, t: s.t }; s.step(0.05); } return { ok: false, t: s.t }; }, [test.toString(), maxS, arg]);
 
+    // THE WHOLE RUN (owner Nov 19 11:27: "it is an entire game"): SPOTS 'flow' times the title, the opening film, the night-1 drill fight, the pause menu and the run-end
+    // screen in real time (game time running): fps, p95, worst, and the three longest frames (the first-use stalls) with when they came; on the default tier with a
+    // real GPU they meet the same gates as the fights (CGATE). Before the hub, so the title is the page's first screen.
+    if (ONLY.includes('flow')) {
+      const timed = (secs) => p.evaluate((secs) => new Promise((res) => { window.__dtMax = 0.05; const ts = []; let t0 = 0; const f = (now) => { if (!t0) t0 = now; ts.push(now); if (now - t0 < secs * 1000) requestAnimationFrame(f); else {
+        const d = ts.slice(1).map((t, i) => ({ ms: t - ts[i], at: (ts[i] - t0) / 1000 })), so = d.map((q) => q.ms).sort((x, y) => x - y), avg = so.reduce((x, y) => x + y, 0) / Math.max(1, so.length);
+        res({ n: so.length, fps: +(1000 / avg).toFixed(1), p95: +(so[Math.floor(so.length * 0.95)] || 0).toFixed(1), worst: +(so[so.length - 1] || 0).toFixed(1), long: d.sort((x, y) => y.ms - x.ms).slice(0, 3).map((q) => Math.round(q.ms) + ' ms at ' + q.at.toFixed(1) + ' s') }); } }; requestAnimationFrame(f); }), secs);
+      const flow = async (spot, secs) => { const f = await timed(secs); console.log('FPS ' + tier + ' ' + spot + ': ' + f.fps + ' fps, p95 ' + f.p95 + ' ms, worst ' + f.worst + ' ms (' + f.n + ' frames); longest: ' + f.long.join(', '));
+        rows.push({ tier, spot, fps: f.fps, p95: f.p95, worst: f.worst });
+        if (GPU && tier === TT) { const t = TT + ' ' + spot + ' (whole run): '; out.push([t + f.fps + ' fps (target >= ' + CGATE.fps + ')', f.fps >= CGATE.fps]); out.push([t + 'p95 ' + f.p95 + ' ms (target <= ' + CGATE.p95 + ')', f.p95 <= CGATE.p95]); out.push([t + 'worst frame ' + f.worst + ' ms (target <= ' + CGATE.worst + ')', f.worst <= CGATE.worst]); }
+        return f; };
+      const err = (e) => info('flow ' + tier + ': ' + String(e && e.message || e).slice(0, 200));
+      info(tier + ' title usable ' + (Date.now() - tGo) + ' ms after the page was asked for, ' + MB(sumB()) + ' MB downloaded');
+      try { await flow('title', 8); } catch (e) { err(e); }
+      try { await p.evaluate(() => document.getElementById('watch').click()); await p.waitForTimeout(200); await flow('film', 25); await p.evaluate(() => { const b = document.getElementById('cineSkip'); if (b) b.click(); }); await p.waitForTimeout(500); } catch (e) { err(e); }
+      // night 1 with the drill on (a fresh save's first night from the base)
+      try { await p.evaluate(() => { try { localStorage.setItem('dawnpunk.drill', '{}'); } catch (e) { /* none */ } const g = window.__game; g.enterBase(); g.save.nights = 0; g.save.day = 1; });
+        await startRun(0); const r0 = await p.evaluate(() => window.__game.run.houses.map((h) => h.i)); await p.evaluate((i) => window.__game.enterHouse(i), r0[0]); await waitGame(1, 0.3);
+        await p.evaluate(() => window.__game.nightfall()); await p.waitForFunction(() => !window.__game.cardOn || !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null);
+        await p.evaluate(() => { const s = window.__game.sim; if (s) s.player.hp = 1e6; }); info('drill on: ' + JSON.stringify(await p.evaluate(() => window.__game.drillInfo ? window.__game.drillInfo() : null)).slice(0, 160)); await flow('drill', 20);
+        await p.evaluate(() => window.__game.setPause && window.__game.setPause(true)); await flow('pause', 6); await p.evaluate(() => window.__game.setPause && window.__game.setPause(false));
+        await p.evaluate(() => { const s = window.__game.sim; s.player.hp = 0; }); await p.waitForFunction(() => window.__game.state === 'end', null, { timeout: 30000 }).catch(() => null); info('run end screen: ' + await p.evaluate(() => window.__game.state)); await flow('end', 6);
+      } catch (e) { err(e); } finally { await p.evaluate(() => { try { localStorage.setItem('dawnpunk.drill', '{"skip":true}'); } catch (e) { /* none */ } }); }
+    }
     if (ONLY.includes('hub')) {
       // day 1, a fresh save, the start spot and view
       await p.evaluate(() => window.__game.enterBase()); await waitLoads('hub'); const startMB = MB(sumB()); await waitGame(3, 0.3);
-      const r = await measure('hub'); r.startMB = startMB; info(tier + ' downloaded before the hub was ready: ' + startMB + ' MB (' + served.length + ' requests)');
+      const r = await measure('hub'); r.startMB = startMB; info(tier + ' downloaded before the hub was ready: ' + startMB + ' MB (' + served.length + ' requests)'); info(tier + ' files over 0.2 MB before the hub: ' + served.filter((q) => q.n > 2e5).map((q) => q.f + ' ' + MB(q.n) + ' MB at ' + ((q.t - T0) / 1000).toFixed(1) + ' s').join(', '));
       if (tier === TT) out.push([TT + ': downloaded before the hub is ready ' + startMB + ' MB (target < ' + TARGET.startMB + ')', startMB < TARGET.startMB]);
     }
     if (ONLY.includes('street')) {
@@ -257,7 +284,7 @@ const BREAKDOWN = (spot) => {
   }
   for (const r of rows) { if (r.tier !== TT || !TARGET[r.spot]) continue; const T = TARGET[r.spot];
     out.push([TT + ' ' + r.spot + ': ' + r.calls + ' draw calls per frame (target < ' + T.calls + ')', r.calls < T.calls]);
-    out.push([TT + ' ' + r.spot + ': ' + (r.tris / 1e6).toFixed(2) + ' M triangles per frame (target < ' + (T.tris / 1e6).toFixed(2) + ' M)', r.tris < T.tris]); }
+    triGate(out, TT + ' ' + r.spot + ': ' + (r.tris / 1e6).toFixed(2) + ' M triangles per frame (target < ' + (T.tris / 1e6).toFixed(2) + ' M)', r.tris < T.tris); }
   // owner Nov 19 07:10: night combat must not fail. On the default tier every combat gate; on low the frame-rate gates; high is printed only.
   { const hub = (rows.find((r) => r.tier === TT && r.spot === 'hub') || {}).fps;
     // the frame-rate gates need a real GPU (GPU=1, perfgpu.yml on macOS); on the Linux software GPU only the draw call and triangle gates count
@@ -266,7 +293,7 @@ const BREAKDOWN = (spot) => {
         out.push([t + 'worst frame from the card on ' + r.worstAll + ' ms (target <= ' + CGATE.worst + ')', r.worstAll <= CGATE.worst]); }
       if (r.tier !== TT) continue;
       if (hub && GPU) out.push([t + r.fps + ' fps vs hub ' + hub + ' fps in the same job (the night must not be slower)', r.fps >= hub]);
-      out.push([t + r.calls + ' draw calls per frame on average (target < 500; max ' + r.callsMax + ')', r.calls < 500]); out.push([t + (r.tris / 1e6).toFixed(2) + ' M triangles per frame on average (target < 0.50 M; max ' + (r.trisMax / 1e6).toFixed(2) + ' M)', r.tris < 0.5e6]);
+      out.push([t + r.calls + ' draw calls per frame on average (target < 500; max ' + r.callsMax + ')', r.calls < 500]); triGate(out, t + (r.tris / 1e6).toFixed(2) + ' M triangles per frame on average (target < 0.50 M; max ' + (r.trisMax / 1e6).toFixed(2) + ' M)', r.tris < 0.5e6);
       const c = r.combat || {}; if (GPU) out.push([t + 'the fight was real: ' + c.quick + ' quick and ' + c.charged + ' charged shots, ' + c.kills + ' kills, ' + c.placeOk + ' devices placed, ' + c.avgAlive + ' Gloom alive on average (' + c.avgInside + ' inside)' + (COMBAT[r.spot].boss ? ', boss acting ' + c.boss : ''), c.kills > 0 && c.charged > 0 && c.avgAlive >= COMBAT[r.spot].n * 0.6 && (!COMBAT[r.spot].boss || c.boss)]); } }
   // owner Nov 19 06:43: the night house and the boss night are the most intense play, so on the default tier their real frame rate (GPU=1) must be at least the hub's
   { const f = (sp) => (rows.find((r) => r.tier === TT && r.spot === sp) || {}).fps; const hub = f('hub');
