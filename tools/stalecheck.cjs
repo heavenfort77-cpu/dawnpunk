@@ -14,23 +14,28 @@ const { chromium } = require('playwright');
   await p.goto('file://' + page + '?quality=' + tier + '&seed=777', { timeout: 600000 }); await p.waitForFunction(() => window.__game && window.__game.startRun);
   await p.evaluate(() => {
     const G = window.__game; G.gloomSample('walker', 0, -400, 0, 0, false); const smp = window.__lastSample, scene = smp.parent; scene.remove(smp); const M4 = smp.matrix.constructor;
-    const L = new M4(), T = new M4(); const stack = [];
+    const L = new M4(), T = new M4(); const stack = []; let HIST = new Map(), FIRST = true; const FA = (typeof G.cfg === 'function' ? G.cfg() : G.cfg).lag.farAnim, KEEP = Math.max(1, ((FA && FA.every) || 1) - 1);
+    const same = (a, c) => { for (let i = 0; i < 16; i++) if (Math.abs(a[i] - c[i]) > 2e-3) return false; return true; };
     // one pass from the root: true world = parent's true world x (its own matrix if it keeps one by hand, else position / turn / size put together)
-    window.__stale = (plantOnly) => { const bad = { drawn: 0, light: 0, hit: 0, other: 0, nodes: 0, ex: {} };
+    window.__stale = (plantOnly) => { const bad = { drawn: 0, light: 0, hit: 0, other: 0, late: 0, nodes: 0, ex: {} }, H2 = new Map();
       const walk = (o, PT, vis) => { vis = vis && o.visible; let W; if (o === scene) W = new M4().copy(o.matrixWorld); else { if (o.matrixAutoUpdate) L.compose(o.position, o.quaternion, o.scale); else L.copy(o.matrix); W = (stack.pop() || new M4()).multiplyMatrices(PT, L); }
+        // OWNER DECISION Nov 19 12:35 (CONFIG.lag.farAnim, approved): a far machine is posed and placed only every farAnim.every-th frame, and the game marks it (userData.stale).
+        // Such a machine may be drawn where it truly stood at one of its last (every - 1) frames, nowhere else: its true places are kept per frame here and compared
+        if (o.parent === scene && o.userData.kind && !plantOnly) { const h = (HIST.get(o) || []).slice(-KEEP); if (o.userData.stale && !same(o.matrixWorld.elements, W.elements) && (FIRST || h.some((m4) => same(o.matrixWorld.elements, m4)))) { bad.late++; h.push(W.elements.slice()); H2.set(o, h); W.copy(o.matrixWorld); } else { h.push(W.elements.slice()); H2.set(o, h); } }
         if (vis && o !== scene) { bad.nodes++; const a = o.matrixWorld.elements, c = W.elements; let d = 0; for (let i = 0; i < 16; i++) d = Math.max(d, Math.abs(a[i] - c[i]));
           if (d > 2e-3 && (!plantOnly || o.userData.__plant)) { const draws = (o.isMesh || o.isSprite || o.isPoints || o.isLine) && (o.layers.mask & 1) && !(o.material && o.material.visible === false), kind = o.isLight ? 'light' : draws ? 'drawn' : (o.isMesh ? 'hit' : 'other'); bad[kind]++;
             if (kind === 'drawn' || kind === 'light') { let r = o; while (r.parent && r.parent !== scene) r = r.parent; const key = (r.userData.kind || r.name || r.type) + ' > ' + (o.name || o.type) + ' [' + Object.keys(o.userData).slice(0, 4).join('+') + ']'; const e = bad.ex[key] || (bad.ex[key] = { n: 0, off: 0 }); e.n++; e.off = Math.max(e.off, +Math.hypot(a[12] - c[12], a[13] - c[13], a[14] - c[14]).toFixed(2)); } } }
         for (const ch of o.children) walk(ch, W, vis); if (o !== scene) stack.push(W); };
-      walk(scene, null, true); return bad; };
+      walk(scene, null, true); if (!plantOnly) { HIST = H2; FIRST = false; } return bad; };
     // the worst of n frames, read after the game's own frame
-    window.__staleRun = (n) => new Promise((res) => { const tot = { drawn: 0, light: 0, hit: 0, other: 0, nodes: 0, frames: 0, ex: {} }; const f = () => { const r = window.__stale(false); tot.frames++; tot.nodes = Math.max(tot.nodes, r.nodes); for (const k of ['drawn', 'light', 'hit', 'other']) tot[k] = Math.max(tot[k], r[k]); for (const k in r.ex) if (!tot.ex[k] || tot.ex[k].off < r.ex[k].off) tot.ex[k] = r.ex[k]; if (tot.frames >= n) res(tot); else requestAnimationFrame(f); }; requestAnimationFrame(f); });
+    // (the kept places start empty at each scan, so on a scan's first frame a far machine marked late is taken as placed; from the second frame on it is compared)
+    window.__staleRun = (n) => new Promise((res) => { HIST = new Map(); FIRST = true; const tot = { drawn: 0, light: 0, hit: 0, other: 0, late: 0, nodes: 0, frames: 0, ex: {} }; const f = () => { const r = window.__stale(false); tot.frames++; tot.nodes = Math.max(tot.nodes, r.nodes); for (const k of ['drawn', 'light', 'hit', 'other', 'late']) tot[k] = Math.max(tot[k], r[k]); for (const k in r.ex) if (!tot.ex[k] || tot.ex[k].off < r.ex[k].off) tot.ex[k] = r.ex[k]; if (tot.frames >= n) res(tot); else requestAnimationFrame(f); }; requestAnimationFrame(f); });
     window.__plant = () => new Promise((res) => { let src = null; scene.traverse((o) => { if (!src && o.isMesh && o.visible && (o.layers.mask & 1) && o.geometry && !o.isSkinnedMesh && !o.isInstancedMesh) src = o; }); if (!src) return res(-1);
       const c = new src.constructor(src.geometry, src.material); c.userData.__plant = true; scene.add(c); c.updateMatrixWorld(true); c.matrixWorldAutoUpdate = false; c.position.x += 5; requestAnimationFrame(() => requestAnimationFrame(() => { const r = window.__stale(true); scene.remove(c); res(r.drawn); })); });
   });
   const scan = async (name, frames) => { const r = await p.evaluate((n) => window.__staleRun(n), frames); const ex = Object.entries(r.ex).sort((x, y) => y[1].off - x[1].off).slice(0, 6).map(([k, v]) => k + ' x' + v.n + ' off ' + v.off + ' m');
     add(name + ': no drawn node or light is away from its true place (' + r.nodes + ' nodes, ' + r.frames + ' frames; drawn ' + r.drawn + ', lights ' + r.light + ')' + (ex.length ? ': ' + ex.join(' | ') : ''), r.drawn === 0 && r.light === 0 && r.nodes > 20);
-    out.push('INFO ' + name + ': shot-only shapes left to the aimed shot ' + r.hit + ', other undrawn nodes ' + r.other); };
+    out.push('INFO ' + name + ': shot-only shapes left to the aimed shot ' + r.hit + ', other undrawn nodes ' + r.other + ', far machines drawn at a place of their last frame (owner-approved farAnim) ' + r.late); };
   // ---- base
   await p.evaluate(() => window.__game.enterBase()); await p.waitForFunction(() => window.__game.state === 'base' && !window.__game.cardOn()); await scan('base', 40);
   { const n = await p.evaluate(() => window.__plant()); add('the scan sees a planted fault (a drawn copy moved 5 m with its matrix pass off: seen ' + n + ')', n >= 1); }

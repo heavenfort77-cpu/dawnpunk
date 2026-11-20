@@ -12,7 +12,10 @@ const srv = http.createServer((q, r) => { const f = path.join(DIST, decodeURICom
   const open = async (opt, q, init) => { const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2, ...opt }); if (init) await ctx.addInitScript(init); ctx.setDefaultTimeout(240000); const p = await ctx.newPage(); p.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
     if (opt.block) await p.route('**/tex/**', (r) => r.abort()); await p.goto(URL0 + (q || '')); await p.waitForFunction(() => window.__game && window.__game.quality); return { ctx, p }; };
   const tierOf = (p) => p.evaluate(() => ({ ...window.__game.quality(), coarse: matchMedia('(pointer: coarse)').matches }));
-  const street = async (p) => { await p.evaluate(() => { window.__game.enterBase(); }); await p.waitForTimeout(1500); const base = await p.evaluate(() => window.__game.quality());
+  const street = async (p) => { await p.evaluate(() => { window.__game.enterBase(); });
+    // (Nov 21) waits on the condition, not on 1.5 wall-clock seconds: the sharper picture files are all in (or none are asked for) and a few frames have been drawn since
+    await p.waitForTimeout(1500); await p.waitForFunction(() => { const q = window.__game.quality(); return !q.hi || !q.hi.asked || q.hi.ok >= q.hi.asked; }, null, { timeout: 180000 }).catch(() => {}); await p.evaluate(() => new Promise((r) => { let n = 0; const f = () => (++n >= 5 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }));
+    const base = await p.evaluate(() => window.__game.quality());
     await p.evaluate(() => { document.getElementById('selRing').value = '1'; window.__game.startRun(0); }); await p.waitForTimeout(1500);
     for (let k = 0; k < 40; k++) { const h = await p.evaluate(() => window.__game.quality().hi); if (h.ok + h.failed >= h.asked) break; await p.waitForTimeout(500); } await p.waitForTimeout(800); return { base, st: await p.evaluate(() => window.__game.quality()) }; };
 
@@ -30,11 +33,12 @@ const srv = http.createServer((q, r) => { const f = path.join(DIST, decodeURICom
   o = await open({}, '?quality=high', () => { try { localStorage.setItem('dawnpunk.quality', 'low'); } catch (e) { /* none */ } }); t = await tierOf(o.p); out.push(['address beats saved choice (?quality=high over saved low -> ' + t.tier + ')', t.tier === 'high']); await o.ctx.close();
   o = await open({}, '', () => { Object.defineProperty(window, 'localStorage', { get: () => { throw new Error('blocked'); } }); }); t = await tierOf(o.p); out.push(['storage blocked: no error, pointer decides (' + t.tier + ')', t.tier === 'medium']); await o.ctx.close();
   // 3 pause-menu button
+  // (Nov 21) the button switches medium <-> low (owner rule: default medium, never high; src/main.js GFX_OTHER). The check still asked for high: out of date, brought to the rule
   o = await open({}); await o.p.evaluate(() => { window.__game.enterBase(); document.getElementById('selRing').value = '1'; window.__game.startRun(0); }); await o.p.waitForTimeout(1500); await o.p.keyboard.press('Escape'); await o.p.waitForTimeout(300);
   const lab0 = await o.p.textContent('#bGfx'); await o.p.evaluate(() => document.getElementById('bGfx').click()); const lab1 = await o.p.textContent('#bGfx'); await Promise.all([o.p.waitForNavigation(), o.p.evaluate(() => document.getElementById('bGfx').click())]); await o.p.waitForFunction(() => window.__game && window.__game.quality);
   t = await tierOf(o.p); const kept = await o.p.evaluate(() => { try { return localStorage.getItem('dawnpunk.quality'); } catch (e) { return null; } });
-  out.push(['pause menu: "' + lab0 + '" -> "' + lab1 + '" -> reload as ' + t.tier + ', saved ' + kept, lab0.includes('medium') && /Tap again/.test(lab1) && t.tier === 'high' && kept === 'high']);
-  await o.p.goto(URL0); await o.p.waitForFunction(() => window.__game && window.__game.quality); t = await tierOf(o.p); out.push(['the choice stays after reopening without ?quality (' + t.tier + ')', t.tier === 'high']); await o.ctx.close();
+  out.push(['pause menu: "' + lab0 + '" -> "' + lab1 + '" -> reload as ' + t.tier + ', saved ' + kept, lab0.includes('medium') && /Switch to low/.test(lab1) && /Tap again/.test(lab1) && t.tier === 'low' && kept === 'low']);
+  await o.p.goto(URL0); await o.p.waitForFunction(() => window.__game && window.__game.quality); t = await tierOf(o.p); out.push(['the choice stays after reopening without ?quality (' + t.tier + ')', t.tier === 'low']); await o.ctx.close();
   // 4 what each tier really uses
   const H = sH.st, M = s1.st, L = s0.st, W = (x) => x.want;
   out.push(['high: wall texture ' + H.wallTex + ' px, wall relief ' + H.wallRelief + ' px, street shadow ' + H.shadow + ', base shadow ' + sH.base.shadow + ', base wall ' + sH.base.wallTex + ' px (files ' + H.hi.ok + '/' + H.hi.asked + ' loaded, ' + H.hi.used + ' textures upgraded)', H.wallTex === 1024 && H.wallRelief === 1024 && H.shadow === 2048 && sH.base.shadow === 2048 && sH.base.wallTex === 1024 && H.hi.ok === H.hi.asked && H.hi.asked > 30]);
