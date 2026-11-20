@@ -19,9 +19,12 @@ const page0 = process.argv[2] || path.resolve(__dirname, '../dist/index.html');
     else if (where === 'ladder') { P.x = l.x + 0.52; P.z = l.z + 0.52; }
     else { let best = null; for (let x = -4; x <= 4; x++) for (let z = -4; z <= 4; z++) { const d = Math.min(...s.stairs.map((q) => Math.min(Math.hypot(x - q.tx, z - q.tz), Math.hypot(x - q.bx, z - q.bz), Math.hypot(x - (q.bx + q.tx) / 2, z - q.bz))), ...s.ladders.map((q) => Math.hypot(x - q.x, z - q.z))); if (!best || d > best[2]) best = [x, z, d]; } P.x = best[0]; P.z = best[1]; }
     return { x: +P.x.toFixed(2), z: +P.z.toFixed(2) }; }, where);
+  const gameSecs = (secs) => p.evaluate((secs) => new Promise((ok) => { let t = 0, last = performance.now(); const f = (now) => { t += Math.min((now - last) / 1000, window.__dtMax || 0.5); last = now; if (t >= secs) ok(); else requestAnimationFrame(f); }; requestAnimationFrame(f); }), secs);
   const after = () => p.evaluate(() => { const g = window.__game, P = g.sim.player; return { floor: P.floor, camY: +g.cam.position.y.toFixed(2), FH: (typeof g.cfg === 'function' ? g.cfg() : g.cfg).floorH }; });
   for (const [where, down] of [['stair', true], ['ladder', true], ['solid', false]]) {
-    const at = await put(where); await p.waitForTimeout(2500); const a = await after();
+    // (Nov 20, Firefox on a Mac runner: the camera had not moved after 2.5 s of wall clock) waits for 2.5 s of GAME time: frames' times added, each capped at the
+    // game's own step cap (__dtMax), so a slow browser waits for as much play as a fast one
+    const at = await put(where); await gameSecs(2.5); const a = await after();
     const want = down ? 0 : 1, eye = want * a.FH + 1.6;
     add(where + ' at ' + JSON.stringify(at) + ' upstairs: ' + (down ? 'drops to the floor below' : 'stays upstairs') + ' (floor ' + (a.floor + 1) + '), camera at ' + a.camY + ' m (eye height there ' + eye.toFixed(2) + ')', a.floor === want && Math.abs(a.camY - eye) < 0.15);
   }
