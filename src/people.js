@@ -210,7 +210,9 @@ export function createPerson(cfg, key) {
     // (a heel up when the walk halts comes down over about 0.1 s)
     for (let i = 0; i < 2; i++) { const p = (st.phase + 0.5 * i) % 1; st.swingQ[i] = walking && M.walkLock && p >= S0 ? (p - S0) / (1 - S0) : -1; const hg = walking && p < S0 ? sstep((p / S0 - (1 - ho)) / ho) : 0; st.heel[i] = walking ? hg : st.heel[i] * Math.exp(-dt / 0.1); } st.A = A; st.v = v; st.walk = walking;
     // body: lean (a spring, so it rocks a little when a walk starts or stops), counter-turn against the hips, waddle (child), breathing; the head kept level
-    const lean = spring(st.lean, G.lean * gw + (G.stoop || 0) - (o.carry ? 0.04 : 0), S.leanHz, S.leanDamp, dt);
+    // (OWNER Nov 20 15:12, the crate carry; Muybridge: a load held in front tips the body back, the steps shorten) carrying, the walk's forward lean is dropped and the
+    // body leans back walk.carryLean rad
+    const lean = spring(st.lean, (o.carry ? -P.walk.carryLean : G.lean * gw) + (G.stoop || 0), S.leanHz, S.leanDamp, dt);
     const counter = -G.twist * Math.sin(2 * Math.PI * st.phase) * gw * 1.4, waddle = (G.waddle || 0) * Math.sin(2 * Math.PI * (st.phase - S0 / 2)) * gw;
     add('spine_01', lean * 0.5, chestOff * 0.3 + counter * 0.3, -hipRoll * 0.7 + waddle * 0.5);
     add('spine_02', lean * 0.3 - br * I.chest, chestOff * 0.3 + counter * 0.3, waddle * 0.5);

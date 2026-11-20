@@ -145,7 +145,8 @@ export const CONFIG = {
     turn: { lead: 0.15, follow: [0.16, 0.2, 0.26], stepStart: 0.4, predict: 0.8, minStep: 0.14, maxStep: 1.15, twist: 0.6, chestTwist: 0.45, headMax: 1.1, stepLift: 0.34, stepSway: 0.02, near: 6, far: 7, back: 2.5, maxSpeed: [5.5, 5.5, 4.5] },
     idle: { shift: [3.5, 6.5], move: 1.4, slow: 7.5, slowShare: 0.35, hip: 0.025, roll: 0.03, knee: 0.14, breath: 4.2, chest: 0.012, look: 0.07 },
     settle: { armHz: 3.6, armDamp: 0.5, foreHz: 3.2, foreDamp: 0.35, handHz: 2.6, handDamp: 0.3, inertia: 0.35, headHz: 2.0, headDamp: 0.5, leanHz: 1.3, leanDamp: 0.55 },
-    walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.85 },
+    // carryLean (Nov 20): the body leans back this many rad while carrying a crate in front; carrySpeed 0.85 -> 0.8 (shorter steps at the same stride time)
+    walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.8, carryLean: 0.06 },
     // motion (tools/humanmotioncheck.cjs measures it):
     // slice: the motion runs in fixed steps of this many seconds (1/120: a 30 or 60 fps frame is a whole number of them, so the motion is the same at both); maxSlices: at most this many per frame (a longer gap is skipped)
     // turnAcc: walking, the body's turn rate changes by at most this many rad/s each second (30 = 1720 deg/s2; no snapped turns at a corner)
