@@ -908,6 +908,7 @@ function enterHouse(i, quiet) { perfRest();
 }
 // the first-collector flash names the real control (CONFIG.firstSolar: desktop key Q, phone SOLAR button)
 function solarBlock() { return FINE ? CONFIG.firstSolar.blockD : CONFIG.firstSolar.blockP; }
+let solarIgn = 0;
 function mustSolar() { return !!(run && sim && fromBase && save && !save.solarDone && !(save.nights > 0) && sim.phase === 'day'); }
 function leaveHouse() { if (!run || !sim || state !== 'play' || paused) return; if (mustSolar()) { flash(solarBlock(), 1); return; } const h = run.houses[run.inside], hp = sim.player.hp; if (!RUN.leave(run)) return; run.hurt = Math.max(0, CONFIG.player.hp - hp); if (save && (save.nights || 0) < 2 && !run.toldPick) { run.toldPick = true; queueHint(1, 'More openings, more Gloom. Pick where you stand.'); } sim = null; yaw = h.row < 0 ? Math.PI : 0; pitch = 0; enterTown(); } // step out facing the street
 function nightfall(byHold) { if (!run) return; perfRest(); if (byHold && mustSolar()) { flash(solarBlock(), 1); return; } if (!sim) { const h = facedHouse() || RUN.nearest(run, run.px, run.pz); run.caught = !byHold; enterHouse(byHold ? h.i : RUN.nearest(run, run.px, run.pz).i, true); } sim.endDay(); }
@@ -2051,6 +2052,9 @@ function frame(now) {
     acc += dt; const step = CONFIG.night.dt;
     while (acc >= step) { sim.step(step); if (mustSolar()) sim.dayT += step; acc -= step; } drillTick(dt);
     // the first-collector order: up CONFIG.firstSolar.secs, again every .repeat s while the collector is still not up (no voice clip, so a repeat is silent)
+    // (owner Nov 21: a player may ignore the lesson) the first-collector hold lets go after CONFIG.firstSolar.ignoreSecs of game time with no collector up: the day clock
+    // runs again and you may leave or start the night; it does not come back (save.solarDone)
+    if (mustSolar()) { solarIgn += dt; if (solarIgn >= CONFIG.firstSolar.ignoreSecs) { solarIgn = 0; save.solarDone = true; persist(); $('marla').textContent = CONFIG.firstSolar.ignored; marlaT = CONFIG.firstSolar.secs; } }
     if (mustSolar()) { solarT -= dt; if (solarT <= 0 && marlaT <= 0.01) { const F = CONFIG.firstSolar; $('marla').textContent = FINE ? F.marlaD : F.marlaP; marlaT = F.secs; solarT = F.repeat; } }
     const evs = sim.log.splice(0); impactEvents(evs);
     for (const ev of evs) { if (ev.e === 'boss' && ev.k === 'spill') sunPop(ev.sun);
@@ -2085,16 +2089,19 @@ function frame(now) {
     cam.position.set(p.x, camY, p.z); cam.rotation.set(pitch, yaw, 0, 'YXZ');
     GFRAME = (GFRAME + 1) | 0;
     for (const g of sim.gloom) {
-      let m = gMesh.get(g.id); if (!m) { m = gloomTake(g); if (m) { scene.add(m); gMesh.set(g.id, m); } else { m = gloomMesh(g); if (m.userData.anim) mergeQ.push([m, g.x, g.z]); gloomBlob(m, gloomKind(g)); scene.add(m); gMesh.set(g.id, m); } }
+      let m = gMesh.get(g.id); const isNew = !m; if (!m) { m = gloomTake(g); if (m) { scene.add(m); gMesh.set(g.id, m); } else { m = gloomMesh(g); if (m.userData.anim) mergeQ.push([m, g.x, g.z]); gloomBlob(m, gloomKind(g)); scene.add(m); gMesh.set(g.id, m); } }
       // the height it is drawn at comes from the sim (src/sim.js gloomY), so the aimed shot aims where the model stands
       const gy = sim.gloomY(g);
       // LAG FIX Nov 19 (owner 07:10): at night in a house a machine outside that no opening shows is not drawn (src/nightcull.js sees; CONFIG.lag.nightCull.gloomR);
       // it stays visible and animated (the aimed shot tests the model as posed, src/main.js drawnHit, so the rules see exactly what they saw before); only its draws move to
       // layer 1, which the camera does not draw (pieces already on the hit layer stay there), and its matrices skip the per-frame pass (drawnHit works them out itself)
-      m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; const L = nightCull.sees(g.x, gy + CONFIG.lag.nightCull.gloomY, g.z, CONFIG.lag.nightCull.gloomR, sim, cam) ? 0 : 1; if ((m.userData.cullL || 0) !== L) { m.userData.cullL = L; m.traverse((q) => { if (!q.userData.hitOnly) q.layers.set(L); }); m.matrixWorldAutoUpdate = L === 0; }
+      m.position.set(g.x, gy, g.z); m.rotation.y = g.face + Math.PI; const L = nightCull.sees(g.x, gy + CONFIG.lag.nightCull.gloomY, g.z, CONFIG.lag.nightCull.gloomR, sim, cam) ? 0 : 1; if ((m.userData.cullL || 0) !== L) { m.userData.cullL = L; m.traverse((q) => { if (!q.userData.hitOnly) q.layers.set(L); }); m.matrixWorldAutoUpdate = L === 0; if (L === 0) m.userData.born = true; }
       // OWNER DECISION Nov 19 12:35 (a visible cut, approved): a machine farther than CONFIG.lag.farAnim.dist m from you, or one the night cull hides, is posed and has its
       // matrices worked out only every farAnim.every-th frame (its frames spread by its id); nearer, every frame as before
-      const FA = CONFIG.lag.farAnim, skip = !!FA && FA.every > 1 && (L === 1 || (g.x - cam.position.x) ** 2 + (g.z - cam.position.z) ** 2 > FA.dist * FA.dist) && (GFRAME + g.id) % FA.every !== 0;
+      // (Nov 21, whole-scene scan: a far machine was drawn for a frame where its model last stood, 53 m off) a machine on its first frame, or the frame the night cull
+      // shows it again, is always posed and placed: the every-other-frame saving starts the frame after
+      const born = isNew || m.userData.born; m.userData.born = false;
+      const FA = CONFIG.lag.farAnim, skip = !born && !!FA && FA.every > 1 && (L === 1 || (g.x - cam.position.x) ** 2 + (g.z - cam.position.z) ** 2 > FA.dist * FA.dist) && (GFRAME + g.id) % FA.every !== 0;
       if (L === 0) m.matrixWorldAutoUpdate = !skip;
       if (m.userData.anim) { if (!skip) { m.userData.anim(performance.now() / 1000, g); m.userData.stale = null; } else m.userData.stale = g; } else m.scale.setScalar(0.9 + 0.1 * (g.hp / g.maxhp));
     }

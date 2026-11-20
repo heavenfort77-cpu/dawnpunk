@@ -601,6 +601,10 @@ export const CONFIG = {
   // first day: the first solar collector must go up inside the first house before you can leave it or start the night; the day clock waits meanwhile (save.solarDone)
   // fresh-player review Nov 18: each line names the real control, D = desktop (key Q), P = phone (the SOLAR button). Her line has no voice clip (the old clip said "tap Solar")
   firstSolar: {
+    // A PLAYER MAY IGNORE IT (owner Nov 21): seconds of game time in the house with no collector up before the hold lets go (the clock runs, you may leave or start the night)
+    ignoreSecs: 60,
+    // Marla when it lets go
+    ignored: "No collector, then. Your loss, Potts.",
     // the flash when you try to leave the house or start the night before it is up
     blockD: 'Set up your first solar collector first: face a window or door and press Q.',
     blockP: 'Set up your first solar collector first: face a window or door and tap SOLAR.',

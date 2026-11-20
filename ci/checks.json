@@ -422,6 +422,38 @@
    "tier": "desktop",
    "quality": "high",
    "timeout": 70
+  },
+  {
+   "name": "fuzz",
+   "script": "tools/fuzz.cjs",
+   "args": [
+    "300"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 110,
+   "note": "random taps, drags, keys, blur and resize on six screen sizes (phone to ultrawide), in the base, street, day and night: fails on any page error or not-a-number (owner Nov 21: phone AND desktop)"
+  },
+  {
+   "name": "phonehudcheck",
+   "script": "tools/phonehudcheck.cjs",
+   "args": [
+    "{dist}/index.html",
+    "{out}/"
+   ],
+   "tier": "phone",
+   "quality": "low",
+   "timeout": 30
+  },
+  {
+   "name": "panelfixcheck",
+   "script": "tools/panelfixcheck.cjs",
+   "args": [
+    "{dist}/index.html"
+   ],
+   "tier": "phone",
+   "quality": "low",
+   "timeout": 30
   }
  ]
 }

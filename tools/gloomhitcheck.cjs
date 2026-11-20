@@ -78,7 +78,8 @@ const KINDS = process.env.KINDS ? process.env.KINDS.split(',') : ['walker', 'lur
       const r = { kind, d, facing, aims: {}, headInWay: false, headHidden };
       for (const [n, a] of aims) r.aims[n] = [fire(g, a, null), fire(g, a, SH0)];
       // does the straight line from the eye through the body centre (and on, to the cannon's range) pass the drawn head? then a head shot there is right
-      { const e = [P.x, eyeY(), P.z], a = ctr(wb), dv = [a[0] - e[0], a[1] - e[1], a[2] - e[2]], L = Math.hypot(dv[0], dv[2]) || 1, k = C.range / L; let t0 = 0, t1 = k, ok = true;
+      // (Nov 21) the line tested is the one fired (the middle of the largest body part), not the line to the middle of the whole machine: on the Ticks the two differ
+      { const e = [P.x, eyeY(), P.z], a = aims[0][1], dv = [a[0] - e[0], a[1] - e[1], a[2] - e[2]], L = Math.hypot(dv[0], dv[2]) || 1, k = C.range / L; let t0 = 0, t1 = k, ok = true;
         for (const [lo, hi, o, dd] of [[hw[0], hw[1], e[0], dv[0]], [hw[2], hw[3], e[1], dv[1]], [hw[4], hw[5], e[2], dv[2]]]) { if (Math.abs(dd) < 1e-9) { if (o < lo || o > hi) ok = false; continue; } let u = (lo - o) / dd, w = (hi - o) / dd; if (u > w) [u, w] = [w, u]; t0 = Math.max(t0, u); t1 = Math.min(t1, w); }
         r.headInWay = ok && t0 <= t1; }
       // just outside the drawn body: the aim turned 0.3 m (at its distance) past the drawn point farthest to one side, or tipped 0.3 m over the drawn point that sticks up most (seen from the eye)
