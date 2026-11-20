@@ -29,8 +29,10 @@ export function lifeMats(hi) {
 // a placer that gathers geometries per surface; aliases fold the shared prop builders' surface names (src/density.js PROPS) into ours
 export function lifePlacer() { const acc = new Map(); return { acc, P: new Placer((key, geo, m, tint) => { const kk = ALIAS[key] || key; let a = acc.get(kk); if (!a) acc.set(kk, a = []); a.push([geo, m.clone(), tint]); }) }; }
 // merge each surface into one mesh (a geometry that carries its own vertex colours keeps them, times its tint); returns triangles. extra: { surface: material } overrides
-export function mergeLife(parent, acc, M, extra) { let tri = 0, meshes = 0;
-  for (const [key, list] of acc) { const geos = [];
+// (Nov 20, a title frame of 205 ms: the life pieces' merge was one part) mergeLifeIter stops after each material; mergeLife runs it at once
+export function mergeLife(parent, acc, M, extra) { const it = mergeLifeIter(parent, acc, M, extra); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
+export function* mergeLifeIter(parent, acc, M, extra) { let tri = 0, meshes = 0;
+  for (const [key, list] of acc) { yield; const geos = [];
     for (const [geo, m, tint] of list) { const own = geo.userData && geo.userData.ownColour, q = geo.index ? geo.toNonIndexed() : geo.clone(); for (const k2 of Object.keys(q.attributes)) if (k2 !== 'position' && k2 !== 'normal' && k2 !== 'uv' && !(own && k2 === 'color')) q.deleteAttribute(k2);
       if (!q.attributes.normal) q.computeVertexNormals(); if (!q.attributes.uv) q.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(q.attributes.position.count * 2), 2)); q.applyMatrix4(m);
       const n = q.attributes.position.count, t = tint || C(0xffffff); if (own && q.attributes.color) { const cc = q.attributes.color; for (let i = 0; i < n; i++) cc.setXYZ(i, cc.getX(i) * t.r, cc.getY(i) * t.g, cc.getZ(i) * t.b); }
@@ -190,7 +192,7 @@ export function* buildBaseWaterIter(g, cfg, hi, ground, kit) {
     if (cfg.baseLife && cfg.baseLife.on) { const z = fl.main[fl.main.length - 1][1]; for (const x of [6.6, 8.2, 9.8, 11.4]) { P.add('wood', G.box(0.08, 0.03, 0.24), x, 0.29, z + 0.2, 0, 0, 0, 1, 1, 1, jit(0x6a4a2e)); P.add('glass', G.box(0.05, 0.22, 0.02), x, 0.35, z + 0.33, 0, 0, 0, 1, 1, 1, C(0xcfeef0)); } } }
   yield;
   // ---- merge what stands still, then the water surface, the turning wheel, foam and drops
-  const res = mergeLife(grp, acc, M); let tri = res.tri, meshes = res.meshes;
+  const res = yield* mergeLifeIter(grp, acc, M); let tri = res.tri, meshes = res.meshes;
   const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wp, 3)); wg.setAttribute('uv', new THREE.Float32BufferAttribute(wu, 2)); wg.setIndex(wi); wg.computeVertexNormals();
   const wm = waterMat(cfg, hi), water = new THREE.Mesh(wg, wm); water.receiveShadow = true; water.userData.life = true; water.userData.noAO = true; water.renderOrder = 2; grp.add(water); tri += wi.length / 3; meshes++;
   // the wheel: two rims (shrouds) with iron bands, spokes to a hub with copper bands, curved paddles between the rims, copper bolts; turns about its own x
