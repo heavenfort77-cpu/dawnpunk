@@ -615,6 +615,20 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
     // #4aa8e8, src/hands.js) the film shows the hands in its turning part (CONFIG.opening.turning.hands) and their scene was never drawn under the black: it is now
     if (hands.warm) hands.warm(renderer, cam.aspect);
     if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e) { /* no context */ } } } catch (e) { /* the film runs as before */ } finally { I.hold = false; } })(); }
+// (Nov 20, PROFILE 44648754836: 6 MeshDepthMaterial programs and 17 new shadow-target draw states in the first play frame after the first ride card) three r187
+// keys every program, the shadow passes' depth programs too, on the light counts of the render BEFORE it (the shadow maps are drawn before that render's own lights
+// are counted). With Marla's lights split off (ML.on) each play frame is: street render (sun shadow pass under the counts her pass left: the scene's lights plus her
+// two), then her pass (her key's shadow pass under the street's counts). The card's parts (drawPieces) follow one another, so they only ever built the sun's depth
+// programs under the street's counts: the other set was first needed in play. CONFIG.lag.shadowSets: under the card, after her pass, the shadow maps alone are drawn
+// once with every piece shown and not culled (no piece goes to the screen: the camera looks at layer 31, which holds only the lights): the scene's lights after her
+// pass, then her key after the street's counts, then the counts put back to the street's. Returns the draw calls made.
+function shadowSets(list) { if (!ML.on || !CONFIG.lag.shadowSets) return 0; const B = 31, c0 = RSTAT.calls, cm = cam.layers.mask, pt = renderer.getRenderTarget(), own = [], hers = [], shm = [], was = [], lods = [];
+  scene.traverse((o) => { if (!o.isLight) return; (ML.lights.includes(o) ? hers : own).push(o); if (o.castShadow && o.shadow && o.shadow.camera) { shm.push([o.shadow.camera, o.shadow.camera.layers.mask]); o.shadow.camera.layers.set(7); } });
+  for (const o of list) { was.push([o, o.visible, o.frustumCulled, o.layers.mask]); o.visible = true; o.frustumCulled = false; o.layers.enable(7); for (let q = o.parent; q && q !== scene; q = q.parent) { if (q.isLOD && q.autoUpdate) { q.autoUpdate = false; lods.push(q); } if (!q.visible) { was.push([q, false, q.frustumCulled, q.layers.mask]); q.visible = true; } } }
+  const pass = (ls, sh) => { for (const l of ls) l.layers.enable(B); renderer.shadowMap.needsUpdate = sh; try { renderer.render(scene, cam); } finally { for (const l of ls) l.layers.disable(B); } };
+  try { ML.sh = false; marlaPass(); cam.layers.set(B); renderer.setRenderTarget(null); pass(own, true); if (hers.some((l) => l.castShadow)) pass(hers, true); pass(own, false); } catch (e) { /* drawn at first use instead */ }
+  finally { renderer.setRenderTarget(pt); cam.layers.mask = cm; for (const [o, v, f, m] of was) { o.visible = v; o.frustumCulled = f; o.layers.mask = m; } for (const [c, m] of shm) c.layers.mask = m; for (const q of lods) q.autoUpdate = true; }
+  return RSTAT.calls - c0; }
 // draws the pieces list[i0..i1) once, each shown and not culled, alone (layer 7), into target (null: the screen; the film's black covers it); the scene's lights
 // take part; everything is put back. Returns the draw calls made.
 // (R4 item D, card 28) a piece inside a THREE.LOD was hidden again by the LOD's own update during this draw (three.js projectObject: lod.update(camera) sets each
@@ -1792,7 +1806,7 @@ async function sceneCard(kind) {
       if (!preDrawn) { const S = CONFIG.lag.slice, list = []; if (pshadow.warm) pshadow.warm(); scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); });
         // (R4, card 27) each part (S.card ms of sending) waits for the GPU to finish it (gpuDone) before the next, instead of one frame
         let fr = 0, worst = 0; for (let i = 0; i < list.length;) { const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.card) { const e = Math.min(list.length, i + S.cardDraws); renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); i = e; } worst = Math.max(worst, performance.now() - t0); fr++; if (gp) await gpuDone(G.cap); else await raf(); }
-        LCARD.allParts = [fr, Math.round(worst)]; mark('all pieces'); }
+        LCARD.allParts = [fr, Math.round(worst)]; LCARD.shadowSets = shadowSets(list); mark('all pieces'); }
       draw1(true); if (gp) await gpuDone(G.cap); else await raf(); draw1(false); if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e2) { /* no context */ } } }
     // the warm-up machines start the Gloom pool (they are built, drawn and uploaded); the rest of the warm-up copies stay hidden until the run ends, their matrices
     // skipping the per-frame pass too (owner 09:50)
@@ -1805,7 +1819,7 @@ async function sceneCard(kind) {
       LCARD.settle = fr; mark('settle'); }
     fill(0.9); if (bot) renderer.shadowMap.needsUpdate = true;
   } catch (e) { try { window.__cardErr = String(e && e.stack || e).slice(0, 300); } catch (e2) { /* no window */ } }
-  LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ id, kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, cw: LCARD.cw || null, allParts: LCARD.allParts || null, lamps: LCARD.lampCounts || null, gpu: [GPUQ.waits - pf0[7], Math.round(GPUQ.ms - pf0[8]), Math.round(GPUQ.worst)], bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
+  LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ id, kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, cw: LCARD.cw || null, allParts: LCARD.allParts || null, shadowSets: LCARD.shadowSets || 0, lamps: LCARD.lampCounts || null, gpu: [GPUQ.waits - pf0[7], Math.round(GPUQ.ms - pf0[8]), Math.round(GPUQ.worst)], bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
   if (CONFIG.lag.crossWarm) { if (crS === null) crW.removeAttribute('style'); else crW.setAttribute('style', crS); crossK = '#'; setCross(crK); }
   fill(1); if (id === LCARD.n) { LCARD.on = false; LCARD.endT = Math.round(performance.now()); $('lcard').style.display = 'none'; perfRest(); }

@@ -1145,6 +1145,8 @@ export const CONFIG = {
     // (R4 worker 8, Card 46 then Card 48) ON: with it off (f7258a2, plain medium 44567127417) 3 programs were built in play, one each at page 99219 / 99235 / 99244 ms
     // (models of the run finishing their load in play: glbReady's compileAsync); the 15 'intro' ones were Card 45's, not glbDefer's
     glbDefer: true,
+    // shadowSets (Nov 20): under the ride and night cards the shadow maps are also drawn once under the light counts Marla's own pass leaves (src/main.js shadowSets)
+    shadowSets: true,
     // warmFresh (R4 worker 11): the night card also draws one not-yet-merged machine of each kind and one breach mark (src/main.js warmNight)
     warmFresh: false,
     // logoWarm (R4 worker 11, OWNER DECISION lead 03:33): after the logo and every load, the scene's shaders built in the background and the scene drawn once under the

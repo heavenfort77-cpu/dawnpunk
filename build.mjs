@@ -45,5 +45,5 @@ for (const f of fs.existsSync('art/voice/mp3') ? fs.readdirSync('art/voice/mp3')
 console.log('Marla voice clips', nv, 'files', (vb / 1024).toFixed(0) + ' KB in dist/voice');
 fs.writeFileSync('dist/index_single.html', single);
 // (H, release check) a failed itch zip fails the build (it was only logged, and an old zip could have gone out)
-const { execSync } = await import('child_process'); try { fs.rmSync('dist/solardg-itch.zip', { force: true }); execSync('cd dist && zip -q -r solardg-itch.zip index.html physics.js music tex models voice'); } catch (e) { console.error('zip failed', String(e).slice(0, 200)); process.exit(1); }
+const { execSync } = await import('child_process'); try { fs.rmSync('dist/solardg-itch.zip', { force: true }); for (const f of ['LICENSE', 'ASSETS-LICENSE.md']) fs.copyFileSync(f, 'dist/' + f); fs.cpSync('licenses', 'dist/licenses', { recursive: true }); execSync('cd dist && zip -q -r solardg-itch.zip index.html physics.js music tex models voice LICENSE ASSETS-LICENSE.md licenses'); } catch (e) { console.error('zip failed', String(e).slice(0, 200)); process.exit(1); }
 console.log('music files', n, '| single-file build', (single.length / 1024).toFixed(0) + ' KB', '| itch zip', (fs.statSync('dist/solardg-itch.zip').size / 1024).toFixed(0) + ' KB');
