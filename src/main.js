@@ -1357,7 +1357,10 @@ function tickMap(dt) { const M = CONFIG.miniMap, cv = $('mmap'); const indoor = 
   mapInfo = drawMap(cv, FINE ? M.px[0] : M.px[1], M.radius, 1e9); }
 let mapKey = '';
 // the round map drawn into a canvas: css size (px), metres from you to its rim, largest glyph (px); the corner map and the big pause-menu map (fresh-player fix, owner Nov 18) share it; returns where Marla and the marks were drawn
-function drawMap(cv, css, rad, gMax) { const M = CONFIG.miniMap, dpr = Math.min(2, devicePixelRatio || 1); if (cv.width !== Math.round(css * dpr)) { cv.width = cv.height = Math.round(css * dpr); cv.style.width = cv.style.height = css + 'px'; }
+function drawMap(cv, css, rad, gMax) { const M = CONFIG.miniMap, dpr = Math.min(2, devicePixelRatio || 1); const W = Math.round(css * dpr);
+  // (player report Nov 20, Retina Mac: the corner map filled the window) the size on screen is set whenever it differs, not only when the pixel size changes: at 2x a
+  // 150 px map is 300 pixels, the size a new canvas already has, so the screen size was never set and the page's rule for canvases (full window) stretched it
+  if (cv.width !== W) cv.width = cv.height = W; if (cv.style.width !== css + 'px' || cv.style.height !== css + 'px') cv.style.width = cv.style.height = css + 'px';
   const x = cv.getContext('2d'), C = M.col, r = css / 2, k = (r - 8) / rad, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw), at = (wx, wz) => { const dx = wx - bp.x, dz = wz - bp.z; return [r + (dx * rx + dz * rz) * k, r - (dx * fx + dz * fz) * k]; };
   x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, css, css); x.globalAlpha = M.alpha; x.fillStyle = C.bg; x.beginPath(); x.arc(r, r, r - 1, 0, 7); x.fill(); x.save(); x.clip();
   x.strokeStyle = C.grid; x.lineWidth = 1; for (const q of [0.33, 0.66]) { x.beginPath(); x.arc(r, r, (r - 8) * q, 0, 7); x.stroke(); }

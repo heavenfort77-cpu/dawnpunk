@@ -183,6 +183,16 @@
    "timeout": 35
   },
   {
+   "name": "mapdprcheck",
+   "script": "tools/mapdprcheck.cjs",
+   "args": [
+    "low"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 30
+  },
+  {
    "name": "premortem",
    "script": "tools/premortem.cjs",
    "args": [

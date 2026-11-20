@@ -258,7 +258,7 @@ body:has(#pause[style*="flex"]) #bMus,body:has(#keys[style*="flex"]) #bMus,body:
 #keysBody .k{justify-self:end;font:700 13px/1.2 system-ui,sans-serif;padding:3px 8px;border-radius:4px;background:#f4e7b0;color:#1b2a22;white-space:nowrap;align-self:start}
 body.hkeys:not(.keyscard) #keys{display:flex!important;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;pointer-events:none}body.hkeys:not(.keyscard) #keys #keysClose{display:none}
 @media (max-height:500px){#keysBody{font-size:13px;gap:3px 10px}#keys .kcard h1{font-size:19px}}
-#bigmap{justify-content:center}#bmap{display:block;border-radius:50%;max-width:92vw;max-height:calc(100vh - 150px)}#bigmap h1{margin:0}#bigmap p.hint{margin:0;font-size:14px;color:#d9cca6}
+#bigmap{justify-content:center}#bmap{display:block;position:relative;inset:auto;border-radius:50%;max-width:92vw;max-height:calc(100vh - 150px)}#bigmap h1{margin:0}#bigmap p.hint{margin:0;font-size:14px;color:#d9cca6}
 #dsub{display:none;position:fixed;z-index:6;padding:4px 10px;border-radius:5px;background:var(--ui-back,#07120ee8);color:#fff3cf;font:600 var(--dsub-px,13px)/1.3 system-ui,sans-serif;text-shadow:0 1px 2px #000;pointer-events:none;max-width:min(84vw,380px);width:max-content;text-align:left}#dsub.on{display:block}
 #dmark,#darrow{display:none;position:fixed;left:0;top:0;z-index:5;pointer-events:none}#dmark.on,#darrow.on{display:block}
 #dmark{width:var(--dm-px,58px);height:var(--dm-px,58px);margin:calc(var(--dm-px,58px) / -2) 0 0 calc(var(--dm-px,58px) / -2);border:3px solid var(--dm-c,#ffd76a);border-radius:50%;box-shadow:0 0 0 2px #000b,inset 0 0 0 2px #000b,0 0 16px var(--dm-c,#ffd76a);animation:dmpulse 1s ease-in-out infinite}
