@@ -1,0 +1,84 @@
+# Dawnpunk checks in other browser engines (Nov 20, after the Retina map fault: every check had run in Chromium only). Started by hand only.
+# Each job builds the asked commit and runs one check from ci/checks.json through main's tools/browserrun.cjs, which hands the check the asked engine
+# (webkit = Safari's engine, firefox) in place of Chromium. A job fails on any FAIL line, a crash, a timeout, or no PASS line.
+name: browsers
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit or branch to test"
+        type: string
+        default: main
+      engines:
+        description: "Comma list: webkit, firefox"
+        type: string
+        default: "webkit,firefox"
+      checks:
+        description: "Comma list of check names from ci/checks.json"
+        type: string
+        default: "hud2check,lorecheck,guidecheck,drillcheck,stairgapcheck,premortem,keycheck,mousecheck"
+      os:
+        description: "Runner image"
+        type: string
+        default: macos-latest
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      engines: ${{ steps.m.outputs.engines }}
+      checks: ${{ steps.m.outputs.checks }}
+    steps:
+      - id: m
+        shell: bash
+        env:
+          ENGINES: ${{ inputs.engines }}
+          CHECKS: ${{ inputs.checks }}
+        run: |
+          j() { python3 -c 'import json,sys; print(json.dumps([x.strip() for x in sys.argv[1].split(",") if x.strip()]))' "$1"; }
+          echo "engines=$(j "$ENGINES")" >> "$GITHUB_OUTPUT"; echo "checks=$(j "$CHECKS")" >> "$GITHUB_OUTPUT"
+  run:
+    needs: plan
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        engine: ${{ fromJSON(needs.plan.outputs.engines) }}
+        check: ${{ fromJSON(needs.plan.outputs.checks) }}
+    name: "${{ matrix.engine }} ${{ matrix.check }}"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Use main's browserrun script
+        shell: bash
+        run: |
+          git fetch --depth 1 origin main
+          git show FETCH_HEAD:tools/browserrun.cjs > tools/browserrun.cjs
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: node build.mjs
+      - run: npm install --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install ${{ matrix.engine }}
+      - name: Run
+        shell: bash
+        env:
+          BROWSER: ${{ matrix.engine }}
+          CHECK: ${{ matrix.check }}
+        run: |
+          set +e
+          T=$(python3 -c 'import json,os; c=[x for x in json.load(open("ci/checks.json"))["checks"] if x["name"]==os.environ["CHECK"]]; print(int(c[0].get("timeout",30))*60 if c else 60)')
+          timeout "$T" node tools/browserrun.cjs "$CHECK" "$PWD/dist" "$PWD/ci-out" > run.log 2>&1; rc=$?
+          set -e
+          grep -E "^\s*(PASS|FAIL)\b|^browserrun|ALL PASS|SOME FAILED|rror" run.log | cut -c1-400 || true
+          if [ $rc -eq 124 ]; then echo "FAIL timed out after $T s"; exit 1; fi
+          if grep -qE "^\s*FAIL\b" run.log; then exit 1; fi
+          if ! grep -qE "^\s*PASS\b" run.log; then echo "FAIL no PASS line (exit $rc)"; tail -20 run.log; exit 1; fi
+          exit $rc
