@@ -1693,7 +1693,11 @@ if (BOTRUN()) gloomPreload();
 // warm-up copies for the night card: one machine of every kind the ring can send and one of every device you carry, built and drawn into the shader cache under the card,
 // then kept hidden until the run ends (a disposed material would free its shader program), so the first machine of a kind or the first device placed does not stall a frame
 // one plain single-sided piece with a picture that casts a shadow (a machine's lit display is the only such piece in play), for the warm-up sets
-function warmCaster() { const dc = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), new THREE.MeshLambertMaterial({ map: lorePaperTex() })); dc.castShadow = true; dc.position.set(0, -50, 0); if (fx && fx.upgradeOne) fx.upgradeOne(dc); return dc; }
+// (Mac PROFILE 44675546859 and a local list of the shadow shaders: the pictured plain one existed under the street's light counts and not under the counts Marla's
+// pass leaves) three r187 picks a shadow pass's shader again only when a piece differs from the one before in instancing, skinning and the like, NOT in having a
+// picture: a pictured plain piece gets its own shader only when it follows such a piece. So an instanced piece is drawn just before it: the pair, in this order
+function warmCaster() { const g = new THREE.Group(), geo = new THREE.PlaneGeometry(0.1, 0.1), im = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: 0x808080 }), 1), dc = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: lorePaperTex() }));
+  im.setMatrixAt(0, new THREE.Matrix4()); im.castShadow = true; dc.castShadow = true; g.add(im, dc); g.position.set(0, -50, 0); if (fx && fx.upgradeOne) fx.upgradeOne(g); return g; }
 function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); drop(c); } scene.remove(warmG); warmG.userData.day = false; }
 // (owner 11:40) the night card keeps the ride card's set when it is for the same run and the same devices (warmKey), instead of building it again
 const warmKey = () => (run ? run.seed + '|' + run.ring + '|' + slotKinds().join(',') : '');
