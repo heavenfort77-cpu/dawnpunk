@@ -348,7 +348,10 @@ const BREAKDOWN = (spot) => {
     }
     // COMBAT spots (see the header): a real night fight driven by the bot below, game time running
     // (R4, lead area 3) combat2 / bosscombat2: the same fight measured again later in the same job (noise band)
-    for (const spot of ['combat', 'bosscombat', 'combat2', 'bosscombat2']) { if (!ONLY.includes(spot)) continue; const C = COMBAT[spot.replace(/2$/, '')]; await p.evaluate((sp) => { window.__spot = sp; }, spot);
+    // (Nov 20, owner: "reduce the Gloom till the frame rate is met") a combat spot may carry its own count after '@' (combat@12, bosscombat@16): the same fight with that
+    // many Gloom kept alive, for finding the count; gates and printing as for the spot itself
+    const NSP = ONLY.filter((x) => /^(boss)?combat@\d+$/.test(x));
+    for (const spot of ['combat', 'bosscombat', 'combat2', 'bosscombat2', ...NSP]) { if (!ONLY.includes(spot)) continue; const C = /@/.test(spot) ? { ...COMBAT[spot.split('@')[0]], n: +spot.split('@')[1] } : COMBAT[spot.replace(/2$/, '')]; await p.evaluate((sp) => { window.__spot = sp; }, spot);
       await midSave(C.boss ? { day: 14, nights: 11, food: 31, ess: 18, ringOpen: 5, scout: 2, cats: [0, 2, 3] } : { day: 7, nights: 5, food: 19, ess: 11, ringOpen: 3, scout: 2, cats: [0, 2, 3] });
       const r = await startRun(C.ring); await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null);
       if (C.boss) for (let k = 0; k < 300; k++) { if (await p.evaluate(() => !window.__boss || ['ready', 'failed', 'none'].includes(window.__boss.model))) break; await p.waitForTimeout(1000); }
