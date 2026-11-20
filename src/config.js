@@ -996,6 +996,14 @@ export const CONFIG = {
     laterDmg: 0.4,
     // while the lesson runs your health never falls under this (it is never raised by it), so the lesson cannot kill you; under eatHp x 100, so the eat step still means something
     hpFloor: 25,
+    // A PLAYER MAY IGNORE THE LESSON (owner Nov 21): lesson machines destroyed on one step, with the step still not done, before the lesson ends itself and the night runs as normal
+    ignoreKills: 3,
+    // and seconds of game time on one step, the step still not done, before the same
+    ignoreSecs: 60,
+    // Marla when a lesson machine is destroyed and its step is still open (another one comes)
+    down: "That one's down. Another's coming. Do it.",
+    // Marla when the lesson ends itself
+    ignored: "Fine. Learn it live. Don't die.",
     // steps in order: id (the action that ends it), the Gloom kind that comes for it, Marla's line on desktop and on a phone (44 characters or fewer, Potts),
     // her shorter repeat, the desktop key chip, and the phone button that pulses (sel = the picked device, switch = the switch tab)
     // fresh-player fix (owner Nov 18): subD / subP = the plain second line under her order (desktop names the key, phone names the button); mark = the drill machine gets the pulsing ring (or an edge arrow) during this step

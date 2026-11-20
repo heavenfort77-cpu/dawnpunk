@@ -382,6 +382,46 @@
    "env": {
     "SPOTS": "hub,street,house,boss,combat,bosscombat"
    }
+  },
+  {
+   "name": "drillignorecheck",
+   "script": "tools/drillignorecheck.cjs",
+   "args": [
+    "{dist}/index.html"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 60
+  },
+  {
+   "name": "gloomhitcheck_phone",
+   "script": "tools/gloomhitcheck.cjs",
+   "args": [
+    "low"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 40
+  },
+  {
+   "name": "stalecheck",
+   "script": "tools/stalecheck.cjs",
+   "args": [
+    "low"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 45
+  },
+  {
+   "name": "stalecheck_desktop",
+   "script": "tools/stalecheck.cjs",
+   "args": [
+    "high"
+   ],
+   "tier": "desktop",
+   "quality": "high",
+   "timeout": 70
   }
  ]
 }
