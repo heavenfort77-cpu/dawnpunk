@@ -13,7 +13,10 @@ const { chromium, devices } = require('playwright');
   await p.evaluate(() => { const s = window.__game.sim; s.player.energy = 30; const bp = s.breaches.find((q) => q.floor === s.player.floor); if (bp) { s.player.x = bp.inX; s.player.z = bp.inZ; } }); await p.keyboard.press('Digit1'); await p.waitForTimeout(200);
   const n1 = await nd(); e0 = await en(); await p.mouse.click(640, 300, { button: 'right' }); await p.waitForTimeout(600); const n2 = await nd(); e1 = await en(); ok(n2 === n1 + 1 || e1 < e0, 'the right button places the picked device (devices ' + n1 + ' -> ' + n2 + ', energy ' + e0.toFixed(0) + ' -> ' + e1.toFixed(0) + ')');
   ok(await p.evaluate(() => getComputedStyle(document.getElementById('bFire')).display) === 'none', 'desktop has no big FIRE button');
-  ok(/Left click/.test(await p.evaluate(() => getComputedStyle(document.getElementById('dkeys')).display === 'block' ? document.getElementById('dkeys').textContent : '')), 'desktop shows the key legend');
+  // (owner Nov 20 23:27) the legend is hidden until H is held
+  await p.keyboard.down('KeyH'); await p.waitForTimeout(300);
+  ok(/Left click/.test(await p.evaluate(() => getComputedStyle(document.getElementById('dkeys')).display === 'block' ? document.getElementById('dkeys').textContent : '')), 'desktop shows the key legend while H is held');
+  await p.keyboard.up('KeyH'); await p.waitForTimeout(200);
   if (process.argv[2]) await p.screenshot({ path: process.argv[2] });
   const p2 = await (await b.newContext({ ...devices['Pixel 7 landscape'] })).newPage(); await p2.goto('file://' + __dirname + '/../dist/index_single.html?fx=0'); await p2.waitForFunction(() => window.__game);
   const ph = await p2.evaluate(() => [getComputedStyle(document.getElementById('bFire'), '::after').content, getComputedStyle(document.getElementById('dkeys')).display, getComputedStyle(document.getElementById('bFire')).width]); ok(ph[0] === 'none' && ph[1] === 'none' && ph[2] === '96px', 'phone keeps its touch buttons, no key badges, no legend (' + ph.join(', ') + ')');
