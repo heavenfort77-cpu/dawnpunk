@@ -933,6 +933,8 @@ export const CONFIG = {
     sayPrio: 3.5, saySecs: 4,
     // the desktop key strip hides by itself once this many nights are done (H shows it again; the player's own choice is remembered)
     keysAfterNights: 1,
+    // nights done before the desktop key strip hides by itself (owner Nov 20 23:27: 0 = hidden from the start, only the 'hold H: keys' chip shows)
+    keysStripNights: 0,
     // the one name for the charge resource, used on every label, cost and line
     sun: 'Sun',
     // colour of the small sun icon beside the Sun number and every cost
