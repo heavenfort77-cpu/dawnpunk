@@ -38,7 +38,9 @@ export function* buildBaseLifeIter(g, cfg, hi, save, ground) {
   if (!lifeOn(cfg) && !(cfg.baseWater && cfg.baseWater.on)) return null;
   const BL = cfg.baseLife, D = hi ? BL.high : BL.low, r = rng(6060), G = shapes(), { acc, P } = lifePlacer(), M = lifeMats(hi), LG = leafGeo(), grp = new THREE.Group(); grp.userData.life = 'village'; g.add(grp);
   const jit = (hx, k) => C(hx).offsetHSL((r() - 0.5) * 0.03, (r() - 0.5) * 0.1, (r() - 0.5) * (k || 0.08)), seg = D.round, solids = [], circles = [], anim = [];
-  const PK0 = LIFE_PLANTS.kit || (hi && BL && BL.plants && BL.plants.on ? plantKit(true, 77) : null), water = cfg.baseWater && cfg.baseWater.on ? buildBaseWater(g, cfg, hi, ground, PK0 && BL.plants.rollout ? PK0 : null) : null;
+  // (Nov 20, a title frame of 200 ms: the plant kit and the base water were one part) a stop between them, and after the water
+  const PK0 = LIFE_PLANTS.kit || (hi && BL && BL.plants && BL.plants.on ? plantKit(true, 77) : null); yield; const water = cfg.baseWater && cfg.baseWater.on ? buildBaseWater(g, cfg, hi, ground, PK0 && BL.plants.rollout ? PK0 : null) : null;
+  yield;
   if (!lifeOn(cfg)) { if (PK0 && PK0.count()) PK0.build(grp); LIFE_PLANTS.kit = null; return { water, solids: waterSolids(cfg), circles, update: (dt) => water && water.update(dt), push: (x, z) => waterPush(cfg, x, z), deckY: (x, z) => deckY(cfg, x, z), near: (x, z) => waterNear(cfg, x, z), keepOut: keepOut(cfg), cost: water ? water.cost : null }; }
   const plots = plotStates(cfg, save), houses = houseFrames(cfg), words = [...houses.map((h) => h.sign), ...plots.filter((p) => p.stage !== 'empty').map((p) => p.name.toUpperCase())], SA = signAtlas(words, hi);
   // ---- small helpers (in the current frame)

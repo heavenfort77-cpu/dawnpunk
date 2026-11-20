@@ -212,10 +212,13 @@ function clumpGeos() {
   return (GEOS = { near, far });
 }
 // a meadow over a rectangle: o = { x0, z0, x1, z1, seed, density(x, z) -> clumps per m2, height(x, z) -> metres, flower(x, z) -> share of clumps in flower }
-function meadow(parent, o) {
+// (Nov 20, the title's frames of 200-260 ms: the base's whole lawn was one part of its sliced build) meadowIter stops after each column of chunks; the
+// grass is the same (the same random numbers in the same order); meadow() runs it to the end at once
+function meadow(parent, o) { const it = meadowIter(parent, o); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
+function* meadowIter(parent, o) {
   const G = S().grass, geos = clumpGeos(), mat = o.mat, cell = o.chunk || G.chunk, r = rng(o.seed), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color(), cool = new THREE.Color(G.patchCool), warm = new THREE.Color(G.patchWarm);
   let n = 0, tris = 0, draws = 0;
-  for (let cx = o.x0; cx < o.x1; cx += cell) for (let cz = o.z0; cz < o.z1; cz += cell) {
+  for (let cx = o.x0; cx < o.x1; cx += cell) { if (cx > o.x0) yield; for (let cz = o.z0; cz < o.z1; cz += cell) {
     const mx = cx + cell / 2, mz = cz + cell / 2, lists = [[], [], [], []], cols = [[], [], [], []], maxD = o.maxD || G.density;
     for (let k = 0, m = Math.round(cell * cell * maxD); k < m; k++) { const x = cx + r() * cell, z = cz + r() * cell, dn = o.density(x, z); if (dn <= 0 || r() * maxD > dn) continue;
       const fz = o.flower ? o.flower(x, z) : 0, patch = fbm(x * 0.07 + 11, z * 0.07 - 4); let kind = 0;
@@ -231,7 +234,7 @@ function meadow(parent, o) {
       for (const im of [a, b2]) { im.userData.noAO = true; im.userData.scenery = true; im.castShadow = false; im.receiveShadow = true; im.onBeforeRender = tick; }
       nearG.add(a); farG.add(b2); tris += cnt * geos.near[k].index.count / 3; draws++; });
     lod.addLevel(nearG, 0); lod.addLevel(farG, o.near || G.near); lod.addLevel(new THREE.Object3D(), o.far || G.far); parent.add(lod);
-  }
+  } }
   return { n, tris, draws };
 }
 // free the instance buffers (three keeps them until the mesh itself is disposed) when the scenery leaves the scene
@@ -303,7 +306,7 @@ export function* baseSceneryIter(o) {
   const flower = (x, z) => { const R = Math.hypot(x, z), drift = fbm(x * 0.06 - 9, z * 0.06 + 4); return Math.max(0, Math.min(1, (R > HEDGE + 1 ? B.flowersOut : B.flowersIn) * (0.4 + 1.4 * drift))); };
   const grassMat = plantMat(C.grass.sway);
   yield;
-  const m1 = meadow(grp, { width: (x, z) => (Math.hypot(x, z) < B.plaza ? B.lawnSpread : C.grass.spread), maxD: C.grass.density * Math.max(1, B.lawnDensity), x0: -B.meadowR, z0: -B.meadowR, x1: B.meadowR, z1: B.meadowR, seed: B.seed + 1, density: (x, z) => (Math.hypot(x, z) > B.meadowR ? 0 : dens(x, z)), height, flower, mat: grassMat });
+  const m1 = yield* meadowIter(grp, { width: (x, z) => (Math.hypot(x, z) < B.plaza ? B.lawnSpread : C.grass.spread), maxD: C.grass.density * Math.max(1, B.lawnDensity), x0: -B.meadowR, z0: -B.meadowR, x1: B.meadowR, z1: B.meadowR, seed: B.seed + 1, density: (x, z) => (Math.hypot(x, z) > B.meadowR ? 0 : dens(x, z)), height, flower, mat: grassMat });
   stat.meadow = m1.n; stat.grassTris = m1.tris; stat.grassDraws = m1.draws;
   // leaf masses: hedge ring, trees, shrubs at the station walls, orchard and wood outside the hedge
   yield;
@@ -311,20 +314,20 @@ export function* baseSceneryIter(o) {
   { const n = Math.round(2 * PI * HEDGE / B.hedgeStep); for (let k = 0; k < n; k++) { yield; const a = k / n * 2 * PI + (r() - 0.5) * 0.04, R = HEDGE + (r() - 0.5) * 0.3, x = Math.cos(a) * R, z = Math.sin(a) * R, h = B.hedgeH * (0.85 + 0.3 * r()); if (KO(x, z)) continue;
     blob(fol, V(x, h * 0.55, z), B.hedgeStep * 0.85, h * 0.55, 0.75, { r, sun, pal: P.hedge, leaf: C.foliage.hedgeLeaf, lower: 0.2 }); } }
   yield;
-  for (const t of o.trees || []) tree(bark, fol, t.x, t.z, { r, h: 2.6 * t.s, R: 2.3 * t.s, lean: 0.6 * t.s, pal: P.tree[Math.floor(r() * P.tree.length)], sun, blobs: 8 });
+  for (const t of o.trees || []) { yield; tree(bark, fol, t.x, t.z, { r, h: 2.6 * t.s, R: 2.3 * t.s, lean: 0.6 * t.s, pal: P.tree[Math.floor(r() * P.tree.length)], sun, blobs: 8 }); }
   // shrubs along each station's back wall; a room turned round (the workshop faces the plaza since Nov 17) has its back on the other side
   const backZ = (s) => { const I = (o.rooms || []).find((q) => Math.abs(q.x - s.x) < 0.1 && Math.abs(q.z - s.z) < 0.1); return s.z - 2.35 * (I ? Math.cos(I.ry) : 1); };
   yield;
-  for (const s of [ST.storage, ST.workshop, ST.garden]) { for (let k = -2; k <= 2; k++) blob(fol, V(s.x + k * 0.95 + (r() - 0.5) * 0.3, 0.45, backZ(s)), 0.55, 0.5, 0.45, { r, sun, pal: P.shrub[k & 1], leaf: C.foliage.shrubLeaf, lower: 0.2 });
+  for (const s of [ST.storage, ST.workshop, ST.garden]) { yield; for (let k = -2; k <= 2; k++) blob(fol, V(s.x + k * 0.95 + (r() - 0.5) * 0.3, 0.45, backZ(s)), 0.55, 0.5, 0.45, { r, sun, pal: P.shrub[k & 1], leaf: C.foliage.shrubLeaf, lower: 0.2 });
     if (s !== ST.garden) for (const sx of [-1, 1]) for (const dz of [-0.9, 0.2]) blob(fol, V(s.x + sx * 2.75, 0.42, s.z + dz), 0.42, 0.45, 0.5, { r, sun, pal: P.shrub[(sx + 1) / 2], leaf: C.foliage.shrubLeaf, lower: 0.2 }); }
   // outside the hedge: orchards and woods (our own farmland), sunflower fields stand in the meadow there as their own clumps
   yield;
-  for (let k = 0, placed = 0; k < 400 && placed < B.outTrees; k++) { const a = r() * 2 * PI, R = HEDGE + 4 + Math.pow(r(), 0.8) * (B.meadowR - HEDGE - 6), x = Math.cos(a) * R, z = Math.sin(a) * R; if (fbm(x * 0.05 + 2, z * 0.05) < 0.45) continue; placed++;
+  for (let k = 0, placed = 0; k < 400 && placed < B.outTrees; k++) { const a = r() * 2 * PI, R = HEDGE + 4 + Math.pow(r(), 0.8) * (B.meadowR - HEDGE - 6), x = Math.cos(a) * R, z = Math.sin(a) * R; if (fbm(x * 0.05 + 2, z * 0.05) < 0.45) continue; placed++; if (placed % 3 === 0) yield;
     const s = 0.8 + 0.6 * r(); tree(bark, fol, x, z, { r, h: 1.3 * s + 0.5, R: 2.3 * s, lean: 0.7, pal: P.tree[Math.floor(r() * P.tree.length)], sun, blobs: 8, leaf: C.foliage.leaf * 1.4, cover: C.foliage.cover * 0.9 }); }
   // borders: both edges of every path are planted (taller flowering clumps, a low shrub now and then), so a path runs between beds, never across bare lawn; the paths stay clear
   yield;
   const border = [];
-  for (const [ex, ez] of lines) { const L = Math.hypot(ex, ez), ux = ex / L, uz = ez / L; for (let t = B.paved + 0.9; t < L + 1.5; t += B.borderStep * (0.7 + 0.6 * r())) for (const sd of [-1, 1]) {
+  for (const [ex, ez] of lines) { yield; const L = Math.hypot(ex, ez), ux = ex / L, uz = ez / L; for (let t = B.paved + 0.9; t < L + 1.5; t += B.borderStep * (0.7 + 0.6 * r())) for (const sd of [-1, 1]) {
     const off = B.borderOff + r() * 0.4, x = ux * t - uz * off * sd, z = uz * t + ux * off * sd; if (dens(x, z) <= 0) continue;
     if (r() < B.borderShrub) blob(fol, V(x - uz * sd * 0.25, 0.32, z + ux * sd * 0.25), 0.42, 0.36, 0.42, { r, sun, pal: P.shrub[Math.floor(r() * 2)], leaf: C.foliage.shrubLeaf, lower: 0.2 });
     else border.push([x, z, B.borderH * (0.7 + 0.6 * r()), r() < 0.2 ? 0 : 1 + Math.floor(fbm(x * 0.2, z * 0.2) * 3)]); } }
