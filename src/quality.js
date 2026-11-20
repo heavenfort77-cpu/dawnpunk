@@ -35,7 +35,10 @@ export const reliefAniso = () => Math.min(Q.reliefAniso, gpuAniso);
 const loader = new THREE.TextureLoader(), hiImg = {}, hiSrc = {}, waiting = {};
 export const hiState = { asked: 0, ok: 0, failed: 0, used: 0 };
 // every texture of one name shares one source, so the GPU holds each sharp picture once however many materials use it
-function upgrade(t, name) { if (!hiImg[name] || (t.userData.hi && t.source === hiSrc[name])) return; t.source = hiSrc[name]; t.userData.hi = true; t.needsUpdate = true; hiState.used++; }
+// (Nov 20, hub crash 'usedTimes' in plain medium 44639366416 / 44644094276, job 'medium hub') a texture already on the GPU is freed BEFORE it takes the sharp
+// picture's source: three r187 keeps its GPU textures per source, so a source swapped under an uploaded texture left its entry under the old source and
+// world.dispose() then failed in WebGLTextures deallocateTexture (webglTextures[__cacheKey] undefined). Freed first, it is made again under the new source
+function upgrade(t, name) { if (!hiImg[name] || (t.userData.hi && t.source === hiSrc[name])) return; t.dispose(); t.source = hiSrc[name]; t.userData.hi = true; t.needsUpdate = true; hiState.used++; }
 function readable(img) { try { const c = document.createElement('canvas'); c.width = c.height = 1; const x = c.getContext('2d'); x.drawImage(img, 0, 0, 1, 1); x.getImageData(0, 0, 1, 1); return true; } catch (e) { return false; } }
 // (R3, owner 14:10: under 20 MB before the base) each sharp picture is asked for when a texture of its name is first made (texTrack), not all with the page: the
 // street's pictures then load when the street is built (under the film's black or the ride card, which wait for them: hiPending), not before the base
