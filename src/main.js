@@ -1988,6 +1988,10 @@ const BOTFAR = () => BOTRUN();
 function frame(now) {
   requestAnimationFrame(frame);
   // a loading card is up (sceneCard): the game is held still and nothing is drawn under it
+  // (player report Nov 21: "when I died and got sent back home my screen was covered with this and I couldn't get rid of it") the run-end screen's blurred
+  // snapshot was only taken away by endSnap() at the end of a night frame; the base, the street, the film and the cards leave this function earlier, so after
+  // any night it stayed over the base. It is now taken away here, on every frame, as soon as the run-end screen is not showing
+  if (ENDS.on && !(state === 'end' && $('end').style.display === 'flex')) endSnap();
   lfStart(now); playProgs(); baseSlice(); filmSlice(); nightBgSlice(); glbFlush(); marlaSync(); baseFar(now);
   if (LCARD.on) { last = now; return; }
   // window.__dtMax is set only by the slow headless checks (software renderer, under 1 frame a second) so game time keeps up; players never set it.

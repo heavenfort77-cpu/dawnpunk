@@ -213,6 +213,16 @@
    "timeout": 40
   },
   {
+   "name": "endsnapcheck",
+   "script": "tools/endsnapcheck.cjs",
+   "args": [
+    "low"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 30
+  },
+  {
    "name": "filmloadcheck",
    "script": "tools/servedist.cjs",
    "args": [
