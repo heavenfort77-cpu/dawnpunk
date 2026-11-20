@@ -1721,11 +1721,15 @@ async function sceneCard(kind) {
   // #cross class x-gloom and #aim) the crosshair's Gloom state (two drop-shadow filters) is drawn the first time under the card, not in play: shown for the card's
   // frames under the opaque card, put back at its end
   const crW = $('cross'), crS = crW.getAttribute('style'), crK = crossK; if (CONFIG.lag.crossWarm) { crW.classList.add('x-gloom'); crW.style.setProperty('visibility', 'visible', 'important'); crW.style.setProperty('display', 'block', 'important'); }
-  // (Nov 20, PROFILE 44648754836 combat: frames of 281 / 253 ms in the first 1.3 s after the night card with 0 programs and 0 new draw states, one GL call waiting
-  // 231-328 ms on the GPU process) the threat arc (#arc) and the drill's arrow (#darrow) carry two drop-shadow filters each, as the crosshair's Gloom state does
-  // (Card 40: 226 ms of GPU raster the first time), and first show in a fight's first seconds. CONFIG.lag.hudWarm: shown under the opaque card, put back at its end
-  const hudW = CONFIG.lag.hudWarm ? ['arc', 'darrow'].map((k) => { const e = $(k); return [e, e.getAttribute('style'), e.classList.contains('on')]; }) : [];
-  for (const [e] of hudW) { e.classList.add('on'); e.style.setProperty('visibility', 'visible', 'important'); e.style.setProperty('display', 'block', 'important'); }
+  // (Nov 20, cause proven: PROFILE low 44664585924 'fight start trace': the frames of 137-286 ms in a fight's first 2 s are the page's own drawing of the interface
+  // (GPU process: RendererRasterWorker DoEndRasterCHROMIUM 209 / 395 ms with a pipeline being built, the game's GL calls waiting on it), at the moments Marla's
+  // line, the threat arc, the aim label and the crosshair's Gloom state first show (local write log: 0.1, 0.3, 1.5 s). Showing them under the card did nothing: a
+  // browser does not draw what an opaque element covers.) CONFIG.lag.hudWarm: for the card's time the interface sits ABOVE the card at opacity 0.002 (no pixel of
+  // the card changes: under half a colour step) with those states shown, so their first drawing is done here; everything is put back at the card's end
+  const hudW = []; if (CONFIG.lag.hudWarm) { const add = (k, o) => { const e = $(k); if (!e) return; const r = { e, st: e.getAttribute('style'), on: e.classList.contains('on'), ph: null }; hudW.push(r); if (o.on) e.classList.add('on');
+      e.style.setProperty('visibility', 'visible', 'important'); e.style.setProperty('display', 'block', 'important'); if (o.up) { e.style.setProperty('z-index', '41', 'important'); e.style.setProperty('opacity', '0.002', 'important'); }
+      if (o.text && !e.textContent) { r.ph = document.createElement('span'); r.ph.textContent = 'Warm-up line 0'; e.appendChild(r.ph); } };
+    add('hud', { up: 1 }); add('arc', { on: 1 }); add('darrow', { on: 1, up: 1 }); for (const k of ['marla', 'aim', 'msg']) add(k, { text: 1 }); }
   // (H, owner 13:04: the home card's draws were no-ops: draw() returns while holdDraw is set, and the held title menu left it set) the card's own draws always draw
   holdDraw = false; pauseDrawn = false; const pf0 = [RSTAT.renders, RSTAT.calls, nProg(), UPL.n, UPL.ms, UPL.bn, UPL.bms, GPUQ.waits, GPUQ.ms]; GPUQ.worst = 0;
   LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
@@ -1832,7 +1836,7 @@ async function sceneCard(kind) {
   LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ id, kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, cw: LCARD.cw || null, allParts: LCARD.allParts || null, shadowSets: LCARD.shadowSets || 0, lamps: LCARD.lampCounts || null, gpu: [GPUQ.waits - pf0[7], Math.round(GPUQ.ms - pf0[8]), Math.round(GPUQ.worst)], bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
   if (CONFIG.lag.crossWarm) { if (crS === null) crW.removeAttribute('style'); else crW.setAttribute('style', crS); crossK = '#'; setCross(crK); }
-  for (const [e, st, on] of hudW) { if (st === null) e.removeAttribute('style'); else e.setAttribute('style', st); if (!on) e.classList.remove('on'); }
+  for (const r of hudW) { if (r.ph) r.ph.remove(); if (r.st === null) r.e.removeAttribute('style'); else r.e.setAttribute('style', r.st); if (!r.on) r.e.classList.remove('on'); }
   fill(1); if (id === LCARD.n) { LCARD.on = false; LCARD.endT = Math.round(performance.now()); $('lcard').style.display = 'none'; perfRest(); }
 }
 // the automatic step-down on the desktop tier (src/perfstep.js, CONFIG.lag.step); phones never run it
