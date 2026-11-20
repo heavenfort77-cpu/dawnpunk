@@ -132,15 +132,17 @@ export const CONFIG = {
   people: {
     kinds: { bram: 'man', oko: 'woman', pip: 'child', gen2: 'man', gen3: 'woman', gen5: 'woman', gen6: 'man', gen7: 'woman', gen8: 'woman', gen9: 'man', gen11: 'woman', gen12: 'man' },
     own: { bram: { stoop: 0.07, speed: 1.1 }, gen5: { stoop: 0.05, speed: 1.05 }, gen7: { stoop: 0.05, speed: 1.05 }, gen8: { stoop: 0.05, speed: 1.05 }, gen12: { stoop: 0.06, speed: 1.1 } },
+    // (OWNER Nov 20 14:08: walk arms, feet, body unnatural) man / woman: swing knee 0.85 / 0.8 -> 0.62 / 0.6, lean 0.04 / 0.02 -> 0.07 / 0.05, sway, roll, twist up,
+    // woman arm 0.32 -> 0.4; motion.heelRise 0.16 -> 0.1, walkCrouch 0.09 -> 0.04; settle.armHz 1.7 -> 3.6 (the arm spring sat near the stride rate and lagged the legs)
     gait: {
-      man: { cycle: 1.05, speed: 1.25, stance: 0.6, knee: 0.85, kneeStance: 0.12, arm: 0.75, elbow: 0.22, elbowSwing: 0.25, armOut: 0.05, track: 0.0, sway: 0.016, roll: 0.035, twist: 0.07, drop: 0.55, lean: 0.04, step: 0.5, vary: 0.04 },
-      woman: { cycle: 1.0, speed: 1.15, stance: 0.6, knee: 0.8, kneeStance: 0.1, arm: 0.32, elbow: 0.3, elbowSwing: 0.12, armOut: 0.04, track: 0.035, sway: 0.028, roll: 0.06, twist: 0.06, drop: 0.5, lean: 0.02, step: 0.48, vary: 0.04 },
+      man: { cycle: 1.05, speed: 1.25, stance: 0.6, knee: 0.62, kneeStance: 0.12, arm: 0.75, elbow: 0.22, elbowSwing: 0.25, armOut: 0.05, track: 0.0, sway: 0.026, roll: 0.06, twist: 0.08, drop: 0.55, lean: 0.07, step: 0.5, vary: 0.04 },
+      woman: { cycle: 1.0, speed: 1.15, stance: 0.6, knee: 0.6, kneeStance: 0.1, arm: 0.4, elbow: 0.3, elbowSwing: 0.12, armOut: 0.04, track: 0.035, sway: 0.035, roll: 0.075, twist: 0.07, drop: 0.5, lean: 0.05, step: 0.48, vary: 0.04 },
       child: { cycle: 0.65, speed: 0.95, stance: 0.58, knee: 0.9, kneeStance: 0.12, arm: 0.1, elbow: 0.35, elbowSwing: 0.05, armOut: 0.22, track: -0.07, sway: 0.035, roll: 0.06, twist: 0.05, drop: 0.6, lean: -0.03, step: 0.36, stepLift: 0.41, vary: 0.05, waddle: 0.07, headBob: 0.04, headHz: 2.6, headDamp: 0.25 },
     },
     // (gait.child.stepLift: a child lifts its foot higher in a pivot step than turn.stepLift, its legs being short)
     turn: { lead: 0.15, follow: [0.16, 0.2, 0.26], stepStart: 0.4, predict: 0.8, minStep: 0.14, maxStep: 1.15, twist: 0.6, chestTwist: 0.45, headMax: 1.1, stepLift: 0.34, stepSway: 0.02, near: 6, far: 7, back: 2.5, maxSpeed: [5.5, 5.5, 4.5] },
     idle: { shift: [3.5, 6.5], move: 1.4, slow: 7.5, slowShare: 0.35, hip: 0.025, roll: 0.03, knee: 0.14, breath: 4.2, chest: 0.012, look: 0.07 },
-    settle: { armHz: 1.7, armDamp: 0.45, foreHz: 2.0, foreDamp: 0.3, handHz: 2.6, handDamp: 0.3, inertia: 0.35, headHz: 2.0, headDamp: 0.5, leanHz: 1.3, leanDamp: 0.55 },
+    settle: { armHz: 3.6, armDamp: 0.5, foreHz: 3.2, foreDamp: 0.35, handHz: 2.6, handDamp: 0.3, inertia: 0.35, headHz: 2.0, headDamp: 0.5, leanHz: 1.3, leanDamp: 0.55 },
     walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.85 },
     // motion (tools/humanmotioncheck.cjs measures it):
     // slice: the motion runs in fixed steps of this many seconds (1/120: a 30 or 60 fps frame is a whole number of them, so the motion is the same at both); maxSlices: at most this many per frame (a longer gap is skipped)
@@ -167,7 +169,7 @@ export const CONFIG = {
     // decideEvery: a pivot step may start only every this many slices (1 = any slice; 4 = only every 1/30 s of game time; 4 measured worse at 30 vs 60 fps in the browser)
     // stepTurn: Marla (src/marla.js) steps round once the way she should face is more than this many rad from where she faces (the base people use turn.stepStart)
     // stepLead: a pivot step's foot lifts for this share of the step before the body turns, and sets down for the same share after; recenter: after pivoting on one foot the body settles back over its middle in about this many s (while stepping or walking)
-    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.16, walkCrouch: 0.09, crouchTime: 0.31, reachMax: 1.08, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckRise: 0.25, deckLook: 1.2, slopeTime: 0.12, reseat: 0.35, reseatLift: 0.06, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
+    motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.1, walkCrouch: 0.04, crouchTime: 0.31, reachMax: 1.08, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckRise: 0.25, deckLook: 1.2, slopeTime: 0.12, reseat: 0.35, reseatLift: 0.06, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
