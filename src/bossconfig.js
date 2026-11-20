@@ -52,7 +52,8 @@ export const BOSS_CONFIG = {
   lateFrac: 0.85, lateMul: 0.75,
   // WEAK POINTS. pawR / coreR: hit radius (m; palm pads 0.9 m wide, chest coin 1.2 m); pawHits / coreHits: cannon hits to break one; charged: hits a charged shot counts;
   // range: longest shot at the boss (m, eye to weak point)
-  weak: { pawR: 0.45, coreR: 0.6, pawHits: 6, coreHits: 12, charged: 2, range: 45 },
+  // (boss at gloom size, weak points low and close: 6 / 12 made the paw-hunting expert win the boss night MORE often than a plain night on the small house; test.js balance)
+  weak: { pawR: 0.45, coreR: 0.6, pawHits: 7, coreHits: 16, charged: 2, range: 45 },
   // weak point positions in the boss's own frame [x right, y up, z (negative = toward the house)], m: the raised beckoning palm, the chest coin;
   // slamUp: height of the slam paw over its target while it rises (from, to); slamCore: height of the stuck slam paw's core over the ground
   pts: { beckon: [-0.55, 1.375, -0.6], chest: [0, 0.8625, -0.3], slamUp: [3.0, 5.5], slamCore: 0.8 },
