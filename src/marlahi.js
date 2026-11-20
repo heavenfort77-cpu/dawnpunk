@@ -13,7 +13,8 @@ function withAO(mat, k, prev, amb) { if (!k) return mat; const A = amb === undef
   // (Nov 20, the first home card's 90 shader programs: the strengths were written into the shader, so every strength was its own program) aoK / aoAmb are uniforms:
   // the same shader for every strength (the same picture), shared with the people's (src/peoplehi.js) where the rest of the material is the same
   const U = { aoK: { value: k }, aoAmb: { value: A } };
-  mat.onBeforeCompile = (sh, r) => { if (pre) pre(sh, r); Object.assign(sh.uniforms, U); sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float aoK; uniform float aoAmb;').replace('#include <color_fragment>', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.rgb, aoK );').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n\treflectedLight.indirectDiffuse *= aoAmb;'); };
+  // (Nov 20, playershadowcheck on high: "'aoK' : redefinition") a material given the baked shading twice keeps the first one's (as before the strengths were uniforms)
+  mat.onBeforeCompile = (sh, r) => { if (pre) pre(sh, r); if (sh.fragmentShader.includes('uniform float aoK')) return; Object.assign(sh.uniforms, U); sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float aoK; uniform float aoAmb;').replace('#include <color_fragment>', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.rgb, aoK );').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n\treflectedLight.indirectDiffuse *= aoAmb;'); };
   const key = mat.customProgramCacheKey ? mat.customProgramCacheKey.bind(mat) : () => ''; mat.customProgramCacheKey = () => key() + '-aoU'; return mat; }
 const RX = /float dotNL = saturate\( dot\( geometryNormal, directLight\.direction \) \);\s*vec3 irradiance = dotNL \* directLight\.color;/;
 export function hiMat(m, o, H) {

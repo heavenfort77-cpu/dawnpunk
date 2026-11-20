@@ -11,7 +11,8 @@ const AOK = (o, k) => (o.geometry && o.geometry.attributes.color && !(o.name || 
 function withAO(mat, k, amb, prev) { if (!k) return mat; mat.vertexColors = true; const pre = prev || mat.onBeforeCompile;
   // (Nov 20) strengths as uniforms, as Marla's (src/marlahi.js withAO): one shader for every strength
   const U = { aoK: { value: k }, aoAmb: { value: amb } };
-  mat.onBeforeCompile = (sh, r) => { if (pre) pre(sh, r); Object.assign(sh.uniforms, U); sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float aoK; uniform float aoAmb;').replace('#include <color_fragment>', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.rgb, aoK );').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n\treflectedLight.indirectDiffuse *= aoAmb;'); };
+  // (Nov 20, playershadowcheck on high: "'aoK' : redefinition") a material given the baked shading twice keeps the first one's (as before the strengths were uniforms)
+  mat.onBeforeCompile = (sh, r) => { if (pre) pre(sh, r); if (sh.fragmentShader.includes('uniform float aoK')) return; Object.assign(sh.uniforms, U); sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float aoK; uniform float aoAmb;').replace('#include <color_fragment>', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.rgb, aoK );').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n\treflectedLight.indirectDiffuse *= aoAmb;'); };
   const key = mat.customProgramCacheKey ? mat.customProgramCacheKey.bind(mat) : () => ''; mat.customProgramCacheKey = () => key() + '-aoU'; return mat; }
 // stencil mark: these pixels get no contact shading (otherwise the shading of the ground behind shows through the hair)
 const mark = (m, H) => { if (!H.keepOut) return m; m.stencilWrite = true; m.stencilRef = H.keepOut; m.stencilFunc = THREE.AlwaysStencilFunc; m.stencilZPass = THREE.ReplaceStencilOp; return m; };
