@@ -1146,10 +1146,10 @@ export const CONFIG = {
     // (models of the run finishing their load in play: glbReady's compileAsync); the 15 'intro' ones were Card 45's, not glbDefer's
     glbDefer: true,
     // warmFresh (R4 worker 11): the night card also draws one not-yet-merged machine of each kind and one breach mark (src/main.js warmNight)
-    warmFresh: true,
+    warmFresh: false,
     // logoWarm (R4 worker 11, OWNER DECISION lead 03:33): after the logo and every load, the scene's shaders built in the background and the scene drawn once under the
     // loading page before the begin button (src/main.js SPLASH); ms: the most it may wait
-    logoWarm: { on: true, ms: 4000 },
+    logoWarm: { on: false, ms: 4000 },
     // bossFreeze (R4 worker 5): the desktop boss model's still parts leave the per-frame matrix pass (src/bosshi.js buildGlb)
     bossFreeze: true,
     // skipCard (R4 worker 5): the film skipped before its base part shows the home card while the base's first frames are made
