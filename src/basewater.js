@@ -81,7 +81,10 @@ function sinkGround(ground, cfg, hi) {
   const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(idx); ge.computeVertexNormals();
   ground.geometry.dispose(); ground.geometry = ge; ground.rotation.set(0, 0, 0); ground.userData.ownGround = true; return idx.length / 3; }
 // g: the base group, ground: the base's ground mesh (sunk along the stream); returns { update(dt, t), group, cost, wheel }
-export function buildBaseWater(g, cfg, hi, ground, kit) {
+// (Nov 20, a title frame of 169 ms: the base water was one part of the base's sliced build) buildBaseWaterIter stops between its sections (the same pieces in the
+// same order); buildBaseWater runs it to the end at once
+export function buildBaseWater(g, cfg, hi, ground, kit) { const it = buildBaseWaterIter(g, cfg, hi, ground, kit); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
+export function* buildBaseWaterIter(g, cfg, hi, ground, kit) {
   const W = cfg.baseWater, D = hi ? W.high : W.low, r = rng(5150), G = shapes(), { acc, P } = lifePlacer(), M = lifeMats(hi), grp = new THREE.Group(); grp.userData.life = 'water'; g.add(grp);
   const LG = leafGeo(), jit = (hx, k) => C(hx).offsetHSL((r() - 0.5) * 0.03, (r() - 0.5) * 0.1, (r() - 0.5) * (k || 0.08)), wy = W.y, BD = W.bed, hw = waterHalf(cfg), rh = waterHalf(cfg, true), L = streamLine(cfg, 1 / Math.max(0.5, D.seg)), F = wheelFrame(cfg), gTris = ground ? sinkGround(ground, cfg, hi) : 0;
   const raceLo = -F.len / 2 - 0.35, raceHi = F.len / 2 + 0.35, inRace = (x, z) => { const dx = x - F.x, dz = z - F.z, lz = dx * Math.sin(F.ry) + dz * Math.cos(F.ry), lx = dx * Math.cos(F.ry) - dz * Math.sin(F.ry); return lz > raceLo && lz < raceHi && Math.abs(lx) < 1.4; };
@@ -92,6 +95,7 @@ export function buildBaseWater(g, cfg, hi, ground, kit) {
     for (let i = 0; i < pts.length - 1; i++) for (let a = 0; a < A; a++) { const q = n0 + i * (A + 1) + a, q2 = q + A + 1; wi.push(q, q + 1, q2, q + 1, q2 + 1, q2); } };
   // the water in the channel: narrower between the race walls; the strip runs a little into the banks so no gap shows
   { let run = [], race = null; const flush = () => { if (run.length > 1) strip(run, (race ? rh : hw) + 0.06, wy); run = []; }; for (const p of L) { if (race !== null && p.race !== race) { const last = run[run.length - 1]; flush(); if (last) run.push(last); } race = p.race; run.push(p); } flush(); }
+  yield;
   // ---- the channel's lining laid on the dug ground: dark pebbly bed, wet earth at the waterline, a mossy band, then the ground's own grass up to the bank top (vertex colours); in the race a dark bed between the walls
   { const pos = [], col = [], uv = [], idx = [], T = BD.top - 0.14, F0 = BD.floor, open = [[-T, [0.42, 0.55, 0.25]], [-(hw + 0.3), [0.33, 0.42, 0.18]], [-(hw + 0.05), [0.3, 0.26, 0.17]], [-(hw - 0.12), [0.17, 0.15, 0.1]], [-F0, [0.2, 0.21, 0.14]], [0, [0.22, 0.23, 0.16]]], rows = (race) => { const o = race ? [[-rh - 0.02, [0.18, 0.17, 0.12]], [0, [0.2, 0.21, 0.14]]] : open; return [...o, ...o.slice(0, -1).reverse().map(([d, c]) => [-d, c])]; };
     let prevBase = -1, prevN = 0, prevRace = null;
@@ -100,6 +104,7 @@ export function buildBaseWater(g, cfg, hi, ground, kit) {
       if (prevBase >= 0 && prevRace === p.race && prevN === R0.length) for (let k = 0; k < R0.length - 1; k++) { const q = prevBase + k, q2 = base + k; idx.push(q, q + 1, q2, q + 1, q2 + 1, q2); }
       prevBase = base; prevN = R0.length; prevRace = p.race; }
     P.add('moss', ownGeo(pos, col, uv, idx), 0, 0, 0); }
+  yield;
   // ---- stones, reeds and ferns along the banks (not in the race or on a bridge's landing)
   { const total = L[L.length - 1].s, st = Math.max(1, Math.round(total * D.stones)), rd = Math.round(total * D.reeds), fe = Math.round(total * D.ferns), at = (s) => { let i = 1; while (i < L.length - 1 && L[i].s < s) i++; return L[i]; };
     for (let k = 0; k < st; k++) { const p = at(r() * total), side = r() < 0.5 ? -1 : 1, o = hw - 0.15 + r() * 0.4, x = p.x - p.tz * side * o, z = p.z + p.tx * side * o; if (inRace(x, z) || nearBridge(x, z, 0.3)) continue; const s = 0.09 + 0.16 * r() * r();
@@ -108,6 +113,7 @@ export function buildBaseWater(g, cfg, hi, ground, kit) {
       P.add('leaf', reedGeo(hi ? 7 : 4), x, bedY(cfg, o), z, 0, r() * 6, 0, s * 0.9, s * (0.8 + 0.5 * r()), s * 0.9, jit(0xffffff, 0.1)); }
     for (let k = 0; k < fe; k++) { const p = at(r() * total), side = r() < 0.5 ? -1 : 1, o = hw + 0.2 + r() * (BD.top - hw - 0.1), x = p.x - p.tz * side * o, z = p.z + p.tx * side * o; if (inRace(x, z) || nearBridge(x, z, 0.6)) continue; const n = 6 + Math.floor(r() * 4), c = jit(0x4f8a34, 0.1); if (kit) { kit.add('fern', x, bedY(cfg, o) + 0.02, z, (0.9 + 0.5 * r()) * ((cfg.baseLife.plants.size || {}).fern || 1)); continue; }
       for (let f = 0; f < n; f++) { P.push(x, bedY(cfg, o) + 0.03, z, f / n * 2 * PI + r() * 0.4, -0.55 - 0.4 * r()); P.add('leaf', LG, 0, 0, 0, 0, 0, 0, 0.16, 0.16, 0.42 + 0.2 * r(), c); P.pop(); } } }
+  yield;
   // ---- the race: stone walls each side with a timber cap, moss at the waterline, a little weir lip where the water drops onto the wheel
   { P.push(F.x, 0, F.z, F.ry); const wl = raceHi - raceLo, zc = (raceLo + raceHi) / 2;
     const wb = -BD.depth, wt = 0.25, rows = Math.round((wt - wb) / 0.18); for (const sx of [-1, 1]) { const x0 = sx * (rh + 0.16);
@@ -126,6 +132,7 @@ export function buildBaseWater(g, cfg, hi, ground, kit) {
     // ferns and moss tufts at the foot of the race walls
     if (hi) for (let k = 0; k < 8; k++) { const sx = k % 2 ? 1 : -1, z = raceLo + r() * wl, n = 7; for (let f = 0; f < n; f++) { P.push(sx * (rh + 0.42 + r() * 0.15), 0.02, z, f / n * 2 * PI, -0.6 - 0.3 * r()); P.add('leaf', LG, 0, 0, 0, 0, 0, 0, 0.15, 0.15, 0.4, jit(0x4a8a32, 0.1)); P.pop(); } }
     P.pop(); }
+  yield;
   // ---- the generator housing (bloom-tech): stone plinth, plaster body under a small green vault, round window onto copper coils, a gauge with a glowing needle, a status lamp, a belt pulley
   const Gf = genFrame(cfg), ay = wy + W.wheel.R - W.wheel.dip; let genPulley = null;
   { const { w, d, h } = Gf; P.push(Gf.x, 0, Gf.z, Gf.ry);
@@ -154,6 +161,7 @@ export function buildBaseWater(g, cfg, hi, ground, kit) {
     pts.forEach(([x, z], k) => { const last = k === pts.length - 1, top = last ? 2.35 : 3.1, q = V(x, top, z); if (!last) { P.add('wood', G.cyl(0.07, 0.09, top + 0.1, 8), x, (top + 0.1) / 2, z, 0, 0, (r() - 0.5) * 0.04, 1, 1, 1, jit(0x6a4a30)); P.add('wood', G.box(0.5, 0.06, 0.08), x, top, z, 0, r(), 0, 1, 1, 1, jit(0x5a3e28)); P.add('cer', G.cyl(0.03, 0.04, 0.08, 8), x + 0.18, top + 0.06, z, 0, 0, 0, 1, 1, 1, C(0x7fbfae)); P.add('copper', G.sphere(0.02, 6, 4), x + 0.18, top + 0.11, z, 0, 0, 0, 1, 1, 1, C(0xc87a3a)); }
       else P.add('copper', G.box(0.14, 0.14, 0.08), x, top, z, 0, 0, 0, 1, 1, 1, C(0xc87a3a));
       const n = 8; let a = prev; for (let i = 1; i <= n; i++) { const t = i / n, b = prev.clone().lerp(q, t); b.y -= Math.sin(PI * t) * 0.35; P.rod('iron', G, a, b, 0.012, 4, C(0x1e1e1e)); a = b; } prev = q.clone().add(V(0.18, 0.11, 0)); }); }
+  yield;
   // ---- footbridges: stone abutments, two arched stringers, plank deck with gaps, posts with copper caps, top and mid rails, a lantern on one post, moss on the stones
   for (const b of B) { P.push(b.x, 0, b.z, b.ry); const hl = b.len / 2, hz = b.wd / 2, yA = (x) => 0.22 + 0.2 * Math.cos(PI * x / b.len);
     for (const sx of [-1, 1]) { P.add('stone', G.box(0.7, 0.34, b.wd + 0.35), sx * (hl - 0.3), 0.15, 0, 0, 0, 0, 1, 1, 1, jit(0x9a9284, 0.08)); if (hi) for (let k = 0; k < 4; k++) P.add('moss', G.lump(k), sx * (hl - 0.3) + (r() - 0.5) * 0.5, 0.3, (r() - 0.5) * b.wd, 0, r() * 6, 0, 0.12, 0.05, 0.16, jit(0x5a8a3a, 0.1)); }
@@ -165,6 +173,7 @@ export function buildBaseWater(g, cfg, hi, ground, kit) {
     // ramps at both ends: planks on two bearers from the ground up to the deck's ends (people and your view ride up and over: deckY / deckAt)
     { const rp = W.ramp, ye = yA(hl) + 0.04; for (const sx of [-1, 1]) { for (const sz of [-1, 1]) P.beam('wood', G, V(sx * (hl + rp), 0.0, sz * (hz - 0.2)), V(sx * (hl - 0.05), ye - 0.07, sz * (hz - 0.2)), 0.1, 0.1, jit(0x5a3e28, 0.05)); for (let k = 0; k < 4; k++) { const t = (k + 0.5) / 4, x = sx * (hl + rp * (1 - t)); P.add('wood', G.box(0.16, 0.04, b.wd - 0.1), x, ye * t + 0.01, 0, 0, 0, sx * Math.atan(ye / rp), 1, 1, 1, jit(0x8a6a44, 0.12)); } } }
     P.pop(); }
+  yield;
   // ---- the flumes: a sluice gate on the bank, a wooden channel on stone blocks into the greenhouse and along its planters (spouts into each), and a branch to the raised beds
   { const fl = W.flume, run = (pts, y0) => { for (let i = 0; i < pts.length - 1; i++) { const [ax, az] = pts[i], [bx, bz] = pts[i + 1], len = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az), mx = (ax + bx) / 2, mz = (az + bz) / 2; P.push(mx, 0, mz, ry);
       P.add('wood', G.box(0.32, 0.04, len + 0.3), 0, y0, 0, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a, 0.08)); for (const sx of [-1, 1]) P.add('wood', G.box(0.04, 0.17, len + 0.3), sx * 0.16, y0 + 0.1, 0, 0, 0, 0, 1, 1, 1, jit(0x6a4a2e, 0.08));
@@ -179,6 +188,7 @@ export function buildBaseWater(g, cfg, hi, ground, kit) {
       P.add('wood', G.box(0.5, 0.42, 0.05), 0, 0.42, 0, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a)); P.add('iron', G.cyl(0.02, 0.02, 0.5, 6), 0, 1.15, 0, 0, 0, 0, 1, 1, 1, C(0x3a3632)); P.add('iron', G.torus(0.16, 0.018, 5, hi ? 16 : 8), 0, 1.4, 0, PI / 2, 0, 0, 1, 1, 1, C(0x3a3632)); if (hi) for (let k = 0; k < 4; k++) P.add('iron', G.box(0.32, 0.012, 0.012), 0, 1.4, 0, 0, k * PI / 4, 0, 1, 1, 1, C(0x3a3632)); P.pop(); }
     // spouts over the planters inside the greenhouse: a notch and a thin fall of water into each bed
     if (cfg.baseLife && cfg.baseLife.on) { const z = fl.main[fl.main.length - 1][1]; for (const x of [6.6, 8.2, 9.8, 11.4]) { P.add('wood', G.box(0.08, 0.03, 0.24), x, 0.29, z + 0.2, 0, 0, 0, 1, 1, 1, jit(0x6a4a2e)); P.add('glass', G.box(0.05, 0.22, 0.02), x, 0.35, z + 0.33, 0, 0, 0, 1, 1, 1, C(0xcfeef0)); } } }
+  yield;
   // ---- merge what stands still, then the water surface, the turning wheel, foam and drops
   const res = mergeLife(grp, acc, M); let tri = res.tri, meshes = res.meshes;
   const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wp, 3)); wg.setAttribute('uv', new THREE.Float32BufferAttribute(wu, 2)); wg.setIndex(wi); wg.computeVertexNormals();

@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { shapes, PROPS } from './density.js';
 import { leafGeo } from './rooms.js';
 import { plantKit, LIFE_PLANTS } from './baseplants.js';
-import { lifeMats, lifePlacer, mergeLife, ownGeo, rng, buildBaseWater } from './basewater.js';
+import { lifeMats, lifePlacer, mergeLife, ownGeo, rng, buildBaseWaterIter } from './basewater.js';
 import { houseFrames, plotStates, pieceFrames, lanes, waterSolids, waterPush, keepOut, nearStream, bridgeFrames, toWorld, lifeOn, deckY, waterNear } from './baselife.js';
 
 const PI = Math.PI, V = (x, y, z) => new THREE.Vector3(x, y, z), C = (h) => new THREE.Color(h);
@@ -39,7 +39,7 @@ export function* buildBaseLifeIter(g, cfg, hi, save, ground) {
   const BL = cfg.baseLife, D = hi ? BL.high : BL.low, r = rng(6060), G = shapes(), { acc, P } = lifePlacer(), M = lifeMats(hi), LG = leafGeo(), grp = new THREE.Group(); grp.userData.life = 'village'; g.add(grp);
   const jit = (hx, k) => C(hx).offsetHSL((r() - 0.5) * 0.03, (r() - 0.5) * 0.1, (r() - 0.5) * (k || 0.08)), seg = D.round, solids = [], circles = [], anim = [];
   // (Nov 20, a title frame of 200 ms: the plant kit and the base water were one part) a stop between them, and after the water
-  const PK0 = LIFE_PLANTS.kit || (hi && BL && BL.plants && BL.plants.on ? plantKit(true, 77) : null); yield; const water = cfg.baseWater && cfg.baseWater.on ? buildBaseWater(g, cfg, hi, ground, PK0 && BL.plants.rollout ? PK0 : null) : null;
+  const PK0 = LIFE_PLANTS.kit || (hi && BL && BL.plants && BL.plants.on ? plantKit(true, 77) : null); yield; const water = cfg.baseWater && cfg.baseWater.on ? (yield* buildBaseWaterIter(g, cfg, hi, ground, PK0 && BL.plants.rollout ? PK0 : null)) : null;
   yield;
   if (!lifeOn(cfg)) { if (PK0 && PK0.count()) PK0.build(grp); LIFE_PLANTS.kit = null; return { water, solids: waterSolids(cfg), circles, update: (dt) => water && water.update(dt), push: (x, z) => waterPush(cfg, x, z), deckY: (x, z) => deckY(cfg, x, z), near: (x, z) => waterNear(cfg, x, z), keepOut: keepOut(cfg), cost: water ? water.cost : null }; }
   const plots = plotStates(cfg, save), houses = houseFrames(cfg), words = [...houses.map((h) => h.sign), ...plots.filter((p) => p.stage !== 'empty').map((p) => p.name.toUpperCase())], SA = signAtlas(words, hi);
@@ -248,7 +248,8 @@ export function* buildBaseLifeIter(g, cfg, hi, save, ground) {
       if (idx.length) P.add('soil', ownGeo(pos, col, uv, idx), 0, 0, 0); } }
   // ---- merge (the nameplates have their own picture)
   yield;
-  const res = mergeLife(grp, acc, M, { sign: SA.mat }), pk = PK && PK.count() ? PK.build(grp) : null; LIFE_PLANTS.kit = null;
+  // (Nov 20, a title frame of 162 ms) a stop between merging the life pieces and building the plant kit
+  const res = mergeLife(grp, acc, M, { sign: SA.mat }); yield; const pk = PK && PK.count() ? PK.build(grp) : null; LIFE_PLANTS.kit = null;
   const cost = { tris: res.tri + (water ? water.cost.tris : 0) + (pk ? pk.tris : 0), meshes: res.meshes + (water ? water.cost.meshes : 0) + anim.length * 2 + (pk ? pk.draws : 0), village: res, water: water && water.cost, plants: pk };
   return { water, plots, solids: [...solids, ...waterSolids(cfg)], circles, cost, keepOut: keepOut(cfg),
     update(dt) { if (water) water.update(dt); for (const a of anim) a(dt); }, push: (x, z) => waterPush(cfg, x, z), deckY: (x, z) => deckY(cfg, x, z), near: (x, z) => waterNear(cfg, x, z) };
