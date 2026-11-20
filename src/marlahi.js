@@ -37,7 +37,8 @@ export function hiMat(m, o, H) {
   m.vertexColors = false; return keep(withAO(m, AOK(o, n === 'scan_mouth' ? H.ao.mouth : H.ao.cloth)));
 }
 // The key light is a narrow spotlight on her head that casts shadows (nose, brow ridge, fringe onto the forehead), as the render's key did; keyShadow: [shadow map size, cone angle rad, blur]; keyBias: [depth bias, normal bias] against striped self-shadow
-export function hiLights(root, H) { hiHair(root, H); const k = new THREE.SpotLight(H.key[0], H.key[1], H.key[2], H.keyShadow[1], 0.6, 2); k.position.set(H.keyAt[0], H.keyAt[1], H.keyAt[2]); k.target.position.set(0, H.headY, 0); k.target.userData.keep = true; root.add(k.target);
+// noLights (CONFIG.lag.shaderLamps): her hair only; the key and rim are worked out in her materials instead (src/shaderlamps.js)
+export function hiLights(root, H, noLights) { hiHair(root, H); if (noLights) return; const k = new THREE.SpotLight(H.key[0], H.key[1], H.key[2], H.keyShadow[1], 0.6, 2); k.position.set(H.keyAt[0], H.keyAt[1], H.keyAt[2]); k.target.position.set(0, H.headY, 0); k.target.userData.keep = true; root.add(k.target);
   k.castShadow = true; k.shadow.mapSize.set(H.keyShadow[0], H.keyShadow[0]); k.shadow.radius = H.keyShadow[2]; k.shadow.bias = H.keyBias[0]; k.shadow.normalBias = H.keyBias[1]; k.shadow.camera.near = 0.3; k.shadow.camera.far = H.key[2]; const r = new THREE.PointLight(H.rim[0], H.rim[1], H.rim[2], 2); r.position.set(H.rimAt[0], H.rimAt[1], H.rimAt[2]); for (const l of [k, r]) { l.userData.keep = true; root.add(l); } }
 // Hair under-layer (owner Nov 16: "work on the hair"): the pick-18 render's hair reads solid with darker hair showing between the strands; in the game the gaps between
 // cards showed the scene. A second copy of the hair cards, cut far more loosely (so each card is nearly solid), darker, pulled a little toward the head and drawn behind

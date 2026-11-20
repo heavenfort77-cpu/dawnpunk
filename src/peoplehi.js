@@ -4,6 +4,7 @@
 // skin, hair and lash cut-outs with soft edges that keep the desktop contact shading off the hair (stencil, CONFIG.quality.high.fx.keepOut), and one warm key light shared by all of them that rides with whoever is nearest the player.
 // Only the high tier with CONFIG.people.scanFaces on uses this; phones keep the light models. Every number is in CONFIG.people.hiMat.
 import * as THREE from 'three';
+import { lamps, lampRoot } from './shaderlamps.js';
 
 const AOK = (o, k) => (o.geometry && o.geometry.attributes.color && !(o.name || '').startsWith('teeth') ? k : 0);
 // baked shading: diffuse colour times the vertex colour at strength k; the sky's soft fill (indirect diffuse) times amb
@@ -39,6 +40,18 @@ export function peopleHiCornea(sc, H) { const add = [];
     const m = new THREE.MeshPhysicalMaterial({ color: 0x000000, roughness: H.corneaRough, metalness: 0, ior: 1.376, specularIntensity: H.corneaSpec !== undefined ? H.corneaSpec : 1, envMapIntensity: H.eyeEnv, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
     m.userData.keep = true; const k = new THREE.SkinnedMesh(g, m); k.name = 'cornea_' + o.name.slice(4); k.bind(o.skeleton, o.bindMatrix); k.castShadow = false; k.receiveShadow = false; k.renderOrder = 3; k.frustumCulled = false; k.userData.keep = true; add.push([o.parent, k]); });
   for (const [p, k] of add) p.add(k); return add.length; }
+// (OWNER DECISION Nov 20 14:15, CONFIG.lag.shaderLamps) the same key worked out in each person's materials, switched on for the one person who holds it (the same
+// nearest-person rule as the real light below), so no light object and no light-count change; returns the same bid function
+let LOWN = null, LOWD = Infinity, LOWT = -1e9;
+export function peopleHiLamp(root, K) {
+  const L = lamps({ key: [K.col, K.power, K.reach], cone: K.cone, penumbra: 0.6, keyAt: K.at, headY: K.headY, rim: null, root, on: 0 }); lampRoot(root, L);
+  const take = (d) => { if (LOWN && LOWN !== L) LOWN.u.slOn.value = 0; LOWN = L; L.u.slOn.value = 1; LOWD = d; LOWT = now(); };
+  const hp = new THREE.Vector3(), cd = new THREE.Vector3();
+  const facing = (d) => { if (!K.talk) return true; if (d > K.talk) return false; const g = typeof window !== 'undefined' && window.__game, cam = g && g.cam; if (!cam) return true;
+    root.getWorldPosition(hp); hp.y += K.headY; cam.getWorldDirection(cd); hp.sub(cam.position); return hp.normalize().dot(cd) > K.faceCos; };
+  const bid = (d) => { const t = now(); if (LOWN === L) { LOWD = facing(d) ? d : Math.max(d, K.talk || d); LOWT = t; return; } if (!facing(d)) return; if (!LOWN || t - LOWT > 500 || d < LOWD - K.swap) take(d); };
+  if (!LOWN || now() - LOWT > 500) take(Infinity);
+  return bid; }
 // the key light: a narrow warm spotlight on the face from in front and to one side. ONE light is shared by every scan-face person (each extra light costs every lit
 // pixel in the scene and a shader rebuild): it rides with whoever is nearest the player. peopleHiLight returns that person's bid(distance to the player, m) for drive()
 // to call each frame; another person takes the light only when nearer by CONFIG.people.hiMat.key.swap. No shadow by default (one shadow map per light is costly).

@@ -1150,6 +1150,8 @@ export const CONFIG = {
     glbDefer: true,
     // baseFar (OWNER DECISION Nov 20 13:40): in the base a piece under r m across is not drawn past far m from the eye; tested every `every` frames, list made again every `list` s
     baseFar: { on: true, r: 0.6, far: 14, every: 6, list: 3 },
+    // shaderLamps (OWNER DECISION Nov 20 14:15): Marla's key and rim and the people's key are worked out in their materials, not real lights (src/shaderlamps.js)
+    shaderLamps: true,
     // shadowSets (Nov 20): under the ride and night cards the shadow maps are also drawn once under the light counts Marla's own pass leaves (src/main.js shadowSets)
     shadowSets: true,
     // warmFresh (R4 worker 11): the night card also draws one not-yet-merged machine of each kind and one breach mark (src/main.js warmNight)
