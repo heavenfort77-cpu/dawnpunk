@@ -1730,6 +1730,8 @@ async function sceneCard(kind) {
   // 336 ms: the first warm-up had not drawn it, and every turn of the arc drew it again with its two shadow filters.) The interface's fade is the browser's own
   // layer for the card's time (will-change: opacity), so its pieces are drawn in full and only shown at 0.002; and the arc is a layer of its own (index.template.html
   // #arc will-change: transform), drawn once and turned by the browser, not drawn again at every turn
+  // (Mac low 44668711691 against 44666613327, same job's hub as the control: with the arc's shadow filters on the layer itself the browser applied them every frame,
+  // fight 130.7 -> 78.9 fps.) The arc's stroke and its filters are on #arc::before, inside the layer: drawn once into it, no filter at draw time
   const hudW = []; if (CONFIG.lag.hudWarm) { const add = (k, o) => { const e = $(k); if (!e) return; const r = { e, st: e.getAttribute('style'), on: e.classList.contains('on'), ph: null }; hudW.push(r); if (o.on) e.classList.add('on');
       e.style.setProperty('visibility', 'visible', 'important'); e.style.setProperty('display', 'block', 'important'); if (o.up) { e.style.setProperty('z-index', '41', 'important'); e.style.setProperty('opacity', '0.002', 'important'); e.style.setProperty('will-change', 'opacity', 'important'); }
       if (o.text && !e.textContent) { r.ph = document.createElement('span'); r.ph.textContent = 'Warm-up line 0'; e.appendChild(r.ph); } };
