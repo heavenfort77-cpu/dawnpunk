@@ -611,7 +611,7 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
     // keep coming between them; the whole still stops at filmCompileCap
     if (renderer.compileAsync && CONFIG.lag.filmCompileParts) { const roots = []; for (const c of scene.children) { if (c.isLight) continue; if (!c.isMesh && c.children.length > 8) roots.push(...c.children); else roots.push(c); }
       const capAt = tc + CONFIG.lag.filmCompileCap * 1000; built = true; FILM.compileParts = roots.length;
-      for (const c of roots) { if (performance.now() > capAt) { built = false; break; } if (!c.parent) continue; await Promise.race([renderer.compileAsync(c, cam, scene).catch(() => {}), nap(Math.max(0, capAt - performance.now()))]); } }
+      let rk = 0; for (const c of roots) { FILM.step = 'compile ' + (++rk) + '/' + roots.length; if (performance.now() > capAt) { built = false; break; } if (!c.parent) continue; await Promise.race([renderer.compileAsync(c, cam, scene).catch(() => {}), nap(Math.max(0, capAt - performance.now()))]); } }
     else if (renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam).then(() => { built = true; }), nap(CONFIG.lag.filmCompileCap * 1000)]);
     FILM.compileMs = Math.round(performance.now() - tc); FILM.compileCut = !built;
     // (Nov 20, the home card after the film 2.8-4.1 s on the Mac: the base built under the black was first drawn under that card) the base's pieces are drawn here
@@ -625,13 +625,13 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
     // (R4 item D, card 28: diagnose 7 'base 109112': 5 depth programs (render.jpg, canopy.png, glaze.jpg, the player's suit) built in the first base frames after the
     // film) the parts also draw the shadow maps (as the cards' parts do) and the body shadow is warmed, so the depth programs are built under the black
     const G = CONFIG.lag.gpuPart, gp = G && G.on; if (pshadow.warm) pshadow.warm();
-    for (let i = 0; i < list.length;) { const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.film) { const e = Math.min(list.length, i + (S.filmDraws || S.draws)); renderer.shadowMap.needsUpdate = true; FILM.warm += drawPieces(list, i, e, null); i = e; if (S.filmDraws) break; }
+    FILM.step = 'compiled'; for (let i = 0; i < list.length;) { FILM.step = 'draw ' + i + '/' + list.length; const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.film) { const e = Math.min(list.length, i + (S.filmDraws || S.draws)); renderer.shadowMap.needsUpdate = true; FILM.warm += drawPieces(list, i, e, null); i = e; if (S.filmDraws) break; }
       FILM.parts = (FILM.parts || 0) + 1; if (gp) await gpuDone(G.cap); else await raf(); }
     if (fbg && fbg.parent === scene) scene.remove(fbg);
     // (R4 item D, card 28: diagnose 7 'intro 102695: 6 programs', the hands' own materials: MeshStandardMaterial #b08a3c, #8a8468, the cells map 64x64, the water
     // #4aa8e8, src/hands.js) the film shows the hands in its turning part (CONFIG.opening.turning.hands) and their scene was never drawn under the black: it is now
-    if (hands.warm) hands.warm(renderer, cam.aspect);
-    if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e) { /* no context */ } } } catch (e) { /* the film runs as before */ } finally { if (FILM.fbg && FILM.fbg.parent === scene) scene.remove(FILM.fbg); FILM.fbg = null; I.hold = false; } })(); }
+    FILM.step = 'hands'; if (hands.warm) hands.warm(renderer, cam.aspect);
+    if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e) { /* no context */ } } } catch (e) { /* the film runs as before */ } finally { FILM.step = ''; if (FILM.fbg && FILM.fbg.parent === scene) scene.remove(FILM.fbg); FILM.fbg = null; I.hold = false; } })(); }
 // (Nov 20, PROFILE 44648754836: 6 MeshDepthMaterial programs and 17 new shadow-target draw states in the first play frame after the first ride card) three r187
 // keys every program, the shadow passes' depth programs too, on the light counts of the render BEFORE it (the shadow maps are drawn before that render's own lights
 // are counted). With Marla's lights split off (ML.on) each play frame is: street render (sun shadow pass under the counts her pass left: the scene's lights plus her
@@ -1686,7 +1686,7 @@ function lfStart(now) { if (!PROGLOG) return; const gap = now - LF.prev; if (LF.
 function lfMark(k) { if (!PROGLOG) return; const n = performance.now(); LF.m[k] += n - LF.k; LF.k = n; }
 // (R3, boss vs hub) ?proglog=1: the frames' CPU cost summed for window.__game.frameCost(): JS per part, and inside the draw the shadow maps and the matrix pass
 const FC = { n: 0, js: 0, logic: 0, draw: 0, hands: 0, shadow: 0, matrix: 0, calls: 0 };
-function lfEnd() { if (!PROGLOG) return; LF.last = { js: Math.round(performance.now() - LF.s), logic: Math.round(LF.m.logic), draw: Math.round(LF.m.draw), hands: Math.round(LF.m.hands), draws: PN.draws - LF.d0, progs: PN.prog - LF.p0, fd: PN.fd - LF.fd0, whys: PN.why - LF.w0, up: UPL.n - LF.u0, upMs: Math.round(UPL.ms - LF.um0), buf: UPL.bn - LF.b0, bufMs: Math.round(UPL.bms - LF.bm0) };  FC.n++; FC.js += performance.now() - LF.s; FC.logic += LF.m.logic; FC.draw += LF.m.draw; FC.hands += LF.m.hands; }
+function lfEnd() { if (!PROGLOG) return; LF.last = { js: Math.round(performance.now() - LF.s), logic: Math.round(LF.m.logic), draw: Math.round(LF.m.draw), hands: Math.round(LF.m.hands), draws: PN.draws - LF.d0, progs: PN.prog - LF.p0, fd: PN.fd - LF.fd0, whys: PN.why - LF.w0, up: UPL.n - LF.u0, upMs: Math.round(UPL.ms - LF.um0), buf: UPL.bn - LF.b0, bufMs: Math.round(UPL.bms - LF.bm0), film: FILM.it ? 'prep' : (FILM.step || '') };  FC.n++; FC.js += performance.now() - LF.s; FC.logic += LF.m.logic; FC.draw += LF.m.draw; FC.hands += LF.m.hands; }
 const PN = { prog: 0, why: 0, draws: 0, fd: 0 };
 if (PROGLOG) { const PL = window.__progLog = [], cur = { m: null, o: null }, rbd = renderer.renderBufferDirect;
   // (owner 13:10, the drill's and the fight's first long frames) also why a material's shader is looked up again (getParameters) without a new program: the scene's
