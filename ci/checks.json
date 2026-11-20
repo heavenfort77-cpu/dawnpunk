@@ -203,6 +203,16 @@
    "timeout": 40
   },
   {
+   "name": "textcheck",
+   "script": "tools/textcheck.cjs",
+   "args": [
+    "low"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 40
+  },
+  {
    "name": "premortem",
    "script": "tools/premortem.cjs",
    "args": [

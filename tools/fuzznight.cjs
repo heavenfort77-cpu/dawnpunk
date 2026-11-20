@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
   p.on('crash', () => console.log('EVENT page crashed'));
   p.on('close', () => console.log('EVENT page closed'));
   p.on('pageerror', (e) => console.log('EVENT page error ' + String(e).slice(0, 200)));
-  await p.goto('file://' + __dirname + '/../dist/index.html');
+  await p.goto((process.env.PAGE || 'file://' + __dirname + '/../dist/index.html'));
   await p.waitForFunction(() => window.__game && window.__game.startRun);
   let q = 12345 + w;
   const r = () => ((q = (q * 1664525 + 1013904223) >>> 0) / 4294967296);
