@@ -1692,6 +1692,8 @@ if (PROGLOG) { const PL = window.__progLog = [], cur = { m: null, o: null }, rbd
 if (BOTRUN()) gloomPreload();
 // warm-up copies for the night card: one machine of every kind the ring can send and one of every device you carry, built and drawn into the shader cache under the card,
 // then kept hidden until the run ends (a disposed material would free its shader program), so the first machine of a kind or the first device placed does not stall a frame
+// one plain single-sided piece with a picture that casts a shadow (a machine's lit display is the only such piece in play), for the warm-up sets
+function warmCaster() { const dc = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), new THREE.MeshLambertMaterial({ map: lorePaperTex() })); dc.castShadow = true; dc.position.set(0, -50, 0); if (fx && fx.upgradeOne) fx.upgradeOne(dc); return dc; }
 function dropWarm() { for (const c of [...warmG.children]) { warmG.remove(c); drop(c); } scene.remove(warmG); warmG.userData.day = false; }
 // (owner 11:40) the night card keeps the ride card's set when it is for the same run and the same devices (warmKey), instead of building it again
 const warmKey = () => (run ? run.seed + '|' + run.ring + '|' + slotKinds().join(',') : '');
@@ -1710,6 +1712,9 @@ function warmNight() { if (warmG.children.length && warmG.userData.run === run &
   // the shot, its splash, a kill's smoke and a broken device's splinters (their shaders), and the scrap pieces' physics file (desktop)
   for (const c of [0x7fd8ff, 0x9fd8ff, 0x9fffa0, 0xd0a0ff, 0xffe08a]) { warmG.add(PR.jet(new THREE.Vector3(0, -50, 0), new THREE.Vector3(1, -50, 0), c)); warmG.add(PR.droplet(c)); }
   warmG.add(PR.smoke()); warmG.add(PR.splinter('panel')); warmG.add(PR.splinter('lance')); physicsPreload();
+  // (Nov 20, PROFILE 44671232007: the display's shadow shader was still built at the first night's start, its key one field from the closest: no picture -> picture)
+  // the night's set is built anew here (dropWarm above), so it gets the plain pictured shadow caster too, under the night's own light counts
+  warmG.add(warmCaster());
   warmG.visible = true; warmG.matrixWorldAutoUpdate = true; scene.add(warmG); }
 const nap = (ms) => new Promise((r) => setTimeout(r, ms));
 // (R4 items B/C, card 27) SPREAD by GPU time: work under the film's black and the cards is sent in parts, and each part waits until the GPU has done the one
@@ -1803,7 +1808,7 @@ async function sceneCard(kind) {
         { const L2 = CONFIG.lore, pm = new THREE.Mesh(new THREE.PlaneGeometry(L2.paper[0], L2.paper[1]), new THREE.MeshLambertMaterial({ map: lorePaperTex(), emissive: 0x2a2618, side: THREE.DoubleSide })); pm.position.set(0, -50, 0); warmG.add(pm); if (fx && fx.upgradeOne) fx.upgradeOne(pm);
           // (Nov 20, PROFILE 44664177726: 'MeshDepthMaterial map side1 [256x192] @ Mesh < head < pend < arm0 < hub' built in play) a machine's display takes its picture
           // after the card, and no other piece that casts a shadow is a plain single-sided mesh with a picture: one such piece is in the set, so its shadow shader is built here
-          const dc = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), new THREE.MeshLambertMaterial({ map: lorePaperTex() })); dc.castShadow = true; dc.position.set(0, -50, 0); warmG.add(dc); if (fx && fx.upgradeOne) fx.upgradeOne(dc); } }
+          warmG.add(warmCaster()); } }
       warmG.visible = true; if (mp) mp.remove(marla.root);
       // (R4) by day too: only the lamp counts this run's houses have
       try { for (const n of counts) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); } await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }

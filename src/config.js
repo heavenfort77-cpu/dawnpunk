@@ -1232,7 +1232,8 @@ export const CONFIG = {
     // CONFIG.quality.high.street.tuftBlades (10) as before
     nightTuftBlades: 5,
     // loadBase (Nov 20): the base is prepared on the loading page as its last stage, before the begin button (src/main.js SPLASH); ms: the most it may take there
-    loadBase: { on: true, ms: 9000 },
+    // OFF (Mac 44671218574): the title's worst-frame gate also times the loading page, so the gate line did not move (225 ms); kept off, as before this change
+    loadBase: { on: false, ms: 9000 },
     // titleBase: a returning player's base is prepared this many seconds after the title is ready, while it idles (src/main.js titleBase)
     titleBase: 1.5,
     // slice: the base prepared at the title in time slices: ms of build parts a frame (a part is not cut), then draws pieces drawn off-screen a frame (src/main.js baseSlice)
