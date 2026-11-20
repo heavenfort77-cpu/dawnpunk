@@ -1877,10 +1877,27 @@ glbHooks.ready = (kind, sc) => { if (CONFIG.lag.glbDefer && !playHeld()) GLBQ.pu
 function glbFlush() { if (GLBQ.length && playHeld()) for (const [k, sc] of GLBQ.splice(0)) glbReady(k, sc); }
 bossHooks.ready = (root) => warmMaps(root);
 let last = performance.now(), acc = 0, hurtT = 0;
+// (OWNER DECISION Nov 20 13:40: "lighter versions past a few metres", the base at 976 draw calls and 1.60 M triangles a frame against 500 / 0.5 M; Mac 44682486313
+// BREAK hub: hundreds of pieces under 200 triangles drawn 17-28 m away) CONFIG.lag.baseFar { on, r, far, every, list }: in the base, a piece whose
+// own size is under r m is not drawn when its middle (as placed when the list is made) is over far m from the eye. The list is made again every `list` s (not per frame); every `every` frames the pieces
+// are tested (no objects made). Only a piece this code hid is ever shown again by it, so a piece hidden by anything else stays hidden. Pieces carried on a
+// person's or an animal's bones are never in the list. Outside the base all are shown
+const BFC = { recs: [], at: 0, k: 0, g: null, v: null, seen: new WeakMap(), mov: new WeakSet() };
+function baseFarOff() { for (const r of BFC.recs) if (r.cull) { r.cull = false; r.o.visible = true; } BFC.recs.length = 0; BFC.g = null; }
+function baseFar(now) { const C = CONFIG.lag.baseFar; if (!C || !C.on) return; if (state !== 'base' || BOTFAR()) { if (BFC.recs.length) baseFarOff(); return; }
+  const g = bview.group; if (BFC.g !== g || now - BFC.at > C.list * 1000) { for (const r of BFC.recs) if (r.cull) { r.cull = false; r.o.visible = true; } BFC.recs.length = 0; BFC.g = g; BFC.at = now; BFC.v = BFC.v || new THREE.Vector3();
+    g.traverse((o) => { if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry || !o.visible || o.userData.keep) return; for (let q = o.parent; q && q !== g; q = q.parent) if (q.isBone || q.isSkinnedMesh || (q.animations && q.animations.length) || q.userData.char) return; const ge = o.geometry; if (!ge.boundingSphere) ge.computeBoundingSphere(); const bs = ge.boundingSphere; if (!bs) return; const e = o.matrixWorld.elements, sc = Math.hypot(e[0], e[1], e[2]); if (bs.radius * sc >= C.r || BFC.mov.has(o)) return; BFC.v.copy(bs.center).applyMatrix4(o.matrixWorld); const was = BFC.seen.get(o);
+      // only a piece found in the same place as at the list before is in the list: a walking animal or person is never hidden (once seen moved, never again)
+      if (!was) { BFC.seen.set(o, [BFC.v.x, BFC.v.y, BFC.v.z]); return; } if (Math.abs(was[0] - BFC.v.x) + Math.abs(was[1] - BFC.v.y) + Math.abs(was[2] - BFC.v.z) > 0.02) { BFC.mov.add(o); return; }
+      BFC.recs.push({ o, cull: false, x: BFC.v.x, y: BFC.v.y, z: BFC.v.z }); }); BFC.k = C.every; }
+  if (++BFC.k < C.every) return; BFC.k = 0; const cx = cam.position.x, cy = cam.position.y, cz = cam.position.z, f2 = C.far * C.far;
+  for (const r of BFC.recs) { const dx = r.x - cx, dy = r.y - cy, dz = r.z - cz, far = dx * dx + dy * dy + dz * dz > f2; if (far && !r.cull && r.o.visible) { r.cull = true; r.o.visible = false; } else if (!far && r.cull) { r.cull = false; r.o.visible = true; } } }
+// the scripted checks look at the base's pieces from fixed spots: they keep every piece (as before); ?cards=1 runs (the Mac's real-play measurement) cull as players do
+const BOTFAR = () => BOTRUN();
 function frame(now) {
   requestAnimationFrame(frame);
   // a loading card is up (sceneCard): the game is held still and nothing is drawn under it
-  lfStart(now); playProgs(); baseSlice(); filmSlice(); nightBgSlice(); glbFlush(); marlaSync();
+  lfStart(now); playProgs(); baseSlice(); filmSlice(); nightBgSlice(); glbFlush(); marlaSync(); baseFar(now);
   if (LCARD.on) { last = now; return; }
   // window.__dtMax is set only by the slow headless checks (software renderer, under 1 frame a second) so game time keeps up; players never set it.
   const rawMs = now - last, dt = Math.min(window.__dtMax || CONFIG.lag.dtMax, rawMs / 1000); last = now; const holdNow = paused || state === 'end' || (state === 'menu' && MENU_EL.style.display !== 'none'); holdDraw = (holdNow && pauseDrawn) || ctxLost; pauseDrawn = holdNow; perfHud(rawMs); perf.tick(rawMs, (state === 'base' || state === 'play') && !paused);
@@ -2128,7 +2145,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
-window.__game.cardOn = () => LCARD.on; window.__game.cardStep = () => (LCARD.on ? (LCARD.kind || '') + ':' + LCARD.steps.length : ''); window.__game.frameCost = (reset) => { const n = Math.max(1, FC.n), o = { frames: FC.n }; for (const k of ['js', 'logic', 'draw', 'hands', 'shadow', 'matrix']) o[k] = +(FC[k] / n).toFixed(2); o.renderRest = +((FC.draw - FC.shadow - FC.matrix) / n).toFixed(2); if (reset) for (const k in FC) FC[k] = 0; return o; }; window.__game.uploads = () => ({ n: UPL.n, ms: Math.round(UPL.ms), bn: UPL.bn, bms: Math.round(UPL.bms), big: UPL.big.slice() }); window.__game.filmHold = () => !!(FILM.it || (intro && intro.hold)); window.__game.filmPrepInfo = () => ({ worst: Math.round(FILM.worst), ms: FILM.ms, err: FILM.err || null, compileMs: FILM.compileMs, compileCut: FILM.compileCut, modelWait: FILM.modelWait });
+window.__game.baseFar = () => ({ pieces: BFC.recs.length, hidden: BFC.recs.filter((r) => r.cull).length }); window.__game.cardOn = () => LCARD.on; window.__game.cardStep = () => (LCARD.on ? (LCARD.kind || '') + ':' + LCARD.steps.length : ''); window.__game.frameCost = (reset) => { const n = Math.max(1, FC.n), o = { frames: FC.n }; for (const k of ['js', 'logic', 'draw', 'hands', 'shadow', 'matrix']) o[k] = +(FC[k] / n).toFixed(2); o.renderRest = +((FC.draw - FC.shadow - FC.matrix) / n).toFixed(2); if (reset) for (const k in FC) FC[k] = 0; return o; }; window.__game.uploads = () => ({ n: UPL.n, ms: Math.round(UPL.ms), bn: UPL.bn, bms: Math.round(UPL.bms), big: UPL.big.slice() }); window.__game.filmHold = () => !!(FILM.it || (intro && intro.hold)); window.__game.filmPrepInfo = () => ({ worst: Math.round(FILM.worst), ms: FILM.ms, err: FILM.err || null, compileMs: FILM.compileMs, compileCut: FILM.compileCut, modelWait: FILM.modelWait });
 // the impact sound proof (tools/perfcheck.cjs, local probes): each kind rendered live and as a rendered variant through a pooled chain, RMS difference / RMS
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);
 window.__game.impactPrerender = () => IMP.prerender();
