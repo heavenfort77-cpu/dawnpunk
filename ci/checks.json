@@ -193,6 +193,16 @@
    "timeout": 30
   },
   {
+   "name": "screencheck",
+   "script": "tools/screencheck.cjs",
+   "args": [
+    "low"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 40
+  },
+  {
    "name": "premortem",
    "script": "tools/premortem.cjs",
    "args": [
