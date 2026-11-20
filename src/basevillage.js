@@ -250,7 +250,7 @@ export function* buildBaseLifeIter(g, cfg, hi, save, ground) {
   // ---- merge (the nameplates have their own picture)
   yield;
   // (Nov 20, a title frame of 162 ms) a stop between merging the life pieces and building the plant kit
-  const res = yield* mergeLifeIter(grp, acc, M, { sign: SA.mat }); yield; const pk = PK && PK.count() ? PK.build(grp) : null; LIFE_PLANTS.kit = null;
+  const res = yield* mergeLifeIter(grp, acc, M, { sign: SA.mat }); yield; const pk = PK && PK.count() ? (yield* PK.buildIter(grp)) : null; LIFE_PLANTS.kit = null;
   const cost = { tris: res.tri + (water ? water.cost.tris : 0) + (pk ? pk.tris : 0), meshes: res.meshes + (water ? water.cost.meshes : 0) + anim.length * 2 + (pk ? pk.draws : 0), village: res, water: water && water.cost, plants: pk };
   return { water, plots, solids: [...solids, ...waterSolids(cfg)], circles, cost, keepOut: keepOut(cfg),
     update(dt) { if (water) water.update(dt); for (const a of anim) a(dt); }, push: (x, z) => waterPush(cfg, x, z), deckY: (x, z) => deckY(cfg, x, z), near: (x, z) => waterNear(cfg, x, z) };

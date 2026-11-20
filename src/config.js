@@ -1134,7 +1134,8 @@ export const CONFIG = {
     // titleDraw: on the title, after the base's shaders are built, its pieces are drawn on screen into a 2 px corner, `pieces` at a time, each part waiting for
     // the GPU (at most cap ms), so the home card finds its draw states made (src/main.js baseSlice0 'draw')
     // film: a film started before the title finished the base finishes that work under its black first (at most filmCap s)
-    titleDraw: { on: true, pieces: 6, cap: 4000, film: true, filmCap: 40 },
+    // single: this many first parts are one piece each; filmPieces: pieces a part under the film's black
+    titleDraw: { on: true, pieces: 6, single: 24, cap: 4000, film: true, filmCap: 40, filmPieces: 24 },
     // cull: skinned characters are culled again (src/lod.js cullSkinned); their bounding sphere, taken in the bind pose, is grown: radius times grow, plus pad metres
     cull: { grow: 1.35, pad: 0.35 },
     // glSlowAfter: ?proglog=1 pages time every WebGL call while a card or the film's black is up and this many s after (the slowest call of a long frame is logged)

@@ -1468,27 +1468,29 @@ function titleBase() { if (!CONFIG.lag.keepBase || BOTRUN() || state !== 'menu' 
   if (bview.bgStart(sv)) { TB.phase = 'build'; TB.t0 = performance.now(); } }
 // (H round 2) the title's slow frames from this work, by phase (cardInfo().title.slow: [phase, post step, ms]) so a long title frame is named
 function baseSlice() { const ph = TB.phase, t0 = performance.now(); baseSlice0(); const ms = performance.now() - t0; if (ms > 50) { TB.slow = TB.slow || []; if (TB.slow.length < 20) TB.slow.push([ph, TB.post || 0, Math.round(ms)]); } }
-function baseSlice0(force) { const S = CONFIG.lag.slice; if (!TB.phase || TB.phase === 'done' || !S) return; if (!force && (state !== 'menu' || document.hidden)) { if (state !== 'menu' && !bview.bgBusy && TB.phase === 'build') TB.phase = ''; return; }
+function baseSlice0(force) { const S = CONFIG.lag.slice, SB = S ? (force ? S.film : S.ms) : 0; if (!TB.phase || TB.phase === 'done' || !S) return; if (!force && (state !== 'menu' || document.hidden)) { if (state !== 'menu' && !bview.bgBusy && TB.phase === 'build') TB.phase = ''; return; }
   const g = bview.group;
-  if (TB.phase === 'build') { if (!bview.bgBusy) { TB.phase = ''; return; } if (bview.bgStep(S.ms)) { TB.phase = 'post'; TB.post = 0; } return; }
+  if (TB.phase === 'build') { if (!bview.bgBusy) { TB.phase = ''; return; } if (bview.bgStep(SB)) { TB.phase = 'post'; TB.post = 0; } return; }
   // after the build, one of its whole-base passes a frame (relief maps, small casters, the still pieces merged), then its shaders in the background
-  // (Nov 20, title frames of 68-136 ms in these passes on the Mac) the relief and small-caster passes walk the base's top-level pieces S.ms at a time (each is a
+  // (Nov 20, title frames of 68-136 ms in these passes on the Mac) the relief and small-caster passes walk the base's top-level pieces SB at a time (each is a
   // plain walk, so piece by piece is the same); the merge and the material pass are a frame each
   if (TB.phase === 'post') { const k = TB.post, p0 = performance.now(); TB.postMs = TB.postMs || [];
-    if (k === 0 || k === 1) { if (!TB.pq) { TB.pq = [...g.children]; if (k === 1) g.updateMatrixWorld(true); } while (TB.pq.length && performance.now() - p0 < S.ms) { const c = TB.pq.shift(); if (c.parent !== g) continue; if (k === 0) applyRelief(c); else noSmallCasters(c); } if (!TB.pq.length) { TB.pq = null; TB.post++; } }
-    else if (k === 2) { bview.mergeStill(); TB.post++; } else if (k === 3) { unifyBase(); TB.post++; } else { TB.phase = 'compile'; TB.cq = [...g.children]; }
+    if (k === 0 || k === 1) { if (!TB.pq) { TB.pq = [...g.children]; if (k === 1) g.updateMatrixWorld(true); } while (TB.pq.length && performance.now() - p0 < SB) { const c = TB.pq.shift(); if (c.parent !== g) continue; if (k === 0) applyRelief(c); else noSmallCasters(c); } if (!TB.pq.length) { TB.pq = null; TB.post++; } }
+    else if (k === 2) { if (!TB.mi) TB.mi = bview.mergeStillIter(); let dn = false; do { dn = TB.mi.next().done; } while (!dn && performance.now() - p0 < SB); if (dn) { TB.mi = null; TB.post++; } } else if (k === 3) { unifyBase(); TB.post++; } else { TB.phase = 'compile'; TB.cq = [...g.children]; }
     const pm = Math.round(performance.now() - p0); if (pm > 25) TB.postMs.push([k, pm]); return; }
-  // (H round 2, the title's seconds-long frames) the base's shaders are built a few of its pieces at a time (compileAsync on each, its sync part at most S.ms a frame:
+  // (H round 2, the title's seconds-long frames) the base's shaders are built a few of its pieces at a time (compileAsync on each, its sync part at most SB a frame:
   // SPREAD); the off-screen draws are gone (REMOVED: they made the GPU's draw states for a 64 px target, not for the screen, so the home card draws on screen anyway)
   if (TB.phase === 'compile') { const t1 = performance.now(); if (!renderer.compileAsync) { TB.phase = 'done'; return; } const inS = !!g.parent; if (!inS) scene.add(g);
-    try { while (TB.cq.length && performance.now() - t1 < S.ms) { const c = TB.cq.shift(); if (c.parent === g) renderer.compileAsync(c, cam, scene).catch(() => {}); } } finally { if (!inS) scene.remove(g); }
+    try { while (TB.cq.length && performance.now() - t1 < SB) { const c = TB.cq.shift(); if (c.parent === g) renderer.compileAsync(c, cam, scene).catch(() => {}); } } finally { if (!inS) scene.remove(g); }
     if (!TB.cq.length) { TB.phase = CONFIG.lag.titleDraw && CONFIG.lag.titleDraw.on ? 'draw' : 'done'; TB.ms = Math.round(performance.now() - TB.t0); pauseDrawn = false; } return; }
   // (Nov 20, home card 7-12 s on the Mac, most of it the GPU making each draw state at its first draw: PROFILE=3 run 44722570694) CONFIG.lag.titleDraw: the base's
   // pieces are then drawn ON SCREEN a few at a time (the card's own drawPieces, shadow maps included) into a 2 px corner, each part waiting for the GPU to finish
   // the one before (gpuDone), so the draw states the home card needs exist before Enter; the card still makes its own passes (whatever is left is made there)
   if (TB.phase === 'draw') { const D = CONFIG.lag.titleDraw; if (TB.wait) return; const inS = !!g.parent; if (!inS) scene.add(g);
     try { if (!TB.dl) { TB.dl = []; TB.di = 0; TB.dn = 0; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) TB.dl.push(o); }); }
-      const e = Math.min(TB.dl.length, TB.di + D.pieces), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
+      // the first parts are one piece each (the very first draws carry the scene's one-time costs: 141-362 ms in one part on the Mac); under the film's black
+      // (force) the parts are larger, since no frame is shown there
+      const e = Math.min(TB.dl.length, TB.di + (force ? D.filmPieces : TB.dn < D.single ? 1 : D.pieces)), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
       try { renderer.shadowMap.needsUpdate = true; drawPieces(TB.dl, TB.di, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } TB.di = e; TB.dn++; }
     finally { if (!inS) scene.remove(g); }
     TB.wait = true; gpuDone(D.cap).then(() => { TB.wait = false; });

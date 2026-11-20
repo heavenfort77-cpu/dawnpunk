@@ -20,7 +20,10 @@ const sigOf = (g) => Object.keys(g.attributes).sort().map((k) => k + g.attribute
 // still: the pieces are known never to move (a house's floor decals): no probe poses, and see-through pieces are merged whatever the Gloom setting says
 // opt (the base, owner 11:27): { transparent: merge see-through pieces too, skip(o): leave this piece alone, cell: also group by this many metres of world ground
 // (so the merged meshes are still culled out of view piece by piece) }
-export function mergeStatic(root, probe, still, opt) {
+// (Nov 20, a title frame of 77-125 ms in the base's merge on the Mac) mergeStaticIter stops after sorting the pieces and after each ~8 000 corners merged (same result);
+// mergeStatic runs it at once
+export function mergeStatic(root, probe, still, opt) { const it = mergeStaticIter(root, probe, still, opt); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
+export function* mergeStaticIter(root, probe, still, opt) {
   const C = still ? { on: true, probes: 0, transparent: opt ? !!opt.transparent : true } : CONFIG.lag.mergeGloom; if (!C || !C.on) return 0; const wv = new THREE.Vector3();
   try {
     const leaves = [];
@@ -32,8 +35,8 @@ export function mergeStatic(root, probe, still, opt) {
     const groups = new Map();
     for (const o of leaves) { if (moving.has(o) || !o.visible) continue; const k = o.parent.uuid + '|' + o.material.uuid + '|' + o.castShadow + o.receiveShadow + o.frustumCulled + o.renderOrder + '|' + sigOf(o.geometry) + (opt && opt.cell ? '|' + (o.getWorldPosition(wv), Math.floor(wv.x / opt.cell) + ',' + Math.floor(wv.z / opt.cell)) : '');
       const l = groups.get(k) || []; l.push(o); groups.set(k, l); }
-    let made = 0;
-    for (const l of groups.values()) { if (l.length < 2) continue;
+    let made = 0, vc = 0; yield;
+    for (const l of groups.values()) { if (l.length < 2) continue; if (vc > 8000) { vc = 0; yield; } for (const o of l) vc += o.geometry.attributes.position ? o.geometry.attributes.position.count : 0;
       const geos = l.map((o) => { o.updateMatrix(); const g = o.geometry.clone(); g.applyMatrix4(o.matrix); return g; }), merged = mergeGeometries(geos, false); for (const g of geos) g.dispose(); if (!merged) { mergeState.failed++; continue; }
       const o0 = l[0], mesh = new THREE.Mesh(merged, o0.material); mesh.castShadow = o0.castShadow; mesh.receiveShadow = o0.receiveShadow; mesh.frustumCulled = o0.frustumCulled; mesh.renderOrder = o0.renderOrder; mesh.userData.mergedDraw = true; mesh.raycast = () => {}; o0.parent.add(mesh);
       // (owner 12:17, the matrix pass) these pieces never move against their parent (that is why they were merged): their local matrix is kept (matrixAutoUpdate off),

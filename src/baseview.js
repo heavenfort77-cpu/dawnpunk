@@ -10,7 +10,7 @@ import { roomInfo, roomSolids, toWorld, toLocal, inRoom, doorAt, workshopLow, ma
 import { densityOn } from './density.js';
 import { CONFIG } from './config.js';
 import { okoWork } from './okowork.js';
-import { mergeStatic } from './mergestatic.js';
+import { mergeStatic, mergeStaticIter } from './mergestatic.js';
 import { buildHatchery, createFlock, hatchLayout, hatchSolids } from './hatchery.js';
 import { createVillageCats } from './villagecats.js';
 import { buildBaseLifeIter, startPlants } from './basevillage.js';
@@ -93,7 +93,9 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // invisible stand-ins). Left alone: anything that moves, turns, shows or hides on its own (people, Marla, cats, towers, the journal, labels, the hatchery, flock,
   // village cats, base life), every piece with its own data or draw hook, see-through pieces, the sky and ground, and the pieces the opening film hides one by one
   // round the plant inside the door (CONFIG.opening.wake.hide). Called after the small-shadow pass (src/main.js), once per build.
-  function mergeStill() { const M = cfg.lag && cfg.lag.mergeBase; if (!M || !M.on || g.userData.merged) return 0; g.userData.merged = true; g.updateMatrixWorld(true);
+  // mergeStillIter: the same in steps (the title's sliced passes); mergeStill runs it at once
+  function mergeStill() { const it = mergeStillIter(); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
+  function* mergeStillIter() { const M = cfg.lag && cfg.lag.mergeBase; if (!M || !M.on || g.userData.merged) return 0; g.userData.merged = true; g.updateMatrixWorld(true); yield;
     const off = new Set([scoutG, sky.mesh, ...npcs.map((o) => o.n), ...Object.values(npcG), ...hiddenCats.map((o) => o.cg), ...homeCats.map((h) => h.cg), ...towers, jn && jn.ribbon, jn && jn.glow].filter(Boolean));
     const H = cfg.opening && cfg.opening.wake && cfg.opening.wake.hide, v = new THREE.Vector3(), base = THREE.Object3D.prototype.onBeforeRender;
     const skip = (o) => { if (Object.keys(o.userData).length || o.onBeforeRender !== base) return true; for (let p = o; p && p !== g; p = p.parent) if (off.has(p) || (p !== o && Object.keys(p.userData).length)) return true;
@@ -102,10 +104,10 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // with its own shader hook or data stays its own. A replaced material no other piece uses is freed.
     const users = new Map(), canon = new Map(), hook = THREE.Material.prototype.onBeforeCompile, tk = (t) => (t ? (t.source ? t.source.uuid : t.uuid) + ':' + t.repeat.x + ',' + t.repeat.y + ',' + t.offset.x + ',' + t.offset.y + ',' + t.rotation + ',' + t.wrapS + ',' + t.wrapT + ',' + t.colorSpace + ',' + t.flipY : '');
     const mk = (m) => (m.onBeforeCompile !== hook || Object.keys(m.userData).some((k) => k !== 'tile' && k !== 'pbr' && k !== 'relief') ? null : [m.type, m.color ? m.color.getHex() : '', m.emissive ? m.emissive.getHex() : '', m.emissiveIntensity, tk(m.map), tk(m.normalMap), m.normalScale ? m.normalScale.x : '', m.roughness, m.metalness, m.envMapIntensity, m.transparent, m.opacity, m.side, m.alphaTest, m.vertexColors, m.flatShading, m.fog, m.depthWrite, m.depthTest, m.toneMapped, m.userData.tile].join('|'));
-    g.traverse((o) => { if (o.isMesh && !Array.isArray(o.material)) users.set(o.material, (users.get(o.material) || 0) + 1); });
+    g.traverse((o) => { if (o.isMesh && !Array.isArray(o.material)) users.set(o.material, (users.get(o.material) || 0) + 1); }); yield;
     g.traverse((o) => { if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || skip(o)) return; const k = mk(o.material); if (!k) return; const c = canon.get(k); if (!c) { canon.set(k, o.material); return; } if (c === o.material) return;
       const old = o.material; o.material = c; const n = users.get(old) - 1; users.set(old, n); if (n <= 0) old.dispose(); });
-    return mergeStatic(g, null, true, { transparent: false, skip, cell: M.cell }); }
+    yield; return yield* mergeStaticIter(g, null, true, { transparent: false, skip, cell: M.cell }); }
   let snap0 = [], sunC0 = 0;
   function reuse(sv) {
     save = sv; scene.add(g); if (keptFog) scene.fog = keptFog; eveT = 0; shadowDirty = true;
@@ -580,5 +582,5 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   const meshCost = (roots) => { let meshes = 0, tris = 0; for (const r of roots) r.traverse((o) => { if (!o.isMesh) return; meshes++; const gq = o.geometry; tris += (gq.index ? gq.index.count : gq.attributes.position.count) / 3; }); return { meshes, tris: Math.round(tris) }; };
   const peek = () => ({ cost: { hatchery: hatch ? meshCost([hatch.group]) : null, birds: flock ? meshCost(flock.birds.map((b) => b.root)) : null, cats: vcats ? meshCost(vcats.cats.map((c) => c.root)) : null }, chars, npcG, npcs, scoutG, rooms: { WS, MH }, journal: jn && { ribbon: jn.ribbon.visible, glow: !!jn.glow.userData.show, at: jn.at }, avians: flock && { shown: flock.shown(), birds: flock.birds.map((b) => ({ id: b.id, kind: b.kind, st: b.st, x: b.x, z: b.z, gone: b.gone })), eveT, layout: AV }, vcats: vcats && vcats.cats.map((c) => ({ x: c.b.x, y: c.b.y, z: c.b.z, mode: c.b.mode, act: c.b.act })), life: life && { cost: life.cost, plots: life.plots, wheel: life.water ? life.water.angle() : null } });
   // preChars (owner 11:40): the villagers' models are made ahead (during the opening film), so the base's first build does not load and parse them in the dawn shot
-  return { bgStart, bgStep, bgWorst, get bgBusy() { return !!bg; }, recruitsChanged, mergeStill, free, get kept() { return keptSig !== null; }, preChars: () => { if (makeChar) for (const n of Object.values(NPCS)) if (!chars[n.id]) chars[n.id] = makeChar(n.id); }, setView: (c) => { viewCam = c; }, build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
+  return { bgStart, bgStep, bgWorst, get bgBusy() { return !!bg; }, recruitsChanged, mergeStill, mergeStillIter, free, get kept() { return keptSig !== null; }, preChars: () => { if (makeChar) for (const n of Object.values(NPCS)) if (!chars[n.id]) chars[n.id] = makeChar(n.id); }, setView: (c) => { viewCam = c; }, build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
 }
