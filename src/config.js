@@ -1092,7 +1092,7 @@ export const CONFIG = {
     // seconds each lore line stays on the loading page before the next one
     loreSecs: 4,
     // weight of each loading stage in the bar (scripts, models and textures, fonts, music, first scene compile); they are added and scaled to 100%
-    weights: { scripts: 1, assets: 6, fonts: 1, music: 1.5, warm: 1.5, base: 1.5 },
+    weights: { scripts: 1, assets: 6, fonts: 1, music: 1.5, warm: 1.5, base: 1.5, film: 8 },
     // seconds after which a stage that never reports (a blocked music file, say) counts as done, so the bar cannot stall forever
     stageCap: 25,
     // soft particles drifting up behind the logo and title (desktop only; phones get none)
@@ -1266,6 +1266,11 @@ export const CONFIG = {
     filmBase: false,
     // filmCompileParts: the film's black builds the street's shaders one top-level piece at a time (src/main.js filmWarm), not all in one frame
     filmCompileParts: true,
+    // filmCard (owner Nov 20 22:37): the loading card with a progress bar is shown over the film's black while its street is prepared (card.titles.film)
+    filmCard: true,
+    // loadFilm (owner Nov 20 22:40): a first-time player's opening film is prepared on the loading page as its last stage ('Opening film'), so the begin button
+    // starts the film at once; ms: the most the stage may take before the button comes anyway (the rest then shows the loading card)
+    loadFilm: { on: true, ms: 150000 },
     // filmCompileCap (R3): the film's black waits at most this many s for its shaders to finish building in the background before its pieces are drawn (it was the
     // card's maxWait, 12 s: on the Mac test GPU the build took longer, and the first draw then waited for the rest of it in one held frame of 19-22 s)
     filmCompileCap: 90,
@@ -1324,7 +1329,7 @@ export const CONFIG = {
     unifyMats: true,
     // cardTurns (Nov 20): a card kind set to false skips the four quarter turns (src/main.js sceneCard)
     cardTurns: { home: false },
-    card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' }, settle: { n: 3, ms: 25, cap: 1.5 } },
+    card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home', film: 'Loading the street' }, settle: { n: 3, ms: 25, cap: 1.5 } },
     // tuftChunk: the street's grass tufts are split into square chunks this many metres wide (one instanced draw each), so chunks out of view or past the night's
     // scenery distance are not drawn (they were one draw over the whole street, never culled); same tufts, same places
     tuftChunk: 12,

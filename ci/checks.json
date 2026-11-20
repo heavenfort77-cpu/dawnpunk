@@ -213,6 +213,17 @@
    "timeout": 40
   },
   {
+   "name": "filmloadcheck",
+   "script": "tools/servedist.cjs",
+   "args": [
+    "tools/filmloadcheck.cjs",
+    "low"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 40
+  },
+  {
    "name": "premortem",
    "script": "tools/premortem.cjs",
    "args": [
