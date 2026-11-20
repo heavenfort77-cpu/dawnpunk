@@ -22,14 +22,16 @@
 const { chromium } = require('playwright'); const http = require('http'); const fs = require('fs'); const path = require('path'); const os = require('os');
 const { execFileSync } = require('child_process');
 const DIST = path.resolve(process.argv[2] || path.join(__dirname, '..', 'dist')), TOOLS = __dirname;
-const SEED = +(process.env.SEED || 777), TIER = process.env.TIER || 'low', TOTAL_CAP = +(process.env.TOTAL_CAP || 1200);
+const SEED = +(process.env.SEED || 777), TIER = process.env.TIER || 'low', TOTAL_CAP = +(process.env.TOTAL_CAP || 1900);
 const ONLY = process.env.TESTS ? process.env.TESTS.split(',').map((s) => s.trim()) : null;
 // gpu() growth allowed between like visits; soak growth (heap and gpu, owner's 10%). The base_reuse people tolerances are not set here: they are measured
 // in the run (3x the larger of the noise floor and NOISE_MIN, see base_reuse)
 const TOL = { flat: 0.05, soak: 0.10 }, NOISE_MIN = 0.001;
 // seconds per test on a software GPU; the 9 together (1105 s) fit in TOTAL_CAP
 // (R3) tier_change: its first step (medium: load, base, night) took 120 s in suite 44478553660 (07:26:13 -> 07:28:13); three steps, the cap is 3 x 120 s
-const CAPS = { base_reuse: 150, context_loss: 100, tier_change: 360, zip_serve: 120, old_save: 60, soak: 170, resize: 80, audio_resume: 55, wallclock_audit: 10 };
+// (Nov 20) tier_change, soak and resize: time caps doubled (360 / 170 / 80 s before). They ran out on slower GitHub runners with no FAIL line (44644106870,
+// 44657884399, 44662954865: CAPHIT only) and passed on faster ones (44650773016). A cap is the test's own time budget: no pass rule is changed
+const CAPS = { base_reuse: 150, context_loss: 100, tier_change: 720, zip_serve: 120, old_save: 60, soak: 340, resize: 160, audio_resume: 55, wallclock_audit: 10 };
 // the software-GL flags of guidecheck/perfcheck, plus gc() and exact heap numbers for the soak, and sound allowed without a click for audio_resume
 const ARGS = ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--expose-gc', '--enable-precise-memory-info', '--autoplay-policy=no-user-gesture-required'];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.glb': 'model/gltf-binary', '.ktx2': 'image/ktx2', '.wasm': 'application/wasm', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
