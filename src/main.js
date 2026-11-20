@@ -1726,8 +1726,12 @@ async function sceneCard(kind) {
   // line, the threat arc, the aim label and the crosshair's Gloom state first show (local write log: 0.1, 0.3, 1.5 s). Showing them under the card did nothing: a
   // browser does not draw what an opaque element covers.) CONFIG.lag.hudWarm: for the card's time the interface sits ABOVE the card at opacity 0.002 (no pixel of
   // the card changes: under half a colour step) with those states shown, so their first drawing is done here; everything is put back at the card's end
+  // (Mac low 44667717773, what the page painted before each long raster: #arc 'Added to layout' at 0.357 s -> raster 293 ms; #arc's turn changed at 0.712 s -> raster
+  // 336 ms: the first warm-up had not drawn it, and every turn of the arc drew it again with its two shadow filters.) The interface's fade is the browser's own
+  // layer for the card's time (will-change: opacity), so its pieces are drawn in full and only shown at 0.002; and the arc is a layer of its own (index.template.html
+  // #arc will-change: transform), drawn once and turned by the browser, not drawn again at every turn
   const hudW = []; if (CONFIG.lag.hudWarm) { const add = (k, o) => { const e = $(k); if (!e) return; const r = { e, st: e.getAttribute('style'), on: e.classList.contains('on'), ph: null }; hudW.push(r); if (o.on) e.classList.add('on');
-      e.style.setProperty('visibility', 'visible', 'important'); e.style.setProperty('display', 'block', 'important'); if (o.up) { e.style.setProperty('z-index', '41', 'important'); e.style.setProperty('opacity', '0.002', 'important'); }
+      e.style.setProperty('visibility', 'visible', 'important'); e.style.setProperty('display', 'block', 'important'); if (o.up) { e.style.setProperty('z-index', '41', 'important'); e.style.setProperty('opacity', '0.002', 'important'); e.style.setProperty('will-change', 'opacity', 'important'); }
       if (o.text && !e.textContent) { r.ph = document.createElement('span'); r.ph.textContent = 'Warm-up line 0'; e.appendChild(r.ph); } };
     add('hud', { up: 1 }); add('arc', { on: 1 }); add('darrow', { on: 1, up: 1 }); for (const k of ['marla', 'aim', 'msg']) add(k, { text: 1 }); }
   // (H, owner 13:04: the home card's draws were no-ops: draw() returns while holdDraw is set, and the held title menu left it set) the card's own draws always draw
@@ -1787,7 +1791,10 @@ async function sceneCard(kind) {
         depthMats(); for (const m of [dirtMat('grime'), poolMat, shadeMat]) { const d = new THREE.Mesh(flatGeo, m); d.position.set(0, -50, 0); d.renderOrder = 1; warmG.add(d); }
         // (Nov 20, PROFILE 44648754836: 'MeshLambertMaterial map side2 [128x96]' then 'MeshStandardMaterial map side2 [128x96]' built entering the first house by day)
         // a house's note paper (loreNote) is in the set too, in the form it is drawn in (src/fx.js upgradeOne)
-        { const L2 = CONFIG.lore, pm = new THREE.Mesh(new THREE.PlaneGeometry(L2.paper[0], L2.paper[1]), new THREE.MeshLambertMaterial({ map: lorePaperTex(), emissive: 0x2a2618, side: THREE.DoubleSide })); pm.position.set(0, -50, 0); warmG.add(pm); if (fx && fx.upgradeOne) fx.upgradeOne(pm); } }
+        { const L2 = CONFIG.lore, pm = new THREE.Mesh(new THREE.PlaneGeometry(L2.paper[0], L2.paper[1]), new THREE.MeshLambertMaterial({ map: lorePaperTex(), emissive: 0x2a2618, side: THREE.DoubleSide })); pm.position.set(0, -50, 0); warmG.add(pm); if (fx && fx.upgradeOne) fx.upgradeOne(pm);
+          // (Nov 20, PROFILE 44664177726: 'MeshDepthMaterial map side1 [256x192] @ Mesh < head < pend < arm0 < hub' built in play) a machine's display takes its picture
+          // after the card, and no other piece that casts a shadow is a plain single-sided mesh with a picture: one such piece is in the set, so its shadow shader is built here
+          const dc = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), new THREE.MeshLambertMaterial({ map: lorePaperTex() })); dc.castShadow = true; dc.position.set(0, -50, 0); warmG.add(dc); if (fx && fx.upgradeOne) fx.upgradeOne(dc); } }
       warmG.visible = true; if (mp) mp.remove(marla.root);
       // (R4) by day too: only the lamp counts this run's houses have
       try { for (const n of counts) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); } await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
