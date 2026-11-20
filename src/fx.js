@@ -37,5 +37,5 @@ export function createFx(renderer, scene, cam, F, P, hemi) {
   let afterMain = null, aoLayer = 0;
   // upgradeNow: the loading card (src/main.js sceneCard) turns every new simple surface into its physically based form BEFORE it builds the shaders, so the first
   // frames after the card do not rebuild them (LAG FIX Nov 19: the night's first frame stalled 2.4 s on the real GPU)
-  return { upgradeNow: () => { if (P) upgrade(scene, P); }, render, setSize: () => { const s = renderer.getDrawingBufferSize(new THREE.Vector2()); if (ao) ao.setSize(Math.max(1, Math.round(s.x * sc)), Math.max(1, Math.round(s.y * sc))); }, ao, setAO: (v) => { aoOn = !!v && !!ao; }, get aoOn() { return aoOn; }, setAfterMain: (f, layer) => { afterMain = f; aoLayer = layer || 0; } };
+  return { upgradeNow: () => { if (P) upgrade(scene, P); }, upgradeOne: (o) => { if (P && o) upgrade(o, P); }, render, setSize: () => { const s = renderer.getDrawingBufferSize(new THREE.Vector2()); if (ao) ao.setSize(Math.max(1, Math.round(s.x * sc)), Math.max(1, Math.round(s.y * sc))); }, ao, setAO: (v) => { aoOn = !!v && !!ao; }, get aoOn() { return aoOn; }, setAfterMain: (f, layer) => { afterMain = f; aoLayer = layer || 0; } };
 }

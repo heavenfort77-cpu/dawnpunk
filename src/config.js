@@ -1141,6 +1141,8 @@ export const CONFIG = {
     nightBg: { on: false, ms: 6 },
     // crossWarm (R4 worker 6, Card 40): the crosshair's Gloom state is drawn first under each loading card (its drop-shadow filters cost 226 ms of GPU raster the first time)
     crossWarm: true,
+    // hudWarm (Nov 20): the threat arc and the drill arrow (drop-shadow filters) are drawn first under each loading card, as crossWarm does for the crosshair
+    hudWarm: true,
     // glbDefer (R4 worker 6): a model that finishes loading while the film or play is shown gets its pictures and shaders prepared at the next held time (card, film black, title)
     // (R4 worker 8, Card 46 then Card 48) ON: with it off (f7258a2, plain medium 44567127417) 3 programs were built in play, one each at page 99219 / 99235 / 99244 ms
     // (models of the run finishing their load in play: glbReady's compileAsync); the 15 'intro' ones were Card 45's, not glbDefer's

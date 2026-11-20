@@ -469,6 +469,8 @@ function loreHouse(i) {
   }
   const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: introGlow(), color: 0xfff2c8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0 }));
   glint.scale.setScalar(L.glint[0]); glint.position.set(0.03, sp.top ? 0.03 : 0.06, sp.top ? 0 : L.board[2] / 2 + 0.03); g.add(glint);
+  // (Nov 20) the note takes its drawn form at once (it was drawn about a second in its first form, one more shader built in play), see the ride card's warm set
+  if (fx && fx.upgradeOne) fx.upgradeOne(g);
   loreN = { i: n, g, glint, x: sp.x, z: sp.z, floor: sp.floor, top: sp.top, bp: bpGroup };
 }
 // every frame: the glint by day, and the prompt when you stand near and look at it
@@ -1719,6 +1721,11 @@ async function sceneCard(kind) {
   // #cross class x-gloom and #aim) the crosshair's Gloom state (two drop-shadow filters) is drawn the first time under the card, not in play: shown for the card's
   // frames under the opaque card, put back at its end
   const crW = $('cross'), crS = crW.getAttribute('style'), crK = crossK; if (CONFIG.lag.crossWarm) { crW.classList.add('x-gloom'); crW.style.setProperty('visibility', 'visible', 'important'); crW.style.setProperty('display', 'block', 'important'); }
+  // (Nov 20, PROFILE 44648754836 combat: frames of 281 / 253 ms in the first 1.3 s after the night card with 0 programs and 0 new draw states, one GL call waiting
+  // 231-328 ms on the GPU process) the threat arc (#arc) and the drill's arrow (#darrow) carry two drop-shadow filters each, as the crosshair's Gloom state does
+  // (Card 40: 226 ms of GPU raster the first time), and first show in a fight's first seconds. CONFIG.lag.hudWarm: shown under the opaque card, put back at its end
+  const hudW = CONFIG.lag.hudWarm ? ['arc', 'darrow'].map((k) => { const e = $(k); return [e, e.getAttribute('style'), e.classList.contains('on')]; }) : [];
+  for (const [e] of hudW) { e.classList.add('on'); e.style.setProperty('visibility', 'visible', 'important'); e.style.setProperty('display', 'block', 'important'); }
   // (H, owner 13:04: the home card's draws were no-ops: draw() returns while holdDraw is set, and the held title menu left it set) the card's own draws always draw
   holdDraw = false; pauseDrawn = false; const pf0 = [RSTAT.renders, RSTAT.calls, nProg(), UPL.n, UPL.ms, UPL.bn, UPL.bms, GPUQ.waits, GPUQ.ms]; GPUQ.worst = 0;
   LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
@@ -1773,7 +1780,10 @@ async function sceneCard(kind) {
       if (!warmG.userData.day) { warmG.userData.day = true; for (const k of ['food', 'ess']) { const c = (LOOK_OLD ? PR.crateMesh : BT.crateV2)(k); shadeUnder(c, CONFIG.depth.crate, 0.02); c.position.set(0, -50, 0); warmG.add(c); } const cat = PR.catMesh(CONFIG.catStyles[0]); cat.g.position.set(0, -50, 0); warmG.add(cat.g);
         // (R3, Mac 44481169893: 3 shaders built entering the first house by day, "MeshLambertMaterial map transparent" x2 and "MeshBasicMaterial #ffe2a8 map transparent")
         // the house's dirt decals (dirtMat) and the light pools at its openings (poolMat), which buildDepth puts in every house, are in the set too
-        depthMats(); for (const m of [dirtMat('grime'), poolMat, shadeMat]) { const d = new THREE.Mesh(flatGeo, m); d.position.set(0, -50, 0); d.renderOrder = 1; warmG.add(d); } }
+        depthMats(); for (const m of [dirtMat('grime'), poolMat, shadeMat]) { const d = new THREE.Mesh(flatGeo, m); d.position.set(0, -50, 0); d.renderOrder = 1; warmG.add(d); }
+        // (Nov 20, PROFILE 44648754836: 'MeshLambertMaterial map side2 [128x96]' then 'MeshStandardMaterial map side2 [128x96]' built entering the first house by day)
+        // a house's note paper (loreNote) is in the set too, in the form it is drawn in (src/fx.js upgradeOne)
+        { const L2 = CONFIG.lore, pm = new THREE.Mesh(new THREE.PlaneGeometry(L2.paper[0], L2.paper[1]), new THREE.MeshLambertMaterial({ map: lorePaperTex(), emissive: 0x2a2618, side: THREE.DoubleSide })); pm.position.set(0, -50, 0); warmG.add(pm); if (fx && fx.upgradeOne) fx.upgradeOne(pm); } }
       warmG.visible = true; if (mp) mp.remove(marla.root);
       // (R4) by day too: only the lamp counts this run's houses have
       try { for (const n of counts) { while (tmp.length < n) { const lp = new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, 6); lp.position.set(0, -40, 0); scene.add(lp); tmp.push(lp); } await Promise.race([renderer.compileAsync(scene, cam), nap(L.maxWait * 1000)]); } }
@@ -1822,6 +1832,7 @@ async function sceneCard(kind) {
   LCARD.ms = Math.round(performance.now() - t0); LCARD.proofs.push({ id, kind, ms: LCARD.ms, renders: RSTAT.renders - pf0[0], calls: RSTAT.calls - pf0[1], programs: nProg() - pf0[2], uploads: UPL.n - pf0[3], uploadMs: Math.round(UPL.ms - pf0[4]), buffers: UPL.bn - pf0[5], bufferMs: Math.round(UPL.bms - pf0[6]), steps: LCARD.steps, cw: LCARD.cw || null, allParts: LCARD.allParts || null, shadowSets: LCARD.shadowSets || 0, lamps: LCARD.lampCounts || null, gpu: [GPUQ.waits - pf0[7], Math.round(GPUQ.ms - pf0[8]), Math.round(GPUQ.worst)], bot }); if (LCARD.proofs.length > 24) LCARD.proofs.shift();
   const left = (bot ? 0 : (L.min[kind] || 0) * 1000) - (performance.now() - t0); if (left > 0) await nap(left);
   if (CONFIG.lag.crossWarm) { if (crS === null) crW.removeAttribute('style'); else crW.setAttribute('style', crS); crossK = '#'; setCross(crK); }
+  for (const [e, st, on] of hudW) { if (st === null) e.removeAttribute('style'); else e.setAttribute('style', st); if (!on) e.classList.remove('on'); }
   fill(1); if (id === LCARD.n) { LCARD.on = false; LCARD.endT = Math.round(performance.now()); $('lcard').style.display = 'none'; perfRest(); }
 }
 // the automatic step-down on the desktop tier (src/perfstep.js, CONFIG.lag.step); phones never run it
