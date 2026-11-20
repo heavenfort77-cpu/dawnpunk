@@ -1,5 +1,5 @@
 # build output and local installs
-node_modules/
+node_modules
 dist/
 ci-logs/
 ci-out/
