@@ -32,13 +32,15 @@ export const reliefAniso = () => Math.min(Q.reliefAniso, gpuAniso);
 
 // High-tier textures: files beside index.html (dist/tex/). Each texture starts with the 512 px picture packed in the page and takes the
 // sharper one when it has arrived; if a file fails (or is unreadable, as from a file:// page), that texture simply keeps the packed one.
-const loader = new THREE.TextureLoader(), hiImg = {}, hiSrc = {}, waiting = {};
+const loader = new THREE.TextureLoader(), hiImg = {}, hiSrc = {}, hiBm = {}, waiting = {};
 export const hiState = { asked: 0, ok: 0, failed: 0, used: 0 };
 // every texture of one name shares one source, so the GPU holds each sharp picture once however many materials use it
 // (Nov 20, hub crash 'usedTimes' in plain medium 44639366416 / 44644094276, job 'medium hub') a texture already on the GPU is freed BEFORE it takes the sharp
 // picture's source: three r187 keeps its GPU textures per source, so a source swapped under an uploaded texture left its entry under the old source and
 // world.dispose() then failed in WebGLTextures deallocateTexture (webglTextures[__cacheKey] undefined). Freed first, it is made again under the new source
-function upgrade(t, name) { if (!hiImg[name] || (t.userData.hi && t.source === hiSrc[name])) return; t.dispose(); t.source = hiSrc[name]; t.userData.hi = true; t.needsUpdate = true; hiState.used++; }
+// (Nov 20, home card: 16 sharp 1024 px pictures sent to the GPU as <img> took 465 ms locally, ImageBitmaps of the same size about 3 ms each) a sharp picture is
+// kept as an ImageBitmap made off the main thread, already turned upside down (WebGL ignores flipY for bitmaps), so a texture that takes it is set flipY false
+function upgrade(t, name) { if (!hiImg[name] || (t.userData.hi && t.source === hiSrc[name])) return; t.dispose(); t.source = hiSrc[name]; t.flipY = !hiBm[name]; t.userData.hi = true; t.needsUpdate = true; hiState.used++; }
 function readable(img) { try { const c = document.createElement('canvas'); c.width = c.height = 1; const x = c.getContext('2d'); x.drawImage(img, 0, 0, 1, 1); x.getImageData(0, 0, 1, 1); return true; } catch (e) { return false; } }
 // (R3, owner 14:10: under 20 MB before the base) each sharp picture is asked for when a texture of its name is first made (texTrack), not all with the page: the
 // street's pictures then load when the street is built (under the film's black or the ride card, which wait for them: hiPending), not before the base
@@ -50,10 +52,14 @@ function askHi(name) {
   // there); a picture can only be unreadable when the page itself is a file:// page and the picture a file beside it, so only then is it checked (REMOVED elsewhere);
   // the picture is decoded off the main thread first (img.decode) before it is used
   const chk = typeof location !== 'undefined' && location.protocol === 'file:' && !String(TEXHI[name]).startsWith('data:');
-  const ok = () => { if (chk && !readable(img)) { hiState.failed++; delete waiting[name]; return; } hiImg[name] = img; hiSrc[name] = new THREE.Source(img); hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
+  const use = (pic, bm) => { hiImg[name] = pic; hiBm[name] = bm; hiSrc[name] = new THREE.Source(pic); hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
+  const ok = () => { if (chk && !readable(img)) { hiState.failed++; delete waiting[name]; return; } use(img, false); };
   const bad = () => { hiState.failed++; delete waiting[name]; };
-  img.src = TEXHI[name];
-  if (img.decode) img.decode().then(ok, bad); else { img.onload = ok; img.onerror = bad; }
+  const viaImg = () => { img.src = TEXHI[name]; if (img.decode) img.decode().then(ok, bad); else { img.onload = ok; img.onerror = bad; } };
+  // CONFIG.lag.hiBitmap: the file fetched and made into a flipped ImageBitmap off the main thread; any failure (no createImageBitmap or fetch, a file:// page) takes the <img> way
+  if (CONFIG.lag && CONFIG.lag.hiBitmap && !chk && typeof createImageBitmap === 'function' && typeof fetch === 'function') {
+    fetch(TEXHI[name]).then((r) => (r.ok ? r.blob() : Promise.reject(r.status))).then((b) => createImageBitmap(b, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bm) => use(bm, true), viaImg);
+  } else viaImg();
 }
 // every sharp picture asked for at once: at the film's start, the ride card and the player's first click or key in the base (so the street and the houses have
 // them before they are shown, as when they all came with the page)
