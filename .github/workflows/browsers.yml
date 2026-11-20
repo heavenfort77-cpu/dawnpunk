@@ -75,10 +75,11 @@ jobs:
         run: |
           set +e
           T=$(python3 -c 'import json,os; c=[x for x in json.load(open("ci/checks.json"))["checks"] if x["name"]==os.environ["CHECK"]]; print(int(c[0].get("timeout",30))*60 if c else 60)')
-          timeout "$T" node tools/browserrun.cjs "$CHECK" "$PWD/dist" "$PWD/ci-out" > run.log 2>&1; rc=$?
+          perl -e 'alarm shift; exec @ARGV' "$T" node tools/browserrun.cjs "$CHECK" "$PWD/dist" "$PWD/ci-out" > run.log 2>&1; rc=$?
           set -e
+          # (macOS has no timeout command: perl's alarm ends the check with code 142)
           grep -E "^\s*(PASS|FAIL)\b|^browserrun|ALL PASS|SOME FAILED|rror" run.log | cut -c1-400 || true
-          if [ $rc -eq 124 ]; then echo "FAIL timed out after $T s"; exit 1; fi
+          if [ $rc -eq 142 ]; then echo "FAIL timed out after $T s"; exit 1; fi
           if grep -qE "^\s*FAIL\b" run.log; then exit 1; fi
           if ! grep -qE "^\s*PASS\b" run.log; then echo "FAIL no PASS line (exit $rc)"; tail -20 run.log; exit 1; fi
           exit $rc
