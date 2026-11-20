@@ -136,7 +136,7 @@ export function vaultHi(g, b) {
 // (Nov 20, title frames of 67-117 ms on the Mac: a building and its lived-in dressing were one step of the base's sliced build) while vaultLater.on the dressing
 // is queued; vaultFlushOne() makes the next queued one (true if it made one), so the build can stop between a building and its dressing
 export const vaultLater = { on: false, q: [] };
-export function vaultFlushOne() { const e = vaultLater.q.shift(); if (!e) return false; vaultDense(e[0], e[1]); return true; }
+export function* vaultFlushIter() { const e = vaultLater.q.shift(); if (e) yield* vaultDenseIter(e[0], e[1]); }
 
 // ---------------------------------------------------------------- DENSITY (CONFIG.quality.high.density.base): the vaulted buildings lived in and cared for
 // lanterns by the door (a glass bud on a verdigris bracket, warm light), a hand-painted sign, stained glass in the round windows, a mosaic round the door, window boxes and pots
@@ -144,7 +144,9 @@ export function vaultFlushOne() { const e = vaultLater.q.shift(); if (!e) return
 // panel wired to a junction box and glass battery jars, a washing line (storage), a workbench and pegboard (workshop), repairs (render patches, copper patches riveted on the vault,
 // a rope-bound downpipe), a stove flue on the roof; inside your home: a stove, coat hooks with a green coat, boots, a shelf of jars and books, a lantern on the desk.
 // Everything is merged per surface (one mesh per surface for the whole base), colour variety rides on vertex colours.
-function vaultDense(g, b) {
+// (Nov 20, title frames of 98-219 ms on the Mac in this one step) vaultDenseIter stops between its sections (same pieces, same order); vaultDense runs it at once
+function vaultDense(g, b) { const it = vaultDenseIter(g, b); while (!it.next().done); }
+function* vaultDenseIter(g, b) {
   const DB = densityOn().base, F = b.front, hw = b.w / 2, hd = b.d / 2, top = b.h, r = rng(b.seed || (Math.round(b.x * 13 + b.z * 29) + 77)), G = shapes(), home = !!b.open && !b.room;
   const word = b.word ? b.word : home ? 'POTTS' : Math.hypot(b.x - STATIONS.storage.x, b.z - STATIONS.storage.z) < 0.5 ? 'STORAGE' : 'WORKSHOP', isStore = word === 'STORAGE';
   const M = { wood: std('dnwood', { map: ptex('wood'), roughness: 0.75, vertexColors: true }), cer: phys('dncer', { map: ptex('glaze'), roughness: 0.35, clearcoat: 0.5, clearcoatRoughness: 0.3, vertexColors: true }), cop: std('dncop', { map: ptex('metal'), roughness: 0.5, metalness: 0.6, vertexColors: true }),
@@ -163,31 +165,38 @@ function vaultDense(g, b) {
   // a wall mark (repair, drips, damp) on the front (side 0), right (1), back (2) or left (3) face: a quad laid on the wall, in the building's frame
   const wallMark = (side, cell, u, y, w, h, tint) => { const gq = new THREE.PlaneGeometry(w, h), [u0, v0, u1, v1] = cellUV(cell), uv = gq.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) ? u1 : u0, uv.getY(i) ? v1 : v0);
     const at = [[u, y, fz + 0.002, 0], [hw + 0.014, y, -u, PI / 2], [-u, y, -fz - 0.002, PI], [-hw - 0.014, y, u, -PI / 2]][side]; P.add('decal', gq, at[0], at[1], at[2], 0, at[3], 0, 1, 1, 1, tint); };
+  yield;
   // ---- lanterns beside the door: a verdigris bracket curling out of the wall, a glass bud with a warm bulb and a copper cap
   const lantern = (x, y, z, ry) => { P.push(x, y, z, ry); P.add('cop', G.box(0.08, 0.16, 0.02), 0, 0, 0.01, 0, 0, 0, 1, 1, 1, C(0xffffff)); let prev = V(0, 0.02, 0.02); for (let k = 1; k <= 6; k++) { const t = k / 6, q = V(0, 0.02 + Math.sin(t * PI * 0.8) * 0.16, 0.02 + t * 0.3); P.rod('cop', G, prev, q, 0.012, 6); prev = q; }
     P.add('cop', G.cyl(0.03, 0.07, 0.05, 10), 0, 0.12, 0.32); P.add('glass', G.lathe('bud', [[0.0, 0], [0.06, 0.02], [0.085, 0.09], [0.07, 0.17], [0.03, 0.21], [0, 0.22]], 14), 0, -0.13, 0.32, 0, 0, 0);
     P.add('glow', G.sphere(0.035, 10, 8), 0, -0.04, 0.32); P.add('cop', G.cyl(0.012, 0.012, 0.04, 6), 0, 0.08, 0.32); P.pop(); };
   if (home) { lantern(-dw / 2 - 0.3, 2.15, fz, 0); lantern(dw / 2 + 0.3, 2.15, fz, 0); } else if (b.lampX !== false) lantern(dx + dw / 2 + 0.38, 2.2, fz, 0);
+  yield;
   // ---- the hand-painted sign: a projecting board on a bracket beside a station door; over the doorway on your home
   // (the painted face is a plane with the whole picture on it; a box's uvs are in metres and showed only the bottom of the picture, without the word)
   if (DB.sign) { if (home) { P.add('wood', G.box(1.36, 0.5, 0.03), -2.3, 2.2, fz + 0.03, 0, 0, 0, 1, 1, 1, C(0x3f8f6a)); P.add('sign', new THREE.PlaneGeometry(1.3, 0.44), -2.3, 2.2, fz + 0.047); P.add('wood', G.box(1.4, 0.05, 0.05), -2.3, 2.44, fz + 0.03, 0, 0, 0, 1, 1, 1, C(0x3f8f6a)); }
     else { const sx = dx - dw / 2 - 0.42; P.add('cop', G.box(0.04, 0.04, 0.95), sx, 2.72, fz + 0.47, 0, 0, 0, 1, 1, 1, C(0xffffff)); P.rod('cop', G, V(sx, 2.5, fz + 0.02), V(sx, 2.7, fz + 0.45), 0.012, 6); for (const zz of [0.25, 0.8]) P.rod('dark', G, V(sx, 2.7, fz + zz), V(sx, 2.56, fz + zz), 0.004, 4);
       P.push(sx, 2.36, fz + 0.52, PI / 2); P.add('wood', G.box(1.0, 0.41, 0.026), 0, 0, 0, 0, 0, 0, 1, 1, 1, C(0x3f8f6a)); for (const s2 of [1, -1]) P.add('sign', new THREE.PlaneGeometry(0.95, 0.36), 0, 0, s2 * 0.0145, 0, s2 > 0 ? 0 : PI, 0); P.pop(); } }
+  yield;
   // ---- stained glass in the round windows, a mosaic of glazed tiles round the door
   if (DB.stained) for (const [wx, wy, wr] of b.windows || []) P.add('stained', new THREE.CircleGeometry(wr * 0.98, 32), wx, wy, fz + 0.04, 0, 0, 0, 1, 1, 1, C(0xffffff));
   if (DB.mosaic) { const cols = [0x4f9a7a, 0xe8dcc0, 0xe0a040, 0x3f7f9a, 0x7fbf8a].map(C), cy = home ? dh : dh, R0 = dw / 2 + (home ? 0.12 : 0.12);
     if (!home) for (let row = 0; row < 2; row++) { const rad = R0 + 0.04 + row * 0.075, n = Math.round(PI * rad / 0.07); for (let k = 0; k <= n; k++) { const a = k / n * PI; P.add('cer', G.box(0.062, 0.062, 0.016), dx + Math.cos(a) * rad, cy + Math.sin(a) * rad * 1.1, fz + 0.008, 0, 0, a, 1, 1, 1, cols[(k + row * 2) % 5].clone().multiplyScalar(0.92 + 0.16 * r())); } }
     for (const sx of [-1, 1]) for (let y = 0.5; y < (home ? dh : dh) - 0.05; y += 0.075) P.add('cer', G.box(0.062, 0.062, 0.016), dx + sx * (dw / 2 + (home ? 0.2 : 0.2)), y, fz + 0.008, 0, 0, 0, 1, 1, 1, cols[(Math.round(y / 0.075) + (sx > 0 ? 2 : 0)) % 5].clone().multiplyScalar(0.92 + 0.16 * r())); }
+  yield;
   // ---- planters: a glazed window box under each round window, pots by the door (soil only: plants are the vegetation layer's; their spots are in g.userData.plantSpots)
   const spots = g.userData.plantSpots || (g.userData.plantSpots = []), toWorld = (x, y, z) => V(b.x + (F > 0 ? x : -x), y, b.z + (F > 0 ? z : -z));
   if (DB.planters) { for (const [wx, wy, wr] of b.windows || []) { const y = wy - wr - 0.3; P.add('cer', G.box(wr * 2 + 0.1, 0.2, 0.22), wx, y, fz + 0.13, 0, 0, 0, 1, 1, 1, jit(0x8fc79a)); P.add('soil', G.box(wr * 2 + 0.02, 0.02, 0.16), wx, y + 0.09, fz + 0.13); for (const sx of [-1, 1]) P.add('cop', G.box(0.03, 0.18, 0.2), wx + sx * wr * 0.8, y - 0.12, fz + 0.1, 0.5, 0, 0, 1, 1, 1, C(0xffffff)); spots.push({ kind: 'box', at: toWorld(wx, y + 0.1, fz + 0.13), w: wr * 2, d: 0.16 }); }
     for (const sx of [-1, 1]) { const x = dx + sx * (dw / 2 + (home ? 0.75 : 0.5)), z = fz + 0.3; P.add('cer', G.lathe('urn', [[0, 0], [0.16, 0.0], [0.2, 0.08], [0.22, 0.3], [0.19, 0.42], [0.21, 0.45], [0.2, 0.47]], 16), x, 0, z, 0, 0, 0, 1, 1, 1, jit(sx > 0 ? 0xf2ecdc : 0x8fc79a)); P.add('soil', G.cyl(0.18, 0.18, 0.02, 14), x, 0.44, z); spots.push({ kind: 'pot', at: toWorld(x, 0.45, z), r: 0.18 }); } }
+  yield;
   // ---- a bench by the front wall with a cushion and a mug; a doormat
   { const bx2 = home ? -dw / 2 - 1.0 : -1.75, bz = fz + 0.32; P.push(bx2, 0, bz, 0); PROPS.bench(P, G, r, 1.3, jit(0x3f8f6a, 0.06)); P.add('cloth', G.box(0.42, 0.06, 0.32), 0.25, 0.5, 0, 0, 0.1, 0, 1, 1, 1, jit(0xd8a040)); P.add('cer', G.cyl(0.04, 0.035, 0.09, 10), -0.45, 0.52, 0.05, 0, 0, 0, 1, 1, 1, jit(0xf2ecdc)); P.pop();
     P.add('cloth', G.box(home ? 1.4 : 0.9, 0.012, 0.55), dx, 0.13, fz + 0.5, 0, 0, 0, 1, 1, 1, jit(0x8a6a3a)); }
+  yield;
   // ---- a water butt under the front downpipe, with a tap and a can
   { const x = hw - 0.15, z = hd + 0.45; P.add('cer', G.lathe('butt', [[0, 0], [0.28, 0], [0.32, 0.2], [0.33, 0.55], [0.3, 0.78], [0.31, 0.8]], 18), x, 0, z, 0, 0, 0, 1, 1, 1, jit(0x8fc79a)); P.add('cop', G.cyl(0.31, 0.31, 0.03, 18), x, 0.8, z, 0, 0, 0, 1, 1, 1, C(0xffffff));
     P.add('cop', G.cyl(0.015, 0.015, 0.1, 6), x - 0.3, 0.18, z, 0, 0, PI / 2, 1, 1, 1, C(0xffffff)); P.add('metal', G.lathe('can', [[0, 0], [0.11, 0], [0.12, 0.22], [0.1, 0.26]], 12), x - 0.55, 0, z + 0.1, 0, 0, 0, 1, 1, 1, jit(0x6a8a7a)); P.rod('metal', G, V(x - 0.47, 0.06, z + 0.1), V(x - 0.25, 0.3, z + 0.1), 0.012, 6, jit(0x6a8a7a)); }
+  yield;
   // ---- along the sides: crates and sacks, tools and a watering can, the solar cell panel wired to a junction box over glass battery jars
   if (DB.crates) { const n = isStore ? 5 : home ? 2 : 3; for (let k = 0; k < n; k++) { const z = -hd + 0.5 + (k % 3) * 0.55, y = Math.floor(k / 3) * 0.32; P.push(hw + 0.32, y, z, PI / 2 + (r() - 0.5) * 0.2); PROPS.crate(P, G, r, 1, jit(0xb08a5a, 0.12)); P.pop(); }
     for (let k = 0; k < (isStore ? 3 : 1); k++) P.add('cloth', G.lump(k + 3), hw + 0.35, 0.22, hd - 0.6 - k * 0.45, 0, r() * 3, 0, 0.24, 0.24, 0.2, jit(0xc8b080)); }
@@ -197,6 +206,7 @@ function vaultDense(g, b) {
     P.add('cer', G.box(0.22, 0.28, 0.1), 0.0, 1.45, 0.05, 0, 0, 0, 1, 1, 1, jit(0xf2ecdc)); P.add('cop', G.box(0.24, 0.03, 0.12), 0, 1.6, 0.05); P.rod('dark', G, V(0.05, 2.15, 0.03), V(0.05, 1.6, 0.03), 0.008, 5); P.rod('dark', G, V(-0.05, 1.31, 0.03), V(-0.05, 0.92, 0.03), 0.008, 5);
     P.add('wood', G.box(0.8, 0.03, 0.22), 0, 0.88, 0.11, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a)); for (let k = 0; k < 3; k++) { const x = -0.25 + k * 0.25; P.add('glass', G.cyl(0.07, 0.07, 0.22, 12), x, 1.0, 0.12); P.add('glow', G.cyl(0.055, 0.055, 0.12, 10), x, 0.96, 0.12, 0, 0, 0, 1, 1, 1, C(0x60ffd8)); P.add('cop', G.cyl(0.075, 0.075, 0.03, 12), x, 1.12, 0.12); }
     P.pop(); }
+  yield;
   // ---- repairs: render patches and faint drips (cared for, not new), a copper patch riveted over a crack in the vault, rope bound round a cracked downpipe
   if (DB.repairs) { for (let k = 0; k < 3; k++) wallMark(1 + (k % 3), 'patch', (r() - 0.5) * (k % 2 ? b.d - 1 : b.w - 1), 0.8 + r() * 1.4, 0.8 + 0.4 * r(), 0.6 + 0.3 * r(), C(0xf4eedc));
     // lime-wash weathered unevenly: soft dirt, paler sun-bleached patches, rain streaks over the side and back walls; on a station front only round the foot, clear of the door and the windows
@@ -206,14 +216,17 @@ function vaultDense(g, b) {
     for (let k = 0; k < 2; k++) { const x = (r() - 0.5) * (b.w - 1), a = 0.5 + 0.6 * r(), z = Math.cos(a) * (b.R + 0.03), y = top + 0.02 + Math.sin(a) * (b.R * b.k + 0.03), nz = b.R * b.k * Math.cos(a), ny = b.R * Math.sin(a); P.push(x, y, z, 0, Math.atan2(-ny, nz)); P.add('cop', G.box(0.5, 0.35, 0.012), 0, 0, 0, 0, 0, 0, 1, 1, 1, C(0xd8b090));
       for (let i = 0; i < 10; i++) P.add('cop', G.sphere(0.012, 6, 4), -0.23 + (i % 5) * 0.115, i < 5 ? 0.16 : -0.16, 0.008, 0, 0, 0, 1, 1, 1, C(0xc89060)); P.pop(); }
     for (let k = 0; k < 3; k++) P.add('dark', G.torus(0.048, 0.008, 5, 12), hw - 0.15, 1.2 + k * 0.03, hd + 0.1, PI / 2, 0, 0, 1, 1, 1, C(0xb89a6a)); }
+  yield;
   // ---- a stove flue through the vault (workshop and home), a copper ridge cap along the top of the vault
   if (DB.stove && !isStore) { const x = b.flue ? b.flue[0] : home ? 2.75 : -1.2, z = b.flue ? b.flue[1] : -0.6, a = Math.acos(Math.min(1, Math.abs(z) / b.R)), ry2 = top + 0.02 + Math.sin(a) * b.R * b.k; P.add('metal', G.cyl(0.07, 0.07, 1.0, 12), x, ry2 + 0.3, z, 0, 0, 0, 1, 1, 1, C(0x5a5650)); P.add('metal', G.cyl(0.0, 0.16, 0.14, 12), x, ry2 + 0.9, z, 0, 0, 0, 1, 1, 1, C(0x5a5650)); for (const yy of [0.1, 0.5]) P.add('cop', G.cyl(0.085, 0.085, 0.04, 12), x, ry2 + yy, z); }
   P.add('cop', G.cyl(0.05, 0.05, b.w + 0.1, 10), 0, top + 0.02 + b.R * b.k + 0.035, 0, 0, 0, PI / 2, 1, 1, 1, C(0xffffff));
+  yield;
   // ---- the storage station's washing line along its left side (clothes with green in them); the workshop's bench and pegboard
   if (DB.line && isStore) { const a = V(-hw - 0.45, 1.8, -hd + 0.6), c2 = V(-hw - 0.45, 1.8, hd - 0.3); for (const p of [a, c2]) P.add('wood', G.cyl(0.03, 0.035, 1.85, 8), p.x, 0.925, p.z, 0, 0, 0, 1, 1, 1, jit(0x3f8f6a, 0.06)); PROPS.laundry(P, G, r, a, c2, [jit(0x4f8a4a), jit(0xe8e0cc), jit(0x6aa070), jit(0xb8c890), jit(0x3f7f5a)], 5); }
   if (!isStore && !home && !b.noBench) { P.push(-hw - 0.4, 0, 0.2, PI / 2); P.add('wood', G.box(1.6, 0.06, 0.6), 0, 0.9, 0, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a)); for (const sx of [-1, 1]) for (const sz of [-1, 1]) P.add('wood', G.box(0.06, 0.88, 0.06), sx * 0.72, 0.44, sz * 0.24, 0, 0, 0, 1, 1, 1, jit(0x6a4a2a));
     P.add('metal', G.box(0.16, 0.12, 0.12), -0.6, 1.0, 0.15, 0, 0, 0, 1, 1, 1, C(0x5a7a6a)); P.add('metal', G.cyl(0.012, 0.012, 0.22, 6), -0.6, 1.03, 0.25, PI / 2, 0, 0); P.add('wood', G.box(1.4, 0.9, 0.02), 0, 1.75, -0.33, 0, 0, 0, 1, 1, 1, jit(0xc8a878));
     for (let k = 0; k < 5; k++) { P.push(-0.5 + k * 0.25, 1.4, -0.3, 0); PROPS.tool(P, G, r, k % 3, 0); P.pop(); } P.pop(); }
+  yield;
   // ---- inside your home: a stove in the back corner (its flue goes up through the vault), coat hooks with a green coat and a scarf, boots by the doorway, a shelf of jars and books, a lantern on the desk
   if (home) { P.push(2.72, 0, -0.6, 0); P.add('metal', G.box(0.5, 0.7, 0.45), 0, 0.35, 0, 0, 0, 0, 1, 1, 1, C(0x3a3836)); P.add('glow', G.box(0.22, 0.14, 0.01), -0.26, 0.32, 0, 0, PI / 2, 0, 1, 1, 1, C(0xff8a40)); P.add('metal', G.cyl(0.07, 0.07, top + 1.3, 12), 0.03, 0.7 + (top + 1.3) / 2, 0, 0, 0, 0, 1, 1, 1, C(0x4a4642)); P.add('cer', G.cyl(0.09, 0.08, 0.16, 12), -0.05, 0.78, 0.1, 0, 0, 0, 1, 1, 1, jit(0x3f8f6a)); P.pop();
     P.push(-2.95, 0, 1.55, PI / 2); for (let k = 0; k < 3; k++) P.add('cop', G.cyl(0.01, 0.01, 0.1, 6), -0.25 + k * 0.25, 1.7, 0.05, PI / 2, 0, 0); P.add('cloth', G.cloth(0.5, 0.95, 2, 0.04, 2), -0.25, 1.24, 0.12, 0, 0, 0, 1, 1, 1, jit(0x3f7a4a, 0.04)); P.add('cloth', G.cloth(0.16, 0.7, 1, 0.02, 3), 0.25, 1.36, 0.1, 0, 0, 0, 1, 1, 1, jit(0xc8b060)); P.pop();
@@ -221,6 +234,7 @@ function vaultDense(g, b) {
     P.push(2.98, 0, 0.7, -PI / 2); P.add('wood', G.box(1.0, 0.03, 0.22), 0, 1.55, 0.11, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a)); for (let k = 0; k < 4; k++) P.add('glass', G.cyl(0.05, 0.05, 0.16, 10), -0.4 + k * 0.12, 1.65, 0.1); for (let k = 0; k < 6; k++) P.add('cer', G.box(0.04, 0.2 + 0.04 * r(), 0.16), 0.1 + k * 0.05, 1.67, 0.1, 0, 0, (r() - 0.5) * 0.1, 1, 1, 1, jit([0x8a3a2e, 0x2f5d8a, 0x3f6b4a, 0xc9a227][k % 4], 0.1)); P.pop();
     P.push(2.8, 0.82, 0.62, 0); P.add('cop', G.cyl(0.06, 0.07, 0.03, 12), 0, 0.015, 0); P.add('glass', G.lathe('bud', [[0.0, 0], [0.06, 0.02], [0.085, 0.09], [0.07, 0.17], [0.03, 0.21], [0, 0.22]], 14), 0, 0.03, 0); P.add('glow', G.sphere(0.035, 10, 8), 0, 0.12, 0); P.pop();
     for (let k = 0; k < 4; k++) P.add('cer', G.box(0.2, 0.04, 0.28), 1.85, 0.84 + k * 0.04, 1.0, 0, (r() - 0.5) * 0.4, 0, 1, 1, 1, jit([0x8a3a2e, 0x2f5d8a, 0x3f6b4a, 0xc9a227][k], 0.1)); }
+  yield;
   // ---- MORE (owner 17:10: "add more and the inside to meet solarpunk theme"): plants grown in every planter and pot, a climbing frame on a side wall,
   // and inside your home a lived-in, grown-in room: hanging planters with trailing vines, shelves of seedlings and seed jars, herbs drying from a beam, a patchwork quilt and cushions,
   // a woven rug, a curtain for the bed nook, a chest, a hand-made chair, produce from the garden, pots over the stove, a pinned-up map and notes, bloom-tech parts on the desk, warm solar bulbs strung under the vault
@@ -242,6 +256,7 @@ function vaultDense(g, b) {
     { const sx = isStore ? 1 : -1; P.push(sx * (hw + 0.06), 0, 0.2, sx * PI / 2); for (let k = 0; k <= 4; k++) P.add('wood', G.box(0.04, 2.2, 0.03), -0.8 + k * 0.4, 1.15, 0, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a)); for (let k = 0; k <= 5; k++) P.add('wood', G.box(1.7, 0.035, 0.03), 0, 0.25 + k * 0.4, 0.03, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a));
       P.add('cer', G.box(1.6, 0.3, 0.3), 0, 0.15, 0.2, 0, 0, 0, 1, 1, 1, jit(0x8fc79a)); for (let k = 0; k < 4; k++) { let px = -0.6 + k * 0.4; for (let y = 0.3; y < 2.0 + 0.3 * r(); y += 0.09) { px += (r() - 0.5) * 0.08; P.push(px, y, 0.06, r() * 6, -0.2 - 0.9 * r()); P.add('leaf', G.box(0.08, 0.005, 0.1), 0, 0, 0.05, 0, 0, 0, 1, 1, 1, jit(green[k % 5], 0.1)); P.pop(); } plant(px, 2.0, 0.06, 0.2, 4, k % 2); } P.pop(); }
     if (home) {
+      yield;
       // shelves on the back wall either side of the window: seedling trays, seed jars, rainwater jars, small potted plants
       for (const [x0, x1] of [[-2.7, -0.65]]) for (const y of [1.4, 1.95, 2.45]) { const xm = (x0 + x1) / 2, w = x1 - x0; P.add('wood', G.box(w, 0.035, 0.24), xm, y, -1.68, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a)); for (const bx2 of [x0 + 0.1, x1 - 0.1]) P.add('cop', G.box(0.03, 0.12, 0.2), bx2, y - 0.07, -1.7, 0, 0, 0, 1, 1, 1, C(0xffffff));
         let x = x0 + 0.12; while (x < x1 - 0.15) { const t = y < 1.6 ? -1 : y > 2.2 ? 0.66 + 0.13 * r() : r() * 0.65; if (t < 0) { books(x, y + 0.02, -1.68); x += 0.36; } else if (t < 0.35) { P.add('wood', G.box(0.36, 0.05, 0.2), x + 0.18, y + 0.04, -1.68, 0, 0, 0, 1, 1, 1, jit(0x9a7a5a)); for (let k = 0; k < 6; k++) plant(x + 0.05 + (k % 3) * 0.12, y + 0.07, -1.73 + Math.floor(k / 3) * 0.1, 0.08, 3); x += 0.4; }
@@ -249,44 +264,55 @@ function vaultDense(g, b) {
           else if (t < 0.8) { P.add('glass', G.cyl(0.08, 0.08, 0.26, 12), x + 0.08, y + 0.15, -1.68); P.add('glow', G.cyl(0.072, 0.072, 0.16, 12), x + 0.08, y + 0.1, -1.68, 0, 0, 0, 1, 1, 1, C(0x6fc8d8).multiplyScalar(0.35)); x += 0.2; }
           else { P.add('pot', G.lathe('spot', [[0, 0], [0.06, 0], [0.08, 0.12], [0.085, 0.13]], 10), x + 0.08, y + 0.02, -1.68); plant(x + 0.08, y + 0.14, -1.68, 0.18, 6, r() < 0.3 ? 2 : 0); x += 0.2; } } }
       for (const x of [-0.25, 0.25]) { P.add('pot', G.lathe('spot', [[0, 0], [0.06, 0], [0.08, 0.12], [0.085, 0.13]], 10), x, 1.56, -1.7); plant(x, 1.68, -1.7, 0.16, 6, 1); }
+      yield;
       // warm lime plaster over the bare walls with wear and damp at the foot, a plank floor (the woven rug lies on it); the room's floor top is 0.17 m (baseview.js floor slab), so floor things stand at 0.17
       { const pl = (w, h, x, y, z, ry) => { P.add('plaster', G.box(w, h, 0.01), x, y, z, 0, ry, 0, 1, 1, 1, jit(0xe6cfa6, 0.04)); const gq = new THREE.PlaneGeometry(w, h), [u0, v0, u1, v1] = cellUV('wash'), uv = gq.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) ? u1 : u0, uv.getY(i) ? v1 : v0); P.push(x, y, z, ry); P.add('decal', gq, 0, 0, 0.007, 0, 0, 0, 1, 1, 1, C(0xb8a080)); P.pop(); };
         pl(6.0, 3.0, 0, 1.5, -1.79, 0); pl(3.6, 3.0, -2.99, 1.5, 0, PI / 2); pl(3.6, 3.0, 2.99, 1.5, 0, -PI / 2); pl(1.8, 3.0, -2.1, 1.5, 1.79, PI); pl(1.8, 3.0, 2.1, 1.5, 1.79, PI); pl(2.4, 0.6, 0, 2.7, 1.79, PI);
         for (let z = -1.75; z < 1.75; z += 0.2) { let x = -2.98; while (x < 2.97) { const l = Math.min(2.98 - x, 0.9 + 1.4 * r()); P.add('wood', G.box(l - 0.008, 0.012, 0.192), x + l / 2, 0.176, z + 0.1, 0, 0, 0, 1, 1, 1, jit(0x9a6a40, 0.1)); x += l; } } }
+      yield;
       // a small bloom-tech workbench wall to the right of the window: a pegboard of hand tools and coils, a shelf of solar petals, glass bulbs and wire spools, parts trays on the bench top between the cats' places
       { P.add('wood', G.box(1.7, 0.95, 0.025), 1.5, 1.85, -1.77, 0, 0, 0, 1, 1, 1, jit(0xb89a6a)); for (let i = 0; i < 6; i++) { const x = 0.85 + i * 0.26, y = 2.05 + (i % 2) * 0.05, t = i % 3; P.add('cop', G.cyl(0.006, 0.006, 0.04, 6), x, y + 0.14, -1.74, PI / 2, 0, 0, 1, 1, 1, C(0xffffff));
           if (t === 0) { P.add('metal', G.box(0.03, 0.22, 0.012), x, y, -1.75, 0, 0, 0.1, 1, 1, 1, C(0x8a8a84)); P.add('metal', G.box(0.07, 0.04, 0.014), x, y + 0.11, -1.75, 0, 0, 0.1, 1, 1, 1, C(0x8a8a84)); } else if (t === 1) { P.add('wood', G.cyl(0.018, 0.018, 0.1, 6), x, y + 0.06, -1.75, 0, 0, 0, 1, 1, 1, jit(0xc83a2a)); P.add('metal', G.cyl(0.005, 0.005, 0.12, 6), x, y - 0.05, -1.75); } else P.add('cop', G.torus(0.07, 0.012, 6, 16), x, y, -1.75, 0, 0, 0, 1, 1, 1, C(0xffffff)); }
         P.add('wood', G.box(1.6, 0.03, 0.22), 1.5, 1.38, -1.68, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a)); for (let k = 0; k < 4; k++) P.add('cell', G.box(0.16, 0.012, 0.11), 0.85 + k * 0.17, 1.42 + k * 0.012, -1.68, 0.5, (r() - 0.5) * 0.3, 0, 1, 1, 1, C(0xffffff)); for (let k = 0; k < 3; k++) { P.add('glass', G.sphere(0.045, 10, 8), 1.6 + k * 0.12, 1.445, -1.68); P.add('glow', G.sphere(0.012, 6, 4), 1.6 + k * 0.12, 1.44, -1.68, 0, 0, 0, 1, 1, 1, C(0xffe0a0)); }
         for (let k = 0; k < 2; k++) P.add('cop', G.cyl(0.05, 0.05, 0.07, 12), 2.05 + k * 0.13, 1.43, -1.68, 0, 0, 0, 1, 1, 1, C(0xffffff));
         for (const x of [0.95, 2.6]) { P.add('wood', G.box(0.4, 0.05, 0.28), x, 1.0, -1.62, 0, 0.1, 0, 1, 1, 1, jit(0x9a7a5a)); for (let k = 0; k < 3; k++) P.add(k ? 'cop' : 'cell', k ? G.torus(0.035, 0.01, 6, 12) : G.box(0.13, 0.01, 0.09), x - 0.1 + k * 0.1, 1.04, -1.62, PI / 2 * (k ? 1 : 0), 0, 0, 1, 1, 1, C(0xffffff)); } }
+      yield;
       // the kitchen corner by the stove: a counter with a cutting board, carrots, tomatoes, a squash and a loaf, a bowl of plums; onions and garlic hung in strings
       { P.push(2.72, 0.17, 0.0, 0); P.add('wood', G.box(0.5, 0.86, 0.72), 0, 0.43, 0, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a)); P.add('wood', G.box(0.54, 0.04, 0.76), 0, 0.88, 0, 0, 0, 0, 1, 1, 1, jit(0x9a7a5a)); P.add('wood', G.box(0.3, 0.02, 0.22), -0.05, 0.91, -0.15, 0, 0.2, 0, 1, 1, 1, jit(0xc8a878));
         for (let k = 0; k < 4; k++) P.add('fruit', G.cyl(0.018, 0.002, 0.16, 6), -0.08 + k * 0.03, 0.93, -0.16, PI / 2, 0.3 + k * 0.1, 0, 1, 1, 1, jit(0xe8781a, 0.05)); for (let k = 0; k < 3; k++) P.add('fruit', G.sphere(0.04, 10, 8), 0.1, 0.94, 0.12 + k * 0.08, 0, 0, 0, 1, 0.85, 1, jit(0xc83a2a, 0.05));
         P.add('fruit', G.sphere(0.09, 12, 8), -0.1, 0.97, 0.2, 0, 0, 0, 1.3, 0.85, 1, jit(0xe8a23a)); P.add('fruit', G.sphere(0.08, 10, 6), 0.12, 0.95, -0.28, 0, 0, 0, 1.6, 0.8, 1, jit(0xb8803a)); P.add('cer', G.lathe('bowl', [[0, 0], [0.07, 0], [0.11, 0.06], [0.12, 0.065]], 14), -0.1, 0.9, 0.0, 0, 0, 0, 1, 1, 1, jit(0x3f7f6a)); for (let k = 0; k < 4; k++) P.add('fruit', G.sphere(0.03, 8, 6), -0.1 + (r() - 0.5) * 0.08, 0.96, (r() - 0.5) * 0.08, 0, 0, 0, 1, 1, 1, jit(0x5a2a5a, 0.05)); P.pop();
         for (const x of [2.5, 2.8]) { P.rod('dark', G, V(x, 2.7, -0.9), V(x, 2.0, -0.9), 0.005, 4, C(0xb89a6a)); for (let k = 0; k < 6; k++) P.add('fruit', G.sphere(0.04, 8, 6), x + (k % 2 ? 0.03 : -0.03), 2.05 + k * 0.1, -0.9, 0, 0, 0, 1, 1.1, 1, jit(x < 2.6 ? 0xc8a060 : 0xf0e8d8, 0.05)); } }
+      yield;
       // hanging planters on ropes from the vault, vines trailing
       for (const [x, z] of DM.hang) { P.rod('dark', G, V(x, 3.9, z), V(x, 2.42, z), 0.006, 4, C(0xb89a6a)); for (const a of [0, 2.1, 4.2]) P.rod('dark', G, V(x, 2.6, z), V(x + Math.cos(a) * 0.13, 2.32, z + Math.sin(a) * 0.13), 0.004, 4, C(0xb89a6a));
         P.add('cer', G.lathe('hang', [[0, 0], [0.08, 0.0], [0.13, 0.06], [0.14, 0.16], [0.145, 0.17]], 14), x, 2.18, z, 0, 0, 0, 1, 1, 1, jit([0xf2ecdc, 0x8fc79a, 0xd08860][Math.floor(r() * 3)])); plant(x, 2.34, z, 0.26, 9); for (let k = 0; k < 3; k++) trail(x + (r() - 0.5) * 0.2, 2.3, z + (r() - 0.5) * 0.2, 0.4 + 0.5 * r()); }
+      yield;
       // herbs drying from a beam across the room
       P.add('wood', G.box(6.0, 0.1, 0.12), 0, 2.75, -0.9, 0, 0, 0, 1, 1, 1, jit(0x7a5a3a)); for (let k = 0; k < DM.herbs; k++) { const x = -2.6 + k * (5.2 / (DM.herbs - 1)) + (r() - 0.5) * 0.1, l = 0.2 + 0.12 * r(); P.rod('dark', G, V(x, 2.7, -0.9), V(x, 2.55, -0.9), 0.004, 4, C(0xb89a6a)); const hc = k % 3 ? 0x4a6a34 : 0x6a5a34; P.add('leaf', G.cyl(0.04, 0.012, l, 6), x, 2.55 - l / 2, -0.9, 0, r() * 3, 0, 1, 1, 1, jit(hc, 0.08)); for (let j = 0; j < 5; j++) { P.push(x, 2.55 - 0.03, -0.9, j * 1.26 + r(), PI / 2 - 0.25 - 0.2 * r()); P.add('leaf', G.box(0.035, 0.004, l * (0.8 + 0.3 * r())), 0, 0, l * 0.45, 0, 0, 0, 1, 1, 1, jit(hc, 0.1)); P.pop(); } }
+      yield;
       // warm solar bulbs strung under the front of the vault
       { let prev = null; for (let k = 0; k <= DM.bulbs; k++) { const t = k / DM.bulbs, q = V(-3.0 + 6.0 * t, 2.95 - 0.35 * 4 * t * (1 - t), 1.4); if (prev) P.rod('dark', G, prev, q, 0.004, 4); if (k > 0 && k < DM.bulbs) P.add('glow', G.sphere(0.03, 8, 6), q.x, q.y - 0.05, q.z, 0, 0, 0, 1, 1, 1, C(0xffd890)); prev = q; } }
+      yield;
       // the bed nook: a patchwork quilt, cushions, a curtain on a rod, a chest at the foot with a folded blanket
       { const qc = [0xc86a4a, 0xe8c87a, 0x5a8a6a, 0x8aa8c8, 0xd8a0a0, 0x3f6b4a, 0xf2ecdc]; for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) P.add('cloth', G.box(0.27, 0.03, 0.29), -3.06 + i * 0.28, 0.615 + 0.004 * ((i + j) % 2), -0.36 + j * 0.3, 0, 0, 0, 1, 1, 1, jit(qc[(i * 7 + j * 3 + Math.floor(r() * 2)) % qc.length], 0.05));
         for (const x of [-2.75, -1.95]) P.add('cloth', G.box(0.55, 0.16, 0.32), x, 0.86, -0.72, -0.25, (r() - 0.5) * 0.2, 0, 1, 1, 1, jit(qc[Math.floor(r() * qc.length)], 0.05));
         P.rod('cop', G, V(-1.32, 2.35, -1.6), V(-1.32, 2.35, 1.45), 0.012, 6); P.push(-1.32, 2.33, 1.15, PI / 2); PROPS.curtain(P, G, r, 0.38, 1.95, jit(0x7f9a7a, 0.04), false); P.pop(); P.push(-1.32, 2.33, -1.3, PI / 2); PROPS.curtain(P, G, r, 0.32, 1.95, jit(0x7f9a7a, 0.04), false); P.pop();
         P.add('wood', G.box(1.0, 0.42, 0.38), -2.3, 0.38, 1.6, 0, 0, 0, 1, 1, 1, jit(0x8a5a3a)); P.add('cop', G.box(1.02, 0.03, 0.4), -2.3, 0.6, 1.6, 0, 0, 0, 1, 1, 1, C(0xffffff)); P.add('cloth', G.box(0.6, 0.1, 0.32), -2.45, 0.66, 1.6, 0, 0.1, 0, 1, 1, 1, jit(0x5a8a6a)); P.add('cer', G.box(0.18, 0.05, 0.24), -1.95, 0.64, 1.6, 0, 0.4, 0, 1, 1, 1, jit(0x8a3a2e)); }
+      yield;
       // a woven rug (stripes and fringes over the plain one), floor cushions
       { const rc = [0xb8584a, 0xe8c87a, 0x3f7f6a, 0xf2ecdc, 0xb8584a, 0x8a6a3a, 0x3f7f6a, 0xe8c87a, 0xb8584a]; for (let k = 0; k < rc.length; k++) P.add('cloth', G.box(2.1, 0.006, 1.5 / rc.length), 0, 0.186, 0.6 - 0.75 + (k + 0.5) * 1.5 / rc.length, 0, 0, 0, 1, 1, 1, jit(rc[k], 0.04)); for (const sx of [-1, 1]) for (let k = 0; k < 14; k++) P.add('cloth', G.box(0.06, 0.004, 0.012), sx * 1.13, 0.185, -0.12 + k * 0.105, 0, 0, 0, 1, 1, 1, C(0xe8dcc0));
         for (const [x, z] of [[0.8, 1.25], [1.25, 0.95]]) P.add('cloth', G.box(0.5, 0.13, 0.5), x, 0.25, z, 0, r(), 0, 1, 1, 1, jit([0xd8a040, 0x5a8a6a][Math.floor(r() * 2)])); }
+      yield;
       // a hand-made chair at the desk, a crate of produce by the stove, pots on a rail over it
       { P.push(2.3, 0.17, 1.58, PI); P.add('wood', G.box(0.44, 0.05, 0.42), 0, 0.46, 0, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a)); for (const [sx, sz] of [[-0.18, -0.17], [0.18, -0.17], [-0.18, 0.17], [0.18, 0.17]]) P.add('wood', G.cyl(0.022, 0.026, 0.46, 6), sx, 0.23, sz, 0, 0, 0, 1, 1, 1, jit(0x6a4a2a)); for (const sx of [-0.18, 0.18]) P.add('wood', G.cyl(0.02, 0.022, 0.5, 6), sx, 0.72, -0.19, -0.1, 0, 0, 1, 1, 1, jit(0x6a4a2a)); for (const y of [0.62, 0.78, 0.92]) P.add('wood', G.box(0.38, 0.05, 0.02), 0, y, -0.2, 0, 0, 0, 1, 1, 1, jit(0x8a6a4a)); P.add('cloth', G.box(0.38, 0.05, 0.36), 0, 0.5, 0.01, 0, 0, 0, 1, 1, 1, jit(0x5a8a6a)); P.pop(); }
       { P.push(2.1, 0.17, -1.05, 0.1); PROPS.crate(P, G, r, 1, jit(0xb08a5a)); for (let k = 0; k < 9; k++) { const t = r(); P.add('fruit', G.sphere(t < 0.5 ? 0.045 : 0.07, 10, 8), (r() - 0.5) * 0.36, 0.25 + 0.04 * r(), (r() - 0.5) * 0.24, 0, 0, 0, 1, t < 0.5 ? 1 : 0.8, 1, jit(t < 0.35 ? 0xc83a2a : t < 0.5 ? 0xe8a23a : t < 0.75 ? 0x7fa83a : 0xd8b040, 0.06)); } plant(0.12, 0.3, 0.02, 0.22, 6); P.pop(); }
       { P.add('cop', G.cyl(0.012, 0.012, 1.1, 6), 2.95, 1.85, -0.6, PI / 2, 0, 0, 1, 1, 1, C(0xffffff)); for (let k = 0; k < 4; k++) { const z = -1.0 + k * 0.27; P.rod('dark', G, V(2.95, 1.85, z), V(2.95, 1.7, z), 0.004, 4); P.add(k === 3 ? 'cop' : 'metal', G.cyl(0.08 - 0.01 * k, 0.07 - 0.01 * k, 0.12, 12), 2.93, 1.62, z, 0, 0, 0, 1, 1, 1, k === 3 ? C(0xffffff) : C(0x5a5650)); } }
+      yield;
       // the map and notes pinned on the wall above the bed; bloom-tech parts on the desk being mended
       { P.push(-2.98, 0, 0.3, PI / 2); P.add('wood', G.box(1.6, 1.0, 0.03), 0, 1.85, 0, 0, 0, 0, 1, 1, 1, jit(0xb08a5a)); P.add('mapt', new THREE.PlaneGeometry(0.8, 0.6), -0.3, 1.88, 0.02, 0, 0, 0.03, 1, 1, 1, C(0xffffff)); for (let k = 0; k < 6; k++) P.add('cer', G.box(0.13, 0.17, 0.004), 0.2 + (k % 3) * 0.17, 1.98 - Math.floor(k / 3) * 0.24, 0.02 + 0.001 * k, 0, 0, (r() - 0.5) * 0.2, 1, 1, 1, jit([0xf2ecdc, 0xe8d8a0, 0xd8e8f0][k % 3], 0.05));
         for (let k = 0; k < 6; k++) P.add('fruit', G.sphere(0.012, 6, 4), -0.45 + r() * 0.9, 1.6 + r() * 0.5, 0.025, 0, 0, 0, 1, 1, 1, jit([0xc83a2a, 0x3f7fba, 0xe8c040][k % 3], 0.02)); P.pop(); }
       { P.add('cop', G.torus(0.05, 0.012, 6, 14), 1.75, 0.83, 0.6, PI / 2, 0, 0, 1, 1, 1, C(0xffffff)); P.add('cell', G.box(0.2, 0.012, 0.13), 1.82, 0.83, 0.85, 0, 0.4, 0, 1, 1, 1, C(0xffffff)); P.add('metal', G.cyl(0.006, 0.006, 0.16, 6), 2.0, 0.83, 0.58, 0, 0.3, PI / 2, 1, 1, 1, C(0x8a8a84)); P.add('glass', G.cyl(0.03, 0.03, 0.08, 8), 2.05, 0.86, 0.75); }
+      yield;
       // big potted plants by the door inside and by the bed
       for (const [x, z, s] of [[1.55, 1.55, 0.7], [-1.15, -1.12, 0.55], [2.75, 1.6, 0.6]]) { P.add('pot', G.lathe('bigpot', [[0, 0], [0.16, 0], [0.2, 0.3], [0.22, 0.34]], 14), x, 0.17, z); P.add('soil', G.cyl(0.19, 0.19, 0.02, 12), x, 0.49, z); plant(x, 0.5, z, s, 13, s > 0.6 ? 0 : 2); }
     }
