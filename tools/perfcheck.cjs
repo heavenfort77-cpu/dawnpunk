@@ -145,7 +145,7 @@ const BREAKDOWN = (spot) => {
     }
     // (R4 item D) the save is set first and the base is then entered through the home card, the player's way (it was entered, changed and rebuilt with reBase(),
     // without a card: 14 shader programs built 'in play' at that rebuild, diagnose 6 state base 366854, a path no player takes)
-    const midSave = async (o) => { await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null); await p.evaluate((o) => { const g = window.__game; if (!g.save) g.enterBase(); const s = g.save; s.day = o.day; s.nights = o.nights; s.trips = o.nights; s.food = o.food; s.essentials = o.ess; s.essTotal = o.ess + 14; s.killsTotal = o.nights * 9;
+    const midSave = async (o) => { await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 120000 }).catch(() => null); await p.evaluate((o) => { const g = window.__game; if (!g.save) g.enterBase(); const s = g.save; s.day = o.day; s.nights = o.nights; s.nightsMet = o.nights; s.trips = o.nights; s.food = o.food; s.essentials = o.ess; s.essTotal = o.ess + 14; s.killsTotal = o.nights * 9;
       s.talkedMarla = true; s.solarDone = true; s.jobCard = true; s.noteSeen = true; s.toldCharge = true; s.ringOpen = o.ringOpen; s.scoutSpot = o.scout; s.up.slots = 1; s.loadout = ['turbine', 'lance', 'panel', 'mine'];
       s.met = { walker: true, lurcher: true, ticks: true, hauler: true, stilt: true }; if (o.cats) s.cats.forEach((c, i) => { c.spot = o.cats[i]; }); if (g.homeCard) g.homeCard(); else g.reBase(); }, o); await waitLoads('base'); };
     // (H) the base is entered the player's way (the home card, as after the run-end screen's Back), so a run starts only after that card
