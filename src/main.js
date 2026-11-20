@@ -1298,7 +1298,7 @@ let drill = null, drillSim = null, drillPh = null;
 function drillStore() { try { return JSON.parse((storage && storage.getItem(CONFIG.drill.store)) || '{}') || {}; } catch (e) { return {}; } }
 function drillKeep(o) { try { storage && storage.setItem(CONFIG.drill.store, JSON.stringify(o)); } catch (e) { /* not saved */ } }
 function drillBegin() { const D = CONFIG.drill; drill = null; if (!D.on || !sim || sim.phase !== 'night' || !fromBase || !save || (save.nights || 0) > 0 || sim.boss) return; const st = drillStore(); if (st.skip) return; const todo = D.steps.filter((q) => !(st.done || []).includes(q.id)); if (todo.length) drill = { todo, i: -1, since: 0, again: false, held: null, t0: 0 }; }
-function drillStep() { const D = CONFIG.drill, q = drill.todo[drill.i], P = sim.player; drill.since = performance.now(); drill.gs = 0; drill.again = false;
+function drillStep() { const D = CONFIG.drill, q = drill.todo[drill.i], P = sim.player; drill.since = performance.now(); drill.gs = 0; drill.again = false; drill.tot = 0; drill.lost = sim.gloom.length ? 0 : -1;
   if (q.id === 'eat') { if (P.hp > CONFIG.player.hp * D.eatHp) P.hp = CONFIG.player.hp * D.eatHp; if (sim.food <= 0) sim.food = 1; }
   if (q.id === 'charge') P.energy = Math.max(P.energy, CONFIG.cannon.cost * CONFIG.cannon.charge.cost + 1); if (q.id === 'place') P.energy = Math.max(P.energy, CONFIG.devices[slotKinds()[selSlot]].cost + 1); // the picked device (the cheapest, from the drill's start) is paid for, so the step cannot dead-end
   drillSay(FINE ? q.desk : q.phone); }
@@ -1308,7 +1308,11 @@ function drillTick(dt) { if (drillSim !== sim || drillPh !== (sim && sim.phase))
   if (!drill.held) { if (sim.t < D.startAt) return; drill.held = sim.spawns.splice(sim.spawned); sim.holdDawn = () => !!(drill && drill.held && drillSim === sim); sim.tame = drillTame; sim.hpFloor = () => (drill && drill.held && drillSim === sim ? D.hpFloor : 0); drill.t0 = sim.t; drill.i = 0; { const sk = slotKinds(), li = sk.indexOf(D.device); let bi = li >= 0 ? li : 0; if (li < 0) sk.forEach((k, i) => { if (CONFIG.devices[k].cost < CONFIG.devices[sk[bi]].cost) bi = i; }); selSlot = bi; } drillStep(); }
   sim.t = Math.min(sim.t, drill.t0); const q = drill.todo[drill.i]; if (!q) return;
   // one machine at a time, of the step's kind, through an opening you can see (drillOpening: in view, a few metres out, so it walks in in front of you)
-  if (!sim.gloom.length && sim.spawned >= sim.spawns.length) { const at = drillOpening(); sim.spawns.push({ t: sim.t, bp: at.bp, hpv: 1, from: { x: at.x, z: at.z } }); drill.kind = q.kind; drill.from = at; }
+  // (owner Nov 21, iPhone player: "they did not die ... it just kept coming") a lesson machine destroyed while its step is still open: Marla says it is down and another comes,
+  // and after D.ignoreKills of them, or D.ignoreSecs of game time on one step, the lesson lets go (a player may ignore the lesson): the held waves come back
+  if (!sim.gloom.length && sim.spawned >= sim.spawns.length) { if (drill.kind && ++drill.lost > 0) { if (drill.lost >= D.ignoreKills) { drillEnd(true, D.ignored); return; } drillSay(D.down); drill.since = performance.now(); drill.gs = 0; drill.again = false; }
+    const at = drillOpening(); sim.spawns.push({ t: sim.t, bp: at.bp, hpv: 1, from: { x: at.x, z: at.z } }); drill.kind = q.kind; drill.from = at; }
+  drill.tot += dt; if (drill.tot >= D.ignoreSecs) { drillEnd(true, D.ignored); return; }
   for (const g of sim.gloom) if (!g.drillKind && drill.kind) { g.drillKind = true; g.kind = drill.kind; }
   // the repeat also waits D.idleGame seconds of game time, so the order is on screen (and spoken) for a few frames even where one frame takes longer than D.idle
   drill.gs += dt; if (!drill.again && performance.now() - drill.since > D.idle * 1000 && drill.gs >= D.idleGame) { drill.again = true; drillSay(q.again); } } // idle counts real seconds (game time runs slow on a slow machine)
@@ -1316,7 +1320,7 @@ function drillTick(dt) { if (drillSim !== sim || drillPh !== (sim && sim.phase))
 function drillTame() { const D = CONFIG.drill; if (!drill || !drill.held || drillSim !== sim) return null; const q = drill.todo[drill.i]; return q && q.id === 'shoot' ? { speed: D.shootSpeed, stop: D.shootStop, dmg: 0 } : { speed: D.laterSpeed, stop: 0, dmg: D.laterDmg }; }
 // the step's action happened: next step, or the end of the drill
 function drillDid(id) { if (!drill || !drill.held) return false; const q = drill.todo[drill.i]; if (!q || q.id !== id) return false; const st = drillStore(); st.done = (st.done || []).concat(id); drillKeep(st); drill.i++; if (drill.i >= drill.todo.length) drillEnd(false); else drillStep(); return true; }
-function drillEnd(skip) { if (!drill) return; if (skip) { const st = drillStore(); st.skip = true; drillKeep(st); } if (sim && drill.held) { sim.spawns.push(...drill.held); sim.spawns.sort((a, b) => a.t - b.t); } drill = null; H2.say('marla', skip ? CONFIG.drill.skipped : CONFIG.drill.done, CONFIG.ui.centre.marla, 4); }
+function drillEnd(skip, line) { if (!drill) return; if (skip) { const st = drillStore(); st.skip = true; drillKeep(st); } if (sim && drill.held) { sim.spawns.push(...drill.held); sim.spawns.sort((a, b) => a.t - b.t); } drill = null; H2.say('marla', line || (skip ? CONFIG.drill.skipped : CONFIG.drill.done), CONFIG.ui.centre.marla, 4); }
 // the key chip (desktop) or pulsing button (phone) for the current step, plus the Skip button; also the Q chip while day 1 asks for the first collector
 function tickDrillUi() { if (drill && (!sim || sim.phase !== 'night' || (state !== 'play' && state !== 'end'))) { drill = null; H2.unsay('marla'); } const q = drill && drill.held ? drill.todo[drill.i] : null, solar = !q && sim && state === 'play' && mustSolar(), chip = q ? q.chip : solar ? 'Q' : '', btn = q ? (q.btn === 'sel' ? 'b' + (selSlot + 1) : q.btn) : solar ? 'b0' : wakeUse() ? 'bFire' : '';
   const c = $('dchip'); if (c.textContent !== chip) c.textContent = chip; if (chip && FINE) { const mr = $('marla').getBoundingClientRect(); sty(c, 'top', (mr.height ? Math.round(mr.bottom + 6) : 112) + 'px'); sty(c, 'right', (mr.width ? Math.round(innerWidth - mr.right) : 22) + 'px'); } for (const id of ['bFire', 'bEat', 'bSwitch', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5']) { const on = !FINE && id === btn; if ($(id).classList.contains('pulse') !== on) $(id).classList.toggle('pulse', on); }
@@ -1438,7 +1442,9 @@ function drawnHit0(m, P) { const L = CONFIG.cannon.live, HC = hitCache(m), headS
   m.updateMatrixWorld(true);
   // (R4 worker 5) a part frozen out of the matrix pass (src/glbmerge.js freezeStillBones) keeps the world matrix of the moment it was frozen: the forced update above
   // skips it (matrixWorldAutoUpdate off), so the hit shape is put where it is drawn: its moving ancestor's world matrix times the kept offset
-  for (const q of HC.list) { const z = q.userData.fz; if (z) q.matrixWorld.multiplyMatrices(z.a.matrixWorld, z.off); }
+  // (Nov 21, phone shot probe: 75-89 hit shapes per machine lay where it was merged, not where it is drawn) a merged machine's hit shapes (src/mergestatic.js: hitOnly,
+  // matrixWorldAutoUpdate off) are skipped by the forced update too: each is put under its parent as drawn (parent's world x its own kept matrix)
+  for (const q of HC.list) { const z = q.userData.fz; if (z) q.matrixWorld.multiplyMatrices(z.a.matrixWorld, z.off); else if (q.userData.hitOnly && !q.matrixWorldAutoUpdate && q.parent) q.matrixWorld.multiplyMatrices(q.parent.matrixWorld, q.matrix); }
   let hv = 0, av = 0, top = -1e9;
   for (const q of HC.list) { if (!solid(q)) continue; const gm = q.geometry; if (!gm.boundingBox) gm.computeBoundingBox(); LVB.copy(gm.boundingBox).applyMatrix4(q.matrixWorld); const v = (LVB.max.x - LVB.min.x) * (LVB.max.y - LVB.min.y) * (LVB.max.z - LVB.min.z); av += v; if (headSet.has(q)) hv += v; if (LVB.max.y > top) top = LVB.max.y; }
   const torso = hv > L.headShare * av, cp = Math.cos(P.pitch || 0);
