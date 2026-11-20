@@ -51,10 +51,12 @@ const path = require('path');
   // (R3) every house of the run is tried, not only the first six (with some seeds only one of the first six has a place for a note)
   const night = await p.evaluate(async () => { const g = window.__game, wait = (ms) => new Promise((r) => setTimeout(r, ms)); const until = async (f) => { const t0 = performance.now(); while (!f() && performance.now() - t0 < 120000) await new Promise((r) => setTimeout(r, 50)); }, frames = (n) => new Promise((r) => { const f = () => (--n <= 0 ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), inHouse = (g, i) => () => g.state === 'play' && g.sim && g.run.inside === i && g.run.lore && (i in g.run.lore) && (g.run.lore[i] < 0 || !!g.lore.note() || !!(g.run.loreSpots && (i in g.run.loreSpots)));
     for (let i = 0; i < g.run.houses.length; i++) { if (i === g.run.inside) continue; g.leaveHouse(); g.enterHouse(i); await until(inHouse(g, i)); const n = g.lore.note(); if (!n) continue;
-      const s = g.sim, d = Math.hypot(n.x, n.z) || 1, px = n.x - (n.x / d) * 1.1, pz = n.z - (n.z / d) * 1.1; s.player.x = px; s.player.z = pz; g.setYaw(Math.atan2(-(n.x - px), -(n.z - pz))); await frames(30); const dayOn = g.lore.note().prompt;
-      g.endDay(); await until(() => g.sim && g.sim.phase === 'night'); await frames(30); return { dayOn, phase: g.sim.phase, nightOn: g.lore.note() ? g.lore.note().prompt : null }; } return null; });
+      const s = g.sim, d = Math.hypot(n.x, n.z) || 1, px = n.x - (n.x / d) * 1.1, pz = n.z - (n.z / d) * 1.1, pf0 = s.player.floor; s.player.x = px; s.player.z = pz; s.player.floor = n.floor; s.player.climb = null; g.setYaw(Math.atan2(-(n.x - px), -(n.z - pz))); await frames(30); const dayOn = g.lore.note().prompt;
+      g.endDay(); await until(() => g.sim && g.sim.phase === 'night'); await frames(30); return { dayOn, phase: g.sim.phase, nightOn: g.lore.note() ? g.lore.note().prompt : null, noteFloor: n.floor, playerFloorBefore: pf0, top: n.top }; } return null; });
   // OWNER DECISION 16:29 (Nov 19): a note does not have to be there every run (the game is right); when no other house of this run has a note place, the night step
   // is skipped and says so (with seeds 12 and 7 only one house of six has one)
+  // (Nov 20) setup only: the player is put on the note's own floor (the prompt shows only there, src/main.js loreTick); the line failed in 44650773016 and
+  // 44670049156 with dayOn false and passed in the other runs and locally; the note's floor and the player's floor before are printed with the result
   if (night === null) console.log('SKIP at night a note shows no prompt (day only): no other house of this run has a note place (owner 16:29)');
   else ok('at night a note shows no prompt (day only)', night.dayOn && night.phase === 'night' && night.nightOn === false, JSON.stringify(night));
   // back home: the journal lists it under Found notes
