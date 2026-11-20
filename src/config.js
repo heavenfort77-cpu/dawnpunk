@@ -502,7 +502,7 @@ export const CONFIG = {
       //   street.woods = tall trees behind the plots, woodsEnd = across each road end, woodsLeaf = their leaf length (m), woodsHaze = baked haze per metre beyond the street's bounds (no fog on them), woodsHazeMax = its most, roadOpen = how far past the street's end (m) the road stays open before the woods.
       scenery: { on: true, sun: [0xffe3b8, 2.3], grade: { sat: 1.22, satNight: 1.0, warm: 0.045, contrast: 0.18 },
         sky: { cover: 0.47, scale: 0.5, soft: 0.13, zenith: 0x2a6fcf, horizon: 0xcfe0ea, cloudLit: 0xffffff, cloudCore: 0xb4c0d2 },
-        grass: { blades: 14, bladesFar: 6, width: 0.045, root: 0x203a14, mid: 0x4f8f2a, tip: 0xb4d65a, dry: 0xc8b870, dryShare: 0.08, patchCool: 0xd8f0d0, patchWarm: 0xffffd0, density: 4.2, spread: 1.5, chunk: 14, near: 18, far: 55, sway: 0.07, windSpeed: 1 },
+        grass: { blades: 14, bladesFar: 6, width: 0.045, root: 0x203a14, mid: 0x4f8f2a, tip: 0xb4d65a, dry: 0xc8b870, dryShare: 0.08, patchCool: 0xd8f0d0, patchWarm: 0xffffd0, density: 4.2, spread: 1.5, chunk: 28, near: 18, far: 55, sway: 0.07, windSpeed: 1 },
         flowers: { height: [0.85, 1.25], size: 0.11, colours: { poppy: 0xe0301e, daisy: 0xf6f3ea, lupine: 0x8a52d8, buttercup: 0xf6c824, sun: 0xf4b818, eye: 0xf0c020 },
           mixes: { warm: ['poppy', 'poppy', 'buttercup', 'buttercup', 'daisy'], cool: ['lupine', 'lupine', 'daisy', 'daisy', 'buttercup'], white: ['daisy', 'daisy', 'daisy', 'buttercup', 'poppy'] } },
         foliage: { leaf: 0.2, hedgeLeaf: 0.24, shrubLeaf: 0.19, cover: 1.5, width: 0.6, tilt: 0.7, jitter: 0.22, coreDark: 0.55 }, tree: { bark: 0x6e5844 },
@@ -513,7 +513,7 @@ export const CONFIG = {
         ground: { dark: 0x8c9e7c, light: 0xf4f8e8, dry: 0xfff0c0, scale: 0.08, fine: 0.6, fineK: 0.25, dryFrom: 0.56, dryMax: 0.6, seg: 1 },
         base: { seed: 4711, plaza: 12.3, paved: 3.4, lawn: 0.3, lawnSpread: 1.7, lawnDensity: 2.2, borderStep: 0.75, borderOff: 1.15, borderH: 0.55, borderShrub: 0.18, hedge: 20.5, hedgeStep: 1.0, hedgeH: 1.25, tall: 0.42, tallOut: 0.75, outside: 0.7, flowersIn: 0.22, flowersOut: 0.3, meadowR: 46, outTrees: 34, sunflowers: 900, sunDrift: 0.55,
           ground: 0x86b04e, fog: [0xcfe0ea, 45, 240], cell: 20, farR: 56, farDepth: 100, farH: [6, 24], farTrees: 520, roofs: 14, roofAt: -2.2, masts: 3, mastAt: 0.9, collar: 9 },
-        street: { ground: 0x8aa058, sprayR: 0.42, leaf: 0.22, shrubs: 70, shrubSize: 0.9, carClear: 2.6, edge: 0.18, verge: 0.75, tall: 0.75, flowers: 0.24, crackFlowers: 0.35, chunk: 12, near: 20, far: 60, cell: 24, farGap: 25, farDepth: 70, farH: [7, 24], farTrees: 600, roofs: 10, masts: 2, clumpsPer: 3, clumpR: 0.75, looseClumps: 1, clumpCover: 1.35, branchShare: 0.55, crownJoin: 3, woods: 56, woodsEnd: 18, woodsLeaf: 0.85, woodsHaze: 0.012, woodsHazeMax: 0.55, roadOpen: 14 },
+        street: { ground: 0x8aa058, sprayR: 0.42, leaf: 0.22, shrubs: 70, shrubSize: 0.9, carClear: 2.6, edge: 0.18, verge: 0.75, tall: 0.75, flowers: 0.24, crackFlowers: 0.35, chunk: 24, near: 20, far: 60, cell: 48, farGap: 25, farDepth: 70, farH: [7, 24], farTrees: 600, roofs: 10, masts: 2, clumpsPer: 3, clumpR: 0.75, looseClumps: 1, clumpCover: 1.35, branchShare: 0.55, crownJoin: 3, woods: 56, woodsEnd: 18, woodsLeaf: 0.85, woodsHaze: 0.012, woodsHazeMax: 0.55, roadOpen: 14 },
         water: { colour: 0x2f7f96, rough: 0.06, ripple: 0.35, env: 1.2, opacity: 0.86, radius: 2.6, stones: 46, reeds: 26 },
         horizon: { near: 0x6a9a3e, far: 0x86a86a, field: 0xb8c060, woodsFrom: 0.28, woodsSize: [1.6, 3.4], treeTop: 0x8cbc4c, treeShade: 0x2c5a2c, walls: [0xd8cdb8, 0xc8b8a0, 0xb8a890, 0xa89a88], roofs: [0x8a4a34, 0x5a5a5e, 0x9a5a3a, 0x4a4a50], roofSpread: 0.7, mast: 22, mastGap: 0.35, cell: 0x3a54b0 } },
       // pbr: desktop surfaces (src/pbr.js). env: strength of the light and reflections from the sky; hemiKeep: share of the old flat sky light kept beside it (the two together should be about as bright as before); hemiDay: the sky light's daytime strength (the sky's share falls with it at night); sky: zenith, horizon, ground colours of that light; sun, sunPower: the bright patch in it;
@@ -1189,6 +1189,8 @@ export const CONFIG = {
     // uploaded, every shader of the scene built, and the sun shadow map drawn once. on: the switch; min: shortest time each card shows (s); titles: the card's line per change
     // mergeCell: the street's static pieces are merged per material and per square cell of this size (m) on the desktop builds (src/world.js), so out-of-view cells are culled
     mergeCell: 16,
+    // sceneryJoin (Nov 20): the street's still scenery meshes are joined per material in cells of this many m (src/scenehi.js joinCells; 0 = off)
+    sceneryJoin: 48,
     // housePad: a street piece within a house's half size plus this (m) belongs to that house's own merged meshes (gutters, sills, steps), never to the street's
     housePad: 0.8,
     // houseMinVerts: a house's own mesh of one material with fewer vertices than this joins the street's mesh of that material instead (a few small pieces: one draw saved)

@@ -8,6 +8,7 @@
 // one mesh per 20 m cell (no picture cards, so the contact shading pass sees their real shape: no grey boards). Grass and flowers sway in the wind in the vertex shader and are kept
 // out of the contact shading pass (userData.noAO, src/fx.js): their own vertex colours carry dark roots instead. Every number: CONFIG.quality.high.scenery.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CONFIG } from './config.js';
 import { Q } from './quality.js';
 
@@ -76,6 +77,17 @@ const tick = (rd) => { WIND.value = performance.now() / 1000 * S().grass.windSpe
 function nightHook(sh) { const N = S().night; sh.uniforms.uNight = NIGHT; sh.fragmentShader = 'uniform float uNight;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb = mix( diffuseColor.rgb, vec3( dot( diffuseColor.rgb, vec3( 0.3, 0.59, 0.11 ) ) ), uNight * ' + N.grey.toFixed(3) + ' ) * ( 1.0 - uNight * ' + N.dark.toFixed(3) + ' );'); }
 
 // ---------------------------------------------------------------- baking many small parts into a few meshes (one per cell, so far cells are culled)
+// join the plain meshes hanging straight under g (no instancing, no children, the same attributes) per material, shadow flags and cell of `cell` m; the joined
+// mesh keeps the first piece's draw hook (the night tint) and flags
+function joinCells(g, cell) { const groups = new Map(), v = new THREE.Vector3(); g.updateMatrixWorld(true);
+  for (const o of [...g.children]) { if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || o.children.length || Array.isArray(o.material) || !o.geometry || o.morphTargetInfluences) continue;
+    const ge = o.geometry; if (!ge.boundingSphere) ge.computeBoundingSphere(); v.copy(ge.boundingSphere.center).applyMatrix4(o.matrixWorld);
+    const k = o.material.uuid + '|' + o.castShadow + o.receiveShadow + '|' + Object.keys(ge.attributes).sort().join(',') + '|' + !!ge.index + '|' + Math.floor(v.x / cell) + ',' + Math.floor(v.z / cell);
+    let l = groups.get(k); if (!l) groups.set(k, l = []); l.push(o); }
+  let n = 0; for (const l of groups.values()) { if (l.length < 2) continue; const gs = l.map((o) => { const c = o.geometry.clone(); o.updateMatrix(); c.applyMatrix4(o.matrix); return c; }); const m = mergeGeometries(gs, false); for (const c of gs) c.dispose(); if (!m) continue;
+    m.computeBoundingSphere(); const a = l[0], j = new THREE.Mesh(m, a.material); j.castShadow = a.castShadow; j.receiveShadow = a.receiveShadow; j.onBeforeRender = a.onBeforeRender; j.renderOrder = a.renderOrder; Object.assign(j.userData, a.userData);
+    for (const o of l) { g.remove(o); o.geometry.dispose(); } g.add(j); n += l.length - 1; }
+  return n; }
 function Bake(cell) {
   const B = new Map(), v = new THREE.Vector3(), nm = new THREE.Matrix3();
   const at = (x, z) => { const k = Math.floor(x / cell) + ',' + Math.floor(z / cell); let b = B.get(k); if (!b) B.set(k, b = { P: [], N: [], C: [], I: [] }); return b; };
@@ -444,5 +456,8 @@ export function* streetSceneryIter(o) {
   stat.far = horizon(grp, { seed: (o.run.seed || 1) + 31, cx: 0, cz: 0, rx: o.X0 + T.farGap, rz: o.cfg.town.boundZ + T.farGap, depth: T.farDepth, height: T.farH, haze: C.sky.horizon, hazeK: 0.9, fog: false, trees: T.farTrees, roofs: T.roofs, roofAt: PI * 0.5, masts: T.masts, mastAt: -PI * 0.5 });
   grp.traverse((q) => { q.userData.scenery = true; });
   grp.userData.stat = stat; window.__scenery = { where: 'street', stat, grp };
+  // (Nov 20, street about 580 draws a frame: some 60 small leaf, bark and wood meshes of a few hundred vertices each) the street's still scenery meshes that hang
+  // straight under it are joined per material, shadow flag and CONFIG.lag.sceneryJoin cell; the pieces and their places are the same, only fewer draws
+  if (CONFIG.lag && CONFIG.lag.sceneryJoin) joinCells(grp, CONFIG.lag.sceneryJoin);
   return grp;
 }
