@@ -1836,8 +1836,11 @@ async function sceneCard(kind) {
       // (H round 2, Enter on medium: "3338 ms drawArrays < render < renderBufferDirect" in the first frame after the card) the title's off-screen draws (a 64 px target)
       // uploaded the data but did not make the draws the screen needs (the GPU builds its draw states per target), so the home card always makes its own passes on screen
       const preDrawn = false;
+      // (Nov 20, home card 4.7-10.6 s on the Mac, its four turns 2.3-5.7 s of it: run 44692193700) CONFIG.lag.cardTurns[kind] === false: that card skips the four
+      // quarter turns; the next step still draws every piece once with the scene's lights and shadows (to be proven by the enter and hub first-use frames)
+      const noTurns = !!(CONFIG.lag.cardTurns && CONFIG.lag.cardTurns[kind] === false);
       // (R4, card 27) each quarter turn waits for the GPU to finish the one before (they were four whole-scene draws queued in one frame)
-      if (!preDrawn) { const ry = cam.rotation.y; cam.layers.enable(1); try { for (let k = 1; k <= 4; k++) { cam.rotation.y = ry + k * Math.PI / 2; cam.updateMatrixWorld(); draw1(false); if (gp) { cam.layers.disable(1); cam.rotation.y = ry; cam.updateMatrixWorld(); await gpuDone(G.cap); cam.layers.enable(1); } } } finally { cam.layers.disable(1); cam.rotation.y = ry; cam.updateMatrixWorld(); } await raf(); mark('turns'); }
+      if (!preDrawn && !noTurns) { const ry = cam.rotation.y; cam.layers.enable(1); try { for (let k = 1; k <= 4; k++) { cam.rotation.y = ry + k * Math.PI / 2; cam.updateMatrixWorld(); draw1(false); if (gp) { cam.layers.disable(1); cam.rotation.y = ry; cam.updateMatrixWorld(); await gpuDone(G.cap); cam.layers.enable(1); } } } finally { cam.layers.disable(1); cam.rotation.y = ry; cam.updateMatrixWorld(); } await raf(); mark('turns'); }
       // (H round 2, warm-up gate: shadow (depth) programs of pieces first seen by the shadow pass after the card) this pass also draws the shadow maps, with every
       // piece shown and not culled, so every caster's depth program is built here; the shadows are drawn again as they are just after; the body shadow too
       // (R3, home card 9.4-14 s on the Mac: the whole pass was one draw of every piece in one frame) the pass is drawn in parts: CONFIG.lag.slice.cardDraws pieces at a
