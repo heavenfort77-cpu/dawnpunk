@@ -372,7 +372,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // bgWorst: the longest single part so far and its number (for perfcheck: a part too long for a slice is named, then cut)
   // (R4 worker 6, lead 21:15: title worst 271 ms) long: every part over 40 ms [part number, ms], so each long part is named and cut
   const bgWorst = { ms: 0, part: -1, n: 0, long: [] };
-  function bgStep(ms) { if (!bg) return false; const t0 = performance.now(); do { const p0 = performance.now(), dn = bg.it.next().done, pm = performance.now() - p0; bgWorst.n++; if (pm > bgWorst.ms) { bgWorst.ms = Math.round(pm); bgWorst.part = bgWorst.n; } if (pm > 40 && bgWorst.long.length < 40) bgWorst.long.push([bgWorst.n, Math.round(pm)]); if (dn) { bg = null; scene.remove(g); return true; } } while (performance.now() - t0 < ms); return false; }
+  function bgStep(ms) { if (!bg) return false; const t0 = performance.now(); do { const p0 = performance.now(), dn = bg.it.next().done, pm = performance.now() - p0; bgWorst.n++; if (pm > bgWorst.ms) { bgWorst.ms = Math.round(pm); bgWorst.part = bgWorst.n; } if (pm > 25 && bgWorst.long.length < 60) bgWorst.long.push([bgWorst.n, Math.round(pm), Math.round(p0)]); if (dn) { bg = null; scene.remove(g); return true; } } while (performance.now() - t0 < ms); return false; }
 
   // ---- solarpunk dressing: sky, solar tree, pond, greenhouse, canopy, paths, flowers, lanterns
   const sky = createSky(cfg);

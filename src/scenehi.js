@@ -81,12 +81,14 @@ function nightHook(sh) { const N = S().night; sh.uniforms.uNight = NIGHT; sh.fra
 // mesh keeps the first piece's draw hook (the night tint) and flags
 function joinCells(g, cell) { const it = joinCellsIter(g, cell); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
 // the same, stopping (yield) after each joined mesh, for the base's sliced build on the title
-function* joinCellsIter(g, cell) { const groups = new Map(), v = new THREE.Vector3(); g.updateMatrixWorld(true);
+function* joinCellsIter(g, cell) { const groups = new Map(), v = new THREE.Vector3(); let seen = 0; g.updateMatrixWorld(true); yield;
   for (const o of [...g.children]) { if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || o.children.length || Array.isArray(o.material) || !o.geometry || o.morphTargetInfluences) continue;
     const ge = o.geometry; if (!ge.boundingSphere) ge.computeBoundingSphere(); v.copy(ge.boundingSphere.center).applyMatrix4(o.matrixWorld);
     const k = o.material.uuid + '|' + o.castShadow + o.receiveShadow + '|' + Object.keys(ge.attributes).sort().join(',') + '|' + !!ge.index + '|' + Math.floor(v.x / cell) + ',' + Math.floor(v.z / cell);
-    let l = groups.get(k); if (!l) groups.set(k, l = []); l.push(o); }
-  let n = 0; for (const l of groups.values()) { if (l.length < 2) continue; const gs = l.map((o) => { const c = o.geometry.clone(); o.updateMatrix(); c.applyMatrix4(o.matrix); return c; }); const m = mergeGeometries(gs, false); for (const c of gs) c.dispose(); if (!m) continue;
+    let l = groups.get(k); if (!l) groups.set(k, l = []); l.push(o); if (++seen % 120 === 0) yield; }
+  // (Nov 20, title frames of 106-184 ms in this step on the Mac) the sorting above stops every 120 pieces, and a group's pieces are copied and moved in steps of
+  // about 12 000 corners, so no one step is long; the result is the same
+  let n = 0; for (const l of groups.values()) { if (l.length < 2) continue; const gs = []; let vc = 0; for (const o of l) { const c = o.geometry.clone(); o.updateMatrix(); c.applyMatrix4(o.matrix); gs.push(c); vc += c.attributes.position.count; if (vc > 12000) { vc = 0; yield; } } const m = mergeGeometries(gs, false); for (const c of gs) c.dispose(); if (!m) continue;
     m.computeBoundingSphere(); const a = l[0], j = new THREE.Mesh(m, a.material); j.castShadow = a.castShadow; j.receiveShadow = a.receiveShadow; j.onBeforeRender = a.onBeforeRender; j.renderOrder = a.renderOrder; Object.assign(j.userData, a.userData);
     for (const o of l) { g.remove(o); o.geometry.dispose(); } g.add(j); n += l.length - 1; yield; }
   return n; }
