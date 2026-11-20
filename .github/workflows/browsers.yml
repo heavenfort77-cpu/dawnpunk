@@ -74,7 +74,7 @@ jobs:
           CHECK: ${{ matrix.check }}
         run: |
           set +e
-          T=$(python3 -c 'import json,os; c=[x for x in json.load(open("ci/checks.json"))["checks"] if x["name"]==os.environ["CHECK"]]; print(int(c[0].get("timeout",30))*60 if c else 60)')
+          T=$(python3 -c 'import json,os; c=[x for x in json.load(open("ci/checks.json"))["checks"] if x["name"]==os.environ["CHECK"]]; print(int(c[0].get("timeout",30))*60 if c else 1200)')
           perl -e 'alarm shift; exec @ARGV' "$T" node tools/browserrun.cjs "$CHECK" "$PWD/dist" "$PWD/ci-out" > run.log 2>&1; rc=$?
           set -e
           # (macOS has no timeout command: perl's alarm ends the check with code 142)

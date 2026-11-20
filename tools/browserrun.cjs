@@ -3,7 +3,8 @@
 // own switches. Usage: BROWSER=webkit node tools/browserrun.cjs <check name> [dist folder] [out folder]. The check's own PASS / FAIL lines are its output.
 const path = require('path'), fs = require('fs');
 const name = process.argv[2], dist = path.resolve(process.argv[3] || 'dist'), out = path.resolve(process.argv[4] || 'ci-out');
-const C = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'ci', 'checks.json'), 'utf8')).checks.find((c) => c.name === name);
+// a name ending in .cjs is a script under tools/ that is not in the list (a probe such as enginecheck), run with no arguments
+const C = /\.cjs$/.test(name) ? { name, script: 'tools/' + name, args: [] } : JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'ci', 'checks.json'), 'utf8')).checks.find((c) => c.name === name);
 if (!C) { console.log('FAIL browserrun: no check named ' + name + ' in ci/checks.json'); process.exit(1); }
 fs.mkdirSync(out, { recursive: true });
 const eng = process.env.BROWSER || 'chromium', pw = require('playwright');
