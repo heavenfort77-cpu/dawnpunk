@@ -22,7 +22,7 @@ const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s 
   async function open(extra, scale) {
     const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: scale || SCALE }); await ctx.addInitScript(INIT, { seed: SEED });
     const p = await ctx.newPage(); p.setDefaultTimeout(900000); p.on('pageerror', (e) => errs.push(String(e).slice(0, 200))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 200)); });
-    await p.goto(URL0 + '?quality=high&seed=' + SEED + (extra || ''), { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info('page up ' + el()); return p;
+    await p.goto(URL0 + '?quality=medium&seed=' + SEED + (extra || ''), { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info('page up ' + el()); return p;
   }
   const frames = (p, n) => p.evaluate((n) => new Promise((res) => { let k = 0; const f = () => (++k >= n ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
   // let this much GAME time pass (each frame's dt is capped by window.__dtMax, as the game does), drawing frames as it goes
