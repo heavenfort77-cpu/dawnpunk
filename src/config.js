@@ -1259,7 +1259,9 @@ export const CONFIG = {
     // them a frame (src/main.js sceneCard), so no frame under the card holds the whole pass
     // filmDraws (Nov 20, the film's black held one frame 6-8 s on the Mac: a part of 40+ pieces' first draws was seconds of GPU work): a part under the film's
     // black is this many pieces, then the GPU is waited for (0 = as before, as many 40-piece batches as fit in `film` ms)
-    slice: { ms: 4, draws: 40, film: 40, card: 40, cardDraws: 40, filmDraws: 8 },
+    slice: { ms: 4, draws: 40, film: 40, card: 40, cardDraws: 40, filmDraws: 16 },
+    // filmBase: the film's black also draws the base's pieces once (src/main.js filmWarm), so the home card after the film finds them drawn
+    filmBase: true,
     // filmCompileCap (R3): the film's black waits at most this many s for its shaders to finish building in the background before its pieces are drawn (it was the
     // card's maxWait, 12 s: on the Mac test GPU the build took longer, and the first draw then waited for the rest of it in one held frame of 19-22 s)
     filmCompileCap: 90,

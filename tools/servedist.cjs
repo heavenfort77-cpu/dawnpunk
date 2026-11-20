@@ -1,0 +1,6 @@
+// Serves dist/ over http on a free local port (as players get the game from itch, not from a file) and runs one tool with PAGE set to the page's address.
+// Usage: node tools/servedist.cjs tools/fuzz.cjs [its arguments]. The tool's own output and exit code are passed on.
+const http = require('http'), fs = require('fs'), path = require('path'), { spawn } = require('child_process');
+const DIST = path.resolve(__dirname, '..', 'dist'), T = { '.html': 'text/html', '.js': 'text/javascript', '.jpg': 'image/jpeg', '.png': 'image/png', '.mp3': 'audio/mpeg', '.glb': 'model/gltf-binary', '.json': 'application/json', '.ktx2': 'image/ktx2', '.wasm': 'application/wasm' };
+const srv = http.createServer((q, r) => { const f = path.join(DIST, decodeURIComponent(q.url.split('?')[0])); if (!f.startsWith(DIST) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); r.end(); return; } r.writeHead(200, { 'content-type': T[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(r); });
+srv.listen(0, '127.0.0.1', () => { const c = spawn(process.execPath, process.argv.slice(2), { stdio: 'inherit', env: { ...process.env, PAGE: 'http://127.0.0.1:' + srv.address().port + '/index.html' } }); c.on('exit', (code) => { srv.close(); process.exit(code === null ? 1 : code); }); });

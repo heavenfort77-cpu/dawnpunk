@@ -606,7 +606,10 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
   // physically based form first (fx.upgradeNow, as the cards do), so the shaders built here are the ones drawn; fx's own walk upgraded them later, in a shown frame
   if (fx && fx.upgradeNow) fx.upgradeNow();
   (async () => { try { const tc = performance.now(); let built = !renderer.compileAsync; if (renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam).then(() => { built = true; }), nap(CONFIG.lag.filmCompileCap * 1000)]); FILM.compileMs = Math.round(performance.now() - tc); FILM.compileCut = !built;
-    const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); FILM.warm = 0;
+    // (Nov 20, the home card after the film 2.8-4.1 s on the Mac: the base built under the black was first drawn under that card) the base's pieces are drawn here
+    // too when it is built and not in the scene (CONFIG.lag.filmBase): it is put in for these parts and taken out after them
+    const fbg = CONFIG.lag.filmBase && bview.group && !bview.group.parent && bview.group.children.length ? bview.group : null; if (fbg) { scene.add(fbg); FILM.fbg = fbg; }
+    const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); FILM.warm = 0; FILM.basePieces = fbg ? 1 : 0;
     // (R4 item B, card 27) after each part the GPU's own time for it is waited for (gpuDone) before the next; the closing gl.finish() (one frame that waited for
     // the whole queue) is a last fence wait now
     // (diagnose 7: parts sized by the fence wait shrank to 1-2 pieces, the wait being frame latency, not GPU work: cards of 26-183 s) the part stays S.film ms of
@@ -616,10 +619,11 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
     const G = CONFIG.lag.gpuPart, gp = G && G.on; if (pshadow.warm) pshadow.warm();
     for (let i = 0; i < list.length;) { const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.film) { const e = Math.min(list.length, i + (S.filmDraws || S.draws)); renderer.shadowMap.needsUpdate = true; FILM.warm += drawPieces(list, i, e, null); i = e; if (S.filmDraws) break; }
       FILM.parts = (FILM.parts || 0) + 1; if (gp) await gpuDone(G.cap); else await raf(); }
+    if (fbg && fbg.parent === scene) scene.remove(fbg);
     // (R4 item D, card 28: diagnose 7 'intro 102695: 6 programs', the hands' own materials: MeshStandardMaterial #b08a3c, #8a8468, the cells map 64x64, the water
     // #4aa8e8, src/hands.js) the film shows the hands in its turning part (CONFIG.opening.turning.hands) and their scene was never drawn under the black: it is now
     if (hands.warm) hands.warm(renderer, cam.aspect);
-    if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e) { /* no context */ } } } catch (e) { /* the film runs as before */ } finally { I.hold = false; } })(); }
+    if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e) { /* no context */ } } } catch (e) { /* the film runs as before */ } finally { if (FILM.fbg && FILM.fbg.parent === scene) scene.remove(FILM.fbg); FILM.fbg = null; I.hold = false; } })(); }
 // (Nov 20, PROFILE 44648754836: 6 MeshDepthMaterial programs and 17 new shadow-target draw states in the first play frame after the first ride card) three r187
 // keys every program, the shadow passes' depth programs too, on the light counts of the render BEFORE it (the shadow maps are drawn before that render's own lights
 // are counted). With Marla's lights split off (ML.on) each play frame is: street render (sun shadow pass under the counts her pass left: the scene's lights plus her
