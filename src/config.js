@@ -1087,7 +1087,7 @@ export const CONFIG = {
     // seconds each lore line stays on the loading page before the next one
     loreSecs: 4,
     // weight of each loading stage in the bar (scripts, models and textures, fonts, music, first scene compile); they are added and scaled to 100%
-    weights: { scripts: 1, assets: 6, fonts: 1, music: 1.5, warm: 1.5 },
+    weights: { scripts: 1, assets: 6, fonts: 1, music: 1.5, warm: 1.5, base: 1.5 },
     // seconds after which a stage that never reports (a blocked music file, say) counts as done, so the bar cannot stall forever
     stageCap: 25,
     // soft particles drifting up behind the logo and title (desktop only; phones get none)
@@ -1231,6 +1231,8 @@ export const CONFIG = {
     // OWNER DECISION Nov 19 12:35: nightTuftBlades: the street's grass tufts have this many blades at night (src/main.js nightTufts); by day the original
     // CONFIG.quality.high.street.tuftBlades (10) as before
     nightTuftBlades: 5,
+    // loadBase (Nov 20): the base is prepared on the loading page as its last stage, before the begin button (src/main.js SPLASH); ms: the most it may take there
+    loadBase: { on: true, ms: 9000 },
     // titleBase: a returning player's base is prepared this many seconds after the title is ready, while it idles (src/main.js titleBase)
     titleBase: 1.5,
     // slice: the base prepared at the title in time slices: ms of build parts a frame (a part is not cut), then draws pieces drawn off-screen a frame (src/main.js baseSlice)
