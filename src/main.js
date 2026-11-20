@@ -614,8 +614,8 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
     // (R4 item D, card 28: diagnose 7 'base 109112': 5 depth programs (render.jpg, canopy.png, glaze.jpg, the player's suit) built in the first base frames after the
     // film) the parts also draw the shadow maps (as the cards' parts do) and the body shadow is warmed, so the depth programs are built under the black
     const G = CONFIG.lag.gpuPart, gp = G && G.on; if (pshadow.warm) pshadow.warm();
-    for (let i = 0; i < list.length;) { const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.film) { const e = Math.min(list.length, i + S.draws); renderer.shadowMap.needsUpdate = true; FILM.warm += drawPieces(list, i, e, null); i = e; }
-      if (gp) await gpuDone(G.cap); else await raf(); }
+    for (let i = 0; i < list.length;) { const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.film) { const e = Math.min(list.length, i + (S.filmDraws || S.draws)); renderer.shadowMap.needsUpdate = true; FILM.warm += drawPieces(list, i, e, null); i = e; if (S.filmDraws) break; }
+      FILM.parts = (FILM.parts || 0) + 1; if (gp) await gpuDone(G.cap); else await raf(); }
     // (R4 item D, card 28: diagnose 7 'intro 102695: 6 programs', the hands' own materials: MeshStandardMaterial #b08a3c, #8a8468, the cells map 64x64, the water
     // #4aa8e8, src/hands.js) the film shows the hands in its turning part (CONFIG.opening.turning.hands) and their scene was never drawn under the black: it is now
     if (hands.warm) hands.warm(renderer, cam.aspect);
