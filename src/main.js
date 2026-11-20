@@ -1884,13 +1884,18 @@ let last = performance.now(), acc = 0, hurtT = 0;
 // person's or an animal's bones are never in the list. Outside the base all are shown
 const BFC = { recs: [], at: 0, k: 0, g: null, v: null, seen: new WeakMap(), mov: new WeakSet() };
 function baseFarOff() { for (const r of BFC.recs) if (r.cull) { r.cull = false; r.o.visible = true; } BFC.recs.length = 0; BFC.g = null; }
-function baseFar(now) { const C = CONFIG.lag.baseFar; if (!C || !C.on) return; if (state !== 'base' || BOTFAR()) { if (BFC.recs.length) baseFarOff(); return; }
-  const g = bview.group; if (BFC.g !== g || now - BFC.at > C.list * 1000) { for (const r of BFC.recs) if (r.cull) { r.cull = false; r.o.visible = true; } BFC.recs.length = 0; BFC.g = g; BFC.at = now; BFC.v = BFC.v || new THREE.Vector3();
+// (Nov 20, street 500 draw calls a frame in plain medium 44689494109 / 44689500672, limit < 500) the street by day too, with its own distance (streetFar): the list
+// and what counts as moved start again whenever the place changes (base, or the street as it stands for this run)
+function baseFar(now) { const C = CONFIG.lag.baseFar; if (!C || !C.on) return; const street = !!(C.streetFar && state === 'play' && world && run && run.inside < 0), g = state === 'base' ? bview.group : street ? world.g : null;
+  if (!g || BOTFAR()) { if (BFC.recs.length) baseFarOff(); return; }
+  if (BFC.g !== g) { BFC.seen = new WeakMap(); BFC.mov = new WeakSet(); }
+  const farM = street ? C.streetFar : C.far;
+  if (BFC.g !== g || now - BFC.at > C.list * 1000) { for (const r of BFC.recs) if (r.cull) { r.cull = false; r.o.visible = true; } BFC.recs.length = 0; BFC.g = g; BFC.at = now; BFC.v = BFC.v || new THREE.Vector3();
     g.traverse((o) => { if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry || !o.visible || o.userData.keep) return; for (let q = o.parent; q && q !== g; q = q.parent) if (q.isBone || q.isSkinnedMesh || (q.animations && q.animations.length) || q.userData.char) return; const ge = o.geometry; if (!ge.boundingSphere) ge.computeBoundingSphere(); const bs = ge.boundingSphere; if (!bs) return; const e = o.matrixWorld.elements, sc = Math.hypot(e[0], e[1], e[2]); if (bs.radius * sc >= C.r || BFC.mov.has(o)) return; BFC.v.copy(bs.center).applyMatrix4(o.matrixWorld); const was = BFC.seen.get(o);
       // only a piece found in the same place as at the list before is in the list: a walking animal or person is never hidden (once seen moved, never again)
       if (!was) { BFC.seen.set(o, [BFC.v.x, BFC.v.y, BFC.v.z]); return; } if (Math.abs(was[0] - BFC.v.x) + Math.abs(was[1] - BFC.v.y) + Math.abs(was[2] - BFC.v.z) > 0.02) { BFC.mov.add(o); return; }
       BFC.recs.push({ o, cull: false, x: BFC.v.x, y: BFC.v.y, z: BFC.v.z }); }); BFC.k = C.every; }
-  if (++BFC.k < C.every) return; BFC.k = 0; const cx = cam.position.x, cy = cam.position.y, cz = cam.position.z, f2 = C.far * C.far;
+  if (++BFC.k < C.every) return; BFC.k = 0; const cx = cam.position.x, cy = cam.position.y, cz = cam.position.z, f2 = farM * farM;
   for (const r of BFC.recs) { const dx = r.x - cx, dy = r.y - cy, dz = r.z - cz, far = dx * dx + dy * dy + dz * dz > f2; if (far && !r.cull && r.o.visible) { r.cull = true; r.o.visible = false; } else if (!far && r.cull) { r.cull = false; r.o.visible = true; } } }
 // the scripted checks look at the base's pieces from fixed spots: they keep every piece (as before); ?cards=1 runs (the Mac's real-play measurement) cull as players do
 const BOTFAR = () => BOTRUN();

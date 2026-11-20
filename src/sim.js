@@ -374,7 +374,9 @@ export function createSim(opts = {}) {
     p.cd = Math.max(0, p.cd - dt); p.eatCd = Math.max(0, p.eatCd - dt); p.stairCd = Math.max(0, p.stairCd - dt); p.ladderCd = Math.max(0, p.ladderCd - dt);
     if (p.climb) { p.climb.t -= dt; if (p.climb.t <= 0) { p.floor = p.climb.to; p.x = p.climb.ax; p.z = p.climb.az; p.climb = null; p.ladderCd = cfg.ladderCd; s.log.push({ e: 'floor' }); } } else playerTravel();
     // spawn (OWNER DECISION lead 00:24, Card 49: on the boss nights a spawn waits while CONFIG.boss.maxAlive Gloom are alive)
-    const aliveCap = s.boss && cfg.boss && cfg.boss.maxAlive ? cfg.boss.maxAlive : 0;
+    // (OWNER DECISION Nov 20 14:51: fewer Gloom until the frame rate is met; the boss's summons never take it past that number) CONFIG.gloom.maxAlive on every night,
+    // the smaller of it and CONFIG.boss.maxAlive on the boss night; summons wait in the same queue
+    const capN = cfg.gloom.maxAlive || 0, capB = s.boss && cfg.boss && cfg.boss.maxAlive ? cfg.boss.maxAlive : 0, aliveCap = capN && capB ? Math.min(capN, capB) : capN || capB;
     while (s.spawned < spawns.length && spawns[s.spawned].t <= s.t && !(aliveCap && s.gloom.length >= aliveCap)) {
       const sp = spawns[s.spawned++], b = breaches[sp.bp];
       const tx = -b.nz, tz = b.nx, j = (s.rng() - 0.5) * 3;
