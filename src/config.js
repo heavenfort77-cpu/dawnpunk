@@ -1307,6 +1307,8 @@ export const CONFIG = {
     // card.sfxWait: the night card waits at most this long (s) for the impact sound variants still being rendered
     // card.settle: before a card lifts, the real frame is drawn under it until settle.n frames in a row come in under settle.ms milliseconds (or settle.cap s pass), so the
     // first slow frames of a new scene (uploads, first draws) happen under the card, not in play
+    // unifyMats (Nov 20): the base's plain materials get white / flat pictures and white vertex colours so they share one shader (src/unifymat.js)
+    unifyMats: true,
     // cardTurns (Nov 20): a card kind set to false skips the four quarter turns (src/main.js sceneCard)
     cardTurns: { home: false },
     card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home' }, settle: { n: 3, ms: 25, cap: 1.5 } },

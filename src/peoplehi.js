@@ -9,8 +9,10 @@ import { lamps, lampRoot } from './shaderlamps.js';
 const AOK = (o, k) => (o.geometry && o.geometry.attributes.color && !(o.name || '').startsWith('teeth') ? k : 0);
 // baked shading: diffuse colour times the vertex colour at strength k; the sky's soft fill (indirect diffuse) times amb
 function withAO(mat, k, amb, prev) { if (!k) return mat; mat.vertexColors = true; const pre = prev || mat.onBeforeCompile;
-  mat.onBeforeCompile = (sh, r) => { if (pre) pre(sh, r); sh.fragmentShader = sh.fragmentShader.replace('#include <color_fragment>', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.rgb, ' + k.toFixed(3) + ' );').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n\treflectedLight.indirectDiffuse *= ' + amb.toFixed(3) + ';'); };
-  const key = mat.customProgramCacheKey ? mat.customProgramCacheKey.bind(mat) : () => ''; mat.customProgramCacheKey = () => key() + '-pao' + k + '-amb' + amb; return mat; }
+  // (Nov 20) strengths as uniforms, as Marla's (src/marlahi.js withAO): one shader for every strength
+  const U = { aoK: { value: k }, aoAmb: { value: amb } };
+  mat.onBeforeCompile = (sh, r) => { if (pre) pre(sh, r); Object.assign(sh.uniforms, U); sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float aoK; uniform float aoAmb;').replace('#include <color_fragment>', 'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.rgb, aoK );').replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n\treflectedLight.indirectDiffuse *= aoAmb;'); };
+  const key = mat.customProgramCacheKey ? mat.customProgramCacheKey.bind(mat) : () => ''; mat.customProgramCacheKey = () => key() + '-aoU'; return mat; }
 // stencil mark: these pixels get no contact shading (otherwise the shading of the ground behind shows through the hair)
 const mark = (m, H) => { if (!H.keepOut) return m; m.stencilWrite = true; m.stencilRef = H.keepOut; m.stencilFunc = THREE.AlwaysStencilFunc; m.stencilZPass = THREE.ReplaceStencilOp; return m; };
 const RX = /float dotNL = saturate\( dot\( geometryNormal, directLight\.direction \) \);\s*vec3 irradiance = dotNL \* directLight\.color;/;

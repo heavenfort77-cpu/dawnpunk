@@ -30,6 +30,7 @@ import { lodTick, lodFull, lodCopy } from './lod.js';
 import { createNightCull } from './nightcull.js';
 import { installHouseLamps, bindHouseLamps, houseLamp, addLamp, listHouseLamps, unlistHouseLamps, houseLampState, houseLampList, houseLampsDrawn, houseLampsForceOff } from './houselamps.js';
 import { freezeStillBones } from './glbmerge.js';
+import { unifyStd } from './unifymat.js';
 import { mergeStatic, HIT_LAYER, splitVariants, singlePassFlat, twoPassGroups } from './mergestatic.js';
 import { gloomPreload, glbHooks, glbCopy, glbState } from './gloomglb.js';
 import { openBook, loadBookFonts, closeBook } from './book.js';
@@ -166,6 +167,8 @@ function buildTrim() { const T = CONFIG.trim, foot = new THREE.MeshLambertMateri
       for (const u of cuts) { seg(a0, u - CONFIG.openingHalf - 0.05); a0 = u + CONFIG.openingHalf + 0.05; } seg(a0, R + T.footOut);
       for (const s of [-1, 1]) { const o = new THREE.Mesh(wallGeo, em); o.scale.set(T.cornerW * (s > 0 ? -1 : 1), top, 1); const u = s * (R - T.cornerW / 2); o.position.set(nx ? nx * (R + 0.012) : u, top / 2, nz ? nz * (R + 0.012) : u); o.rotation.y = nx > 0 ? Math.PI / 2 : nx < 0 ? -Math.PI / 2 : nz > 0 ? 0 : Math.PI; if (nx) o.scale.x *= nx > 0 ? -1 : 1; if (nz < 0) o.scale.x *= -1; hg.add(o); } } } }
 // owner's rule (Nov 19): small props cast no shadow (CONFIG.lag.smallCaster: a piece whose bounding sphere is smaller than this radius, m)
+// (Nov 20) the base's plain materials share one shader where only their pictures differed (src/unifymat.js, CONFIG.lag.unifyMats)
+function unifyBase() { if (CONFIG.lag.unifyMats) unifyStd(bview.group); }
 function noSmallCasters(root) { const R = CONFIG.lag.smallCaster, v = new THREE.Vector3(); root.updateMatrixWorld(true); root.traverse((o) => { if (!o.isMesh || !o.castShadow || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry) return; const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); if (g.boundingSphere && g.boundingSphere.radius * o.getWorldScale(v).x < R) o.castShadow = false; }); }
 // the street built (src/world.js buildWorldIter, which stops between its parts) and set in the scene; needWorld runs it at once, the film in time slices (filmPrep)
 function* worldIter() { if (DESO.place && !run.desoPlaced) { placeSample(run, CONFIG); run.desoPlaced = true; } world = yield* buildWorldIter(CONFIG, run); noSmallCasters(world.g); scene.add(world.g); applyRelief(world.g); buildGrounding(); buildTrim(); shadowT = 1.5; }
@@ -659,7 +662,7 @@ function introClear() { clearScene(); dropWorld(); bview.dispose(); sim = null; 
 // (owner 11:40) the base is built under the film's opening black and kept hidden (src/baseview.js, CONFIG.lag.keepBase; its shaders built in the background), so the
 // dawn shot shows it without building it; in parts (yield) for filmPrep, at once for the scripted checks
 function* introBase() { if (!CONFIG.lag.keepBase) return; const g = bview.group;
-  try { bview.build(save); yield; applyRelief(g); yield; noSmallCasters(g); yield; bview.mergeStill(); yield; if (renderer.compileAsync) renderer.compileAsync(g, cam, scene).catch(() => {}); } catch (e) { /* built at the dawn shot instead */ } bview.dispose(); }
+  try { bview.build(save); yield; applyRelief(g); yield; noSmallCasters(g); yield; bview.mergeStill(); yield; unifyBase(); yield; if (renderer.compileAsync) renderer.compileAsync(g, cam, scene).catch(() => {}); } catch (e) { /* built at the dawn shot instead */ } bview.dispose(); }
 function* filmPrep() { yield 'frame'; yield 'frame'; gloomPreload(FILM_KINDS); askAllHi(); bview.preChars(); yield; introClear(); yield;
   if (CONFIG.lag.keepBase) { bview.bgStart(save); while (bview.bgBusy && !bview.bgStep(0)) yield; yield* introBase(); }
   yield; run = RUN.createRun(CONFIG, 0, CONFIG.opening.seed, {}); yield; yield* worldIter();
@@ -967,7 +970,7 @@ function enterBase(intro) { perfRest(); baseCamY = 1.6;
   if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   sky.mesh.visible = false; scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95);
   $('marla').textContent = ''; $('hs').textContent = ''; marlaT = 0; hsT = 0; $('bLeave').style.display = 'none'; $('time').style.color = '';
-  (bview.build(save), applyRelief(bview.group), noSmallCasters(bview.group), bview.mergeStill(), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); bp = { x: 3, z: 7 }; yaw = 0; pitch = 0; camY = 1.6;
+  (bview.build(save), applyRelief(bview.group), noSmallCasters(bview.group), bview.mergeStill(), unifyBase(), renderer.shadowMap.needsUpdate = true, shadowT = 1.5); bp = { x: 3, z: 7 }; yaw = 0; pitch = 0; camY = 1.6;
   $('menu').style.display = 'none'; $('end').style.display = 'none'; $('scout').style.display = 'none'; $('qb').style.display = 'none';
   $('hud').style.display = 'block'; $('hud').className = 'base'; $('bFire').textContent = 'USE';
   flash(intro || ('Dawn, day ' + save.day + '. Find Marla the Scout to go out on a collection run (last seen ' + B.scoutPos(save).hint + ').' + (save.day === 1 ? ' They say a lucky cat hides somewhere in the base.' : '')), 2);
@@ -1444,7 +1447,7 @@ function baseSlice0() { const S = CONFIG.lag.slice; if (!TB.phase || TB.phase ==
   const g = bview.group;
   if (TB.phase === 'build') { if (!bview.bgBusy) { TB.phase = ''; return; } if (bview.bgStep(S.ms)) { TB.phase = 'post'; TB.post = 0; } return; }
   // after the build, one of its whole-base passes a frame (relief maps, small casters, the still pieces merged), then its shaders in the background
-  if (TB.phase === 'post') { const k = TB.post++, p0 = performance.now(); TB.postMs = TB.postMs || []; if (k === 0) applyRelief(g); else if (k === 1) noSmallCasters(g); else if (k === 2) bview.mergeStill(); else { TB.phase = 'compile'; TB.cq = [...g.children]; } TB.postMs.push(Math.round(performance.now() - p0)); return; }
+  if (TB.phase === 'post') { const k = TB.post++, p0 = performance.now(); TB.postMs = TB.postMs || []; if (k === 0) applyRelief(g); else if (k === 1) noSmallCasters(g); else if (k === 2) { bview.mergeStill(); unifyBase(); } else { TB.phase = 'compile'; TB.cq = [...g.children]; } TB.postMs.push(Math.round(performance.now() - p0)); return; }
   // (H round 2, the title's seconds-long frames) the base's shaders are built a few of its pieces at a time (compileAsync on each, its sync part at most S.ms a frame:
   // SPREAD); the off-screen draws are gone (REMOVED: they made the GPU's draw states for a 64 px target, not for the screen, so the home card draws on screen anyway)
   if (TB.phase === 'compile') { const t1 = performance.now(); if (!renderer.compileAsync) { TB.phase = 'done'; return; } const inS = !!g.parent; if (!inS) scene.add(g);
