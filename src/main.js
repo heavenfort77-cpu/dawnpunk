@@ -605,7 +605,15 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
   // (R4 item D, card 28: "MeshStandardMaterial map transparent [edge.png]" and 5 more built in shown film frames) the simple surfaces are turned into their
   // physically based form first (fx.upgradeNow, as the cards do), so the shaders built here are the ones drawn; fx's own walk upgraded them later, in a shown frame
   if (fx && fx.upgradeNow) fx.upgradeNow();
-  (async () => { try { const tc = performance.now(); let built = !renderer.compileAsync; if (renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam).then(() => { built = true; }), nap(CONFIG.lag.filmCompileCap * 1000)]); FILM.compileMs = Math.round(performance.now() - tc); FILM.compileCut = !built;
+  (async () => { try { const tc = performance.now(); let built = !renderer.compileAsync;
+    // (Nov 20, PROFILE 44737704647: under the black one frame of 1.6 s built 64 shaders' sources at once, and the next frame came 7.9 s later while the GPU
+    // linked them all) CONFIG.lag.filmCompileParts: the street's shaders are built one top-level piece at a time, each waited for before the next, so frames
+    // keep coming between them; the whole still stops at filmCompileCap
+    if (renderer.compileAsync && CONFIG.lag.filmCompileParts) { const roots = []; for (const c of scene.children) { if (c.isLight) continue; if (!c.isMesh && c.children.length > 8) roots.push(...c.children); else roots.push(c); }
+      const capAt = tc + CONFIG.lag.filmCompileCap * 1000; built = true; FILM.compileParts = roots.length;
+      for (const c of roots) { if (performance.now() > capAt) { built = false; break; } if (!c.parent) continue; await Promise.race([renderer.compileAsync(c, cam, scene).catch(() => {}), nap(Math.max(0, capAt - performance.now()))]); } }
+    else if (renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam).then(() => { built = true; }), nap(CONFIG.lag.filmCompileCap * 1000)]);
+    FILM.compileMs = Math.round(performance.now() - tc); FILM.compileCut = !built;
     // (Nov 20, the home card after the film 2.8-4.1 s on the Mac: the base built under the black was first drawn under that card) the base's pieces are drawn here
     // too when it is built and not in the scene (CONFIG.lag.filmBase): it is put in for these parts and taken out after them
     const fbg = CONFIG.lag.filmBase && bview.group && !bview.group.parent && bview.group.children.length ? bview.group : null; if (fbg) { scene.add(fbg); FILM.fbg = fbg; }

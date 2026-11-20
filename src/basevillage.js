@@ -36,7 +36,8 @@ export function startPlants(cfg, hi) { const PL = cfg.baseLife && cfg.baseLife.o
 export function buildBaseLife(g, cfg, hi, save, ground) { const it = buildBaseLifeIter(g, cfg, hi, save, ground); for (;;) { const q = it.next(); if (q.done) return q.value; } }
 export function* buildBaseLifeIter(g, cfg, hi, save, ground) {
   if (!lifeOn(cfg) && !(cfg.baseWater && cfg.baseWater.on)) return null;
-  const BL = cfg.baseLife, D = hi ? BL.high : BL.low, r = rng(6060), G = shapes(), { acc, P } = lifePlacer(), M = lifeMats(hi), LG = leafGeo(), grp = new THREE.Group(); grp.userData.life = 'village'; g.add(grp);
+  // (Nov 20, the title's longest frame, 114-178 ms at about 2 s on the Mac, was this first part: local profile) a stop after each of its makers
+  const BL = cfg.baseLife, D = hi ? BL.high : BL.low, r = rng(6060), G = shapes(); yield; const { acc, P } = lifePlacer(); yield; const M = lifeMats(hi); yield; const LG = leafGeo(), grp = new THREE.Group(); grp.userData.life = 'village'; g.add(grp); yield;
   const jit = (hx, k) => C(hx).offsetHSL((r() - 0.5) * 0.03, (r() - 0.5) * 0.1, (r() - 0.5) * (k || 0.08)), seg = D.round, solids = [], circles = [], anim = [];
   // (Nov 20, a title frame of 200 ms: the plant kit and the base water were one part) a stop between them, and after the water
   const PK0 = LIFE_PLANTS.kit || (hi && BL && BL.plants && BL.plants.on ? plantKit(true, 77) : null); yield; const water = cfg.baseWater && cfg.baseWater.on ? (yield* buildBaseWaterIter(g, cfg, hi, ground, PK0 && BL.plants.rollout ? PK0 : null)) : null;

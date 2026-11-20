@@ -131,8 +131,12 @@ export function vaultHi(g, b) {
     const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, -0.5, -0.38, 0.05, 0, -1, 0, 0.5, -0.38, 0.05, 0, -0.42, 0.09], 3)); lg.setIndex([4, 0, 1, 4, 1, 2, 4, 2, 3, 4, 3, 0]); lg.computeVertexNormals();
     const im = new THREE.InstancedMesh(lg, leafM, c.length / 3); im.instanceMatrix.array.set(n); im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(c), 3); im.computeBoundingSphere(); g.add(im); }
 
-  if (densityOn()) vaultDense(g, b);
+  if (densityOn()) { if (vaultLater.on) vaultLater.q.push([g, b]); else vaultDense(g, b); }
 }
+// (Nov 20, title frames of 67-117 ms on the Mac: a building and its lived-in dressing were one step of the base's sliced build) while vaultLater.on the dressing
+// is queued; vaultFlushOne() makes the next queued one (true if it made one), so the build can stop between a building and its dressing
+export const vaultLater = { on: false, q: [] };
+export function vaultFlushOne() { const e = vaultLater.q.shift(); if (!e) return false; vaultDense(e[0], e[1]); return true; }
 
 // ---------------------------------------------------------------- DENSITY (CONFIG.quality.high.density.base): the vaulted buildings lived in and cared for
 // lanterns by the door (a glass bud on a verdigris bracket, warm light), a hand-painted sign, stained glass in the round windows, a mosaic round the door, window boxes and pots

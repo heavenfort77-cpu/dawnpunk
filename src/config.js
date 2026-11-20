@@ -1262,6 +1262,8 @@ export const CONFIG = {
     slice: { ms: 4, draws: 40, film: 40, card: 40, cardDraws: 40, filmDraws: 8 },
     // filmBase: the film's black also draws the base's pieces once (src/main.js filmWarm), so the home card after the film finds them drawn
     filmBase: false,
+    // filmCompileParts: the film's black builds the street's shaders one top-level piece at a time (src/main.js filmWarm), not all in one frame
+    filmCompileParts: true,
     // filmCompileCap (R3): the film's black waits at most this many s for its shaders to finish building in the background before its pieces are drawn (it was the
     // card's maxWait, 12 s: on the Mac test GPU the build took longer, and the first draw then waited for the rest of it in one held frame of 19-22 s)
     filmCompileCap: 90,

@@ -3,7 +3,7 @@ import { houseLampsOn, houseLamp, addLamp } from './houselamps.js';
 import * as THREE from 'three';
 import { createSky } from './sky.js';
 import { BM, BLOOM, petal, stem, halo, lathe, collectorV2 } from './bloomtech.js';
-import { HIBASE, vaultHi, detailDevice } from './basehi.js';
+import { HIBASE, vaultHi, detailDevice, vaultLater, vaultFlushOne } from './basehi.js';
 import { SCENERY, baseSceneryIter } from './scenehi.js';
 import { STATIONS, CAT_SPOTS, HOME, NPCS, catPos, scoutPos, marlaJournalUnread, boardYaw, BOARD_BOX } from './base.js';
 import { roomInfo, roomSolids, toWorld, toLocal, inRoom, doorAt, workshopLow, marlaLow, workshopHi, marlaHi } from './rooms.js';
@@ -164,6 +164,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // CONFIG.lag.slice) while the title idles; build() runs what is left of it at once (Enter, the film) or the whole of it as before
   function* buildIter(sv) {
     const sig = cfg.lag && cfg.lag.keepBase ? keySig(sv) : null; if (sig && sig === keptSig && g.children.length) { reuse(sv); return; }
+    // the buildings' lived-in dressing is queued and made at the stops after each building (src/basehi.js vaultLater); whatever is left is made before the end
+    vaultLater.on = true; vaultLater.q.length = 0;
     keptSig = null; const tok = ++buildN; // a model that finishes loading after this base is gone must not be pulled back into it (Marla is on the street then)
     save = sv; freeAll(); g.clear(); g.userData.merged = false; g.userData.drawn = false; obst.length = 0; npcs.length = 0; towers = []; boxes.length = 0; jn = null; life = null; startPlants(cfg, HIBASE); hatch = null; flock = null; eveT = 0; vcats = null;
     const gt = tex('grass').clone(); gt.repeat.set(34, 34); gt.needsUpdate = true; const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshLambertMaterial({ map: gt, color: 0xc4ec9a })); ground.rotation.x = -Math.PI / 2; g.add(ground);
@@ -179,7 +181,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       for (let k = 0; k < n; k++) { const top = rn() < 0.55, lx = (rn() - 0.5) * w * (top ? 1 : 1.1), lz = top ? (rn() - 0.5) * d : (rn() < 0.5 ? -1 : 1) * d * 0.5, ly = top ? h * 0.5 : (rn() - 0.3) * h * 0.6, sz = 0.7 + rn() * 0.7, o = card(sz, sz, k % 3 ? canM : canD, x + lx * c + lz * s2, y + ly, z - lx * s2 + lz * c, rn() * 3, g); o.rotation.x = (rn() - 0.5) * 1.2; } };
     // a station house: white plaster walls that have weathered, a barrel roof that is a garden on one side and leaf-shaped solar cells on the sunny side,
     // an arched glazed door, round windows that glow, a ceramic plinth. (No comments inside the long lines below: a comment there cuts off the rest of the line.)
-    const house = (s, col, roof) => {
+    const house = function* (s, col, roof) {
       bx(5, 3, 4, col, s.x, 1.5, s.z, g); bx(5.2, 0.3, 4.2, 0x5a3d28, s.x, 0.15, s.z, g); shadeAt(g, s.x, s.z, cfg.depth.baseHouse[0], cfg.depth.baseHouse[1]);
       const vault = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 5.5, 18, 1, false, 0, Math.PI), mat(0x4aa84a)); vault.material.side = THREE.DoubleSide; vault.rotation.z = Math.PI / 2; vault.scale.set(0.6, 1, 1); vault.position.set(s.x, 3.0, s.z); g.add(vault);
       for (const sx of [-1, 1]) { const end = new THREE.Mesh(new THREE.CircleGeometry(2.25, 18, 0, Math.PI), mat(col)); end.scale.y = 0.6; end.position.set(s.x + sx * 2.75, 3.0, s.z); end.material.side = THREE.DoubleSide; end.rotation.y = sx * Math.PI / 2; g.add(end); }
@@ -191,7 +193,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       for (const wx of [-1.7, 1.7]) { const gl = new THREE.Mesh(new THREE.CircleGeometry(0.46, 20), BM.glow(0xffe9b0)); gl.position.set(s.x + wx, 1.8, s.z + 2.02); g.add(gl); const pane = new THREE.Mesh(new THREE.CircleGeometry(0.46, 20), BM.glass); pane.position.set(s.x + wx, 1.8, s.z + 2.04); g.add(pane); const fr = new THREE.Mesh(new THREE.TorusGeometry(0.47, 0.045, 6, 22), BM.verdigris); fr.position.set(s.x + wx, 1.8, s.z + 2.05); g.add(fr); g.add(stem([[s.x + wx - 0.46, 1.8, s.z + 2.06], [s.x + wx, 1.9, s.z + 2.06], [s.x + wx + 0.46, 1.8, s.z + 2.06]], 0.018, BM.verdigris)); halo(g, s.x + wx, 1.8, s.z + 2.2, 1.3, 0xffe0a0); }
       card(2.2, 2.6, vineM, s.x - 2.52, 1.5, s.z + 0.4, Math.PI / 2, g); card(1.8, 2.2, vineM, s.x + 2.52, 1.3, s.z - 0.6, Math.PI / 2, g); card(2.4, 2.4, vineM, s.x + 0.8, 1.4, s.z - 2.02, 0, g); // creepers on the side and back walls
       for (let k = 0; k < 7; k++) card(0.9, 0.6, tuftM, s.x - 2.6 + k * 0.85, 0.3, s.z + 2.12 + (k % 2) * 0.1, (k % 3) * 0.3, g); // grass at the foot of the wall
-      if (HIBASE) vaultHi(g, { x: s.x, z: s.z, w: 5, d: 4, h: 3, R: 2.25, k: 0.6, front: 1, door: [0, 1.1, 2.0], windows: [[-1.7, 1.8, 0.46], [1.7, 1.8, 0.46]] });
+      if (HIBASE) vaultHi(g, { x: s.x, z: s.z, w: 5, d: 4, h: 3, R: 2.25, k: 0.6, front: 1, door: [0, 1.1, 2.0], windows: [[-1.7, 1.8, 0.46], [1.7, 1.8, 0.46]] }); yield; vaultFlushOne();
       circle(s.x, s.z, 2.9); const l = label(s.name, '#fff'); l.position.set(s.x, 4.6, s.z); l.userData.kind = 'station'; g.add(l); };
     yield;
     // a room you walk into (src/rooms.js): the station house's look (plaster walls, a barrel vault that is a garden on one side and solar petals on the other, round windows that glow),
@@ -219,7 +221,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       for (let k = 0; k < 7; k++) { const x = -hw - 0.1 + k * (I.w + 0.2) / 6; if (Math.abs(x) > rw + 0.2) card(0.9, 0.6, tuftM, x, 0.3, hd + 0.12 + (k % 2) * 0.1, (k % 3) * 0.3, rg); }
       const L = (HIBASE ? Lt.high : Lt.low); if (L && L[1] > 0) { const lamp = houseLampsOn() ? addLamp(houseLamp(L[1], L[2], L[0])) : new THREE.PointLight(L[0], L[1], L[2]); lamp.position.set(0, h - 0.35, 0); rg.add(lamp); }
       yield;
-      if (HIBASE) { vaultHi(rg, { x: 0, z: 0, w: I.w, d: I.d, h, R, k: kk, front: 1, open: true, room: I.key, word: I.word, seed: I.seed, lampX: false, noBench: I.key !== 'workshop', flue: I.key === 'marla' ? [-0.6, -1.32] : undefined, door: [0, I.dw, I.dh], windows: I.windows, inside: dense ? (c) => (I.key === 'workshop' ? workshopHi : marlaHi)(c, I) : null });
+      if (HIBASE) { vaultHi(rg, { x: 0, z: 0, w: I.w, d: I.d, h, R, k: kk, front: 1, open: true, room: I.key, word: I.word, seed: I.seed, lampX: false, noBench: I.key !== 'workshop', flue: I.key === 'marla' ? [-0.6, -1.32] : undefined, door: [0, I.dw, I.dh], windows: I.windows, inside: dense ? (c) => (I.key === 'workshop' ? workshopHi : marlaHi)(c, I) : null }); yield; vaultFlushOne();
         if (rg.userData.densityB) Object.assign(g.userData.densityB || (g.userData.densityB = {}), rg.userData.densityB); }
       if (!dense) { const lin = new THREE.Mesh(new THREE.CylinderGeometry(R - 0.05, R - 0.05, I.w - 2 * tw, 16, 1, true, 0, Math.PI), mat(0x8a5a3a)); lin.material.side = THREE.DoubleSide; lin.rotation.z = Math.PI / 2; lin.scale.set(kk, 1, 1); lin.position.set(0, h, 0); rg.add(lin);
         // the vault's ends closed from inside at the walls (phones saw a sliver of the green roof's underside above the side walls)
@@ -230,9 +232,9 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       return rg; }
     // (R4 worker 6, title worst 271 ms: base build parts of 100-360 ms on the Mac, cardInfo title.slow; this part 1483 ms locally) a stop between the houses and
     // between the scenery pieces below (the same pieces, built in more, shorter parts: SPREAD)
-    house(st.storage, 0x4a8f8a, 0x2f4f9a);
+    yield* house(st.storage, 0x4a8f8a, 0x2f4f9a);
     yield;
-    if (WS) yield* vaultRoomIter(WS, 0xb08a4a, 'Workshop', '#fff', cfg.workshop.light); else house(st.workshop, 0xb08a4a, 0x2f4f9a);
+    if (WS) yield* vaultRoomIter(WS, 0xb08a4a, 'Workshop', '#fff', cfg.workshop.light); else yield* house(st.workshop, 0xb08a4a, 0x2f4f9a);
     yield;
     // Marla's house (owner Nov 16 23:35): her journal lies on the desk; a ribbon and a warm glow show while a line is unread (refreshJournal)
     if (MH) { const rg = yield* vaultRoomIter(MH, 0x9a8a6a, "Marla's place", '#ffd080', cfg.marlaHouse.light), dk = cfg.marlaHouse.desk, y = MH.floor + 0.785, jg = new THREE.Group(); jg.position.set(dk[0], y, dk[1]); jg.rotation.y = 0.18; rg.add(jg);
@@ -312,7 +314,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       // (R4, lead area 2: at most 2-3 real lights) the base's room lamps are shader lamps (src/houselamps.js; same light math), not THREE point lights
       const lamp = houseLampsOn() ? addLamp(houseLamp(1.6, 9)) : new THREE.PointLight(0xffe0a0, 1.6, 9); lamp.position.set(hx, 2.6, hz); g.add(lamp);
       const hl = label('Your home', '#ffe9a0'); hl.position.set(hx, 4.9, hz); hl.userData.kind = 'station'; g.add(hl);
-      if (HIBASE) vaultHi(g, { x: hx, z: hz, w: 6.8, d: 4.4, h: 3, R: 2.45, k: 0.55, front: 1, open: true, door: [0, 2.4, 2.4] });
+      if (HIBASE) vaultHi(g, { x: hx, z: hz, w: 6.8, d: 4.4, h: 3, R: 2.45, k: 0.55, front: 1, open: true, door: [0, 2.4, 2.4] }); yield; vaultFlushOne();
       homeCats = HOME.slots.map(() => ({ cg: null })); refreshHome(); }
     yield;
     // personnel (addRecruits)
@@ -334,7 +336,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     yield;
     // the hatchery corner and its flock (CONFIG.avians): the corner on both tiers (desktop at the density standard), the birds you own walking in the run
     const live0 = g.children.length; // the hatchery, flock, village cats and base life (they move and change) are marked below: never merged (mergeStill)
-    if (AV && save.avians) { hatch = buildHatchery(g, cfg, HIBASE); hatch.refresh(save.avians); flock = createFlock(g, cfg, HIBASE, save.avians, save.seed); const W0 = { x: 0, z: 0, ry: 0 }; for (const q of hatchSolids(cfg)) boxes.push({ I: W0, cx: q[0], cz: q[1], hx: q[2], hz: q[3] });
+    if (AV && save.avians) { hatch = buildHatchery(g, cfg, HIBASE); hatch.refresh(save.avians); yield; flock = createFlock(g, cfg, HIBASE, save.avians, save.seed); const W0 = { x: 0, z: 0, ry: 0 }; for (const q of hatchSolids(cfg)) boxes.push({ I: W0, cx: q[0], cz: q[1], hx: q[2], hz: q[3] });
       const hl = label('Hatchery', '#ffe9a0'); hl.position.set(AV.cx, 2.6, AV.cz); hl.userData.kind = 'station'; g.add(hl); }
     yield;
     // the ambient village cats (CONFIG.villageCats): scenery only, never near a lucky-cat hideout, not part of any cat code
@@ -351,6 +353,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // desktop scenery (src/scenehi.js): meadow, flowers, hedge, trees, shrubs, sunflowers, pond, far hills, sky and light; its parts keep their own shadow settings (userData.scenery)
     if (SCENERY) { let pondM = null; g.traverse((o) => { if (o.userData.pond) pondM = o; }); yield* baseSceneryIter({ g, scene, sky, sun, ground, plaza, pond: pondM, ST: STATIONS, CATS: CAT_SPOTS, HOME, trees: sceneTrees, rooms: KEEP, keepOut: LIFE_ANY ? LIFE_KO : null, hedge: HEDGE_R }); }
     yield;
+    while (vaultFlushOne()) yield; vaultLater.on = false;
     // static shadows: everything that stands still casts one; walkers, turbine blades, labels and glass do not
     const still = new Set(); for (const q of npcs) q.n.traverse((o) => still.add(o)); for (const q of towers) q.traverse((o) => still.add(o)); g.traverse((o) => { if (o.isSprite || o.isSkinnedMesh) still.add(o); });
     g.traverse((o) => { if (!o.isMesh || o === sky.mesh || o.isSkinnedMesh || o.userData.blob || o.userData.scenery) return; o.receiveShadow = !o.material.transparent; o.castShadow = !still.has(o) && !o.material.transparent && o !== ground && o !== plaza; });

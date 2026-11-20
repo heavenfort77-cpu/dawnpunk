@@ -71,16 +71,18 @@ function waterMat(cfg, hi) { const T = waterTex(), sw = cfg.quality && cfg.quali
 // ---------------------------------------------------------------- the build
 // the ground sunk along the stream (round 2, owner 21:46): the base's flat ground becomes a grid that is fine round the stream (its channel dug to CONFIG.baseWater.bed)
 // and coarse elsewhere (flat), with the same picture and tiling; src/scenehi.js shades it on desktop (userData.ownGround)
-function sinkGround(ground, cfg, hi) {
+// (Nov 20, the title's longest frame on the Mac: the dug grid's heights were one step) sinkGroundIter stops every 24 rows of the dug grid; sinkGround runs it at once
+function sinkGround(ground, cfg, hi) { const it = sinkGroundIter(ground, cfg, hi); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
+function* sinkGroundIter(ground, cfg, hi) {
   const L = streamLine(cfg, 0.5), top = cfg.baseWater.bed.top + 0.6, E = 60, st = hi ? 0.25 : 0.5, big = hi ? 1 : 6;
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const p of L) { x0 = Math.min(x0, p.x - top); x1 = Math.max(x1, p.x + top); z0 = Math.min(z0, p.z - top); z1 = Math.max(z1, p.z + top); }
   x0 = Math.max(-E + 1, Math.floor(x0)); x1 = Math.min(E - 1, Math.ceil(x1)); z0 = Math.max(-E + 1, Math.floor(z0)); z1 = Math.min(E - 1, Math.ceil(z1));
   const pos = [], uv = [], idx = [];
-  const grid = (ax, bx, az, bz, step, dig) => { const nx = Math.max(1, Math.round((bx - ax) / step)), nz = Math.max(1, Math.round((bz - az) / step)), n0 = pos.length / 3;
-    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) { const x = ax + (bx - ax) * i / nx, z = az + (bz - az) * j / nz; pos.push(x, dig ? groundY(cfg, x, z) : 0, z); uv.push((x + E) / (2 * E), (E - z) / (2 * E)); }
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const a = n0 + j * (nx + 1) + i, b = a + 1, c = a + nx + 1, d = c + 1; idx.push(a, c, b, b, c, d); } };
-  grid(x0, x1, z0, z1, st, true); grid(-E, E, -E, z0, big, false); grid(-E, E, z1, E, big, false); grid(-E, x0, z0, z1, big, false); grid(x1, E, z0, z1, big, false);
-  const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(idx); ge.computeVertexNormals();
+  function* grid(ax, bx, az, bz, step, dig) { const nx = Math.max(1, Math.round((bx - ax) / step)), nz = Math.max(1, Math.round((bz - az) / step)), n0 = pos.length / 3;
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) { const x = ax + (bx - ax) * i / nx, z = az + (bz - az) * j / nz; pos.push(x, dig ? groundY(cfg, x, z) : 0, z); uv.push((x + E) / (2 * E), (E - z) / (2 * E)); if (dig && i === nx && j % 24 === 23) yield; }
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const a = n0 + j * (nx + 1) + i, b = a + 1, c = a + nx + 1, d = c + 1; idx.push(a, c, b, b, c, d); } }
+  yield* grid(x0, x1, z0, z1, st, true); yield* grid(-E, E, -E, z0, big, false); yield* grid(-E, E, z1, E, big, false); yield* grid(-E, x0, z0, z1, big, false); yield* grid(x1, E, z0, z1, big, false);
+  yield; const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(idx); ge.computeVertexNormals();
   ground.geometry.dispose(); ground.geometry = ge; ground.rotation.set(0, 0, 0); ground.userData.ownGround = true; return idx.length / 3; }
 // g: the base group, ground: the base's ground mesh (sunk along the stream); returns { update(dt, t), group, cost, wheel }
 // (Nov 20, a title frame of 169 ms: the base water was one part of the base's sliced build) buildBaseWaterIter stops between its sections (the same pieces in the
@@ -88,7 +90,7 @@ function sinkGround(ground, cfg, hi) {
 export function buildBaseWater(g, cfg, hi, ground, kit) { const it = buildBaseWaterIter(g, cfg, hi, ground, kit); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
 export function* buildBaseWaterIter(g, cfg, hi, ground, kit) {
   const W = cfg.baseWater, D = hi ? W.high : W.low, r = rng(5150), G = shapes(), { acc, P } = lifePlacer(), M = lifeMats(hi), grp = new THREE.Group(); grp.userData.life = 'water'; g.add(grp);
-  const LG = leafGeo(), jit = (hx, k) => C(hx).offsetHSL((r() - 0.5) * 0.03, (r() - 0.5) * 0.1, (r() - 0.5) * (k || 0.08)), wy = W.y, BD = W.bed, hw = waterHalf(cfg), rh = waterHalf(cfg, true), L = streamLine(cfg, 1 / Math.max(0.5, D.seg)), F = wheelFrame(cfg), gTris = ground ? sinkGround(ground, cfg, hi) : 0;
+  const LG = leafGeo(), jit = (hx, k) => C(hx).offsetHSL((r() - 0.5) * 0.03, (r() - 0.5) * 0.1, (r() - 0.5) * (k || 0.08)), wy = W.y, BD = W.bed, hw = waterHalf(cfg), rh = waterHalf(cfg, true), L = streamLine(cfg, 1 / Math.max(0.5, D.seg)), F = wheelFrame(cfg), gTris = ground ? (yield* sinkGroundIter(ground, cfg, hi)) : 0;
   const raceLo = -F.len / 2 - 0.35, raceHi = F.len / 2 + 0.35, inRace = (x, z) => { const dx = x - F.x, dz = z - F.z, lz = dx * Math.sin(F.ry) + dz * Math.cos(F.ry), lx = dx * Math.cos(F.ry) - dz * Math.sin(F.ry); return lz > raceLo && lz < raceHi && Math.abs(lx) < 1.4; };
   const B = bridgeFrames(cfg), nearBridge = (x, z, m) => B.some((b) => Math.hypot(x - b.x, z - b.z) < b.wd / 2 + m);
   // ---- the water surface (stream and flumes) in one geometry: v runs downstream in metres / 2, u across
