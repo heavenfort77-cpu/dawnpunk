@@ -13,7 +13,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { GRITTY, GRIT } from './look.js';
 import { MODELS, liteModel } from './modeldata.js';
 import { QUALITY } from './quality.js';
-import { peopleHiMat, peopleHiLight, peopleHiCornea } from './peoplehi.js';
+import { peopleHiMat, peopleHiLight, peopleHiLamp, peopleHiCornea } from './peoplehi.js';
 import { cullSkinned, lodPrepare } from './lod.js';
 
 const XA = new THREE.Vector3(1, 0, 0), ZA = new THREE.Vector3(0, 0, 1);
@@ -93,7 +93,7 @@ export function createPerson(cfg, key) {
     sc.traverse((q) => { if (q.isMesh) cullSkinned(q); }); if (QUALITY === 'high') lodPrepare(sc, 'people', true);
     { root.updateWorldMatrix(true, true); const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), v = new THREE.Vector3(); for (const [i, k] of [[0, 'foot_l'], [1, 'foot_r']]) if (bones[k]) { bones[k].getWorldPosition(v).applyMatrix4(inv); footAt[i] = [v.x, v.z]; footY[i] = v.y; } }
     { const qS = sc.getWorldQuaternion(new THREE.Quaternion()); for (const [i, k] of [[0, 'thigh_l'], [1, 'thigh_r']]) if (bones[k]) hinge[i].copy(XA).applyQuaternion(qS).applyQuaternion(bones[k].getWorldQuaternion(new THREE.Quaternion()).invert()); }
-    if (useScan && isHi) { keyBid = peopleHiLight(root, P.hiMat.key, cfg.marlaHi && cfg.marlaHi.keyBias); if (hiCopy) peopleHiCornea(sc, HM); } ready = true; const w0 = wait; wait = []; for (const f of w0) f();
+    if (useScan && isHi) { keyBid = cfg.lag && cfg.lag.shaderLamps ? peopleHiLamp(root, P.hiMat.key) : peopleHiLight(root, P.hiMat.key, cfg.marlaHi && cfg.marlaHi.keyBias); if (hiCopy) peopleHiCornea(sc, HM); } ready = true; const w0 = wait; wait = []; for (const f of w0) f();
   }, (e) => console.error(key + ' model failed to load', e));
   // LAG FIX Nov 19 (owner 11:40): the light model is a file beside the page (src/modeldata.js; inside index_single.html as a data: address)
   const packed = () => liteModel(key).then((b) => go(b, false)).catch((e) => console.error(key + ' light model failed to load', e));

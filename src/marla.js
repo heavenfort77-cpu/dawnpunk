@@ -9,6 +9,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { MODELS, liteModel } from './modeldata.js';
 import { QUALITY } from './quality.js';
 import { hiMat, hiLights } from './marlahi.js';
+import { lamps, lampRoot } from './shaderlamps.js';
 import { createStepper } from './people.js';
 import { cullSkinned, lodPrepare } from './lod.js';
 
@@ -49,7 +50,8 @@ export function createMarla(cfg, key = 'marla') {
     scn = sc; root.add(sc);
     // LAG FIX Nov 19: culled again with a grown sphere (every tier), and on the desktop builds a reduced copy of the big meshes past CONFIG.lag.lod.kinds.people.near metres (src/lod.js)
     sc.traverse((q) => { if (q.isMesh) cullSkinned(q); }); if (QUALITY === 'high') lodPrepare(sc, 'people', true);
-    if (isHi) hiLights(root, cfg.marlaHi); hiModel = !!isHi; ready = true; if (onReady) onReady();
+    // (OWNER DECISION Nov 20 14:15, CONFIG.lag.shaderLamps) no real key spot and rim lamp on her: the same two lamps worked out in her materials (src/shaderlamps.js)
+    if (isHi) { const SL = cfg.lag && cfg.lag.shaderLamps, H = cfg.marlaHi; hiLights(root, H, SL); if (SL) lampRoot(root, lamps({ key: H.key, cone: H.keyShadow[1], penumbra: 0.6, keyAt: H.keyAt, headY: H.headY, rim: H.rim, rimAt: H.rimAt, root })); } hiModel = !!isHi; ready = true; if (onReady) onReady();
   }, (e) => console.error(key + ' model failed to load', e));
   // a page opened straight from a folder (file://) cannot fetch a model file beside it: play index_single.html from a folder (it carries every model inside)
   if (HI && (HI.startsWith('data:') || location.protocol !== 'file:')) fetch(HI).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((b) => go(b, true)).catch(() => lite()); else lite();

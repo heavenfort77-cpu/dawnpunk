@@ -18,7 +18,9 @@ export const BOSS_CONFIG = {
   // About 22-28 m from the house front (advisor). It never walks.
   place: { out: 11, side: 21 },
   // size: the model is built at quarter scale; scale = the game's size multiplier (about 8.8 m seated with ears)
-  scale: 4,
+  // OWNER DECISION Nov 20 14:04: the same boss at the size of a Gloom (scale 1: about 2.2 m; it was 4, about 8.8 m). Its points below (pts), the rise depth and
+  // the palm's halo are a quarter of what they were, to stay on the model; the hit sizes (weak), the slam's reach and ring, and where it stands are unchanged
+  scale: 1,
   // the reveal at night start: it rises out of the street from 'at' seconds for 'dur' seconds (a scripted moment; it cannot act until risen); Marla shouts as it starts
   rise: { at: 1.0, dur: 5.0 },
   // summons take over from the normal ring-5 waves: normal spawns before keepFrac of the night stay (the first wave); of the later ones only waveKeep still come.
@@ -53,7 +55,7 @@ export const BOSS_CONFIG = {
   weak: { pawR: 0.45, coreR: 0.6, pawHits: 6, coreHits: 12, charged: 2, range: 45 },
   // weak point positions in the boss's own frame [x right, y up, z (negative = toward the house)], m: the raised beckoning palm, the chest coin;
   // slamUp: height of the slam paw over its target while it rises (from, to); slamCore: height of the stuck slam paw's core over the ground
-  pts: { beckon: [-2.2, 5.5, -2.4], chest: [0, 3.45, -1.2], slamUp: [3.0, 5.5], slamCore: 0.8 },
+  pts: { beckon: [-0.55, 1.375, -0.6], chest: [0, 0.8625, -0.3], slamUp: [3.0, 5.5], slamCore: 0.8 },
   // DAWN: it powers down ("POWER SAVER") and collapses; the end screen waits hold seconds. wreck: the collapse after the core is broken.
   // wreck.endNight (coordinator 22:40, owner: 'rather it be the hardest night'): false = the night goes on to dawn after the collapse (the remaining waves and every Gloom still
   // alive; the usual early dawn once all are gone); throe = Gloom it calls in one last time as it falls
@@ -80,7 +82,7 @@ export const BOSS_CONFIG = {
   view: {
     glb: true,
     // the rise out of the street: how deep it starts (m), the dust it throws, how far the camera shakes meanwhile (deg)
-    riseDepth: 9.5, riseShake: 0.6,
+    riseDepth: 2.4, riseShake: 0.6,
     // colours: teal = the summon glow (a colour nothing else in the game uses); open = a weak point that can be hit (pulsing white-amber); ring = the slam warning [amber, red];
     // eye = the live lamp eye; lamp = the small lamps; bell = the collar bell; coin = the coin-core
     // standby = the small red standby lights on its body
@@ -95,7 +97,7 @@ export const BOSS_CONFIG = {
     // the collapse: sag (s) before it falls apart, how far the body tilts (radians), how deep it sinks (m)
     sag: 0.9, tilt: 0.45, sink: 1.2,
     // the halo round the summoning palm (m) and the hit sparks (count, life s)
-    halo: 4.5, sparks: 14, sparkLife: 0.5,
+    halo: 1.2, sparks: 14, sparkLife: 0.5,
   },
   // ---- FALLING PIECES. Desktop: cannon-es (src/physics.js, loaded only on the desktop tier); phones: scripted, cheaper pieces with no collisions.
   // on: master switch; max: most pieces at once; life: seconds a piece is simulated, then it is frozen; fade: seconds after that before it sinks away;
