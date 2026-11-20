@@ -1272,7 +1272,11 @@ export const CONFIG = {
     filmCard: true,
     // loadFilm (owner Nov 20 22:40): a first-time player's opening film is prepared on the loading page as its last stage ('Opening film'), so the begin button
     // starts the film at once; ms: the most the stage may take before the button comes anyway (the rest then shows the loading card)
-    loadFilm: { on: true, ms: 150000 },
+    // OFF since playOrWatch (below): the film is prepared only for a player who asks to watch it
+    loadFilm: { on: false, ms: 150000 },
+    // playOrWatch (developer panel Nov 20, owner 23:34): a first-time player's loading page ends with 'Play' (straight to the base) and 'Watch the opening
+    // film' (the film, prepared under the loading card's bar); false: the begin button gives a first-time player the film, as before
+    playOrWatch: true,
     // filmCompileCap (R3): the film's black waits at most this many s for its shaders to finish building in the background before its pieces are drawn (it was the
     // card's maxWait, 12 s: on the Mac test GPU the build took longer, and the first draw then waited for the rest of it in one held frame of 19-22 s)
     filmCompileCap: 90,
@@ -1331,7 +1335,7 @@ export const CONFIG = {
     unifyMats: true,
     // cardTurns (Nov 20): a card kind set to false skips the four quarter turns (src/main.js sceneCard)
     cardTurns: { home: false },
-    card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home', film: 'Loading the street' }, settle: { n: 3, ms: 25, cap: 1.5 } },
+    card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home', film: 'Opening film' }, settle: { n: 3, ms: 25, cap: 1.5 } },
     // tuftChunk: the street's grass tufts are split into square chunks this many metres wide (one instanced draw each), so chunks out of view or past the night's
     // scenery distance are not drawn (they were one draw over the whole street, never culled); same tufts, same places
     tuftChunk: 12,
