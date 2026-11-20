@@ -1131,6 +1131,9 @@ export const CONFIG = {
   lag: {
     // sharp (high-tier) pictures kept as flipped ImageBitmaps made off the main thread, not <img> (src/quality.js askHi): faster to send to the GPU under the cards
     hiBitmap: true,
+    // titleDraw: on the title, after the base's shaders are built, its pieces are drawn on screen into a 2 px corner, `pieces` at a time, each part waiting for
+    // the GPU (at most cap ms), so the home card finds its draw states made (src/main.js baseSlice0 'draw')
+    titleDraw: { on: true, pieces: 6, cap: 4000 },
     // cull: skinned characters are culled again (src/lod.js cullSkinned); their bounding sphere, taken in the bind pose, is grown: radius times grow, plus pad metres
     cull: { grow: 1.35, pad: 0.35 },
     // glSlowAfter: ?proglog=1 pages time every WebGL call while a card or the film's black is up and this many s after (the slowest call of a long frame is logged)

@@ -1455,7 +1455,17 @@ function baseSlice0() { const S = CONFIG.lag.slice; if (!TB.phase || TB.phase ==
   // SPREAD); the off-screen draws are gone (REMOVED: they made the GPU's draw states for a 64 px target, not for the screen, so the home card draws on screen anyway)
   if (TB.phase === 'compile') { const t1 = performance.now(); if (!renderer.compileAsync) { TB.phase = 'done'; return; } const inS = !!g.parent; if (!inS) scene.add(g);
     try { while (TB.cq.length && performance.now() - t1 < S.ms) { const c = TB.cq.shift(); if (c.parent === g) renderer.compileAsync(c, cam, scene).catch(() => {}); } } finally { if (!inS) scene.remove(g); }
-    if (!TB.cq.length) { TB.phase = 'done'; TB.ms = Math.round(performance.now() - TB.t0); pauseDrawn = false; } } }
+    if (!TB.cq.length) { TB.phase = CONFIG.lag.titleDraw && CONFIG.lag.titleDraw.on ? 'draw' : 'done'; TB.ms = Math.round(performance.now() - TB.t0); pauseDrawn = false; } return; }
+  // (Nov 20, home card 7-12 s on the Mac, most of it the GPU making each draw state at its first draw: PROFILE=3 run 44722570694) CONFIG.lag.titleDraw: the base's
+  // pieces are then drawn ON SCREEN a few at a time (the card's own drawPieces, shadow maps included) into a 2 px corner, each part waiting for the GPU to finish
+  // the one before (gpuDone), so the draw states the home card needs exist before Enter; the card still makes its own passes (whatever is left is made there)
+  if (TB.phase === 'draw') { const D = CONFIG.lag.titleDraw; if (TB.wait) return; const inS = !!g.parent; if (!inS) scene.add(g);
+    try { if (!TB.dl) { TB.dl = []; TB.di = 0; TB.dn = 0; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) TB.dl.push(o); }); }
+      const e = Math.min(TB.dl.length, TB.di + D.pieces), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
+      try { renderer.shadowMap.needsUpdate = true; drawPieces(TB.dl, TB.di, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } TB.di = e; TB.dn++; }
+    finally { if (!inS) scene.remove(g); }
+    TB.wait = true; gpuDone(D.cap).then(() => { TB.wait = false; });
+    if (TB.di >= TB.dl.length) { TB.phase = 'done'; TB.dl = null; TB.drawMs = Math.round(performance.now() - TB.t0) - TB.ms; renderer.shadowMap.needsUpdate = true; pauseDrawn = false; } } }
 const SPLASH = (() => {
   const S = CONFIG.splash, el = $('spl'), q = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })(), quick = q.has('quality') && q.get('splash') !== '1';
   const t0 = performance.now(), st = { scripts: [1, 1], assets: [0, 0], fonts: [0, 1], music: [0, 0], warm: [0, CONFIG.lag.logoWarm && CONFIG.lag.logoWarm.on ? 2 : 1], base: [CONFIG.lag.loadBase && CONFIG.lag.loadBase.on ? 0 : 1, 1] }, began = {}, label = { scripts: 'Scripts', assets: 'Models and textures', fonts: 'Handwriting fonts', music: 'Music', warm: 'First scene (shaders)', base: 'Home base' };
@@ -2174,7 +2184,7 @@ window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, 
 window.__game.impactPrerender = () => IMP.prerender();
 // the last card's work time (ms) and any error it swallowed (tools/perfcheck.cjs prints them)
 window.__game.nightBg = () => ({ on: NBG.on, left: NBG.q.length, built: NBG.built, slices: NBG.slices, ms: Math.round(NBG.ms), khr: KHR_PAR });
-window.__game.cardInfo = () => ({ twoPass: LCARD.twoPass || null, proof: LCARD.proofs[LCARD.proofs.length - 1] || null, proofs: LCARD.proofs, title: { phase: TB.phase, calls: TB.calls || 0, ms: TB.ms || 0, worstPart: bview.bgWorst, postMs: TB.postMs || null, slow: TB.slow || null }, ms: LCARD.ms, endT: LCARD.endT || 0, settle: LCARD.settle || null, steps: LCARD.steps || null, buildMs: LCARD.buildMs || null, err: window.__cardErr || '' });
+window.__game.cardInfo = () => ({ twoPass: LCARD.twoPass || null, proof: LCARD.proofs[LCARD.proofs.length - 1] || null, proofs: LCARD.proofs, title: { phase: TB.phase, calls: TB.calls || 0, ms: TB.ms || 0, drawMs: TB.drawMs || 0, drawParts: TB.dn || 0, worstPart: bview.bgWorst, postMs: TB.postMs || null, slow: TB.slow || null }, ms: LCARD.ms, endT: LCARD.endT || 0, settle: LCARD.settle || null, steps: LCARD.steps || null, buildMs: LCARD.buildMs || null, err: window.__cardErr || '' });
 // the shader programs built so far (tools/perfcheck.cjs: which ones are first built after the night card); name and a short key each
 // (owner 12:35) which pieces use a given program id (perfcheck names the program built during a fight)
 window.__game.programUsers = (ids) => { const want = new Set(ids), out = {}; const look = (o) => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { const pr = renderer.properties.get(m); const prog = pr && pr.currentProgram; if (prog && want.has(prog.id)) { const l = out[prog.id] || (out[prog.id] = []); if (l.length < 4) { let path = [], q = o; while (q && q !== scene && path.length < 4) { path.push(q.name || q.type); q = q.parent; } l.push(m.type + ' ' + (m.name || '') + ' col ' + (m.color ? m.color.getHexString() : '-') + (m.map ? ' map' : '') + ' on ' + path.join('<')); } } } };
