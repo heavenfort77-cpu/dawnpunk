@@ -79,14 +79,16 @@ function nightHook(sh) { const N = S().night; sh.uniforms.uNight = NIGHT; sh.fra
 // ---------------------------------------------------------------- baking many small parts into a few meshes (one per cell, so far cells are culled)
 // join the plain meshes hanging straight under g (no instancing, no children, the same attributes) per material, shadow flags and cell of `cell` m; the joined
 // mesh keeps the first piece's draw hook (the night tint) and flags
-function joinCells(g, cell) { const groups = new Map(), v = new THREE.Vector3(); g.updateMatrixWorld(true);
+function joinCells(g, cell) { const it = joinCellsIter(g, cell); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
+// the same, stopping (yield) after each joined mesh, for the base's sliced build on the title
+function* joinCellsIter(g, cell) { const groups = new Map(), v = new THREE.Vector3(); g.updateMatrixWorld(true);
   for (const o of [...g.children]) { if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || o.children.length || Array.isArray(o.material) || !o.geometry || o.morphTargetInfluences) continue;
     const ge = o.geometry; if (!ge.boundingSphere) ge.computeBoundingSphere(); v.copy(ge.boundingSphere.center).applyMatrix4(o.matrixWorld);
     const k = o.material.uuid + '|' + o.castShadow + o.receiveShadow + '|' + Object.keys(ge.attributes).sort().join(',') + '|' + !!ge.index + '|' + Math.floor(v.x / cell) + ',' + Math.floor(v.z / cell);
     let l = groups.get(k); if (!l) groups.set(k, l = []); l.push(o); }
   let n = 0; for (const l of groups.values()) { if (l.length < 2) continue; const gs = l.map((o) => { const c = o.geometry.clone(); o.updateMatrix(); c.applyMatrix4(o.matrix); return c; }); const m = mergeGeometries(gs, false); for (const c of gs) c.dispose(); if (!m) continue;
     m.computeBoundingSphere(); const a = l[0], j = new THREE.Mesh(m, a.material); j.castShadow = a.castShadow; j.receiveShadow = a.receiveShadow; j.onBeforeRender = a.onBeforeRender; j.renderOrder = a.renderOrder; Object.assign(j.userData, a.userData);
-    for (const o of l) { g.remove(o); o.geometry.dispose(); } g.add(j); n += l.length - 1; }
+    for (const o of l) { g.remove(o); o.geometry.dispose(); } g.add(j); n += l.length - 1; yield; }
   return n; }
 function Bake(cell) {
   const B = new Map(), v = new THREE.Vector3(), nm = new THREE.Matrix3();
@@ -224,13 +226,13 @@ function clumpGeos() {
   return (GEOS = { near, far });
 }
 // a meadow over a rectangle: o = { x0, z0, x1, z1, seed, density(x, z) -> clumps per m2, height(x, z) -> metres, flower(x, z) -> share of clumps in flower }
-// (Nov 20, the title's frames of 200-260 ms: the base's whole lawn was one part of its sliced build) meadowIter stops after each column of chunks; the
+// (Nov 20, the title's frames of 200-260 ms: the base's whole lawn was one part of its sliced build) meadowIter stops after each chunk; the
 // grass is the same (the same random numbers in the same order); meadow() runs it to the end at once
 function meadow(parent, o) { const it = meadowIter(parent, o); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
 function* meadowIter(parent, o) {
   const G = S().grass, geos = clumpGeos(), mat = o.mat, cell = o.chunk || G.chunk, r = rng(o.seed), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color(), cool = new THREE.Color(G.patchCool), warm = new THREE.Color(G.patchWarm);
   let n = 0, tris = 0, draws = 0;
-  for (let cx = o.x0; cx < o.x1; cx += cell) { if (cx > o.x0) yield; for (let cz = o.z0; cz < o.z1; cz += cell) {
+  let first = true; for (let cx = o.x0; cx < o.x1; cx += cell) { for (let cz = o.z0; cz < o.z1; cz += cell) { if (!first) yield; first = false;
     const mx = cx + cell / 2, mz = cz + cell / 2, lists = [[], [], [], []], cols = [[], [], [], []], maxD = o.maxD || G.density;
     for (let k = 0, m = Math.round(cell * cell * maxD); k < m; k++) { const x = cx + r() * cell, z = cz + r() * cell, dn = o.density(x, z); if (dn <= 0 || r() * maxD > dn) continue;
       const fz = o.flower ? o.flower(x, z) : 0, patch = fbm(x * 0.07 + 11, z * 0.07 - 4); let kind = 0;
@@ -363,6 +365,8 @@ export function* baseSceneryIter(o) {
   stat.far = horizon(grp, { seed: B.seed + 9, cx: 0, cz: 0, rx: B.farR, rz: B.farR, depth: B.farDepth, height: B.farH, haze: C.sky.horizon, hazeK: 1.1, fog: true, trees: B.farTrees, roofs: B.roofs, roofAt: B.roofAt, masts: B.masts, mastAt: B.mastAt });
   grp.traverse((q) => { q.userData.scenery = true; });
   grp.userData.stat = stat; window.__scenery = { where: 'base', stat, grp };
+  // (Nov 20) the base's still scenery meshes joined as the street's are (CONFIG.lag.sceneryJoin)
+  if (CONFIG.lag && CONFIG.lag.sceneryJoin) { yield; yield* joinCellsIter(grp, CONFIG.lag.sceneryJoin); }
   return grp;
 }
 // sunflowers as one instanced geometry (stalk, two leaves, ring of petals, dark seed disc) facing the sun
