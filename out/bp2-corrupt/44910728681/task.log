@@ -1,0 +1,10 @@
+$ TESTS=corrupt node tools/bugprobe.cjs   (limit 60 min)
+STEP 1s enterBase
+STEP 15s toNight
+STEP 35s fight 10
+STEP 260s endNight true
+STEP 262s again
+TIME corrupt: 272 s of cap 700 s
+PASS corrupt
+BUGPROBE 1 PASS, 0 FAIL
+exit code 0
