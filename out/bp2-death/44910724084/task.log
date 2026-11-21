@@ -1,0 +1,17 @@
+$ TESTS=death node tools/bugprobe.cjs   (limit 60 min)
+STEP 1s enterBase
+STEP 14s toNight
+STEP 32s fight 8
+STEP 60s endNight false
+STEP 63s again
+STEP 71s toNight
+STEP 88s fight 6
+STEP 113s again
+STEP 120s toNight
+STEP 137s fight 5
+STEP 154s endNight true
+STEP 156s again
+TIME death: 164 s of cap 900 s
+PASS death
+BUGPROBE 1 PASS, 0 FAIL
+exit code 0
