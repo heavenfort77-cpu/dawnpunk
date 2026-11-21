@@ -1,0 +1,19 @@
+$ TESTS=loop node tools/bugprobe.cjs   (limit 90 min)
+STEP 1s enterBase
+STEP 17s toNight
+STEP 42s fight 25
+STEP 160s endNight true
+STEP 163s again
+STEP 199s toNight
+STEP 220s fight 25
+STEP 334s endNight true
+STEP 337s again
+STEP 371s toNight
+STEP 393s fight 25
+STEP 493s endNight true
+STEP 496s again
+INFO loop listeners after cycles 2 and 3: 79 kinds, intervals 2->2
+TIME loop: 531 s of cap 1500 s
+PASS loop
+BUGPROBE 1 PASS, 0 FAIL
+exit code 0
