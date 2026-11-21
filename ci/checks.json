@@ -507,6 +507,22 @@
    "quality": "low",
    "timeout": 35,
    "note": "bug probe: localStorage blocked, full, and damaged: the loop still plays"
+  },
+  {
+   "name": "skipcheck",
+   "script": "tools/skipcheck.cjs",
+   "args": [
+    "{dist}",
+    "low"
+   ],
+   "env": {
+    "SKIPS": "4,33",
+    "AFTER": "200"
+   },
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 40,
+   "note": "owner Nov 22: skipping the opening must not leave the film warm-up drawing over the base (bright flash); film skipped at 4 and 33 s"
   }
  ]
 }

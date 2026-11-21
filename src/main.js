@@ -605,6 +605,10 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
   // (R4 item D, card 28: "MeshStandardMaterial map transparent [edge.png]" and 5 more built in shown film frames) the simple surfaces are turned into their
   // physically based form first (fx.upgradeNow, as the cards do), so the shaders built here are the ones drawn; fx's own walk upgraded them later, in a shown frame
   { const tu = performance.now(); if (fx && fx.upgradeNow) fx.upgradeNow(); FILM.upgradeMs = Math.round(performance.now() - tu); FILM.compileSyncMax = 0; FILM.compileSyncSum = 0; FILM.drawSyncMax = 0; FILM.gpuWaitMax = 0; FILM.parts = 0; }
+  // (owner Nov 22: a bright flash in the base after skipping the opening) the parts below draw pieces straight to the screen under the film's black; a skip
+  // takes the black away at once, and the parts went on, one clear-and-draw of a few pieces a frame over the base, for 1-2 s on a fast machine (40 s on a slow
+  // one). gone(): this film was skipped or ended, so no part is drawn after that
+  const gone = () => intro !== I;
   (async () => { try { const tc = performance.now(); let built = !renderer.compileAsync;
     // (Nov 20, PROFILE 44737704647: under the black one frame of 1.6 s built 64 shaders' sources at once, and the next frame came 7.9 s later while the GPU
     // linked them all) CONFIG.lag.filmCompileParts: the street's shaders are built one top-level piece at a time, each waited for before the next, so frames
@@ -614,7 +618,7 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
     // material, skinned, instanced) is built and waited for before the next, so the GPU has one shader to build between two frames
     if (renderer.compileAsync && CONFIG.lag.filmCompileParts) { const seen = new Set(), roots = []; scene.traverse((o) => { if (!(o.isMesh || o.isSprite || o.isPoints || o.isLine) || o === sky.mesh || !o.material) return; for (const m of Array.isArray(o.material) ? o.material : [o.material]) { const k = m.uuid + (o.isSkinnedMesh ? 's' : '') + (o.isInstancedMesh ? 'i' : '') + (o.castShadow ? 'c' : '') + (o.receiveShadow ? 'r' : ''); if (!seen.has(k)) { seen.add(k); if (roots[roots.length - 1] !== o) roots.push(o); } } });
       const capAt = tc + CONFIG.lag.filmCompileCap * 1000; built = true; FILM.compileParts = roots.length;
-      let rk = 0; for (const c of roots) { FILM.step = 'compile ' + (++rk) + '/' + roots.length; filmCardFill(0.55 + 0.2 * rk / roots.length); if (performance.now() > capAt) { built = false; break; } if (!c.parent) continue; const t1 = performance.now(), n0 = nProg(), pr = renderer.compileAsync(c, cam, scene).catch(() => {}), d1 = performance.now() - t1; FILM.compileSyncMax = Math.max(FILM.compileSyncMax, Math.round(d1)); FILM.compileSyncSum += Math.round(d1);
+      let rk = 0; for (const c of roots) { if (gone()) break; FILM.step = 'compile ' + (++rk) + '/' + roots.length; filmCardFill(0.55 + 0.2 * rk / roots.length); if (performance.now() > capAt) { built = false; break; } if (!c.parent) continue; const t1 = performance.now(), n0 = nProg(), pr = renderer.compileAsync(c, cam, scene).catch(() => {}), d1 = performance.now() - t1; FILM.compileSyncMax = Math.max(FILM.compileSyncMax, Math.round(d1)); FILM.compileSyncSum += Math.round(d1);
         // a piece whose shader exists already is not waited for (the wait is at least one timer tick)
         if (nProg() !== n0) { const tw = performance.now(); await Promise.race([pr, nap(Math.max(0, capAt - performance.now()))]); FILM.compileWaitMax = Math.max(FILM.compileWaitMax || 0, Math.round(performance.now() - tw)); FILM.compileNew = (FILM.compileNew || 0) + 1; await raf(); } } }
     else if (renderer.compileAsync) await Promise.race([renderer.compileAsync(scene, cam).then(() => { built = true; }), nap(CONFIG.lag.filmCompileCap * 1000)]);
@@ -630,12 +634,12 @@ function filmWarm(I) { if (BOTRUN() || !CONFIG.lag.filmWarm) return; I.hold = tr
     // (R4 item D, card 28: diagnose 7 'base 109112': 5 depth programs (render.jpg, canopy.png, glaze.jpg, the player's suit) built in the first base frames after the
     // film) the parts also draw the shadow maps (as the cards' parts do) and the body shadow is warmed, so the depth programs are built under the black
     const G = CONFIG.lag.gpuPart, gp = G && G.on; if (pshadow.warm) pshadow.warm();
-    FILM.step = 'compiled'; for (let i = 0; i < list.length;) { FILM.step = 'draw ' + i + '/' + list.length; filmCardFill(0.75 + 0.25 * i / Math.max(1, list.length)); const t0 = performance.now(); while (i < list.length && performance.now() - t0 < S.film) { const e = Math.min(list.length, i + (S.filmDraws || S.draws)); renderer.shadowMap.needsUpdate = true; FILM.warm += drawPieces(list, i, e, null); i = e; if (S.filmDraws) break; }
+    FILM.step = 'compiled'; for (let i = 0; i < list.length && !gone();) { FILM.step = 'draw ' + i + '/' + list.length; filmCardFill(0.75 + 0.25 * i / Math.max(1, list.length)); const t0 = performance.now(); while (i < list.length && !gone() && performance.now() - t0 < S.film) { const e = Math.min(list.length, i + (S.filmDraws || S.draws)); renderer.shadowMap.needsUpdate = true; FILM.warm += drawPieces(list, i, e, null); i = e; if (S.filmDraws) break; }
       FILM.parts = (FILM.parts || 0) + 1; FILM.drawSyncMax = Math.max(FILM.drawSyncMax, Math.round(performance.now() - t0)); if (gp) { const w = await gpuDone(G.cap); FILM.gpuWaitMax = Math.max(FILM.gpuWaitMax, Math.round(w)); } else await raf(); }
     if (fbg && fbg.parent === scene) scene.remove(fbg);
     // (R4 item D, card 28: diagnose 7 'intro 102695: 6 programs', the hands' own materials: MeshStandardMaterial #b08a3c, #8a8468, the cells map 64x64, the water
     // #4aa8e8, src/hands.js) the film shows the hands in its turning part (CONFIG.opening.turning.hands) and their scene was never drawn under the black: it is now
-    FILM.step = 'hands'; if (hands.warm) hands.warm(renderer, cam.aspect);
+    FILM.step = 'hands'; if (hands.warm && !gone()) hands.warm(renderer, cam.aspect);
     if (gp) await gpuDone(G.cap); else { try { renderer.getContext().finish(); } catch (e) { /* no context */ } } } catch (e) { /* the film runs as before */ } finally { FILM.step = ''; filmCardOff(); FILM.prepT = 0; FILM.frac = 1; if (FILM.pre) FILM.preHold = true; if (FILM.fbg && FILM.fbg.parent === scene) scene.remove(FILM.fbg); FILM.fbg = null; if (FILM.preHold) { FILM.preHold = false; FILM.preDone = true; I.hold = true; } else I.hold = false; } })(); }
 // (Nov 20, PROFILE 44648754836: 6 MeshDepthMaterial programs and 17 new shadow-target draw states in the first play frame after the first ride card) three r187
 // keys every program, the shadow passes' depth programs too, on the light counts of the render BEFORE it (the shadow maps are drawn before that render's own lights
@@ -780,11 +784,11 @@ function opTurning(I, t, dt) {
   if (!I.scr || I.scr[0] !== m.o) I.scr = [m.o, ...I.walkers.map((q) => q.o)]; opScreens(I.scr);
 }
 // leave the street: the base at dawn is built while the screen is black
-function introToBase() {
+function introToBase(noWarm) {
   const I = intro; if (!CONFIG.opening.on) { introToBaseOld(); return; } I.part = 'base'; if (I.grp) { scene.remove(I.grp); if (HL_ON) unlistHouseLamps(I.grp); drop(I.grp); I.grp = null; } I.walkers = [];
   dropWorld(); run = null; GK.nightGlow(0); glights.forEach((l) => { l.intensity = 0; l.visible = false; }); hemi.color.setHex(CONFIG.baseLight.sky); hemi.groundColor.setHex(CONFIG.baseLight.ground); sky.mesh.visible = false;
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
-  bview.build(save); applyRelief(bview.group); I.hide = []; I.stands = []; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 0; if (o.isSprite && o.userData.kind) I.hide.push(o); if (o.isDirectionalLight && !I.sun) I.sun = o; if (opStandIn(o)) I.stands.push(o.parent); }); renderer.shadowMap.needsUpdate = true; shadowT = 1.5; filmWarm(I);
+  bview.build(save); applyRelief(bview.group); I.hide = []; I.stands = []; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 0; if (o.isSprite && o.userData.kind) I.hide.push(o); if (o.isDirectionalLight && !I.sun) I.sun = o; if (opStandIn(o)) I.stands.push(o.parent); }); renderer.shadowMap.needsUpdate = true; shadowT = 1.5; if (!noWarm) filmWarm(I);
 }
 // a person's plain stand-in figure (src/baseview.js: a capsule body and a ball head in their own group, until the person's model has loaded)
 function opStandIn(o) { const q = o.isMesh && o.geometry && o.geometry.type === 'CylinderGeometry' && o.geometry.parameters; return !!q && ((q.radiusTop === 0.3 && q.radiusBottom === 0.38 && q.height === 1.2) || (q.radiusTop === 0.2 && q.radiusBottom === 0.26 && q.height === 1.3)) && !!o.parent; }
@@ -810,7 +814,7 @@ function opWake(I, w) {
   opLids(lid); sty(cvs, 'filter', QUALITY === 'high' && w < K.blur[1] ? 'blur(' + (K.blur[0] * (1 - w / K.blur[1])).toFixed(2) + 'px)' : '');
 }
 function finishIntro() {
-  if (!intro || intro.prep) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } const skipTown = intro.part === 'town'; if (skipTown) introToBase(); const I0 = intro; intro = null; opLids(0); cvs.style.filter = '';
+  if (!intro || intro.prep) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } const skipTown = intro.part === 'town', warming = !!intro.hold; if (skipTown) introToBase(true); const I0 = intro; intro = null; opLids(0); cvs.style.filter = '';
   for (const o of (I0.hide || []).concat(I0.stands || [])) o.visible = true; if (I0.fov0 && cam.fov !== I0.fov0) { cam.fov = I0.fov0; cam.updateProjectionMatrix(); }
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); hemi.intensity = CONFIG.baseLight.power; hemi.color.setHex(CONFIG.baseLight.sky); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   $('cine').style.display = 'none'; state = 'base'; ui = null; bp = { x: -0.6, z: -9.3 }; baseCamY = 1.6; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 1; }); const sp = B.scoutPos(save); yaw = Math.atan2(-(sp.x - bp.x), -(sp.z - bp.z)); pitch = 0; camY = 1.6; cam.rotation.set(0, yaw, 0, 'YXZ');
@@ -818,7 +822,8 @@ function finishIntro() {
   // (R4 worker 5, held frame of 7567 ms in diagnose 10: the film skipped in its street part built and drew the whole base in ONE frame: 1714 draws, 159 texture
   // uploads 6018 ms, 11 programs) the base's first frames are made under the home card instead (sliced parts, each waiting for the GPU), as Enter does
   // (R4 worker 6, lead 21:15) the first-time job card comes after the home card ends (both are z-index 40: under the card it closed unseen after jobCardSecs)
-  if (skipTown && CONFIG.lag.skipCard) sceneCard('home').then(() => jobCard(), () => jobCard()); else jobCard(); }
+  // (owner Nov 22) a skip while the film's warm-up still runs (the dawn or wake hold) also goes through the home card: its draws were stopped part-way (gone())
+  if ((skipTown || warming) && CONFIG.lag.skipCard) sceneCard('home').then(() => jobCard(), () => jobCard()); else jobCard(); }
 function introFrame(dt) {
   if (!CONFIG.opening.on) { introFrameOld(dt); return; }
   const I = intro, C = CONFIG.opening, P = C.parts; if (I.hold || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) return; I.t += dt; const t = I.t; // I.hold: filmWarm is still preparing under the black
