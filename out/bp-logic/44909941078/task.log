@@ -1,0 +1,47 @@
+$ node tools/bugprobe_logic.mjs 24 && node tools/bugprobe_logic.mjs --selftest   (limit 60 min)
+INFO ring 1 house 0 seed 500: first hit at 30fps 14.87s, 60fps 14.88s, 144fps 14.85s; health lost by 90 s 100/100/100
+INFO ring 1 house 0 seed 501: first hit at 30fps 13.80s, 60fps 13.78s, 144fps 13.76s; health lost by 90 s 100/100/100
+INFO ring 1 house 0 seed 502: first hit at 30fps 16.83s, 60fps 16.80s, 144fps 16.78s; health lost by 90 s 100/100/100
+INFO ring 1 house 0 seed 503: first hit at 30fps 17.30s, 60fps 17.27s, 144fps 17.22s; health lost by 90 s 100/100/100
+INFO ring 2 house 3 seed 500: first hit at 30fps 16.83s, 60fps 16.80s, 144fps 16.78s; health lost by 90 s 100/100/100
+INFO ring 2 house 3 seed 501: first hit at 30fps 13.47s, 60fps 13.43s, 144fps 13.40s; health lost by 90 s 100/100/100
+INFO ring 2 house 3 seed 502: first hit at 30fps 15.87s, 60fps 15.83s, 144fps 15.82s; health lost by 90 s 100/100/100
+INFO ring 2 house 3 seed 503: first hit at 30fps 16.33s, 60fps 16.32s, 144fps 16.29s; health lost by 90 s 100/100/100
+INFO ring 3 house 5 seed 500: first hit at 30fps 14.37s, 60fps 14.38s, 144fps 14.35s; health lost by 90 s 100/100/100
+INFO ring 3 house 5 seed 501: first hit at 30fps 13.50s, 60fps 13.47s, 144fps 13.44s; health lost by 90 s 100/100/100
+INFO ring 3 house 5 seed 502: first hit at 30fps 15.87s, 60fps 15.83s, 144fps 15.82s; health lost by 90 s 100/100/100
+INFO ring 3 house 5 seed 503: first hit at 30fps 16.40s, 60fps 16.37s, 144fps 16.34s; health lost by 90 s 100/100/100
+INFO ring 4 house 1 seed 500: first hit at 30fps 13.53s, 60fps 13.50s, 144fps 13.47s; health lost by 90 s 100/100/100
+INFO ring 4 house 1 seed 501: first hit at 30fps 14.67s, 60fps 14.62s, 144fps 14.59s; health lost by 90 s 100/100/100
+INFO ring 4 house 1 seed 502: first hit at 30fps 16.80s, 60fps 16.75s, 144fps 16.74s; health lost by 90 s 100/100/100
+INFO ring 4 house 1 seed 503: first hit at 30fps 16.13s, 60fps 16.15s, 144fps 16.13s; health lost by 90 s 100/100/100
+INFO 2880 nights/days fuzzed, 24 seeds x 5 rings x 6 houses x 4 modes, 31.7 s
+PASS S0 no crash
+PASS S1 values finite
+PASS S2 health in 0..max
+PASS S3 energy in 0..cap
+PASS S4 food and essentials not negative
+PASS S5 player inside the house
+PASS S6 floors valid
+PASS S7 machines inside stay inside
+PASS S8 machine health in 0..max
+PASS S9 device caps hold
+PASS S10 every night and day ends (no soft-lock)
+PASS S11 night result finite and not negative
+PASS S12 nothing changes after the night is over
+PASS T1 same night at 30, 60 and 144 fps
+PASS R0 no crash on the street
+PASS R1 street position finite
+PASS R2 street energy in 0..cap
+PASS R3 the day on the street ends
+PASS R4 nightfall gives a night
+FAIL V0 no crash on a save: 40 x save.cats.2.spot = {}: Cannot read properties of undefined (reading 'hint')
+PASS V1 any stored text loads to a usable save
+PASS V2 loaded save gives finite night settings
+FAIL V3 loaded save gives a full loadout: 2 x save.up.slots = 0.5 ["turbine","lance","panel","mine"]
+PASS V4 base text has no undefined/NaN
+FAIL V5 save stays finite after a night: 48 x save.up.dev_press = -5 save.essentials=NaN, save.project.left=NaN
+PASS V6 a written save loads back the same
+PASS V7 blocked storage does not crash
+BUGPROBE_LOGIC 24 PASS, 3 FAIL
+exit code 1
