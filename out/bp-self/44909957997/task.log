@@ -1,0 +1,11 @@
+$ SELFTEST=1 TESTS=loop,pause,keys node tools/bugprobe.cjs; true   (limit 60 min)
+TIME loop: 612 s of cap 900 s
+FAIL loop: error: Play again did not reach the base (state menu)
+TIME pause: 177 s of cap 300 s
+FAIL pause: paused by Escape but the night moved: {"t":5.1,"p":[-3.2143,5.2,100,10.23],"g":[[17.612,3.623,14.45,"approach"]],"d":[]} -> {"t":5.1,"p":[-3.2143,5.2,99,10.23],"g":[[17.612,3.623,14.45,"approach"]],"d":[]} | paused by hidden but the night moved: {"t":7.3,"p":[-3.2143,5.2,99,10.23],"g":[[13.474,4.035,14.45,"approach"],[16.688,3.565,21.826,"approach"],[6.077,-16.575 -> {"t":7.3,"p":[-3.2143,5.2,99,null],"g":[[13.474,4.035,14.45,"approach"],[16.688,3.565,21.826,"approach"],[6.077,-16.575, | live values finite: 29 frame(s), first: {"x":-3.2142857142857144,"z":5.199999999999999,"hp":99,"e":null,"t":7.29999999999999} | live health and energy in range: 29 frame(s), first: hp 99 energy NaN
+INFO keys base: moved 1.40 m in 10 frames with W held; 0.00 m in 30 frames after focus came back
+INFO keys night: moved 1.40 m in 10 frames with W held; 0.00 m in 30 frames after focus came back
+TIME keys: 111 s of cap 300 s
+PASS keys
+BUGPROBE 1 PASS, 2 FAIL
+exit code 0
