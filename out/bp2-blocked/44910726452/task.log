@@ -1,0 +1,10 @@
+$ TESTS=blocked node tools/bugprobe.cjs   (limit 60 min)
+STEP 1s enterBase
+STEP 23s toNight
+STEP 58s fight 10
+STEP 461s endNight true
+STEP 465s again
+TIME blocked: 482 s of cap 700 s
+PASS blocked
+BUGPROBE 1 PASS, 0 FAIL
+exit code 0
