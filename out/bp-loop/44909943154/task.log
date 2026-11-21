@@ -1,0 +1,5 @@
+$ TESTS=loop node tools/bugprobe.cjs   (limit 60 min)
+TIME loop: 789 s of cap 900 s
+FAIL loop: error: Play again did not reach the base (state menu)
+BUGPROBE 0 PASS, 1 FAIL
+exit code 1
