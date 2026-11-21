@@ -1,0 +1,5 @@
+$ TESTS=double node tools/bugprobe.cjs   (limit 60 min)
+TIME double: 150 s of cap 500 s
+FAIL double: error: Play again x3 did not reach the base
+BUGPROBE 0 PASS, 1 FAIL
+exit code 1
