@@ -21,7 +21,7 @@ const DIST = path.resolve(process.argv[2] || path.join(__dirname, '..', 'dist'))
 const TIER = process.env.TIER || 'low', SEED = 777, SELF = !!process.env.SELFTEST;
 const ALL = ['loop', 'pause', 'keys', 'double', 'death', 'blocked', 'quota', 'corrupt'];
 const ONLY = process.env.TESTS ? process.env.TESTS.split(',').map((s) => s.trim()) : ALL;
-const CAPS = { loop: 900, pause: 300, keys: 300, double: 500, death: 400, blocked: 400, quota: 400, corrupt: 400 };
+const CAPS = { loop: 1500, pause: 400, keys: 400, double: 600, death: 900, blocked: 700, quota: 700, corrupt: 700 };
 const ARGS = ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.glb': 'model/gltf-binary', '.ktx2': 'image/ktx2', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.woff2': 'font/woff2' };
 
@@ -37,7 +37,9 @@ function serve(root) {
 }
 
 // installed before the game's scripts. storage: 'normal' (cleared once, lesson done), 'blocked', 'quota', 'corrupt'
-const INIT = ({ seed, storage, self }) => {
+const INIT = ({ seed, storage, self, fast }) => {
+  // fast: game time keeps up on the software renderer (the slow checks' window.__dtMax, as guidecheck); the keys test keeps the players' own step
+  if (fast) window.__dtMax = 0.2;
   let s = seed; Math.random = () => { s |= 0; s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   window.__fakeLock = true;
   if (storage === 'blocked') { Object.defineProperty(window, 'localStorage', { configurable: true, get() { throw new DOMException('The operation is insecure.', 'SecurityError'); } }); }
@@ -81,23 +83,32 @@ const INIT = ({ seed, storage, self }) => {
   }; raf0(mon);
 };
 
+let STEP_T0 = Date.now(), CUR = null; const STEP = (n) => { console.log('STEP ' + ((Date.now() - STEP_T0) / 1000).toFixed(0) + 's ' + n); };
 const waitFor = async (p, fn, arg, capS, poll) => { try { await p.waitForFunction(fn, arg === undefined ? null : arg, { timeout: capS * 1000, polling: poll || 250 }); return true; } catch (e) { if (/closed|crash/i.test(String(e))) throw e; return false; } };
 const stateOf = (p) => p.evaluate(() => { const g = window.__game; return g ? g.state + (g.sim ? '/' + g.sim.phase : '') + (g.run ? '/run' : '') : 'no game'; }).catch(() => '?');
 const frames = async (p, n, capS) => { const f0 = await p.evaluate(() => window.__bpFrames); return waitFor(p, ([f0, n]) => window.__bpFrames >= f0 + n, [f0, n], capS || 90); };
 const SETTLED = () => { try { const g = window.__game; if (!g) return false; if (g.cardOn && g.cardOn()) return false; if (g.state === 'base' && g.bview && g.bview.bgBusy) return false; if (g.state === 'base' && g.marla && g.marla.ready === false) return false; const q = g.quality().hi; if (q && q.ok + q.failed < q.asked) return false; const G = window.__gloomGlb || {}; for (const k in G) if (G[k] === 'loading') return false; return true; } catch (e) { return false; } };
 const settle = async (p, capS) => { await waitFor(p, SETTLED, undefined, capS || 60, 500); await frames(p, 3, 60); };
+// a real mouse click (or several) at the button's place on screen: a later click lands on whatever is there by then, as for a player
+async function realClicks(p, id, gaps) {
+  const r = await p.evaluate((id) => { const b = document.getElementById(id); if (!b || !b.offsetParent) return null; const q = b.getBoundingClientRect(); return { x: q.left + q.width / 2, y: q.top + q.height / 2 }; }, id);
+  if (!r) throw new Error('button #' + id + ' is not on screen');
+  await p.mouse.click(r.x, r.y); for (const g of gaps) { if (g) await p.waitForTimeout(g); await p.mouse.click(r.x, r.y); }
+}
 const press = (p, id) => p.evaluate((id) => { const b = document.getElementById(id); if (!b) return false; b.click(); return true; }, id);
 const state = (p, want, capS) => waitFor(p, (w) => { const g = window.__game; return !!g && g.state === w; }, want, capS || 90);
 // the job card and Marla's first card: closed with their own buttons, as a player does
 const cards = (p) => p.evaluate(() => { const c = document.getElementById('jobCard'); if (c) c.querySelector('button').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); });
 
 async function enterBase(p) {
+  STEP('enterBase');
   await p.click('#enter', { timeout: 60000 }).catch(() => press(p, 'enter'));
   if (!await state(p, 'base', 120)) throw new Error('Enter did not reach the base (state ' + await stateOf(p) + ')');
   await settle(p); await cards(p); await frames(p, 3);
 }
 // ride out with the real button (Ride out in the scout card), then into the nearest house and the night through the game's own nightfall
 async function toNight(p) {
+  STEP('toNight');
   await p.evaluate(() => { const s = document.getElementById('selRing'); if (s) s.value = '0'; });
   if (!await press(p, 'go')) throw new Error('no Ride out button');
   if (!await waitFor(p, () => { const g = window.__game; return !!g && !!g.run && g.state === 'play'; }, undefined, 120)) throw new Error('Ride out did not start a run (state ' + await stateOf(p) + ')');
@@ -112,6 +123,7 @@ async function toNight(p) {
 }
 // night play through the real inputs: look around (mouse), fire (mouse button), devices (number keys), eat (F), walk (WASD); game seconds of night
 async function fight(p, gameS) {
+  STEP('fight ' + gameS);
   const t0 = await p.evaluate(() => window.__game.sim.t); const box = await p.evaluate(() => { const r = document.getElementById('c').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
   let i = 0; const keys = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
   while (i++ < 400) {
@@ -123,20 +135,22 @@ async function fight(p, gameS) {
   }
 }
 async function endNight(p, win) {
+  STEP('endNight ' + win);
   const ok = await p.evaluate((w) => window.__game.endNight(w), win);
   if (!ok) throw new Error('endNight refused (state ' + await stateOf(p) + ')');
   if (!await state(p, 'end', 90)) throw new Error('no end screen (state ' + await stateOf(p) + ')');
   await frames(p, 3);
 }
 async function again(p, twice) {
-  await p.evaluate((tw) => { const b = document.getElementById('again'); b.click(); if (tw) b.click(); }, !!twice);
+  STEP('again');
+  if (twice) await realClicks(p, 'again', [0]); else await press(p, 'again');
   if (!await state(p, 'base', 120)) throw new Error('Play again did not reach the base (state ' + await stateOf(p) + ')');
   await settle(p); await cards(p); await frames(p, 3);
 }
 
-async function open(t, storage) {
+async function open(t, storage, slow) {
   const ctx = await t.b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); t.ctxs.push(ctx);
-  await ctx.addInitScript(INIT, { seed: SEED, storage: storage || 'normal', self: SELF });
+  await ctx.addInitScript(INIT, { seed: SEED, storage: storage || 'normal', self: SELF, fast: !slow });
   const p = await ctx.newPage(); p.setDefaultTimeout(120000);
   p.on('pageerror', (e) => t.errs.push(String(e).slice(0, 240)));
   p.on('console', (m) => { if (m.type() === 'error') t.errs.push('console: ' + m.text().slice(0, 240)); });
@@ -199,7 +213,7 @@ const TESTS = {
     await monitorFails(t, p);
   },
   async keys(t) {
-    const p = await open(t); await enterBase(p);
+    const p = await open(t, 'normal', true); await enterBase(p);
     for (const where of ['base', 'night']) {
       if (where === 'night') await toNight(p);
       const pos = () => p.evaluate(() => { const g = window.__game; return g.state === 'base' ? [g.basePos().x, g.basePos().z] : [g.sim.player.x, g.sim.player.z]; });
@@ -221,11 +235,13 @@ const TESTS = {
   },
   async double(t) {
     const p = await open(t);
-    await p.evaluate(() => { const b = document.getElementById('enter'); b.click(); b.click(); });
+    await realClicks(p, 'enter', [0]);
     if (!await state(p, 'base', 120)) throw new Error('double Enter did not reach the base (state ' + await stateOf(p) + ')');
     await settle(p); await cards(p);
     const n0 = await p.evaluate(() => window.__game.save.nights);
-    await p.evaluate(() => { const s = document.getElementById('selRing'); if (s) s.value = '0'; const b = document.getElementById('go'); b.click(); b.click(); });
+    await p.evaluate(() => { const s = document.getElementById('selRing'); if (s) s.value = '0'; });
+    if (!await p.evaluate(() => !!document.getElementById('go').offsetParent)) { await p.evaluate(() => window.__game.openScout()); await frames(p, 3); }
+    await realClicks(p, 'go', [0]);
     if (!await waitFor(p, () => { const g = window.__game; return !!g.run && g.state === 'play'; }, undefined, 120)) throw new Error('double Ride out did not start a run (state ' + await stateOf(p) + ')');
     await settle(p);
     const r1 = await p.evaluate(() => { window.__bpRun = window.__game.run; return true; }); void r1;
@@ -234,8 +250,9 @@ const TESTS = {
     await p.evaluate(() => { window.__game.nightfall(); window.__game.endDay(); });
     await waitFor(p, () => { const s = window.__game.sim; return !!s && s.phase === 'night'; }, undefined, 120); await settle(p);
     await endNight(p, true);
-    await p.evaluate(() => { const b = document.getElementById('again'); b.click(); b.click(); b.click(); });
-    if (!await state(p, 'base', 120)) throw new Error('Play again x3 did not reach the base');
+    // a double click, then a third click 0.7 s later (past the touch guard's 600 ms) on the same spot
+    await realClicks(p, 'again', [0, 700]);
+    if (!await state(p, 'base', 120)) { t.fail('Back to the base clicked twice, then once more 0.7 s later: the base was not reached (state ' + await stateOf(p) + ', title shown: ' + await p.evaluate(() => document.getElementById('menu').style.display) + ')'); return; }
     await settle(p);
     const n1 = await p.evaluate(() => window.__game.save.nights);
     if (n1 - n0 !== 1) t.fail('incorrect reward: one night, Play again pressed 3 times, the save counts ' + (n1 - n0) + ' nights');
@@ -273,10 +290,10 @@ async function storageRun(t, how) {
   const b = await chromium.launch({ args: ARGS, executablePath: exe });
   let np = 0, nf = 0;
   for (const name of ONLY) {
-    const fails = [], t = { b, url: srv.url, errs: [], ctxs: [], fail: (s) => fails.push(s) }, t0 = Date.now();
+    STEP_T0 = Date.now(); const fails = [], t = { b, url: srv.url, errs: [], ctxs: [], fail: (s) => fails.push(s) }, t0 = Date.now();
     let capped = false;
     try { await Promise.race([TESTS[name](t), new Promise((_, rj) => setTimeout(() => { capped = true; rj(new Error('cap ' + CAPS[name] + ' s reached')); }, CAPS[name] * 1000))]); }
-    catch (e) { fails.push((capped ? 'CAPHIT ' : 'error: ') + String(e && e.message).split('\n')[0].slice(0, 240)); }
+    catch (e) { let st = '?'; try { const pg = t.ctxs.length && t.ctxs[t.ctxs.length - 1].pages()[0]; if (pg) st = await stateOf(pg) + ' drill ' + JSON.stringify(await pg.evaluate(() => window.__game.drillInfo && window.__game.drillInfo())) + ' card ' + await pg.evaluate(() => window.__game.cardOn && window.__game.cardOn()); } catch (e2) { } fails.push((capped ? 'CAPHIT ' : 'error: ') + String(e && e.message).split('\n')[0].slice(0, 240) + ' (game at: ' + st + ')'); }
     for (const c of t.ctxs) await c.close().catch(() => {});
     console.log(`TIME ${name}: ${((Date.now() - t0) / 1000).toFixed(0)} s of cap ${CAPS[name]} s`);
     if (fails.length) { nf++; console.log(`FAIL ${name}: ${fails.join(' | ')}`); } else { np++; console.log('PASS ' + name); }
