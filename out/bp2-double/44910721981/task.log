@@ -1,0 +1,6 @@
+$ TESTS=double node tools/bugprobe.cjs   (limit 60 min)
+STEP 34s endNight true
+TIME double: 45 s of cap 600 s
+PASS double
+BUGPROBE 1 PASS, 0 FAIL
+exit code 0
