@@ -454,6 +454,59 @@
    "tier": "phone",
    "quality": "low",
    "timeout": 30
+  },
+  {
+   "name": "bugprobe_logic",
+   "script": "tools/bugprobe_logic.mjs",
+   "args": [
+    "24"
+   ],
+   "tier": "logic",
+   "quality": "node",
+   "timeout": 10,
+   "note": "bug probe (Nov 21): random play of the night, day, street and save modules under always-true rules; damaged saves; 30/60/144 fps"
+  },
+  {
+   "name": "bugprobe_loop",
+   "script": "tools/bugprobe.cjs",
+   "args": [
+    "{dist}"
+   ],
+   "env": {
+    "TESTS": "loop"
+   },
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 30,
+   "note": "bug probe: 3 full cycles through the real buttons: page errors, on-screen undefined/NaN, live values, reward counted once, runaway sound, listener growth"
+  },
+  {
+   "name": "bugprobe_play",
+   "script": "tools/bugprobe.cjs",
+   "args": [
+    "{dist}"
+   ],
+   "env": {
+    "TESTS": "pause,keys,double,death"
+   },
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 30,
+   "note": "bug probe: pause/blur/hidden freeze the night, stuck key after focus loss, double clicks, lost and left nights"
+  },
+  {
+   "name": "bugprobe_storage",
+   "script": "tools/bugprobe.cjs",
+   "args": [
+    "{dist}"
+   ],
+   "env": {
+    "TESTS": "blocked,quota,corrupt"
+   },
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 35,
+   "note": "bug probe: localStorage blocked, full, and damaged: the loop still plays"
   }
  ]
 }

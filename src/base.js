@@ -66,7 +66,23 @@ export function newSave(cfg, seed = (Math.random() * 1e9) | 0) {
 }
 
 // newer fields get their defaults, so older saves keep working
-function fill(cfg, s) { if (cfg.avians) fillFlock(cfg, s); for (const k of ['nights', 'killsTotal', 'essTotal']) if (typeof s[k] !== 'number' || !isFinite(s[k])) s[k] = 0; if (typeof s.nightsMet !== 'number' || !isFinite(s.nightsMet)) s.nightsMet = s.nights; if (Array.isArray(s.quests)) s.quests = s.quests.filter((q) => q && (!q.giver || NPCS[q.giver])); if (typeof s.trips !== 'number') s.trips = s.nights || 0; if (typeof s.mjRead !== 'number') s.mjRead = 0; if (!s.up) return true; for (const k of Object.keys(cfg.base.upgrades)) if (typeof s.up[k] !== 'number') s.up[k] = 0; if (!Array.isArray(s.loadout)) s.loadout = cfg.loadout.first.slice(); return true; }
+function fill(cfg, s) { if (cfg.avians) fillFlock(cfg, s); for (const k of ['nights', 'killsTotal', 'essTotal']) if (typeof s[k] !== 'number' || !isFinite(s[k])) s[k] = 0; if (typeof s.nightsMet !== 'number' || !isFinite(s.nightsMet)) s.nightsMet = s.nights; if (Array.isArray(s.quests)) s.quests = s.quests.filter((q) => q && (!q.giver || NPCS[q.giver])); if (typeof s.trips !== 'number') s.trips = s.nights || 0; if (typeof s.mjRead !== 'number') s.mjRead = 0; if (!s.up) return true; for (const k of Object.keys(cfg.base.upgrades)) if (typeof s.up[k] !== 'number') s.up[k] = 0; if (!Array.isArray(s.loadout)) s.loadout = cfg.loadout.first.slice(); fixRanges(cfg, s); return true; }
+// (bug probe Nov 21, tools/bugprobe_logic.mjs V0/V3/V5) a damaged save could hold an upgrade level outside 0..max or not whole (the level indexes the cost and
+// days tables, so a night turned essentials into NaN), a research project naming no upgrade, a person, quest or cat entry of the wrong shape, or a cat whose spot is not a hiding place (the base crashed on
+// open, every time, until the site data was cleared). Each such field gets its default (a new save's value); a save the game wrote itself is left exactly as it is
+function fixRanges(cfg, s) {
+  // every top-level field of a new save keeps its kind: a number stays a finite number, a yes/no stays one, a list stays a list, a record stays a record
+  const T = newSave(cfg, s.seed | 0);
+  for (const k of Object.keys(T)) { if (k === 'project' || k === 'avians') continue; const d = T[k], v = s[k], kind = (x) => (Array.isArray(x) ? 'list' : x === null ? 'null' : typeof x);
+    if (typeof d === 'number' ? !(typeof v === 'number' && Number.isFinite(v)) : kind(v) !== kind(d)) s[k] = d; }
+  const U = cfg.base.upgrades; for (const k of Object.keys(U)) { const v = s.up[k]; if (!Number.isInteger(v) || v < 0 || v > U[k].max) s.up[k] = Number.isFinite(v) ? Math.max(0, Math.min(U[k].max, Math.floor(v))) : 0; }
+  const P = s.project; if (P !== null && P !== undefined && (typeof P !== 'object' || !U[P.key] || !Number.isFinite(P.left) || !Number.isFinite(P.total))) s.project = null;
+  if (Array.isArray(s.personnel)) s.personnel = s.personnel.filter((q) => q && typeof q === 'object' && Number.isInteger(q.id) && typeof q.name === 'string' && ROLES.includes(q.role));
+  const num = (v) => typeof v === 'number' && Number.isFinite(v);
+  if (Array.isArray(s.quests)) s.quests = s.quests.filter((q) => q && typeof q === 'object' && Number.isInteger(q.id) && typeof q.type === 'string' && typeof q.text === 'string' && typeof q.state === 'string' && q.reward && typeof q.reward === 'object' && num(q.reward.food) && num(q.reward.essentials) && ((q.type !== 'hunt' && q.type !== 'collect') || (num(q.got) && num(q.target))) && (!('got' in q) || num(q.got)) && (!('target' in q) || num(q.target)));
+  if (!Number.isInteger(s.nextId)) s.nextId = Math.max(100, ...(Array.isArray(s.quests) ? s.quests.map((q) => q.id + 1) : []));
+  if (Array.isArray(s.cats)) { const t = makeCats(cfg, mulberry32(s.seed | 0)); s.cats = s.cats.map((c, i) => (c && typeof c === 'object' && Number.isInteger(c.spot) && CAT_SPOTS[c.spot] && (c.type === 'energy' || c.type === 'lure') && ['hidden', 'carried', 'placed'].includes(c.state) && Number.isInteger(c.slot) ? c : t[i])).filter(Boolean); }
+}
 // devices you know, and how many you can carry into the night
 export const unlocked = (cfg, save) => Object.keys(cfg.devices).filter((k) => cfg.loadout.start.includes(k) || (save.up['dev_' + k] || 0) > 0);
 export const slots = (cfg, save) => cfg.loadout.slots + (save.up.slots || 0);
