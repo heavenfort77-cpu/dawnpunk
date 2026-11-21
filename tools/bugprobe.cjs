@@ -223,8 +223,9 @@ const TESTS = {
       // the window loses focus with W still down: the browser never sends its keyup
       await p.evaluate(() => dispatchEvent(new Event('blur'))); await frames(p, 5);
       await press(p, 'resume'); await frames(p, 5);
+      const b0 = await pos(); await frames(p, 30);
       if (SELF && where === 'base') await p.evaluate(() => { const q = window.__game.basePos(); window.__game.setBase(q.x + 0.5, q.z); });
-      const b0 = await pos(); await frames(p, 30); const b1 = await pos();
+      const b1 = await pos();
       const drift = Math.hypot(b1[0] - b0[0], b1[1] - b0[1]);
       console.log(`INFO keys ${where}: moved ${moved.toFixed(2)} m in 10 frames with W held; ${drift.toFixed(2)} m in 30 frames after focus came back`);
       if (moved < 0.01) t.fail(where + ': W held did not move the player (test setup)');
