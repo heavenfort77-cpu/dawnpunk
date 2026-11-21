@@ -1,0 +1,67 @@
+$ SELFTEST=1 node tools/bugprobe.cjs; true   (limit 90 min)
+STEP 1s enterBase
+STEP 23s toNight
+STEP 58s fight 25
+STEP 223s endNight true
+STEP 228s again
+STEP 279s toNight
+STEP 311s fight 25
+STEP 467s endNight true
+STEP 471s again
+STEP 518s toNight
+STEP 550s fight 25
+STEP 694s endNight true
+STEP 698s again
+INFO loop listeners after cycles 2 and 3: 80 kinds, intervals 2->2
+TIME loop: 748 s of cap 1500 s
+FAIL loop: runaway sound: 1 looping source(s) from the run still playing in the base, first: planted OscillatorNode from play | listeners/timers grow every cycle: window:planted 0->5 | live values finite: 65 frame(s), first: {"x":-7.2,"z":1.5665749410761312,"hp":95.2,"e":null,"t":19.200000000000003} | live health and energy in range: 65 frame(s), first: hp 95.2 energy NaN | screen text has no undefined/NaN/null: 1 frame(s), first: Food undefined (state play)
+STEP 1s enterBase
+STEP 20s toNight
+TIME pause: 164 s of cap 400 s
+FAIL pause: paused by Escape but the night moved: {"t":5.6,"p":[-3.2143,5.2,100,10.92],"g":[[16.672,3.716,14.45,"approach"]],"d":[]} -> {"t":5.6,"p":[-3.2143,5.2,99,10.92],"g":[[16.672,3.716,14.45,"approach"]],"d":[]}
+STEP 2s enterBase
+INFO keys base: moved 1.40 m in 10 frames with W held; 0.50 m in 30 frames after focus came back
+STEP 68s toNight
+INFO keys night: moved 1.40 m in 10 frames with W held; 0.00 m in 30 frames after focus came back
+TIME keys: 146 s of cap 400 s
+FAIL keys: base: stuck key: the player kept walking 0.50 m after the window lost focus with W held
+STEP 55s endNight true
+TIME double: 73 s of cap 600 s
+PASS double
+STEP 1s enterBase
+STEP 21s toNight
+STEP 56s fight 8
+STEP 110s endNight false
+STEP 114s again
+STEP 129s toNight
+STEP 161s fight 6
+STEP 207s again
+STEP 221s toNight
+STEP 253s fight 5
+STEP 286s endNight true
+STEP 290s again
+TIME death: 305 s of cap 900 s
+PASS death
+STEP 1s enterBase
+STEP 21s toNight
+STEP 56s fight 10
+STEP 456s endNight true
+STEP 460s again
+TIME blocked: 476 s of cap 700 s
+FAIL blocked: live values finite: 64 frame(s), first: {"x":-4.18948502873524,"z":5.183067059062642,"hp":100,"e":null,"t":3.600000000000002} | live health and energy in range: 64 frame(s), first: hp 100 energy NaN
+STEP 1s enterBase
+STEP 21s toNight
+STEP 56s fight 10
+STEP 121s endNight true
+STEP 125s again
+TIME quota: 142 s of cap 700 s
+PASS quota
+STEP 1s enterBase
+STEP 21s toNight
+STEP 56s fight 10
+STEP 458s endNight true
+STEP 461s again
+TIME corrupt: 478 s of cap 700 s
+FAIL corrupt: live values finite: 63 frame(s), first: {"x":-1.728000327442502,"z":6.565693774053404,"hp":100,"e":null,"t":4.000000000000002} | live health and energy in range: 63 frame(s), first: hp 100 energy NaN
+BUGPROBE 3 PASS, 5 FAIL
+exit code 0
