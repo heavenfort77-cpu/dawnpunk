@@ -1,0 +1,5 @@
+$ TESTS=blocked node tools/bugprobe.cjs   (limit 60 min)
+TIME blocked: 400 s of cap 400 s
+FAIL blocked: CAPHIT cap 400 s reached
+BUGPROBE 0 PASS, 1 FAIL
+exit code 1
