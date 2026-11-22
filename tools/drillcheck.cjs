@@ -35,6 +35,15 @@ const { chromium, devices } = require('playwright');
     add('after 20 s idle Marla repeats the step, shorter: "' + l1 + '" -> "' + l2 + '"', l2 && l2 !== l1 && l2.length < l1.length);
     await p.keyboard.press('KeyK'); await p.waitForTimeout(600); const sk = await p.evaluate(() => [window.__game.drillInfo(), localStorage.getItem('dawnpunk.drill')]); add('K skips the drill and it is remembered: ' + JSON.stringify(sk), sk[0] === null && /skip/.test(sk[1]));
     await night(p, 0); await p.waitForTimeout(3000); const again = await step(p); add('a skipped drill does not come back (' + again + ')', again === null);
+    // BUILD NUDGE (Nov 23, CONFIG.drill.nudge): with the lesson skipped and no defence device standing, Marla gives the place order again; none after a device stands. Waits on the game's own counter and clock.
+    { const want = await p.evaluate(() => window.CONFIG.drill.steps.find((q) => q.id === 'place').desk), N = await p.evaluate(() => window.CONFIG.drill.nudge);
+      const got = await p.waitForFunction(() => { const i = window.__game.nudgeInfo(); return i.cur && i.n >= 1; }, null, { timeout: 180000 }).then(() => true).catch(() => false);
+      const txt = await p.evaluate(() => document.getElementById('marla').textContent), t1 = await p.evaluate(() => window.__game.sim.t);
+      add('skipped lesson, no device: Marla repeats the place order (reminder ' + got + ' at night second ' + t1.toFixed(1) + ', line "' + txt + '")', got && txt === want && t1 >= N.after);
+      const pl = await p.evaluate(() => { const s = window.__game.sim, P = s.player; s.player.energy = Math.max(s.player.energy, 30); return s.place('lance', { x: P.x + 1, z: P.z + 1 }); }), n1 = await p.evaluate(() => window.__game.nudgeInfo().n);
+      await p.waitForFunction((a) => window.__game.sim.t >= a[0] + a[1] + 3 || window.__game.sim.done, [t1, N.every], { timeout: 240000 }).catch(() => null);
+      const n2 = await p.evaluate(() => window.__game.nudgeInfo().n), t2 = await p.evaluate(() => window.__game.sim.t);
+      add('a device placed (' + JSON.stringify(pl).slice(0, 60) + '): no further reminder (count ' + n1 + ' -> ' + n2 + ' of max ' + N.max + ', night second ' + t2.toFixed(1) + ')', pl && pl.ok && n2 === N.max && t2 >= t1 + N.every); }
     await ctx.close(); }
   // ---- DESKTOP: night 2, a clean screen, H, the device bar
   { const { ctx, p } = await open({ viewport: { width: 1280, height: 720 } });

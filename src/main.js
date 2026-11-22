@@ -1444,6 +1444,14 @@ function drillStep() { const D = CONFIG.drill, q = drill.todo[drill.i], P = sim.
   if (q.id === 'eat') { if (P.hp > CONFIG.player.hp * D.eatHp) P.hp = CONFIG.player.hp * D.eatHp; if (sim.food <= 0) sim.food = 1; }
   if (q.id === 'charge') P.energy = Math.max(P.energy, CONFIG.cannon.cost * CONFIG.cannon.charge.cost + 1); if (q.id === 'place') P.energy = Math.max(P.energy, CONFIG.devices[slotKinds()[selSlot]].cost + 1); // the picked device (the cheapest, from the drill's start) is paid for, so the step cannot dead-end
   drillSay(FINE ? q.desk : q.phone); }
+// BUILD NUDGE (CONFIG.drill.nudge): outside the lesson, a first night with no defence device standing (collectors are not defences) repeats Marla's place order.
+// The device list is read only when a reminder is due, not every frame.
+const NUDGE = { sim: null, gs: 0, n: 0 };
+function buildNudge(dt) { const N = CONFIG.drill.nudge; if (!N || !N.on || drill || !sim || sim.phase !== 'night' || sim.boss || !save || (save.nights || 0) >= N.nights) return;
+  if (NUDGE.sim !== sim) { NUDGE.sim = sim; NUDGE.gs = 0; NUDGE.n = 0; } if (NUDGE.n >= N.max) return; NUDGE.gs += dt; if (NUDGE.gs < (NUDGE.n ? N.every : N.after)) return; NUDGE.gs = 0;
+  for (let i = 0; i < sim.devices.length; i++) if (sim.devices[i].kind !== 'collector') { NUDGE.n = N.max; return; }
+  let q = null; for (let i = 0; i < CONFIG.drill.steps.length; i++) if (CONFIG.drill.steps[i].id === 'place') q = CONFIG.drill.steps[i]; if (!q) return;
+  NUDGE.n++; H2.say('marla', FINE ? q.desk : q.phone, CONFIG.ui.centre.marla, N.secs); }
 function drillSay(t) { H2.say('marla', t, CONFIG.ui.centre.marla, CONFIG.drill.lineSecs); }
 function drillTick(dt) { if (drillSim !== sim || drillPh !== (sim && sim.phase)) { drillSim = sim; drillPh = sim && sim.phase; drillBegin(); } if (!drill || !sim || sim.phase !== 'night') return; const D = CONFIG.drill;
   // while the lesson holds the waves (drill.held), the night must not see "no Gloom left" as dawn: sim.holdDawn says so until drillEnd gives the waves back
@@ -2200,7 +2208,7 @@ function frame(now) {
     const wx = mx * cy + mz * sy, wz = -mx * sy + mz * cy;
     sim.move(wx, wz, dt); // smooth: every frame, real dt
     acc += dt; const step = CONFIG.night.dt;
-    while (acc >= step) { sim.step(step); if (mustSolar()) sim.dayT += step; acc -= step; } drillTick(dt);
+    while (acc >= step) { sim.step(step); if (mustSolar()) sim.dayT += step; acc -= step; } drillTick(dt); buildNudge(dt);
     // the first-collector order: up CONFIG.firstSolar.secs, again every .repeat s while the collector is still not up (no voice clip, so a repeat is silent)
     // (owner Nov 21: a player may ignore the lesson) the first-collector hold lets go after CONFIG.firstSolar.ignoreSecs of game time with no collector up: the day clock
     // runs again and you may leave or start the night; it does not come back (save.solarDone)
@@ -2327,6 +2335,7 @@ window.__game = { liveShapes, marlaStreak, marlaNightTips, get cam() { return ca
 // test hooks for tools/workshopcheck.cjs: where you stand in the base, the workshop-line timer
 window.__game.basePos = () => ({ x: bp.x, z: bp.z, yaw });
 // test hooks for tools/freshfixcheck.cjs: the drill machine's opening (index, degrees off your view when it came), and the waking prompt's text
+window.__game.nudgeInfo = () => ({ n: NUDGE.n, cur: NUDGE.sim === sim });
 window.__game.drillFrom = () => (drill && drill.from ? { bp: drill.from.bp, ang: drill.from.ang } : null);
 // Marla's voice for the checks (tools/voicecheck.cjs): clips started (n), the last clip id and its shown text, how it played, playing now, Voice on
 window.__game.marlaVoice = () => ({ n: MV.hook.n, last: MV.hook.last, lastText: MV.hook.lastText, via: MV.hook.via, playing: MV.hook.playing, on: MV.on, allowed: MV.allowed, duck: MV.duck() });

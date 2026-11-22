@@ -1023,6 +1023,22 @@ export const CONFIG = {
     ignoreKills: 3,
     // and seconds of game time on one step, the step still not done, before the same
     ignoreSecs: 60,
+    // BUILD NUDGE (player comment Nov 23: "first night hard when I didn't figure out how to build"; bots that never build win 0 % of nights at every skill).
+    // After the lesson is over, skipped or ignored, a night with no defence device standing gets Marla's place order again (the place step's own line, no new text).
+    nudge: {
+      // master switch
+      on: true,
+      // only on the save's first nights: nights already played must be under this
+      nights: 3,
+      // seconds of night (game time, lesson not running) with no defence device before her first reminder
+      after: 12,
+      // seconds between reminders while there is still none
+      every: 18,
+      // reminders per night at most
+      max: 4,
+      // seconds each reminder stays up
+      secs: 5,
+    },
     // Marla when a lesson machine is destroyed and its step is still open (another one comes)
     down: "That one's down. Another's coming. Do it.",
     // Marla when the lesson ends itself
