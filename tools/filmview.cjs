@@ -34,7 +34,7 @@ async function setup(p) {
 }
 async function finish(p, browser, tier, S) {
   await p.waitForTimeout(3000); try { await S.cdp.send('Page.stopScreencast'); } catch (e) { /* none */ }
-  const F = await p.evaluate(() => window.__fv), out = [], T = tier + ' film (as the player sees it): ';
+  const F = await p.evaluate(() => window.__fv), out = [], T = tier + ' film (as the player sees it): ', W = await p.evaluate(() => (window.__game && window.__game.vidWarm ? window.__game.vidWarm() : null)).catch(() => null);
   if (!F || !F.frames.length) return { lines: [], info: { video: false, shots: S.shots.length } };
   // the screen pictures' brightness, decoded in a blank page
   const dp = await browser.newPage(); const lum = [];
@@ -63,6 +63,6 @@ async function finish(p, browser, tier, S) {
     const ref = Math.max(lastFilm ? lastFilm[3] : 0, base === null ? 0 : base), after = scr.filter((q) => q[0] >= F.skip && q[0] <= endT); let hi = 0, hiAt = 0; for (const [t, l] of after) if (l > hi) { hi = l; hiAt = t; }
     out.push([T + 'brightest screen after Skip ' + hi.toFixed(0) + ' at ' + ((hiAt - F.skip) / 1000).toFixed(2) + ' s (film\'s last picture ' + (lastFilm ? lastFilm[3].toFixed(0) : '-') + ', the base once shown ' + (base === null ? '-' : base.toFixed(0)) + '; target <= ' + (ref + FLASH).toFixed(0) + ', no flash)', hi <= ref + FLASH]);
   }
-  return { lines: out, info: { video: true, callbacksPerSecond: +rate.toFixed(1), longestCallbackGap: gap, shots: scr.length, filmPictures: fr.length, click: F.click, first: first - (F.click || first), skip: F.skip && F.skip - (F.click || 0), baseAt: F.baseAt && F.baseAt - (F.skip || 0), dbg: F.dbg } };
+  return { lines: out, info: { vidWarm: W, video: true, callbacksPerSecond: +rate.toFixed(1), longestCallbackGap: gap, shots: scr.length, filmPictures: fr.length, click: F.click, first: first - (F.click || first), skip: F.skip && F.skip - (F.click || 0), baseAt: F.baseAt && F.baseAt - (F.skip || 0), dbg: F.dbg } };
 }
 module.exports = { setup, finish };
