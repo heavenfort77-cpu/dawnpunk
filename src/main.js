@@ -856,6 +856,7 @@ function startVideoIntro() {
     // (owner Nov 22 19:54, "shorten the film's start after the click": 1.5 s on the Mac from the title's Watch) on the loading page the video waits until it can
     // play through; after a click it starts as soon as it can play (canplay), the rest still arriving while it plays
     v.addEventListener('canplaythrough', ok); v.addEventListener('canplay', () => { if (!FILM.pre) ok(); }); v.addEventListener('progress', () => { if (FILM.pre || FILM.card) { try { const b = v.buffered, d = v.duration; if (b.length && d) filmCardFill(b.end(b.length - 1) / d); } catch (e) { /* not known yet */ } } });
+    if (OVF && v.requestVideoFrameCallback) { const vf = (now, md) => { if (VID.el !== v) return; VID.mt = md.mediaTime; VID.vfNew = true; VID.vfOk = true; v.requestVideoFrameCallback(vf); }; v.requestVideoFrameCallback(vf); }
     v.src = src; v.load(); clearTimeout(VID.waitT); VID.waitT = setTimeout(() => { if (!VID.ready && VID.el === v && v.readyState >= 3) ok(); else if (!VID.ready && VID.el === v) vidFail('slow'); }, V.waitMs);
   } else { try { v.currentTime = 0; } catch (e) { /* not seekable yet */ } }
   // the 3D picture behind the video is not shown (nothing in it belongs to the film): it comes back under the home card at the end
@@ -881,6 +882,8 @@ function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT
 // The pieces are drawn a few at a time into a small hidden target, frustum culling off for that draw, so each one's buffers and pictures are on the GPU before
 // Skip; the home card after Skip then only does what Enter's card does (0.7-1.0 s). CONFIG.lag.vidWarm: after (s into the video), ms (work a frame), on
 if (/[?&]nowarm=1/.test(location.search) && CONFIG.lag.vidWarm) CONFIG.lag.vidWarm.on = false; // (probe3 only, never merged)
+if (/[?&]warmall=1/.test(location.search) && CONFIG.lag.vidWarm) CONFIG.lag.vidWarm.darkOnly = 0; // (probe3 only)
+const OVF = /[?&]ovf=1/.test(location.search); // (probe3 only) the film's overlay (fade, eyelids, caption) set once per presented video frame
 const VWARM = { it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false, long: [], last: '' };
 // (Mac fv2 45021132181: one step of 6.2 s, 126 of 763 video frames dropped) in parts: the base built a part at a time if it is not the kept one, its shaders
 // built in parallel (compileAsync, waited on without blocking), then every piece drawn as the title and the card draw them (drawPieces, a 2x2 scissor), the
@@ -906,7 +909,9 @@ function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
   if (v.paused && !v.ended) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => vidFail('play')); }
-  const t = Math.min(v.currentTime || 0, P[4]); I.t = t; vidWarmStep(t);
+  const tc = Math.min(v.currentTime || 0, P[4]);
+  if (OVF && VID.vfOk) { if (!VID.vfNew) { I.t = tc; vidWarmStep(tc); musicTick(dt); if (v.ended || tc >= P[4] - 0.02) finishIntro(); return; } VID.vfNew = false; }
+  const t = OVF && VID.vfOk ? Math.min(VID.mt, P[4]) : tc; I.t = t; vidWarmStep(t);
   let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
   const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
   I.part = part >= 2 ? 'base' : 'town';
