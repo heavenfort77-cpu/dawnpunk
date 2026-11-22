@@ -432,7 +432,38 @@
    "tier": "logic",
    "quality": "low",
    "timeout": 110,
-   "note": "random taps, drags, keys, blur and resize on six screen sizes (phone to ultrawide), in the base, street, day and night: fails on any page error or not-a-number (owner Nov 21: phone AND desktop)"
+   "note": "random taps, drags, keys, blur and resize on six screen sizes (phone to ultrawide), in the base, street, day and night: fails on any page error or not-a-number (owner Nov 21: phone AND desktop) (part: screen sizes; over http since Nov 22, split in three parallel parts)",
+   "env": {
+    "FUZZ_PART": "sizes"
+   }
+  },
+  {
+   "name": "fuzz_phone",
+   "script": "tools/fuzz.cjs",
+   "args": [
+    "300"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 110,
+   "note": "random taps, drags, keys, blur and resize on six screen sizes (phone to ultrawide), in the base, street, day and night: fails on any page error or not-a-number (owner Nov 21: phone AND desktop) (part: phone random-event stages)",
+   "env": {
+    "FUZZ_PART": "phone"
+   }
+  },
+  {
+   "name": "fuzz_desktop",
+   "script": "tools/fuzz.cjs",
+   "args": [
+    "300"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 110,
+   "note": "random taps, drags, keys, blur and resize on six screen sizes (phone to ultrawide), in the base, street, day and night: fails on any page error or not-a-number (owner Nov 21: phone AND desktop) (part: desktop random-event stages)",
+   "env": {
+    "FUZZ_PART": "desktop"
+   }
   },
   {
    "name": "phonehudcheck",
