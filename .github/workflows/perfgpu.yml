@@ -112,3 +112,11 @@ jobs:
           set +e; node tools/perfcheck.cjs "${{ matrix.tier }}" > perf.log 2>&1; rc=$?; set -e
           grep -E "^JOB|FTRACE|RENDERER|^PERF|^FPS|^PASS|^FAIL|^REPORT|^LEDGER|^BREAK|^PROFILE|^  |^   \\.|^ BY|INFO (dist|cost |.* card (flow|enter) |.*GPU uploads|.*during play|.*downloaded|.*files over|.*title usable|flow|drill on|run end|returning|programs built during.*page errors|Gloom present|boss view|combat)" perf.log || true
           if [ "$rc" = 3 ]; then echo "perfcheck crashed (a spot could not run)"; exit 1; fi
+      - name: Traces (probe3)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-${{ strategy.job-index }}
+          path: trace_*.json.gz
+          if-no-files-found: ignore
+          retention-days: 3

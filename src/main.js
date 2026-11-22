@@ -880,6 +880,7 @@ function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT
 // lights and the kept base) and its pieces drawn for the first time while the video plays: the 3D picture is hidden then and the page has nothing else to do.
 // The pieces are drawn a few at a time into a small hidden target, frustum culling off for that draw, so each one's buffers and pictures are on the GPU before
 // Skip; the home card after Skip then only does what Enter's card does (0.7-1.0 s). CONFIG.lag.vidWarm: after (s into the video), ms (work a frame), on
+if (/[?&]nowarm=1/.test(location.search) && CONFIG.lag.vidWarm) CONFIG.lag.vidWarm.on = false; // (probe3 only, never merged)
 const VWARM = { it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false, long: [], last: '' };
 // (Mac fv2 45021132181: one step of 6.2 s, 126 of 763 video frames dropped) in parts: the base built a part at a time if it is not the kept one, its shaders
 // built in parallel (compileAsync, waited on without blocking), then every piece drawn as the title and the card draw them (drawPieces, a 2x2 scissor), the

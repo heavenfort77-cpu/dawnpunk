@@ -9,13 +9,15 @@
 const BLACK = 6, BLACK_MS = 100, FLASH = 30, START_MS = 1000, SKIP_MS = 1500, GAP_MS = 100, DROP_MAX = 0.02;
 const lumOf = (d) => { let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; return s / (d.length / 4); };
 async function setup(p) {
+  // (probe3) FVNOREAD: the video's own picture is not read back each frame (its read-back stalled the page 250-780 ms at the film's start and 1871 ms after Skip)
+  if (process.env.FVNOREAD || (process.env.SPOTS || '').includes('noread')) await p.evaluate(() => { window.__fvNoRead = 1; });
   const cdp = await p.context().newCDPSession(p), shots = [];
   cdp.on('Page.screencastFrame', (f) => { shots.push([Math.round(f.metadata.timestamp * 1000), f.data]); cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => {}); });
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 40, maxWidth: 160, maxHeight: 90, everyNthFrame: 1 });
   await p.evaluate(() => { const F = window.__fv = { click: null, skip: null, baseAt: null, frames: [], q: null };
     const mark = () => { if (F.click === null) { F.click = Date.now(); console.timeStamp('CLICK'); } }; document.addEventListener('pointerdown', mark, true); document.addEventListener('click', mark, true);
     const cv = document.createElement('canvas'); cv.width = 16; cv.height = 9; const cx = cv.getContext('2d', { willReadFrequently: true });
-    const hook = (v) => { if (v.__fv || !v.requestVideoFrameCallback) return; v.__fv = 1; const cb = (now, md) => { let lum = null; try { cx.drawImage(v, 0, 0, 16, 9); const d = cx.getImageData(0, 0, 16, 9).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; lum = s / (d.length / 4); } catch (e) { /* none */ }
+    const hook = (v) => { if (v.__fv || !v.requestVideoFrameCallback) return; v.__fv = 1; const cb = (now, md) => { let lum = null; if (!window.__fvNoRead) try { cx.drawImage(v, 0, 0, 16, 9); const d = cx.getImageData(0, 0, 16, 9).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; lum = s / (d.length / 4); } catch (e) { /* none */ }
       // the film's own designed darkness at this moment: the eyelids (cineLidT closed when not moved away) and the black fade (cineFade opacity)
       let des = 0; try { const lt = document.getElementById('cineLidT'), fd = document.getElementById('cineFade'); if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) des = Math.max(des, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (fd) des = Math.max(des, +getComputedStyle(fd).opacity || 0); } catch (e) { /* none */ }
       F.frames.push([Date.now(), md.mediaTime, md.presentedFrames, lum, des]); if (v.isConnected) v.requestVideoFrameCallback(cb); }; v.requestVideoFrameCallback(cb); };

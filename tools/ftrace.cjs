@@ -50,4 +50,14 @@ async function bare(ctx, url, vp, secs) {
     if (v.readyState >= 3) go(); else v.addEventListener('canplay', go); }), secs);
   await pv.close(); return r;
 }
-module.exports = { CATS, report, bare };
+// a browser-wide trace through CDP (record as much as possible, streamed to a file, so it is not cut to the last part like a ring buffer); stop() writes
+// the file (and a .gz copy for the job's artifact) and returns its contents for report() when under 400 MB
+async function recorder(b) {
+  const fs = require('fs'), zlib = require('zlib'), cdp = await b.newBrowserCDPSession();
+  return { start: () => cdp.send('Tracing.start', { transferMode: 'ReturnAsStream', traceConfig: { recordMode: 'recordAsMuchAsPossible', includedCategories: CATS, excludedCategories: ['*'] } }),
+    stop: async (file) => { const done = new Promise((r) => cdp.once('Tracing.tracingComplete', r)); await cdp.send('Tracing.end'); const { stream } = await done; const fd = fs.openSync(file, 'w');
+      for (;;) { const r = await cdp.send('IO.read', { handle: stream, size: 4 << 20 }); fs.writeSync(fd, r.base64Encoded ? Buffer.from(r.data, 'base64') : Buffer.from(r.data)); if (r.eof) break; } fs.closeSync(fd); await cdp.send('IO.close', { handle: stream });
+      const size = fs.statSync(file).size; await new Promise((ok) => fs.createReadStream(file).pipe(zlib.createGzip()).pipe(fs.createWriteStream(file + '.gz')).on('finish', ok));
+      console.log('FTRACE file ' + file + ' ' + (size / 1048576).toFixed(0) + ' MB'); return size < 400 * 1048576 ? fs.readFileSync(file) : Buffer.from('{"traceEvents":[]}'); } };
+}
+module.exports = { CATS, report, bare, recorder };
