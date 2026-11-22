@@ -535,6 +535,11 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     const ry = Math.atan2(b.x - a.x, b.z - a.z) + Math.PI / 2, fx = Math.sin(ry), fz = Math.cos(ry), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, mz = (a.z + b.z) / 2; let push = 0;
     if (o.chest) { o.chest.updateWorldMatrix(false, false); const c = HV2.setFromMatrixPosition(o.chest.matrixWorld); o.n.worldToLocal(c); push = Math.max(0, (cfg.base.crateClear || 0) + (cfg.base.crateSize ? cfg.base.crateSize[2] / 2 : 0.2) - ((mx - c.x) * fx + (mz - c.z) * fz)); }
     o.crate.position.set(mx + fx * push, my, mz + fz * push); o.crate.rotation.y = ry; };
+  // (owner Nov 22 19:54: "drawing distant characters more cheaply") a recruit's small parts are not drawn past CONFIG.people.farParts distances from the camera:
+  // the teeth (inside the mouth: seen only up close), the small metal bits (earrings, buckle), and past the face distance the eyes and lashes (a face is then a
+  // few pixels tall). Each part is its own draw (12-17 a recruit); set only when the distance band changes
+  const farParts = (o, px, pz) => { const F = cfg.people.farParts; if (!F || !F.on) return; if (!o.fp) { const by = {}; o.ch.root.traverse((q) => { if (!q.isMesh) return; for (const [band, names] of Object.entries(F.parts)) if (names.includes(q.name)) (by[band] || (by[band] = [])).push(q); }); o.fp = { by, band: {} }; }
+    const d = Math.hypot(o.n.position.x - px, o.n.position.z - pz); for (const band in o.fp.by) { const on = d < F.dist[band]; if (o.fp.band[band] !== on) { o.fp.band[band] = on; for (const q of o.fp.by[band]) q.visible = on; } } };
   let viewCam = null; const FAR = cfg.lag && cfg.lag.farStep;
   const live = (x, z, px, pz) => { if (!FAR || !viewCam) return true; if (Math.hypot(x - px, z - pz) < FAR.dist) return true; FS.center.set(x, 0.9, z); FS.radius = 1.3; return FR.intersectsSphere(FS); };
   const stepDt = (o, on, dt) => { const a = (o.facc || 0) + dt; if (on || a >= 1 / FAR.hz) { o.facc = 0; return a; } o.facc = a; return 0; };
@@ -571,7 +576,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     for (const n of Object.values(NPCS)) { const o = npcG[n.id]; if (!o) continue; o.mk.position.y = 3.1 + Math.sin(t * 3 + n.z) * 0.12; }
     // recruits on patrol: the person's own motion decides the pace (eases in and out, slows in a bend, stops and turns on the spot in pivot steps at a sharp corner); the holder moves along their facing
     for (const o of npcs) {
-      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { plan: () => patrolStep(o) }); o.yaw = r.yaw; if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; if (o.crate.visible) crateInHands(o); continue; }
+      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { farParts(o, px, pz); const r = o.ch.drive(dt, { plan: () => patrolStep(o) }); o.yaw = r.yaw; if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; if (o.crate.visible) crateInHands(o); continue; }
       const tgt = o.wp[o.i], dx = tgt[0] - o.n.position.x, dz = tgt[1] - o.n.position.z, d = Math.hypot(dx, dz); if (d < 0.6) o.i = (o.i + 1) % o.wp.length;
       if (d >= 0.6) { o.n.position.x += (dx / d) * 1.2 * dt; o.n.position.z += (dz / d) * 1.2 * dt; o.n.rotation.y = Math.atan2(dx, dz); }
     }

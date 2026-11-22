@@ -149,6 +149,8 @@ export const CONFIG = {
     // carryArm, carryFore (owner Nov 22: a carrier's head was inside the crate): how far (rad) the upper arms reach forward and the forearms bend up when carrying.
     // Were 0.75 and 0.9: the forearms pointed up and the hands, and so the crate between them, sat at chin height, the face inside the box (tools/crateprobe.cjs)
     // carryOut (owner Nov 22: "the hands are sunken into the box"): the upper arms open this many rad more while carrying, so the palms rest on the crate's sides
+    // farParts (owner Nov 22 19:54, "drawing distant characters more cheaply"): a base recruit's small parts are not drawn past these distances (m) from the camera
+    farParts: { on: true, dist: { teeth: 4, small: 12, face: 20 }, parts: { teeth: ['teeth', 'teeth_up'], small: ['earring_l', 'earring_r', 'buckle'], face: ['eye_l', 'eye_r', 'lashes'] } },
     walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.8, carryLean: 0.06, carryArm: 0.25, carryFore: 0.8, carryOut: 0 },
     // motion (tools/humanmotioncheck.cjs measures it):
     // slice: the motion runs in fixed steps of this many seconds (1/120: a 30 or 60 fps frame is a whole number of them, so the motion is the same at both); maxSlices: at most this many per frame (a longer gap is skipped)
@@ -1302,6 +1304,11 @@ export const CONFIG = {
     // filmDraws (Nov 20, the film's black held one frame 6-8 s on the Mac: a part of 40+ pieces' first draws was seconds of GPU work): a part under the film's
     // black is this many pieces, then the GPU is waited for (0 = as before, as many 40-piece batches as fit in `film` ms)
     slice: { ms: 4, draws: 40, film: 40, card: 40, cardDraws: 40, filmDraws: 8 },
+    // vidWarm (owner Nov 22 19:54, the wait after Skip): the base the film ends in is set up and first drawn, a few pieces a frame (about ms of work each), while the
+    // video plays, from `after` s into it (src/main.js vidWarmIter)
+    // loading: on the loading page (first visit) it is done there before the begin button; darkOnly: during the video (the title's Watch) a part only while the
+    // picture is at least this dark by design (fade or eyelids)
+    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0.85 },
     // filmBase: the film's black also draws the base's pieces once (src/main.js filmWarm), so the home card after the film finds them drawn
     filmBase: false,
     // filmCompileParts: the film's black builds the street's shaders one top-level piece at a time (src/main.js filmWarm), not all in one frame

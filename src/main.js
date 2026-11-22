@@ -853,7 +853,9 @@ function startVideoIntro() {
     v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:' + (V.fit || 'contain') + ';background:#000;pointer-events:none';
     v.addEventListener('error', () => vidFail('error ' + (v.error ? v.error.code : '?')));
     const ok = () => { if (VID.ready || VID.el !== v) return; VID.ready = true; vidReady(); };
-    v.addEventListener('canplaythrough', ok); v.addEventListener('progress', () => { if (FILM.pre || FILM.card) { try { const b = v.buffered, d = v.duration; if (b.length && d) filmCardFill(b.end(b.length - 1) / d); } catch (e) { /* not known yet */ } } });
+    // (owner Nov 22 19:54, "shorten the film's start after the click": 1.5 s on the Mac from the title's Watch) on the loading page the video waits until it can
+    // play through; after a click it starts as soon as it can play (canplay), the rest still arriving while it plays
+    v.addEventListener('canplaythrough', ok); v.addEventListener('canplay', () => { if (!FILM.pre) ok(); }); v.addEventListener('progress', () => { if (FILM.pre || FILM.card) { try { const b = v.buffered, d = v.duration; if (b.length && d) filmCardFill(b.end(b.length - 1) / d); } catch (e) { /* not known yet */ } } });
     v.src = src; v.load(); clearTimeout(VID.waitT); VID.waitT = setTimeout(() => { if (!VID.ready && VID.el === v && v.readyState >= 3) ok(); else if (!VID.ready && VID.el === v) vidFail('slow'); }, V.waitMs);
   } else { try { v.currentTime = 0; } catch (e) { /* not seekable yet */ } }
   // the 3D picture behind the video is not shown (nothing in it belongs to the film): it comes back under the home card at the end
@@ -867,14 +869,43 @@ function startVideoIntro() {
 function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT);
   if (FILM.pre) { const I = intro, TD = CONFIG.lag.titleDraw, tf = performance.now(); FILM.frac = 0.5;
     const step = () => { if (intro !== I || !FILM.pre) return; if (TD && TD.on && TD.film && TB.phase && TB.phase !== 'done' && performance.now() - tf < TD.filmCap * 1000) { baseSlice0(true); filmCardFill(0.5 + 0.4 * (TB.phase === 'draw' && TB.dl ? TB.di / Math.max(1, TB.dl.length) : 0)); requestAnimationFrame(step); return; }
-      FILM.titleLeft = [Math.round(performance.now() - tf), TB.phase || 'none']; FILM.preDone = true; FILM.frac = 1; };
+      FILM.titleLeft = [Math.round(performance.now() - tf), TB.phase || 'none'];
+      // (owner Nov 22 19:54) on the loading page the base the film ends in is also set up and first drawn here (vidWarmIter), a part a frame, before the begin
+      // button: the video then plays with nothing else to do (Mac fv2: drawing during the video dropped 3.4-7.8 % of its frames against 2.2-3.5 %)
+      const C = CONFIG.lag.vidWarm; if (C && C.on && C.loading && !VWARM.done) { if (!VWARM.it) VWARM.it = vidWarmIter(); const w0 = performance.now(); const r = VWARM.it.next(); VWARM.steps++; VWARM.ms += performance.now() - w0; if (r.done) VWARM.done = true; else { filmCardFill(0.9 + 0.1 * Math.min(1, VWARM.steps / 60)); requestAnimationFrame(step); return; } }
+      FILM.preDone = true; FILM.frac = 1; };
     step(); }
   else { intro.hold = false; if (FILM.card) filmCardOff(); } }
+// (owner Nov 22 19:54: "cut the wait after Skip (2.5-3.2 s) by building the base while the video plays") the base the film ends in is set up (introToBase, its
+// lights and the kept base) and its pieces drawn for the first time while the video plays: the 3D picture is hidden then and the page has nothing else to do.
+// The pieces are drawn a few at a time into a small hidden target, frustum culling off for that draw, so each one's buffers and pictures are on the GPU before
+// Skip; the home card after Skip then only does what Enter's card does (0.7-1.0 s). CONFIG.lag.vidWarm: after (s into the video), ms (work a frame), on
+const VWARM = { it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false, long: [], last: '' };
+// (Mac fv2 45021132181: one step of 6.2 s, 126 of 763 video frames dropped) in parts: the base built a part at a time if it is not the kept one, its shaders
+// built in parallel (compileAsync, waited on without blocking), then every piece drawn as the title and the card draw them (drawPieces, a 2x2 scissor), the
+// part size kept near ms a frame; the home card after Skip then skips its own turns and all-pieces draws (VWARM.ok)
+function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
+  if (bview.bgStart(save)) while (bview.bgBusy && !bview.bgStep(C.ms)) yield 'build';
+  if (intro && intro.video) introToBase(true); yield 'setup';
+  // (Mac fv2c 45023628513: a 789 ms part drawing a face's cornea and crinkle pieces: their shaders were built at that draw, since a hidden piece is not in compileAsync's
+  // list) every piece drawPieces will show is shown while compileAsync takes its list (it reads the scene at once), then put back
+  if (renderer.compileAsync) { let ok = false; const hid = []; scene.traverse((o) => { if (!o.visible && o !== sky.mesh) { hid.push(o); o.visible = true; } });
+    try { renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); } finally { for (const o of hid) o.visible = false; } while (!ok) yield 'compile'; }
+  const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); VWARM.pieces = list.length; let i = 0, n = 1;
+  while (i < list.length) { const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
+    VWARM.last = list.slice(i, e).map((o) => { const m = Array.isArray(o.material) ? o.material[0] : o.material, mp = m && m.map, im = mp && mp.image; return (o.name || o.type) + (im ? ' tex ' + (im.width || '?') + 'x' + (im.height || '?') : ''); }).slice(0, 4).join(' | ') + (e - i > 4 ? ' +' + (e - i - 4) : '');
+    try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } i = e; const ms = performance.now() - t0;
+    n = ms < C.ms / 2 ? Math.min(n * 2, 64) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
+  VWARM.ok = true; }
+// during the video (the title's Watch: no loading page) a part is drawn only while the picture is dark by design (the black fade between parts, closed eyelids):
+// a frame the video drops there is not seen
+function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (C.darkOnly) { const fo = parseFloat($('cineFade').style.opacity) || 0, lt = $('cineLidT'); let cover = fo; if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) cover = Math.max(cover, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (cover < C.darkOnly) return; } if (!VWARM.it) VWARM.it = vidWarmIter(); const t0 = performance.now();
+  const r = VWARM.it.next(); if (r.done) VWARM.done = true; VWARM.steps++; const ms = performance.now() - t0; VWARM.ms += ms; if (ms > VWARM.worst) { VWARM.worst = ms; VWARM.worstAt = r.value || 'end'; } if (ms > 60 && VWARM.long.length < 12) VWARM.long.push([r.value || 'end', Math.round(ms), Math.round(t * 10) / 10, VWARM.last]); }
 function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
   if (v.paused && !v.ended) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => vidFail('play')); }
-  const t = Math.min(v.currentTime || 0, P[4]); I.t = t;
+  const t = Math.min(v.currentTime || 0, P[4]); I.t = t; vidWarmStep(t);
   let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
   const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
   I.part = part >= 2 ? 'base' : 'town';
@@ -1809,7 +1840,8 @@ const PLAYP = { last: -1, n: 0, at: [], old: 0, k0: undefined };
 // black / the title, at the moment it is built (each push into the list)
 // (?proglog=1 only) how a new program's key differs from the closest earlier program of the same kind: 'field index:old>new' (the fields of three's cache key)
 function progDiff(pr) { try { const a = String(pr.cacheKey).split(','); let best = null, bn = 1e9; for (const q of renderer.info.programs) { if (!q || q === pr || q.name !== pr.name) continue; const b = String(q.cacheKey).split(','); let n = Math.abs(a.length - b.length); const d = []; for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) { n++; if (d.length < 8) d.push(i + ':' + b[i].slice(0, 24) + '>' + a[i].slice(0, 24)); } if (n < bn) { bn = n; best = d; } } return 'key differs from the closest by ' + bn + ': ' + (best || []).join(' ') + ' | key ' + a.join(',').slice(0, 520) + ' | depth programs now ' + renderer.info.programs.filter((q) => q && q.name === pr.name).map((q) => { const b = String(q.cacheKey).split(','); return b.slice(7, 9).join('/') + ':' + b.slice(-28, -1).join('.'); }).slice(-40).join(' ; ').slice(0, 2600); } catch (e) { return 'no key'; } }
-const playHeld = () => LCARD.on || !!FILM.it || !!(intro && intro.hold) || state === 'menu' || state === 'end';
+// (owner Nov 22 19:54) while the opening plays as a video the 3D picture is hidden (cvs visibility hidden), as under the film's black: those frames are held too
+const playHeld = () => LCARD.on || !!FILM.it || !!(intro && intro.hold) || !!(intro && intro.video) || state === 'menu' || state === 'end';
 { const PA = renderer.info.programs, push2 = PA.push; PA.push = function (...a) { if (NBG.inSlice) NBG.built += a.length; if (PLAYP.last >= 0 && !playHeld()) { PLAYP.n += a.length; if (PLAYP.at.length < 30) PLAYP.at.push([state, Math.round(performance.now()), a.length, PROGLOG ? (window.__progLog || []).slice(-1).map((q) => q.mat + ' @ ' + q.owner + ' {' + q.geo + (q.tgt ? ' target' : '') + '}').concat(a[0] ? [progDiff(a[0])] : []) : null]); } return push2.apply(this, a); }; }
 // (lead 21:15) the old count (the list's growth outside the held times) is kept beside it as PLAYP.old, printed next to the new one
 function playProgs() { const k = nProg(); if (PLAYP.k0 !== undefined && k > PLAYP.k0 && !playHeld()) PLAYP.old += k - PLAYP.k0; PLAYP.k0 = k; PLAYP.last = 0; }
@@ -2009,7 +2041,8 @@ async function sceneCard(kind) {
       // (owner 12:35) the home card over a base already drawn at the title (titleBase: shaders built, every piece uploaded) skips the turn-round and all-pieces passes
       // (H round 2, Enter on medium: "3338 ms drawArrays < render < renderBufferDirect" in the first frame after the card) the title's off-screen draws (a 64 px target)
       // uploaded the data but did not make the draws the screen needs (the GPU builds its draw states per target), so the home card always makes its own passes on screen
-      const preDrawn = false;
+      // (owner Nov 22 19:54) the home card right after the video: every piece was drawn during the video (vidWarmIter), so its turns and all-pieces draws are skipped
+      const preDrawn = kind === 'home' && VWARM.ok && !VWARM.used; if (preDrawn) VWARM.used = true;
       // (Nov 20, home card 4.7-10.6 s on the Mac, its four turns 2.3-5.7 s of it: run 44692193700) CONFIG.lag.cardTurns[kind] === false: that card skips the four
       // quarter turns; the next step still draws every piece once with the scene's lights and shadows (to be proven by the enter and hub first-use frames)
       const noTurns = !!(CONFIG.lag.cardTurns && CONFIG.lag.cardTurns[kind] === false);
@@ -2337,6 +2370,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
+window.__game.vidWarm = () => ({ done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock
