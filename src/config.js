@@ -148,7 +148,8 @@ export const CONFIG = {
     // carryLean (Nov 20): the body leans back this many rad while carrying a crate in front; carrySpeed 0.85 -> 0.8 (shorter steps at the same stride time)
     // carryArm, carryFore (owner Nov 22: a carrier's head was inside the crate): how far (rad) the upper arms reach forward and the forearms bend up when carrying.
     // Were 0.75 and 0.9: the forearms pointed up and the hands, and so the crate between them, sat at chin height, the face inside the box (tools/crateprobe.cjs)
-    walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.8, carryLean: 0.06, carryArm: 0.25, carryFore: 0.8 },
+    // carryOut (owner Nov 22: "the hands are sunken into the box"): the upper arms open this many rad more while carrying, so the palms rest on the crate's sides
+    walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.8, carryLean: 0.06, carryArm: 0.25, carryFore: 0.8, carryOut: 0 },
     // motion (tools/humanmotioncheck.cjs measures it):
     // slice: the motion runs in fixed steps of this many seconds (1/120: a 30 or 60 fps frame is a whole number of them, so the motion is the same at both); maxSlices: at most this many per frame (a longer gap is skipped)
     // turnAcc: walking, the body's turn rate changes by at most this many rad/s each second (30 = 1720 deg/s2; no snapped turns at a corner)
@@ -1144,6 +1145,9 @@ export const CONFIG = {
     recruitFood: 30, tryTime: 60, // tryTime: a lost night only earns the home income and a research day if you lasted this many seconds (no farming by dying at once)
     // crateClear (owner Nov 22, head and chest inside the carried crate): the crate's back face stays this many m in front of the carrier's chest bone (src/baseview.js)
     crateClear: 0.14,
+    // crateSize (owner Nov 22: "the hands are sunken into the box"): a carried crate's width, height, depth (m). Was 0.4 wide: the carriers' palms are about 0.26 m
+    // apart, so they sank 6.6 cm into its sides (tools/crateprobe.cjs measures the skinned hand against the box)
+    crateSize: [0.255, 0.3, 0.4],
     maxPersonnel: 9, recruitModels: 9, recruitOrder: [3, 2, 11, 5, 6, 7, 9, 8, 12], // recruitOrder: which recruit model (art/models/genN) the 1st, 2nd, ... person gets, chosen so the model suits the name: Ines, Tomas, Wen, Aroha, Kofi, Mei, Sol, Dara, Jun. All nine are adults.
     // recruitModels: how many different recruit models ship (art/models/gen1..gen9); keep it at or above maxPersonnel so no two people look the same
     speed: 4, bound: 19.5,

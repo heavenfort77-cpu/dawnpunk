@@ -280,7 +280,9 @@ function buildRoomDyn() {
   roomGroup = new THREE.Group();
   for (let f = 0; f < sim.L; f++) { const lamp = HL_ON ? houseLamp(CONFIG.world.lamp, sim.H * CONFIG.world.lampReach) : new THREE.PointLight(0xffe0a0, CONFIG.world.lamp, sim.H * CONFIG.world.lampReach); lamp.position.set(0, f * FH + 2.6, 0); lamp.userData.roomLamp = true; roomGroup.add(lamp); }
   // no floor marks at the stairs or the ladder (user, 2026-11-14): the stairs and the ladder are real and show where to go
-  const crate = (LOOK_OLD ? PR.crateMesh : BT.crateV2)('ess'); crate.scale.setScalar(2); crate.position.set(sim.cat.x + 1.1, 0.06, sim.cat.z - 1.1); roomGroup.add(crate); // the big crate the cat hides behind
+  // the big crate the cat hides behind (owner Nov 22: it was a loot capsule at twice the size, blue band and glow, in every house, that could never be taken, so it
+  // read as loot that does not go away): a plain wooden box, no band
+  const crate = PR.crateMesh('ess', true); crate.scale.setScalar(2); crate.position.set(sim.cat.x + 1.1, 0.06, sim.cat.z - 1.1); roomGroup.add(crate);
   const c = PR.catMesh(CONFIG.catStyles[((run && run.inside) || 0) % CONFIG.catStyles.length]); catG = c.g; catArm = c.arm; catG.position.set(sim.cat.x, 0.06, sim.cat.z); catG.rotation.y = Math.atan2(-sim.cat.x, -sim.cat.z); // it faces the room
   roomGroup.add(catG); scene.add(roomGroup); if (HL_ON) listHouseLamps(roomGroup);
 }
@@ -854,7 +856,15 @@ function startVideoIntro() {
   if (VID.ready) vidReady(); else if (!FILM.pre) filmCardOn();
 }
 // the video can play through: on the loading page it waits for Enter (filmGo lets go of the hold); after Enter it starts at once
-function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT); if (FILM.pre) { FILM.preDone = true; FILM.frac = 1; } else { intro.hold = false; if (FILM.card) filmCardOff(); } }
+// (Mac 44992564917: 86 shaders built in shown frames at 1.7-1.9 s, 0 with the 3D film) the 3D film's preparation finished what the title had left of the
+// base (its build, passes, shaders, corner draws: filmPrep, CONFIG.lag.titleDraw.film) under the loading page before the begin button; the video skipped that, so the
+// title built those shaders in shown frames. The same finish is done here, a frame at a time, before the begin button (the film stage)
+function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT);
+  if (FILM.pre) { const I = intro, TD = CONFIG.lag.titleDraw, tf = performance.now(); FILM.frac = 0.5;
+    const step = () => { if (intro !== I || !FILM.pre) return; if (TD && TD.on && TD.film && TB.phase && TB.phase !== 'done' && performance.now() - tf < TD.filmCap * 1000) { baseSlice0(true); filmCardFill(0.5 + 0.4 * (TB.phase === 'draw' && TB.dl ? TB.di / Math.max(1, TB.dl.length) : 0)); requestAnimationFrame(step); return; }
+      FILM.titleLeft = [Math.round(performance.now() - tf), TB.phase || 'none']; FILM.preDone = true; FILM.frac = 1; };
+    step(); }
+  else { intro.hold = false; if (FILM.card) filmCardOff(); } }
 function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
