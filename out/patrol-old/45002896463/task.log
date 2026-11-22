@@ -1,0 +1,10 @@
+$ git fetch -q --depth=1 origin next5a && git show FETCH_HEAD:tools/patrolprobe.cjs > tools/patrolprobe.cjs && node tools/patrolprobe.cjs dist low   (limit 20 min)
+FAIL probe error page.evaluate: ReferenceError: BODY is not defined
+    at f (eval at evaluate (:311:30), <anonymous>:7:243)
+    at eval (eval at evaluate (:311:30), <anonymous>:10:107)
+    at new Promise (<anonymous>)
+    at eval (eval at evaluate (:311:30), <anonymous>:1:8)
+    at UtilityScript.evaluate (<anonymous>:313:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at /home/runner/work/dawnpunk/dawnpunk/tools/patrolprobe.cjs:20:21
+exit code 1
