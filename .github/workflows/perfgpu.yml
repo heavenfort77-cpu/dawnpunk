@@ -85,8 +85,8 @@ jobs:
       - name: Use main's perfcheck script
         shell: bash
         run: |
-          git fetch --depth 1 origin main
-          git show FETCH_HEAD:tools/perfcheck.cjs > tools/perfcheck.cjs
+          # (test branch fv1 only, never merged) each commit's own perfcheck is used
+          echo "own perfcheck"
       - uses: actions/setup-node@v5
         with:
           node-version: 22

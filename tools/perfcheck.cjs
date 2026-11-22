@@ -191,7 +191,10 @@ const BREAKDOWN = (spot) => {
       const flow = async (spot, secs, click) => { await p.evaluate((sp) => { window.__spot = sp; }, spot); const f = await timed(secs, click); console.log('FPS ' + tier + ' ' + spot + ': ' + f.fps + ' fps, p95 ' + f.p95 + ' ms, worst ' + f.worst + ' ms (' + f.n + ' frames); longest: ' + f.long.join(', ') + (f.held ? '; held (card or warm-up black, not timed) ' + f.held + ' ms, longest held frame ' + f.heldWorst + ' ms, first visible frame after it ' + f.firstVis + ' ms' : ''));
         rows.push({ tier, spot, fps: f.fps, p95: f.p95, worst: f.worst });
         // (R4 worker 6, A.1) the pause holds a still picture: its rate is the runner's idle pacing (Card 8), gated by the pause control below, not by CGATE
-        if (GPU && tier === TT && spot !== 'pause') { const t = TT + ' ' + spot + ' (whole run): '; out.push([t + f.fps + ' fps (target >= ' + CGATE.fps + ')', f.fps >= CGATE.fps]); out.push([t + 'p95 ' + f.p95 + ' ms (target <= ' + CGATE.p95 + ')', f.p95 <= CGATE.p95]); out.push([t + 'worst frame ' + f.worst + ' ms (target <= ' + CGATE.worst + ')', f.worst <= CGATE.worst]); }
+        // (owner Nov 22 18:06, "check the way it should be in game") the opening is a video file: while it plays the page draws nothing and its frame rate is the
+        // runner's idle pacing, so the film is judged as the player sees it instead (tools/filmview.cjs, lines below); the 3D film (fallback) keeps these gates
+        const vidFilm = spot === 'film' && await p.evaluate(() => !!(window.__fv && window.__fv.frames.length)).catch(() => false); if (vidFilm) info('flow ' + tier + ' film: the video played; the page frame gates are replaced by the as-seen lines');
+        if (GPU && tier === TT && spot !== 'pause' && !vidFilm) { const t = TT + ' ' + spot + ' (whole run): '; out.push([t + f.fps + ' fps (target >= ' + CGATE.fps + ')', f.fps >= CGATE.fps]); out.push([t + 'p95 ' + f.p95 + ' ms (target <= ' + CGATE.p95 + ')', f.p95 <= CGATE.p95]); out.push([t + 'worst frame ' + f.worst + ' ms (target <= ' + CGATE.worst + ')', f.worst <= CGATE.worst]); }
         return f; };
       // (coordinator 14:58) a spot that cannot run is a crash, never a quiet INFO line: it fails the run (exit 3, perfgpu turns red)
       const err = (e) => { info('flow ' + tier + ': ' + String(e && e.message || e).slice(0, 200)); CRASH.push(tier + ' flow: ' + String(e && e.message || e).slice(0, 160)); };
@@ -216,9 +219,11 @@ const BREAKDOWN = (spot) => {
       try { await flow('title', 8); } catch (e) { err(e); }
       // (owner 13:10) the film timed from its click (its sliced preparation under the black counts as held; the first visible frame is reported); PROFILE: its first 4 s
       try { let stopP = null; if (process.env.PROFILE) { const cdp = await p.context().newCDPSession(p); await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 }); await cdp.send('Profiler.start'); stopP = (async () => { await new Promise((r) => setTimeout(r, 4000)); const { profile } = await cdp.send('Profiler.stop'); showProf(profile, 'film start'); await cdp.detach(); })(); }
+        let FV = null; if (GPU && tier === TT) { try { FV = await require('./filmview.cjs').setup(p); } catch (e) { err(e); } }
         const ff = await flow('film', 25, 'watch'); if (GPU && CARDMS[tier]) out.push([tier + ' film: longest held frame (under its black) ' + ff.heldWorst + ' ms (card budget <= ' + CARDMS[tier] + ')', ff.heldWorst <= CARDMS[tier]]); if (stopP) await stopP; const fp = await p.evaluate(() => (window.__game.filmPrepInfo ? window.__game.filmPrepInfo() : null)); info('flow ' + tier + ' film preparation under the black: ' + JSON.stringify(fp) + ' (longest prep frame of work, whole prep ms)');
         if (GPU && tier === TT) out.push([TT + ' film: first visible frame ' + ff.firstVis + ' ms (target < 100)', ff.firstVis !== null && ff.firstVis < 100]);
-        await p.evaluate(() => { const b = document.getElementById('cineSkip'); if (b) b.click(); }); await p.waitForTimeout(500); } catch (e) { err(e); }
+        await p.evaluate(() => { const b = document.getElementById('cineSkip'); if (b) b.click(); }); await p.waitForTimeout(500);
+        if (FV) { const R = await require('./filmview.cjs').finish(p, b, TT, FV); info('flow ' + TT + ' film as seen: ' + JSON.stringify(R.info)); for (const l of R.lines) out.push(l); } } catch (e) { err(e); }
       // night 1 with the drill on (a fresh save's first night from the base)
       try { await p.evaluate(() => { try { localStorage.setItem('dawnpunk.drill', '{}'); } catch (e) { /* none */ } const g = window.__game; if (g.homeCard) g.homeCard(); else g.enterBase(); g.save.nights = 0; g.save.day = 1; });
         // (R4 worker 5, item 1) PROFILE: the first ride card's 'first frame' step traced (5 s from its start, ANGLE and decoder categories)
