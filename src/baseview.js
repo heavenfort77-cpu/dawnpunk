@@ -67,14 +67,16 @@ const SPV = { b: -1, n: -1, k: 0, list: [], c: new THREE.Vector3(), w: new THREE
 const ROLE_COL = { hunter: 0xc0583a, gatherer: 0xc8b43a, researcher: 0x3a7ac0 };
 const PATROL = { hunter: [[-15, -15], [15, -15], [15, 15], [-15, 15]], gatherer: [[-9, -8], [0, -16], [-9, -8]], researcher: [[6.0, 3.9], [9, 3.4], [9.55, 2.2], [9, 3.4]] }; // researchers walk past the workshop door (it faces the plaza since Nov 17), clear of its step and urns, and stop to read the quest board beside it
 // (owner Nov 22: two researchers carrying crates walked through each other on their one shared line) recruits who share a route walk it apart (CONFIG.people.patrol).
-// routeFor: a route that turns straight back on itself (out and back along one line) becomes a thin loop: each leg is moved lane m to the right of its walk, a
-// turn-back point becomes the two ends of its legs and a bend the mean of them, so the way out and the way back are 2 x lane apart; a loop route is kept as it is
-function routeFor(wp, lane) { const q = wp.filter((a, j) => { const r = wp[(j + wp.length - 1) % wp.length]; return Math.hypot(a[0] - r[0], a[1] - r[1]) > 1e-3; }), n = q.length; if (!lane || n < 2) return wp;
-  const dir = (j) => { const a = q[j], c = q[(j + 1) % n], dx = c[0] - a[0], dz = c[1] - a[1], l = Math.hypot(dx, dz); return [dx / l, dz / l]; };
+// routeFor: a route that turns straight back on itself (out and back along one line) becomes a thin loop: each leg's inner part is moved lane m to the right
+// of its walk (from tipIn m after its start to tipIn m before its end; a short leg at its middle), so the way out and the way back are 2 x lane apart; a
+// turn-back point stays on the line and is turned there as before (two waypoints side by side at a tip stalled the walk: tried, people stood still); a bend
+// moves by the mean of its legs' sides; a loop route is kept as it is
+function routeFor(wp, lane, tipIn) { const q = wp.filter((a, j) => { const r = wp[(j + wp.length - 1) % wp.length]; return Math.hypot(a[0] - r[0], a[1] - r[1]) > 1e-3; }), n = q.length; if (!lane || n < 2) return wp;
+  const dir = (j) => { const a = q[j], c = q[(j + 1) % n], dx = c[0] - a[0], dz = c[1] - a[1], l = Math.hypot(dx, dz); return [dx / l, dz / l, l]; };
   let back = n === 2; for (let j = 0; j < n && !back; j++) { const u = dir((j + n - 1) % n), v = dir(j); if (u[0] * v[0] + u[1] * v[1] < -0.9) back = true; } if (!back) return wp;
-  const out = []; for (let j = 0; j < n; j++) { const u = dir((j + n - 1) % n), v = dir(j), a = q[j], ru = [-u[1] * lane, u[0] * lane], rv = [-v[1] * lane, v[0] * lane];
-    if (u[0] * v[0] + u[1] * v[1] < -0.5) { out.push([a[0] + ru[0], a[1] + ru[1]], [a[0] + rv[0], a[1] + rv[1]]); continue; }
-    const mx = ru[0] + rv[0], mz = ru[1] + rv[1], ml = Math.hypot(mx, mz) || 1; out.push([a[0] + mx / ml * lane, a[1] + mz / ml * lane]); }
+  const out = [], T = tipIn || 1; for (let j = 0; j < n; j++) { const u = dir((j + n - 1) % n), v = dir(j), a = q[j], rv = [-v[1] * lane, v[0] * lane];
+    if (u[0] * v[0] + u[1] * v[1] < -0.5) out.push([a[0], a[1]]); else { const mx = -u[1] - v[1], mz = u[0] + v[0], ml = Math.hypot(mx, mz) || 1; out.push([a[0] + mx / ml * lane, a[1] + mz / ml * lane]); }
+    const L = v[2]; if (L > 2 * T + 0.2) out.push([a[0] + v[0] * T + rv[0], a[1] + v[1] * T + rv[1]], [a[0] + v[0] * (L - T) + rv[0], a[1] + v[1] * (L - T) + rv[1]]); else if (L > 0.8) out.push([a[0] + v[0] * L / 2 + rv[0], a[1] + v[1] * L / 2 + rv[1]]); }
   return out; }
 // routeStart: walker k of n on one route starts k / n of the way round it (times spread), on the leg that point falls on: its spot and the waypoint it walks to
 function routeStart(wp, k, n, spread) { const m = wp.length, seg = []; let L = 0; for (let j = 0; j < m; j++) { const a = wp[j], c = wp[(j + 1) % m], l = Math.hypot(c[0] - a[0], c[1] - a[1]); seg.push(l); L += l; }
@@ -165,7 +167,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     const rule = (o, cast) => { if (!o.isMesh || o === sky.mesh || o.isSkinnedMesh || o.userData.blob || o.userData.scenery) return; o.receiveShadow = !o.material.transparent; o.castShadow = cast && !o.material.transparent; };
     for (const c of lifeKids) c.traverse((o) => rule(o, true)); for (const q of npcs) q.n.traverse((o) => rule(o, false)); }
   function addRecruits(tok) {
-    const roleN = new Map(), roleK = new Map(); for (const p of save.personnel) roleN.set(p.role, (roleN.get(p.role) || 0) + 1);
+    const roleN = new Map(), roleK = new Map(); for (const p of save.personnel) { const rr = PATROL[p.role] ? p.role : 'hunter'; roleN.set(rr, (roleN.get(rr) || 0) + 1); }
     for (const p of save.personnel) {
       const n = new THREE.Group(), stand = new THREE.Group(), body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 1.2, 8), mat(ROLE_COL[p.role] || 0xaaaaaa)); body.position.y = 0.8; stand.add(body);
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 6), mat(0xe0b890)); head.position.y = 1.65; stand.add(head); n.add(stand);
@@ -181,8 +183,9 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       // (owner Nov 22: "the hands are sunken into the box") the crate's size is CONFIG.base.crateSize: as wide as the space between the carrier's palms
       const CS = cfg.base.crateSize || [0.4, 0.3, 0.4], crate = bx(CS[0], CS[1], CS[2], cfg.base.crateCol || 0x8a6a3a, 0, 1.05, 0.4, n); crate.visible = p.role === 'researcher';
       const wp0 = p.role === 'hunter' && cfg.baseWater && cfg.baseWater.on && cfg.baseLife && cfg.baseLife.rounds ? [PATROL.hunter[0], PATROL.hunter[1], ...cfg.baseLife.rounds, PATROL.hunter[2], PATROL.hunter[3]] : PATROL[p.role] || PATROL.hunter;
-      // one route per role: walker k of the role's n walks its lanes, k / n of the way round (CONFIG.people.patrol); was every walker on the centre line from waypoint p.id % length
-      const PT = cfg.people.patrol, rk = roleK.get(p.role) || 0, rn = roleN.get(p.role) || 1; roleK.set(p.role, rk + 1); const wr = PT ? routeFor(wp0, PT.lane) : wp0, st0 = routeStart(wr, rk, rn, PT ? PT.spread : 0), i = st0.i; n.position.set(st0.x, 0, st0.z);
+      // one route per role (a role without its own walks the hunters'): walker k of the route's n walks its lanes, k / n of the way round (CONFIG.people.patrol); was every walker on the centre line from waypoint p.id % length
+      // a role in patrol.fan (the researchers: four of them on one short line by the workshop and the board crowded together even in lanes) gives walker k its own copy of the line, moved k x fan m
+      const PT = cfg.people.patrol, rr = PATROL[p.role] ? p.role : 'hunter', rk = roleK.get(rr) || 0, rn = roleN.get(rr) || 1; roleK.set(rr, rk + 1); const fan = PT && PT.fan && PT.fan[rr], wr = fan ? wp0.map((w) => [w[0] + fan[0] * rk, w[1] + fan[1] * rk]) : PT ? routeFor(wp0, PT.lane, PT.tipIn) : wp0, st0 = routeStart(wr, rk, rn, PT ? PT.spread : 0), i = st0.i; n.position.set(st0.x, 0, st0.z);
       g.add(n); npcs.push({ n, p, wp: wr, i, i0: i, x0: st0.x, z0: st0.z, crate, ch, ord: npcs.length, wt: 0 });
     }
   }

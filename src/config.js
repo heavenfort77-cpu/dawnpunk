@@ -181,8 +181,9 @@ export const CONFIG = {
     // lane: on a there-and-back route each walker keeps this many m to the right of the line, so walkers going opposite ways pass 2 x lane apart (src/baseview.js routeFor)
     // gap: a walker waits while another recruit stands within this many m ahead of it in its own lane; spread: walkers of one route start this share of the route apart (1 = evenly round it)
     // ahead: the width (m, either side of the walk line) in which another recruit counts as ahead
-    // waitMax: the longest a walker waits (s) before it goes on anyway for goOn s
-    patrol: { lane: 0.35, gap: 1.1, spread: 1, ahead: 0.4, waitMax: 4, goOn: 1.5 },
+    // waitMax: the longest a walker waits (s) before it goes on anyway for goOn s; tipIn: a lane begins this many m after a turn-back point and ends as far before one
+    // fan: per role, [x, z] m between the copies of the route its walkers each walk (the researchers' copies step away from the workshop, into the plaza)
+    patrol: { lane: 0.35, gap: 1.1, spread: 1, ahead: 0.4, waitMax: 4, goOn: 1.5, tipIn: 1, fan: { researcher: [0, -0.9] } },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
     hiMat: { bump: 1.0, skinRough: 0.95, skinSpec: 0.5, skinTint: 0xe6e3d8, sheen: 0.06, env: 0.3, wrap: 0.35, scatter: 0.06, scatterCol: 0xff8068, eyeRough: 0.3, cut: 0.42, hairRough: 0.62, hairSheen: 0.15,

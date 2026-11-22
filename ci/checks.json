@@ -646,6 +646,21 @@
    "quality": "low",
    "timeout": 30,
    "note": "owner Nov 22: loot orbs that do not go away; in each house of a run all crates taken, nothing in loot colours may still show (the cat's cover was a loot capsule)"
+  },
+  {
+   "name": "patrolprobe",
+   "script": "tools/patrolprobe.cjs",
+   "args": [
+    "{dist}",
+    "low"
+   ],
+   "env": {
+    "FR": "3000"
+   },
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 30,
+   "note": "owner Nov 22: two crate carriers walked through each other; nine recruits stepped 150 s: no two bodies within 0.5 m, no crate through a person, none in a solid, all keep walking"
   }
  ]
 }
