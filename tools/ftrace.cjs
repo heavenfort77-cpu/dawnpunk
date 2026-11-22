@@ -15,7 +15,7 @@ function report(label, buf) {
   const at = (us) => (off === null ? 'trace ' + (us / 1000).toFixed(0) + ' ms' : ((us / 1000 - off) / 1000).toFixed(2) + ' s');
   const main = marks[0] ? marks[0].pid + ':' + marks[0].tid : null;
   const X = evs.filter((e) => e.ph === 'X' && e.dur > 0);
-  const t0 = Math.min(...X.map((e) => e.ts)), t1 = Math.max(...X.map((e) => e.ts + e.dur));
+  let t0 = Infinity, t1 = -Infinity; for (const e of X) { if (e.ts < t0) t0 = e.ts; if (e.ts + e.dur > t1) t1 = e.ts + e.dur; }
   console.log('FTRACE ' + label + ': ' + evs.length + ' events, ' + at(t0) + ' to ' + at(t1) + ' (film clock: s after the click), page main ' + (main ? th({ pid: +main.split(':')[0], tid: +main.split(':')[1] }) : 'not found'));
   // busy per thread over the window (top-level tasks)
   const busy = new Map(); for (const e of X) if (e.name === 'ThreadControllerImpl::RunTask' || e.name === 'RunTask' || e.name === 'ThreadPool_RunTask') busy.set(th(e), (busy.get(th(e)) || 0) + e.dur / 1000);
