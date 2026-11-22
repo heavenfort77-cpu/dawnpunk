@@ -883,7 +883,10 @@ const VWARM = { it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, wor
 function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   if (bview.bgStart(save)) while (bview.bgBusy && !bview.bgStep(C.ms)) yield 'build';
   if (intro && intro.video) introToBase(true); yield 'setup';
-  if (renderer.compileAsync) { let ok = false; renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); while (!ok) yield 'compile'; }
+  // (Mac fv2c 45023628513: a 789 ms part drawing a face's cornea and crinkle pieces: their shaders were built at that draw, since a hidden piece is not in compileAsync's
+  // list) every piece drawPieces will show is shown while compileAsync takes its list (it reads the scene at once), then put back
+  if (renderer.compileAsync) { let ok = false; const hid = []; scene.traverse((o) => { if (!o.visible && o !== sky.mesh) { hid.push(o); o.visible = true; } });
+    try { renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); } finally { for (const o of hid) o.visible = false; } while (!ok) yield 'compile'; }
   const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); VWARM.pieces = list.length; let i = 0, n = 1;
   while (i < list.length) { const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
     VWARM.last = list.slice(i, e).map((o) => { const m = Array.isArray(o.material) ? o.material[0] : o.material, mp = m && m.map, im = mp && mp.image; return (o.name || o.type) + (im ? ' tex ' + (im.width || '?') + 'x' + (im.height || '?') : ''); }).slice(0, 4).join(' | ') + (e - i > 4 ? ' +' + (e - i - 4) : '');
