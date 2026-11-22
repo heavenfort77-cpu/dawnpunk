@@ -870,11 +870,27 @@ function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT
       FILM.titleLeft = [Math.round(performance.now() - tf), TB.phase || 'none']; FILM.preDone = true; FILM.frac = 1; };
     step(); }
   else { intro.hold = false; if (FILM.card) filmCardOff(); } }
+// (owner Nov 22 19:54: "cut the wait after Skip (2.5-3.2 s) by building the base while the video plays") the base the film ends in is set up (introToBase, its
+// lights and the kept base) and its pieces drawn for the first time while the video plays: the 3D picture is hidden then and the page has nothing else to do.
+// The pieces are drawn a few at a time into a small hidden target, frustum culling off for that draw, so each one's buffers and pictures are on the GPU before
+// Skip; the home card after Skip then only does what Enter's card does (0.7-1.0 s). CONFIG.lag.vidWarm: after (s into the video), ms (work a frame), on
+const VWARM = { it: null, done: false, steps: 0, ms: 0, worst: 0, pieces: 0 };
+function* vidWarmIter() {
+  if (intro && intro.video) introToBase(true); const g = bview.group; if (!g || !g.parent) return; const list = []; g.traverse((o) => { if ((o.isMesh || o.isLine || o.isPoints) && o.visible) list.push(o); }); VWARM.pieces = list.length; yield;
+  const rt = new THREE.WebGLRenderTarget(64, 64), C = CONFIG.lag.vidWarm, sun = renderer.shadowMap.autoUpdate; let i = 0, n = 8;
+  try { renderer.shadowMap.autoUpdate = false; for (const o of list) o.visible = false;
+    while (i < list.length) { const t0 = performance.now(), part = list.slice(i, i + n); for (const o of part) { o.visible = true; o.userData.__fc = o.frustumCulled; o.frustumCulled = false; }
+      const rt0 = renderer.getRenderTarget(); renderer.setRenderTarget(rt); renderer.render(scene, cam); renderer.setRenderTarget(rt0);
+      for (const o of part) { o.visible = false; o.frustumCulled = o.userData.__fc; delete o.userData.__fc; } i += part.length; const ms = performance.now() - t0; VWARM.worst = Math.max(VWARM.worst, ms);
+      n = ms < C.ms / 2 ? Math.min(n * 2, 256) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield; } }
+  finally { for (const o of list) o.visible = true; renderer.shadowMap.autoUpdate = sun; rt.dispose(); } }
+function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (!VWARM.it) VWARM.it = vidWarmIter(); const t0 = performance.now();
+  if (VWARM.it.next().done) VWARM.done = true; VWARM.steps++; VWARM.ms += performance.now() - t0; }
 function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
   if (v.paused && !v.ended) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => vidFail('play')); }
-  const t = Math.min(v.currentTime || 0, P[4]); I.t = t;
+  const t = Math.min(v.currentTime || 0, P[4]); I.t = t; vidWarmStep(t);
   let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
   const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
   I.part = part >= 2 ? 'base' : 'town';
@@ -2337,6 +2353,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
+window.__game.vidWarm = () => ({ done: VWARM.done, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), pieces: VWARM.pieces });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock
