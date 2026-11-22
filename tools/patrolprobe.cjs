@@ -17,7 +17,7 @@ const srv = http.createServer((q, r) => { const f = path.join(D, decodeURICompon
     const R = ['researcher', 'gatherer', 'hunter', 'researcher', 'engineer', 'researcher', 'gatherer', 'researcher', 'hunter'], N = ['Wen', 'Jun', 'Mei', 'Tomas', 'Ines', 'Bram', 'Lia', 'Kofi', 'Ana'], IDS = [100, 101, 103, 104, 105, 107, 108, 109, 112];
     s.personnel = R.map((r, k) => ({ id: IDS[k], name: N[k], role: r })); });
   await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 600000 }); await p.waitForTimeout(2000);
-  const r = await p.evaluate((F) => new Promise((res) => { const g = window.__game, pk = g.bview.peek(), A = pk.npcs, n = A.length, cp = g.cam.position, V = cp.constructor, cw = new V();
+  const r = await p.evaluate(({ F, BODY, CRATE }) => new Promise((res) => { const g = window.__game, pk = g.bview.peek(), A = pk.npcs, n = A.length, cp = g.cam.position, V = cp.constructor, cw = new V();
     const out = { people: n, roles: A.map((o) => o.p.name + ' ' + o.p.role), close: {}, crate: {}, inBox: {}, walked: A.map(() => 0), minPair: {} }; const last = A.map((o) => [o.n.position.x, o.n.position.z]);
     const near = (pk.boxes || []).map((bx) => { const I = bx.I || { x: 0, z: 0, ry: 0 }; return { bx, I }; });
     out.boxesNear = near.filter(({ I }) => Math.abs(I.x - 7.5) < 5 && Math.abs(I.z - 3) < 4).slice(0, 20).map(({ bx, I }) => [I.x, I.z, I.ry || 0, bx.cx || 0, bx.cz || 0, bx.hx, bx.hz].map((v) => +(+v).toFixed(2)));
@@ -26,7 +26,7 @@ const srv = http.createServer((q, r) => { const f = path.join(D, decodeURICompon
         for (let c = a + 1; c < n; c++) { const Q = A[c].n.position, d = Math.hypot(P.x - Q.x, P.z - Q.z), key = A[a].p.name + '-' + A[c].p.name; if (out.minPair[key] == null || d < out.minPair[key]) out.minPair[key] = +d.toFixed(3); if (d < BODY) out.close[key] = (out.close[key] || 0) + 1; }
         if (A[a].crate.visible) { A[a].crate.getWorldPosition(cw); for (let c = 0; c < n; c++) { if (c === a) continue; const Q = A[c].n.position, d = Math.hypot(cw.x - Q.x, cw.z - Q.z); if (d < CRATE) { const key = A[a].p.name + ' crate-' + A[c].p.name; out.crate[key] = (out.crate[key] || 0) + 1; } } }
         for (const { bx, I } of near) { const dx = P.x - I.x, dz = P.z - I.z, co = Math.cos(-(I.ry || 0)), si = Math.sin(-(I.ry || 0)), lx = dx * co + dz * si - (bx.cx || 0), lz = -dx * si + dz * co - (bx.cz || 0); if (Math.max(Math.abs(lx) - bx.hx, Math.abs(lz) - bx.hz) < 0.2) { const key = A[a].p.name + ' at ' + P.x.toFixed(1) + ',' + P.z.toFixed(1) + ' box ' + (+I.x).toFixed(1) + ',' + (+I.z).toFixed(1); out.inBox[A[a].p.name] = out.inBox[A[a].p.name] || [0, key]; out.inBox[A[a].p.name][0]++; } } }
-      if (k < F) { if (k % 100 === 0) setTimeout(f, 0); else f(); } else { out.frames = k; res(out); } }; f(); }), +(process.env.FR || 3000));
+      if (k < F) { if (k % 100 === 0) setTimeout(f, 0); else f(); } else { out.frames = k; res(out); } }; f(); }), { F: +(process.env.FR || 3000), BODY, CRATE });
   const fails = [], line = (ok, t) => { console.log((ok ? 'PASS ' : 'FAIL ') + t); if (!ok) fails.push(t); };
   console.log('people ' + r.people + ': ' + r.roles.join(', ') + '; ' + r.frames + ' steps of 0.05 s');
   console.log('boxes near the researchers (x, z, ry, cx, cz, hx, hz): ' + JSON.stringify(r.boxesNear));
