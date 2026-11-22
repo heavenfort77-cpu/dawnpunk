@@ -10,8 +10,9 @@ import { TEXHI } from './texhi.js';
 // next start. ?quality=low|medium|high in the address wins (the scripted checks pass their tier), then the choice saved from the Graphics button.
 // medium and high both use the desktop builds and models (QUALITY 'high' below, the switch every module reads); medium is CONFIG.quality.medium laid over CONFIG.quality.high.
 export const QPICK = (() => {
-  const ok = (t) => t === 'high' || t === 'low' || t === 'medium';
-  try { const u = new URLSearchParams(location.search).get('quality'); if (ok(u)) return { tier: u, by: 'address' }; } catch (e) { /* no address */ }
+  const ok = (t) => t === 'low' || t === 'medium';
+  // OWNER DECISION (Nov 23 04:23): the high tier is removed: ?quality=high in the address gives medium, as a saved high already did
+  try { let u = new URLSearchParams(location.search).get('quality'); if (u === 'high') u = 'medium'; if (ok(u)) return { tier: u, by: 'address' }; } catch (e) { /* no address */ }
   // OWNER DECISION (lead 00:16, R4 worker 8, Card 47): players never get high: a save that stored high loads as medium (and is saved as medium); only the address
   // (?quality=high: the scripted desktop checks, the owner's tests) still gives high
   try { let s = localStorage.getItem('dawnpunk.quality'); if (s === 'high') { s = 'medium'; try { localStorage.setItem('dawnpunk.quality', s); } catch (e) { /* not kept */ } } if (ok(s)) return { tier: s, by: 'saved' }; } catch (e) { /* storage blocked */ }
