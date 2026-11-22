@@ -523,6 +523,36 @@
    "quality": "low",
    "timeout": 40,
    "note": "owner Nov 22: skipping the opening must not leave the film warm-up drawing over the base (bright flash); film skipped at 4 and 33 s"
+  },
+  {
+   "name": "videocheck",
+   "script": "tools/videocheck.cjs",
+   "args": [
+    "{dist}",
+    "medium"
+   ],
+   "env": {
+    "PARTS": "ABCDE"
+   },
+   "tier": "logic",
+   "quality": "medium",
+   "timeout": 30,
+   "note": "owner Nov 22: the opening as a video: loading page without the 3D film, plays, captions on its clock, end and skip to the base, missing file -> 3D film (Google Chrome on the runner)"
+  },
+  {
+   "name": "videocheck_low",
+   "script": "tools/videocheck.cjs",
+   "args": [
+    "{dist}",
+    "low"
+   ],
+   "env": {
+    "PARTS": "AB"
+   },
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 20,
+   "note": "owner Nov 22: phone tier gets the small H.264 file and it plays"
   }
  ]
 }

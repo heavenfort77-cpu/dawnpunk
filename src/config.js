@@ -225,6 +225,11 @@ export const CONFIG = {
   opening: {
     // on: the new opening (false = the old sample, CONFIG.intro, kept until the owner approves this one)
     on: true,
+    // video (owner Nov 22): the opening played as a video recorded from the 3D film (tools/filmrender.cjs + tools/filmencode.sh, files from art/film):
+    // hi for medium (desktop, laptop), lo for low (phone); type: what the browser must be able to play; waitMs: longest wait for it to be playable
+    // before the 3D film is used instead; fit: how it fills a screen of another shape (contain: black bars, nothing cut off)
+    // hiAv1: the medium file in AV1 (desktop browsers decode it; about 20 % smaller than hi at better quality), used where av1Type can play, else hi (H.264)
+    video: { on: true, hiAv1: 'film/opening_hi_av1.mp4', av1Type: 'video/mp4; codecs="av01.0.05M.08"', hi: 'film/opening_hi.mp4', lo: 'film/opening_lo.mp4', type: 'video/mp4; codecs="avc1.640028"', waitMs: 25000, fit: 'contain' },
     // seed: the street it is filmed in (the run's seed, ring 1)
     seed: 4242,
     // parts: start of each part [grid, turning, dawn, wake] and the end of the film (s); owner 17:00: about 45-75 s as first briefed (the advisor's 40 s cap is not used)
