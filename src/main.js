@@ -910,7 +910,11 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   if (intro && intro.video) introToBase(true); yield 'setup';
   // (Mac fv2c 45023628513: a 789 ms part drawing a face's cornea and crinkle pieces: their shaders were built at that draw, since a hidden piece is not in compileAsync's
   // list) every piece drawPieces will show is shown while compileAsync takes its list (it reads the scene at once), then put back
-  const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); VWARM.pieces = list.length; let i = 0, n = 1;
+  // (next8 45038918268: with the big pictures sent before the video, 20-45 frames still dropped at 8-14 s, where the warm first drew the people, in 5 of 5 runs)
+  // the people's pieces (every piece under a rig that holds a skinned mesh) come first in the list and are first drawn before the video starts playing too
+  const all = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) all.push(o); });
+  const rigs = new Set(); for (const o of all) if (o.isSkinnedMesh && o.parent) rigs.add(o.parent); const ofRig = (o) => { for (let q = o; q; q = q.parent) if (rigs.has(q)) return true; return false; };
+  const list = all.filter(ofRig), np = list.length; for (const o of all) if (!ofRig(o)) list.push(o); VWARM.pieces = list.length; VWARM.people = np; let i = 0, n = 1;
   // (next8 / next8b 45037773470: the dropped frames sat where the warm reached the scan-face people, and followed the count of big pictures sent in the film:
   // 3 sent 0.3 and 0.9 %, 7 sent 2.9-4.4 %, 12 sent 5.0 and 6.1 %) the big pictures of every piece go to the GPU first, one a step, and the people's shadow
   // shaders are started next: on the title's Watch both happen before the video starts playing (videoFrame holds it at most C.hold ms after the click), so
@@ -919,22 +923,21 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   if (C.texAlone) for (const t of texPre(list, 0, list.length, C.texAlone)) { try { renderer.initTexture(t); } catch (er) { /* sent at its first draw instead */ } VWARM.tex++; yield 'tex'; }
   if (C.depthPre && renderer.compileAsync) { const sk = list.filter((o) => o.castShadow && (o.isSkinnedMesh || o.morphTargetInfluences)); if (sk.length) { const at = list.indexOf(sk[0]); for (const p of depthPre(sk, 0, sk.length)) pend.push([p, at]); yield 'depth'; } }
   if (renderer.compileAsync) { let ok = false; const hid = []; scene.traverse((o) => { if (!o.visible && o !== sky.mesh) { hid.push(o); o.visible = true; } });
-    try { renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); } finally { for (const o of hid) o.visible = false; } VWARM.pre = true; while (!ok) yield 'compile'; }
-  VWARM.pre = true;
+    try { renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); } finally { for (const o of hid) o.visible = false; } while (!ok) yield 'compile'; }
   // (next8 45036628749: the warm did not finish in the video in 5 of 5 runs, the steps spent waiting on the depth shaders' links; parts of 107-197 ms held a
   // scan-face piece's 1024 pictures, 3 to 8 uploads in one draw) the depth shaders are now built for the pieces up to C.depthAhead ahead of the part being drawn,
   // at most 8 pieces a step, so they link while earlier parts draw (a part waits only if its own are not ready yet); and a picture of C.texAlone pixels or
   // more is sent to the GPU in a step of its own before its piece is drawn (texPre)
   let dj = 0;
-  while (i < list.length) { const e0 = Math.min(list.length, i + n);
+  while (i < list.length) { if (i >= np) VWARM.pre = true; const e0 = Math.min(list.length, i < np ? np : list.length, i + n);
     if (C.depthPre && renderer.compileAsync) { const to = Math.min(list.length, Math.max(e0, Math.min(dj + 8, i + (C.depthAhead || 0)))); if (to > dj) { for (const p of depthPre(list, dj, to)) pend.push([p, dj]); dj = to; }
       while (pend.some(([p, at]) => at < e0 && !p.isReady())) { VWARM.dwait++; yield 'depth'; } }
     if (C.texAlone) for (const t of texPre(list, i, e0, C.texAlone)) { try { renderer.initTexture(t); } catch (er) { /* sent at its first draw instead */ } VWARM.tex++; yield 'tex'; }
-    const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
+    const t0 = performance.now(), e = e0, V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
     VWARM.last = list.slice(i, e).map((o) => { const m = Array.isArray(o.material) ? o.material[0] : o.material, mp = m && m.map, im = mp && mp.image; return (o.name || o.type) + (im ? ' tex ' + (im.width || '?') + 'x' + (im.height || '?') : ''); }).slice(0, 4).join(' | ') + (e - i > 4 ? ' +' + (e - i - 4) : '');
     try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } i = e; const ms = performance.now() - t0;
     n = ms < C.ms / 2 ? Math.min(n * 2, FILM.pre || !C.maxPart ? 64 : C.maxPart) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
-  VWARM.ok = true; }
+  VWARM.pre = true; VWARM.ok = true; }
 // during the video (the title's Watch: no loading page) a part is drawn only while the picture is dark by design (the black fade between parts, closed eyelids):
 // a frame the video drops there is not seen
 function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (C.darkOnly) { const fo = parseFloat($('cineFade').style.opacity) || 0, lt = $('cineLidT'); let cover = fo; if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) cover = Math.max(cover, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (cover < C.darkOnly) return; } if (!VWARM.it) VWARM.it = vidWarmIter(); const t0 = performance.now();
@@ -2418,7 +2421,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
-window.__game.vidWarm = () => ({ depth: [DPRE.n, DPRE.built, VWARM.dwait], tex: VWARM.tex, held: VWARM.held, done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
+window.__game.vidWarm = () => ({ depth: [DPRE.n, DPRE.built, VWARM.dwait], tex: VWARM.tex, held: VWARM.held, people: VWARM.people || 0, done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock

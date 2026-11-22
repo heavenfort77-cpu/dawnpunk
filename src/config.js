@@ -1314,9 +1314,9 @@ export const CONFIG = {
     // for the scan-face people's skinned and morphing pieces, were built at the draw itself, each a 77-418 ms wait on its link: the dropped frames at 10-16 s)
     // depthAhead: how many pieces ahead of the part being drawn those shaders are built (they link meanwhile); texAlone: a picture with at least this many
     // pixels goes to the GPU in a step of its own before its piece is drawn (0 = with the piece)
-    // hold: on the title's Watch the video's start waits at most this many ms after the click while the big pictures are sent and the people's shadow shaders
-    // are started (0 = no wait). maxPart 8 (45037773470): with 4 the warm was not finished at Skip in 5 of 5 runs (Skip 834-1916 ms), with 8 in 0 of 5 (737-978 ms)
-    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0, maxPart: 8, depthPre: true, depthAhead: 48, texAlone: 400000, hold: 600 },
+    // hold: on the title's Watch the video's start waits at most this many ms after the click while the big pictures are sent, the people's shadow shaders
+    // are started, the base's shaders are built and the people are first drawn (0 = no wait). maxPart 8 (45037773470): with 4 the warm was not finished at Skip in 5 of 5 runs (Skip 834-1916 ms), with 8 in 0 of 5 (737-978 ms)
+    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0, maxPart: 8, depthPre: true, depthAhead: 48, texAlone: 400000, hold: 800 },
     // filmBase: the film's black also draws the base's pieces once (src/main.js filmWarm), so the home card after the film finds them drawn
     filmBase: false,
     // filmCompileParts: the film's black builds the street's shaders one top-level piece at a time (src/main.js filmWarm), not all in one frame
