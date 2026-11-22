@@ -1577,8 +1577,17 @@ function baseSlice0(force) { const S = CONFIG.lag.slice, SB = S ? (force ? S.fil
   // (H round 2, the title's seconds-long frames) the base's shaders are built a few of its pieces at a time (compileAsync on each, its sync part at most SB a frame:
   // SPREAD); the off-screen draws are gone (REMOVED: they made the GPU's draw states for a 64 px target, not for the screen, so the home card draws on screen anyway)
   if (TB.phase === 'compile') { const t1 = performance.now(); if (!renderer.compileAsync) { TB.phase = 'done'; return; } const inS = !!g.parent; if (!inS) scene.add(g);
-    try { while (TB.cq.length && performance.now() - t1 < SB) { const c = TB.cq.shift(); if (c.parent === g) renderer.compileAsync(c, cam, scene).catch(() => {}); } } finally { if (!inS) scene.remove(g); }
-    if (!TB.cq.length) { TB.phase = CONFIG.lag.titleDraw && CONFIG.lag.titleDraw.on ? 'draw' : 'done'; TB.ms = Math.round(performance.now() - TB.t0); pauseDrawn = false; } return; }
+    // (owner Nov 22 16:22, "why is the title still so laggy": titleprobe on the Mac, run 45002689486) two causes in this phase. 1: a top-level piece holds many
+    // materials, so one compileAsync's sync part took 142-250 ms in a frame; now one piece per material and kind (skinned, instanced, morphed) at a time, SB ms a frame.
+    // 2: the draw phase began the frame the last compileAsync was ASKED, while the GPU was still building ~hundreds of programs; its first draw read a program's
+    // link status, which waits for every queued build: one title frame of 7583 ms (getProgramParameter < getUniforms < renderBufferDirect, GPU main thread busy
+    // 7574 ms). Now the draw phase waits until every compileAsync has resolved (they poll the GPU's completion flag, which never waits)
+    if (!TB.lv) { TB.lv = true; TB.pend = []; const seen = new Set(), lv = []; for (const c of TB.cq) c.traverse((o) => { if (!(o.isMesh || o.isPoints || o.isLine || o.isSprite) || !o.material) return; const ms = Array.isArray(o.material) ? o.material : [o.material], k = ms.map((m) => m.id).join(',') + (o.isSkinnedMesh ? 's' : '') + (o.isInstancedMesh ? 'i' : '') + (o.morphTargetInfluences ? 'm' : '') + (o.isBatchedMesh ? 'b' : ''); if (seen.has(k)) return; seen.add(k); lv.push(o); }); TB.cq = lv; }
+    try { while (TB.cq.length && performance.now() - t1 < SB) { const c = TB.cq.shift(); let inG = false; for (let q = c; q; q = q.parent) if (q === g) { inG = true; break; } if (inG) TB.pend.push(renderer.compileAsync(c, cam, scene).catch(() => {})); } } finally { if (!inS) scene.remove(g); }
+    if (TB.cq.length) return;
+    if (!TB.pw) { TB.pw = true; TB.pdone = false; Promise.allSettled(TB.pend).then(() => { TB.pdone = true; }); }
+    if (!TB.pdone) return;
+    TB.pend = null; TB.pw = false; TB.lv = false; TB.phase = CONFIG.lag.titleDraw && CONFIG.lag.titleDraw.on ? 'draw' : 'done'; TB.ms = Math.round(performance.now() - TB.t0); pauseDrawn = false; return; }
   // (Nov 20, home card 7-12 s on the Mac, most of it the GPU making each draw state at its first draw: PROFILE=3 run 44722570694) CONFIG.lag.titleDraw: the base's
   // pieces are then drawn ON SCREEN a few at a time (the card's own drawPieces, shadow maps included) into a 2 px corner, each part waiting for the GPU to finish
   // the one before (gpuDone), so the draw states the home card needs exist before Enter; the card still makes its own passes (whatever is left is made there)
