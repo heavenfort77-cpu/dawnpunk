@@ -163,7 +163,8 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       if (ch) ch.whenReady(() => { if (tok !== buildN) return; n.remove(stand); n.rotation.set(0, 0, 0); ch.root.position.set(0, 0, 0); if (ch.restart) ch.restart(); ch.root.traverse((o) => { o.castShadow = false; }); n.add(ch.root); });
       { const bl = new THREE.Mesh(new THREE.CircleGeometry(0.42, 14), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })); bl.rotation.x = -Math.PI / 2; bl.position.y = 0.035; bl.userData.blob = true; n.add(bl); }
       const lab = label(p.name + ' (' + p.role + ')', '#fff', 2.6); lab.position.y = 2.4; lab.userData.kind = 'npc'; n.add(lab);
-      const crate = bx(0.4, 0.3, 0.4, 0xb08a4a, 0, 1.05, 0.4, n); crate.visible = p.role === 'researcher';
+      // (owner Nov 22: "the hands are sunken into the box") the crate's size is CONFIG.base.crateSize: as wide as the space between the carrier's palms
+      const CS = cfg.base.crateSize || [0.4, 0.3, 0.4], crate = bx(CS[0], CS[1], CS[2], 0xb08a4a, 0, 1.05, 0.4, n); crate.visible = p.role === 'researcher';
       const wp = p.role === 'hunter' && cfg.baseWater && cfg.baseWater.on && cfg.baseLife && cfg.baseLife.rounds ? [PATROL.hunter[0], PATROL.hunter[1], ...cfg.baseLife.rounds, PATROL.hunter[2], PATROL.hunter[3]] : PATROL[p.role] || PATROL.hunter, i = p.id % wp.length; n.position.set(wp[i][0], 0, wp[i][1]);
       g.add(n); npcs.push({ n, p, wp, i, i0: i, crate, ch });
     }
@@ -507,7 +508,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   const crateInHands = (o) => { if (o.hands === undefined) { let l = null, r = null, c = null; o.ch.root.traverse((q) => { if (q.isBone && q.name === 'hand_l') l = q; if (q.isBone && q.name === 'hand_r') r = q; if (q.isBone && q.name === 'spine_03') c = q; }); o.hands = l && r ? [l, r] : null; o.chest = c; }
     if (!o.hands) return; const [a, b] = HV; o.hands[0].updateWorldMatrix(true, false); o.hands[1].updateWorldMatrix(true, false); a.setFromMatrixPosition(o.hands[0].matrixWorld); b.setFromMatrixPosition(o.hands[1].matrixWorld); o.n.worldToLocal(a); o.n.worldToLocal(b);
     const ry = Math.atan2(b.x - a.x, b.z - a.z) + Math.PI / 2, fx = Math.sin(ry), fz = Math.cos(ry), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, mz = (a.z + b.z) / 2; let push = 0;
-    if (o.chest) { o.chest.updateWorldMatrix(false, false); const c = HV2.setFromMatrixPosition(o.chest.matrixWorld); o.n.worldToLocal(c); push = Math.max(0, (cfg.base.crateClear || 0) + 0.2 - ((mx - c.x) * fx + (mz - c.z) * fz)); }
+    if (o.chest) { o.chest.updateWorldMatrix(false, false); const c = HV2.setFromMatrixPosition(o.chest.matrixWorld); o.n.worldToLocal(c); push = Math.max(0, (cfg.base.crateClear || 0) + (cfg.base.crateSize ? cfg.base.crateSize[2] / 2 : 0.2) - ((mx - c.x) * fx + (mz - c.z) * fz)); }
     o.crate.position.set(mx + fx * push, my, mz + fz * push); o.crate.rotation.y = ry; };
   let viewCam = null; const FAR = cfg.lag && cfg.lag.farStep;
   const live = (x, z, px, pz) => { if (!FAR || !viewCam) return true; if (Math.hypot(x - px, z - pz) < FAR.dist) return true; FS.center.set(x, 0.9, z); FS.radius = 1.3; return FR.intersectsSphere(FS); };

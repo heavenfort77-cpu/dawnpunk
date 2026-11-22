@@ -73,10 +73,11 @@ export function deviceMesh(kind, cfg) {
 }
 
 // ---- crates: slatted wooden boxes with a painted band (green food, blue essentials)
-export function crateMesh(kind) {
+// plain (owner Nov 22: "the loot are inside orb, some of the orb don't disappear"): no painted band, a plain wooden box that is no loot (the big box the cat hides behind)
+export function crateMesh(kind, plain) {
   const g = new THREE.Group(); bx(0.58, 0.46, 0.58, MT.wood, 0, 0.23, 0, g); bx(0.62, 0.05, 0.62, MT.woodDark, 0, 0.47, 0, g);
   for (const [x, z] of [[-0.29, -0.29], [0.29, -0.29], [-0.29, 0.29], [0.29, 0.29]]) bx(0.07, 0.48, 0.07, MT.woodDark, x, 0.24, z, g);
-  bx(0.6, 0.12, 0.6, kind === 'food' ? MT.food : MT.ess, 0, 0.24, 0, g).scale.set(1.01, 1, 1.01);
+  if (!plain) bx(0.6, 0.12, 0.6, kind === 'food' ? MT.food : MT.ess, 0, 0.24, 0, g).scale.set(1.01, 1, 1.01);
   return g;
 }
 

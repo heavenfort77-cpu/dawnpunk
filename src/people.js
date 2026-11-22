@@ -231,7 +231,7 @@ export function createPerson(cfg, key) {
       if (dt > 0) { const av = st.arm[k].v, acc = (av - (st.arm[k].pv || 0)) / dt; st.arm[k].pv = av; st.fore[k].v -= clamp(acc, -60, 60) * S.inertia * dt; st.hand[k].v -= clamp(acc, -60, 60) * S.inertia * 0.5 * dt; }
       const f = spring(st.fore[k], -G.elbow - G.elbowSwing * Math.max(0, -a) - car * P.walk.carryFore, S.foreHz, S.foreDamp, dt);
       const hd = spring(st.hand[k], (f + G.elbow) * 0.3, S.handHz, S.handDamp, dt);
-      add('upperarm_' + s, a, 0, sg * (G.armOut + br * I.chest * 0.3) - sg * hipRoll * 0.2);
+      add('upperarm_' + s, a, 0, sg * (G.armOut + br * I.chest * 0.3 + car * (P.walk.carryOut || 0)) - sg * hipRoll * 0.2);
       add('lowerarm_' + s, f + G.elbow, 0, 0); add('hand_' + s, hd, 0, 0);
     }
     st.hipX = hipX; st.drop = drop;
