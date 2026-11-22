@@ -1,0 +1,9 @@
+$ node tools/patrolprobe.cjs dist low   (limit 20 min)
+people 3: Ines hunter, Tomas gatherer, Wen researcher; 3000 steps of 0.05 s
+boxes near the researchers (x, z, ry, cx, cz, hx, hz): [[10.95,3.3,-1.86,0,-0.12,1.15,0.28]]
+closest approach per pair (m): Ines-Tomas 0.752, Ines-Wen 5.002, Tomas-Wen 19.233
+PASS no two recruits closer than 0.5 m (steps per pair: none)
+PASS no carried crate within 0.3 m of another recruit (none)
+PASS no recruit within 0.2 m of a solid footprint (none)
+FAIL every recruit keeps walking (median 126.4 m; under half: Wen researcher 10.9)
+exit code 1
