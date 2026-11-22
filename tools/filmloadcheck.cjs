@@ -8,12 +8,15 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); i
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] }); const errs = [];
   const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } }), p = await ctx.newPage(); p.setDefaultTimeout(600000); p.on('pageerror', (e) => errs.push(String(e).slice(0, 200)));
-  await p.addInitScript(() => { window.__fakeLock = false; });
+  // (owner Nov 22, the opening as a video: its film stage now takes about 0.2 s, shorter than this check's 0.5 s poll) every text the loading page writes into its
+  // stage line is recorded as it is written, so a short stage is seen too; the poll below still reads it as before
+  await p.addInitScript(() => { window.__fakeLock = false; window.__stagesW = []; const on = () => { const e = document.getElementById('sstage'); if (!e) return false; new MutationObserver(() => window.__stagesW.push(e.textContent)).observe(e, { childList: true, characterData: true, subtree: true }); window.__stagesW.push(e.textContent); return true; }; if (!on()) document.addEventListener('DOMContentLoaded', on); });
   // ---- first visit
   await p.goto(URL0, { timeout: 600000 }); await p.waitForFunction(() => window.__game && window.__splash);
   const seen = new Set(); let shownEarly = false;
   for (let i = 0; i < 1200; i++) { const s = await p.evaluate(() => ({ stage: document.getElementById('sstage').textContent, enter: getComputedStyle(document.getElementById('enter')).display !== 'none' && document.getElementById('spl').classList.contains('ph-ready'), film: window.__splash.stages && window.__splash.stages.film ? window.__splash.stages.film.slice() : null, menu: getComputedStyle(document.getElementById('menu')).display, frac: window.__splash.frac }));
     seen.add(s.stage.replace(/\s*\(.*\)$/, '')); if (s.enter && s.film && s.film[0] < s.film[1]) shownEarly = true; if (s.enter) break; if (s.menu === 'none') { ok(false, 'first visit: the loading page disappeared before the begin button came (stage "' + s.stage + '")'); break; } await p.waitForTimeout(500); }
+  for (const t of await p.evaluate(() => window.__stagesW || [])) seen.add(String(t).replace(/\s*\(.*\)$/, ''));
   ok(seen.has('Loading: Opening film'), 'first visit: the loading page shows the stage "Loading: Opening film" (stages seen: ' + [...seen].join(' / ') + ')');
   ok(!shownEarly, 'first visit: the begin button comes only when the film stage is done');
   const before = await p.evaluate(() => ({ state: window.__game.state, card: getComputedStyle(document.getElementById('lcard')).display, loadFilmMs: window.__splash.loadFilmMs || null }));
@@ -29,6 +32,7 @@ let fail = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); i
   await p.evaluate(() => { try { const g = window.__game; localStorage.setItem('solardg.save', JSON.stringify(g.save)); } catch (e) { /* none */ } });
   await p.goto(URL0, { timeout: 600000 }); await p.waitForFunction(() => window.__game && window.__splash); const seen2 = new Set();
   for (let i = 0; i < 600; i++) { const s = await p.evaluate(() => ({ stage: document.getElementById('sstage').textContent, enter: getComputedStyle(document.getElementById('enter')).display !== 'none' && document.getElementById('spl').classList.contains('ph-ready') })); seen2.add(s.stage.replace(/\s*\(.*\)$/, '')); if (s.enter) break; await p.waitForTimeout(500); }
+  for (const t of await p.evaluate(() => window.__stagesW || [])) seen2.add(String(t).replace(/\s*\(.*\)$/, ''));
   ok(!seen2.has('Loading: Opening film'), 'returning player: no film stage on the loading page (stages seen: ' + [...seen2].join(' / ') + ')');
   await p.click('#enter'); let base = false; try { await p.waitForFunction(() => window.__game.state === 'base' && !window.__game.cardOn(), null, { timeout: 300000 }); base = true; } catch (e) { base = false; }
   ok(base, 'returning player: the begin button leads to the base');

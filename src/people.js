@@ -226,10 +226,10 @@ export function createPerson(cfg, key) {
     // arms: swing from the shoulder against the legs (springs, so they lag and settle), forearms and hands follow later; carrying holds them forward
     const car = spring(st.carry, o.carry ? 1 : 0, 1.2, 0.9, dt);
     for (const [s, k, Lo, sg] of [['l', 0, R, 1], ['r', 1, L, -1]]) {
-      const a = spring(st.arm[k], -Lo[0] * G.arm * gw * (1 - car) - car * 0.75, S.armHz, S.armDamp, dt);
+      const a = spring(st.arm[k], -Lo[0] * G.arm * gw * (1 - car) - car * P.walk.carryArm, S.armHz, S.armDamp, dt);
       // the forearm hangs from the upper arm: when the upper arm speeds up or slows down, the forearm is thrown the other way and swings on a moment (double pendulum)
       if (dt > 0) { const av = st.arm[k].v, acc = (av - (st.arm[k].pv || 0)) / dt; st.arm[k].pv = av; st.fore[k].v -= clamp(acc, -60, 60) * S.inertia * dt; st.hand[k].v -= clamp(acc, -60, 60) * S.inertia * 0.5 * dt; }
-      const f = spring(st.fore[k], -G.elbow - G.elbowSwing * Math.max(0, -a) - car * 0.9, S.foreHz, S.foreDamp, dt);
+      const f = spring(st.fore[k], -G.elbow - G.elbowSwing * Math.max(0, -a) - car * P.walk.carryFore, S.foreHz, S.foreDamp, dt);
       const hd = spring(st.hand[k], (f + G.elbow) * 0.3, S.handHz, S.handDamp, dt);
       add('upperarm_' + s, a, 0, sg * (G.armOut + br * I.chest * 0.3) - sg * hipRoll * 0.2);
       add('lowerarm_' + s, f + G.elbow, 0, 0); add('hand_' + s, hd, 0, 0);

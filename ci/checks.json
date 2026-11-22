@@ -584,6 +584,56 @@
    "quality": "low",
    "timeout": 20,
    "note": "owner Nov 22: phone tier gets the small H.264 file and it plays"
+  },
+  {
+   "name": "crateprobe",
+   "script": "tools/crateprobe.cjs",
+   "args": [
+    "{dist}",
+    "low"
+   ],
+   "env": {
+    "FR": "1500"
+   },
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 30,
+   "note": "owner Nov 22: head in the carried box, a box floating with no carrier; nine recruits with spread ids, every step: own body, hands on the crate, head and chest clear, not in a solid"
+  },
+  {
+   "name": "lootprobe",
+   "script": "tools/lootprobe.mjs",
+   "args": [
+    "40"
+   ],
+   "tier": "logic",
+   "quality": "node",
+   "timeout": 10,
+   "note": "owner Nov 22: loot that does not go away; every crate of every street house (5 rings x 40 seeds) has a spot in reach and is taken when stood at"
+  },
+  {
+   "name": "zfightcheck",
+   "script": "tools/zfightcheck.cjs",
+   "args": [
+    "{dist}",
+    "high"
+   ],
+   "tier": "desktop",
+   "quality": "high",
+   "timeout": 40,
+   "note": "owner Nov 22: z-fighting in the base; 56 views round the workshop and Marla's house, same frame drawn in both orders, no view over 300 px"
+  },
+  {
+   "name": "zfightcheck_low",
+   "script": "tools/zfightcheck.cjs",
+   "args": [
+    "{dist}",
+    "low"
+   ],
+   "tier": "logic",
+   "quality": "low",
+   "timeout": 40,
+   "note": "owner Nov 22: z-fighting in the base, low tier"
   }
  ]
 }

@@ -119,7 +119,8 @@ export function vaultHi(g, b) {
     for (const sx of [-1, 1]) lf(0.1, dh - 0.05, sx * (dw / 2 - 0.05), dh / 2, 0.02); for (const [y, h] of [[0.12, 0.16], [dh * 0.48, 0.12], [dh - 0.1, 0.1]]) lf(dw - 0.2, h, 0, y, 0.02);
     for (const sx of [-1, 1]) for (const [y0, y1] of [[0.2, dh * 0.48 - 0.06], [dh * 0.48 + 0.06, dh - 0.15]]) { lf(dw / 2 - 0.16, y1 - y0, sx * (dw / 4 - 0.02), (y0 + y1) / 2, 0.035); }
     mesh(new THREE.SphereGeometry(0.035, 12, 8), brass, b.x + dx + dw / 2 - 0.15, 1.0, dz + F * 0.07, g); mesh(new THREE.BoxGeometry(0.06, 0.18, 0.012), brass, b.x + dx + dw / 2 - 0.15, 1.0, dz + F * 0.045, g); }
-  else for (const sx of [-1, 1]) box(0.08, dh, 0.5, cer, dx + sx * (dw / 2 + 0.04), dh / 2, F * hd);
+  // (owner Nov 22, z-fighting) the lining sits 3 mm inside the opening: its inner face lay exactly on the wall's cut face and the two fought
+  else for (const sx of [-1, 1]) box(0.08, dh, 0.5, cer, dx + sx * (dw / 2 + 0.04 - 0.003), dh / 2, F * hd);
   box(dw + 0.5, 0.12, 0.5, stone, dx, 0.06, F * (hd + 0.3));
   // round windows: a sill under each, glazing bars across
   for (const [wx, wy, wr] of b.windows || []) { box(wr * 2 + 0.2, 0.05, 0.16, cer, wx, wy - wr - 0.04, F * (hd + 0.06)); for (const a of [0, PI / 2]) { const bar = mesh(new THREE.BoxGeometry(wr * 2, 0.025, 0.02), cop, b.x + wx, wy, dz + F * 0.02, g); bar.rotation.z = a; } }

@@ -1,0 +1,43 @@
+const { chromium } = require('playwright');
+const http = require('http'), fs = require('fs'), path = require('path');
+const D = process.argv[2] || require('path').join(__dirname, '..', 'dist'), QUAL = process.argv[3] || 'low';
+const srv = http.createServer((q, r) => { const f = path.join(D, decodeURIComponent(q.url.split('?')[0])); fs.readFile(f, (e, b) => { if (e) { r.writeHead(404); r.end(); return; } r.writeHead(200, { 'content-type': f.endsWith('.html') ? 'text/html' : f.endsWith('.js') ? 'text/javascript' : 'application/octet-stream' }); r.end(b); }); });
+// Crate probe (owner Nov 22: "head in the box", "floating box in the air"): a base with nine recruits whose ids are spread as quests spread them (100, 101, 103 ...),
+// the base's own update stepped FR times (no drawing needed). Rules, every step, every researcher carrying a crate: each recruit has their own body in place
+// (two never share one model); a crate is never shown without its carrier's body; both hands on the crate; the head clear of it; the chest clear of its back
+// face; the crate never inside a solid's footprint. Usage: node tools/crateprobe.cjs [dist] [quality]. Prints PASS/FAIL per rule, exit 1 on any FAIL.
+(async () => {
+  await new Promise((ok) => srv.listen(0, '127.0.0.1', ok));
+  const b = await chromium.launch({ executablePath: process.env.CHROME || undefined, args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const p = await (await b.newContext({ viewport: { width: 640, height: 480 } })).newPage(); p.setDefaultTimeout(900000);
+  await p.goto('http://127.0.0.1:' + srv.address().port + '/index.html?quality=' + QUAL + '&seed=7&cards=1');
+  await p.waitForFunction(() => window.__game && window.__game.enterBase);
+  await p.evaluate(() => { const g = window.__game; g.enterBase(); const s = g.save; s.day = 5; s.nights = 3; s.nightsMet = 3; s.trips = 3; s.talkedMarla = true; s.solarDone = true; s.jobCard = true; s.noteSeen = true; s.toldCharge = true; s.ringOpen = 4;
+    const R = ['researcher', 'gatherer', 'hunter', 'researcher', 'engineer', 'researcher', 'gatherer', 'researcher', 'hunter'], N = ['Wen', 'Jun', 'Mei', 'Tomas', 'Ines', 'Bram', 'Lia', 'Kofi', 'Ana']; const IDS = [100, 101, 103, 104, 105, 107, 108, 109, 112]; s.personnel = R.map((r, k) => ({ id: IDS[k], name: N[k], role: r })); s.nextId = 113; if (g.homeCard) g.homeCard(); else g.reBase(); });
+  console.log('base set ' + new Date().toISOString()); await p.waitForFunction(() => !window.__game.cardOn(), null, { timeout: 600000 }); await p.waitForTimeout(2000); console.log('base up ' + new Date().toISOString());
+  const r = await p.evaluate((F) => new Promise((res) => { const g = window.__game, pk = g.bview.peek(), out = { frames: 0, carriers: 0, bad: {} }, V = g.cam.position.constructor; const t = new V(), hl = new V(), hr = new V(), hd = new V();
+    const note = (k, ex) => { const q = out.bad[k] || (out.bad[k] = { n: 0, ex }); q.n++; };
+    const roots = new Set(); out.people = pk.npcs.length; for (const o of pk.npcs) { if (!o.ch || o.ch.root.parent !== o.n) note('recruit without a body in place', o.p.name + ' id ' + o.p.id); else if (roots.has(o.ch.root)) note('two recruits share one model', o.p.name); else roots.add(o.ch.root); }
+    let k = 0; const cp = g.cam.position; const f = () => { for (let st = 0; st < 3; st++) g.bview.update(0.05 / 3, cp.x, cp.z, cp.y); for (const o of pk.npcs) if (o.ch && o.ch.root) o.ch.root.updateMatrixWorld(true); k++; out.frames = k;
+      for (const o of pk.npcs) { if (!o.crate.visible) continue; if (k === 1) out.carriers++; const root = o.ch && o.ch.root; const nm = o.p.name;
+        if (!root || root.parent !== o.n) { note('crate shown, model not in place', nm); continue; }
+        let vis = true; for (let q = o.crate; q; q = q.parent) if (!q.visible) vis = false; if (!vis) continue;
+        let bodyVis = true; for (let q = root; q; q = q.parent) if (!q.visible) bodyVis = false; let sk = null; root.traverse((q) => { if (q.isSkinnedMesh && !sk) sk = q; }); if (sk && !sk.visible) bodyVis = false; if (!bodyVis) note('crate shown, body hidden', nm);
+        let L = null, Rr = null, H = null; root.traverse((q) => { if (q.isBone) { if (q.name === 'hand_l') L = q; if (q.name === 'hand_r') Rr = q; if (q.name === 'head') H = q; } }); if (!L || !Rr || !H) { note('no bones', nm); continue; }
+        o.crate.updateWorldMatrix(true, false); const inv = o.crate.matrixWorld.clone().invert(); hl.setFromMatrixPosition(L.matrixWorld).applyMatrix4(inv); hr.setFromMatrixPosition(Rr.matrixWorld).applyMatrix4(inv); hd.setFromMatrixPosition(H.matrixWorld).applyMatrix4(inv);
+        const dl = Math.hypot(hl.x, hl.y, hl.z), dr = Math.hypot(hr.x, hr.y, hr.z); if (Math.max(dl, dr) > 0.45) note('hand far from crate (>0.45 m)', nm + ' ' + dl.toFixed(2) + '/' + dr.toFixed(2));
+        if (Math.abs(hd.x) < 0.2 + 0.1 && Math.abs(hd.y) < 0.15 + 0.1 && Math.abs(hd.z) < 0.2 + 0.1 && hd.z > -0.2 - 0.12) note('head inside crate (+0.1 m)', nm + ' head at ' + [hd.x, hd.y, hd.z].map((v) => v.toFixed(2)).join(','));
+        { const S3 = o._s3 || (o._s3 = (() => { let b = null; root.traverse((q) => { if (q.isBone && q.name === 'spine_03') b = q; }); return b; })()); if (S3) { const c = new V().setFromMatrixPosition(S3.matrixWorld).applyMatrix4(inv); out.chestZ = Math.max(out.chestZ == null ? -9 : out.chestZ, +c.z.toFixed(3)); if (c.z > -0.2 - 0.1) note('chest inside or against the crate (chest bone under 0.1 m behind its back face)', nm + ' chest at ' + c.z.toFixed(2)); }
+          out.headTopMin = Math.min(out.headTopMin == null ? 9 : out.headTopMin, +(hd.y - 0.15).toFixed(3)); out.headBackMax = Math.max(out.headBackMax == null ? -9 : out.headBackMax, +(hd.z + 0.2).toFixed(3)); out.handY = +((hl.y + hr.y) / 2).toFixed(3); }
+        { const cw = new V(); o.crate.getWorldPosition(cw); for (const bx of pk.boxes || []) { const I = bx.I || { x: 0, z: 0, ry: 0 }, dx = cw.x - I.x, dz = cw.z - I.z, c = Math.cos(-(I.ry || 0)), s2 = Math.sin(-(I.ry || 0)), lx = dx * c + dz * s2 - (bx.cx || 0), lz = -dx * s2 + dz * c - (bx.cz || 0);
+            const ox = Math.abs(lx) - bx.hx, oz = Math.abs(lz) - bx.hz, dist = Math.max(ox, oz); if (dist < 0.2) note('crate inside a solid footprint (within the crate half size)', nm + ' at ' + cw.x.toFixed(2) + ',' + cw.z.toFixed(2) + ' box at ' + I.x.toFixed(2) + ',' + I.z.toFixed(2) + ' half ' + bx.hx + 'x' + bx.hz + ' dist ' + dist.toFixed(2)); } }
+        if (k % 200 === 1) { (out.samples || (out.samples = [])).push(nm + ' head ' + [hd.x, hd.y, hd.z].map((v) => v.toFixed(2)).join(',') + ' handsDist ' + dl.toFixed(2) + '/' + dr.toFixed(2)); } }
+      if (k < F) { if (k % 100 === 0) setTimeout(f, 0); else f(); } else res(out); }; f(); }), +(process.env.FR || 1500));
+  console.log(JSON.stringify(r, null, 1));
+  const RULES = ['recruit without a body in place', 'two recruits share one model', 'crate shown, model not in place', 'crate shown, body hidden', 'no bones', 'hand far from crate (>0.45 m)', 'head inside crate (+0.1 m)', 'chest inside or against the crate (chest bone under 0.1 m behind its back face)', 'crate inside a solid footprint (within the crate half size)'];
+  let nf = 0; if (!r.carriers) { console.log('FAIL no researcher carries a crate (the probe tested nothing)'); nf++; } for (const k of RULES) { const v = r.bad[k]; if (v) { nf++; console.log('FAIL ' + k + ': ' + v.n + ' x ' + v.ex); } else console.log('PASS ' + k + ' (' + r.carriers + ' carriers, ' + r.frames + ' steps)'); }
+  for (const k of Object.keys(r.bad)) if (!RULES.includes(k)) { nf++; console.log('FAIL ' + k + ': ' + r.bad[k].n + ' x ' + r.bad[k].ex); }
+  if (process.env.SHOTS) { const shots = await p.evaluate(() => { const g = window.__game, pk = g.bview.peek(), V = g.cam.position.constructor, out = []; for (const o of pk.npcs) { if (!o.crate.visible || out.length >= 2) continue; const c = new V(); o.crate.getWorldPosition(c); const ry = o.crate.getWorldQuaternion(new (o.crate.quaternion.constructor)()); const e = new (o.crate.rotation.constructor)().setFromQuaternion(ry, 'YXZ').y;
+      for (const side of [Math.PI / 2, -Math.PI / 2, 0.6]) { const a = e + side, x = c.x + Math.sin(a) * 1.6, z = c.z + Math.cos(a) * 1.6; out.push(g.shotAt([x, c.y + 0.25, z, a, -0.1, 50])); } } return out; });
+    shots.forEach((d, k) => require('fs').writeFileSync((process.env.SHOTS) + '/crate_' + k + '.png', Buffer.from(d.split(',')[1], 'base64'))); console.log('shots ' + shots.length); } await b.close(); srv.close(); process.exit(nf ? 1 : 0);
+})().catch((e) => { console.error(e); process.exit(1); });

@@ -146,7 +146,9 @@ export const CONFIG = {
     idle: { shift: [3.5, 6.5], move: 1.4, slow: 7.5, slowShare: 0.35, hip: 0.025, roll: 0.03, knee: 0.14, breath: 4.2, chest: 0.012, look: 0.07 },
     settle: { armHz: 3.6, armDamp: 0.5, foreHz: 3.2, foreDamp: 0.35, handHz: 2.6, handDamp: 0.3, inertia: 0.35, headHz: 2.0, headDamp: 0.5, leanHz: 1.3, leanDamp: 0.55 },
     // carryLean (Nov 20): the body leans back this many rad while carrying a crate in front; carrySpeed 0.85 -> 0.8 (shorter steps at the same stride time)
-    walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.8, carryLean: 0.06 },
+    // carryArm, carryFore (owner Nov 22: a carrier's head was inside the crate): how far (rad) the upper arms reach forward and the forearms bend up when carrying.
+    // Were 0.75 and 0.9: the forearms pointed up and the hands, and so the crate between them, sat at chin height, the face inside the box (tools/crateprobe.cjs)
+    walk: { blend: 0.25, stopCos: 0.25, corner: 2.2, follow: 5, carrySpeed: 0.8, carryLean: 0.06, carryArm: 0.25, carryFore: 0.8 },
     // motion (tools/humanmotioncheck.cjs measures it):
     // slice: the motion runs in fixed steps of this many seconds (1/120: a 30 or 60 fps frame is a whole number of them, so the motion is the same at both); maxSlices: at most this many per frame (a longer gap is skipped)
     // turnAcc: walking, the body's turn rate changes by at most this many rad/s each second (30 = 1720 deg/s2; no snapped turns at a corner)
@@ -194,7 +196,11 @@ export const CONFIG = {
   // rotate: the rotate screen shows on touch devices when the visible height is more than ratio times the width; pollMs: how often that is rechecked (ms)
   rotate: { ratio: 1.05, pollMs: 500 },
   marlaTalk: { streakHits: 3, streakWindow: 8, streakCd: 20, hintDelay: 25, hintTimes: 2 },
-  music: { on: true, volume: 0.35, pausedVolume: 0.2, fade: 2.5 }, // which track plays where is set in tools/makemusic.py (base, day, night)
+  // which track plays where is set in tools/makemusic.py (base, day, night)
+  // volume (owner Nov 22: music too loud; was 0.35, now 4.9 dB quieter): the tracks are about -12 LUFS, so 0.2 puts them near -26 LUFS, about 6 dB under the voice clips
+  // pausedVolume: the same share lower while paused (was 0.2); ambient: the level the base's stream sound is set against (src/basesound.js), kept at the old music
+  // volume so the water is as loud as before
+  music: { on: true, volume: 0.2, pausedVolume: 0.11, ambient: 0.35, fade: 2.5 },
   depth: { wallOut: 0.2, wallLen: 1.3, wallW: 4.6, car: [4.2, 6.6], baseHouse: [8.6, 7.6], basePost: 1.3, baseTree: 3.2, shade: 0.5, shadeNight: 0.34, furn: 2.7, device: 1.5, gloom: 1.9, crate: 1.25, pool: 0.55, poolNight: 0.26, poolSun: 0xffe2a8, poolMoon: 0x7f9cff, poolW: 2.3, poolL: 3.6, doorW: 2.0, doorL: 4.4 }, // light and depth inside houses: soft contact shadows (klad 'shade') under things, light pools (klad 'pool') on the floor at every opening; sizes in metres (shadow sizes are times the thing's radius)
   // shot: the hand cannon's old shot sound (plays only when impact.on is false): pitch drop (Hz), length (s), loudness
   sfx: { shot: { from: 620, to: 150, len: 0.11, vol: 0.1 },
@@ -1136,6 +1142,8 @@ export const CONFIG = {
 
     start: { food: 10, essentials: 0, personnel: [{ name: 'Ines', role: 'hunter' }, { name: 'Tomas', role: 'gatherer' }, { name: 'Wen', role: 'researcher' }] },
     recruitFood: 30, tryTime: 60, // tryTime: a lost night only earns the home income and a research day if you lasted this many seconds (no farming by dying at once)
+    // crateClear (owner Nov 22, head and chest inside the carried crate): the crate's back face stays this many m in front of the carrier's chest bone (src/baseview.js)
+    crateClear: 0.14,
     maxPersonnel: 9, recruitModels: 9, recruitOrder: [3, 2, 11, 5, 6, 7, 9, 8, 12], // recruitOrder: which recruit model (art/models/genN) the 1st, 2nd, ... person gets, chosen so the model suits the name: Ines, Tomas, Wen, Aroha, Kofi, Mei, Sol, Dara, Jun. All nine are adults.
     // recruitModels: how many different recruit models ship (art/models/gen1..gen9); keep it at or above maxPersonnel so no two people look the same
     speed: 4, bound: 19.5,
@@ -1213,6 +1221,8 @@ export const CONFIG = {
     // uploaded, every shader of the scene built, and the sun shadow map drawn once. on: the switch; min: shortest time each card shows (s); titles: the card's line per change
     // mergeCell: the street's static pieces are merged per material and per square cell of this size (m) on the desktop builds (src/world.js), so out-of-view cells are culled
     mergeCell: 16,
+    // trimJoin (owner Nov 22, frame rate): each street house's footing boxes drawn as one mesh (src/main.js buildTrim); false = one per piece
+    trimJoin: true,
     // sceneryJoin (Nov 20): the street's still scenery meshes are joined per material in cells of this many m (src/scenehi.js joinCells; 0 = off)
     sceneryJoin: 48,
     // housePad: a street piece within a house's half size plus this (m) belongs to that house's own merged meshes (gutters, sills, steps), never to the street's
@@ -1308,7 +1318,8 @@ export const CONFIG = {
     // (not with the page), so the film shows the same machines and pictures as before
     filmModelWait: 60,
     // mergeBase: the base's still pieces drawn as one mesh per material and cell m of ground (src/baseview.js mergeStill); hidePad: extra m kept clear round the film's hidden plant
-    mergeBase: { on: true, cell: 16, hidePad: 1.5 },
+    // roomData (owner Nov 22, frame rate): the two rooms' still pieces are merged too (their groups only carry plant spots and triangle counts); false = left apart as before
+    mergeBase: { on: true, cell: 16, hidePad: 1.5, roomData: true },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind
     // longFrame: with ?proglog=1 a frame starting more than this many ms after the one before is logged with what the frame before it did (src/main.js lfStart)
     longFrame: 80,

@@ -95,10 +95,13 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // round the plant inside the door (CONFIG.opening.wake.hide). Called after the small-shadow pass (src/main.js), once per build.
   // mergeStillIter: the same in steps (the title's sliced passes); mergeStill runs it at once
   function mergeStill() { const it = mergeStillIter(); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
-  function* mergeStillIter() { const M = cfg.lag && cfg.lag.mergeBase; if (!M || !M.on || g.userData.merged) return 0; g.userData.merged = true; g.updateMatrixWorld(true); yield;
+  // (owner Nov 22, frame rate) roomData: a room group's own bookkeeping (plantSpots: where its plants stand, densityB: its triangle counts, written by src/basehi.js
+  // vaultHi on the group it is given) no longer keeps that room's still pieces apart; any other tag on a group still does. rooms = 'rooms': the test hook's second pass
+  function* mergeStillIter(rooms) { const M = cfg.lag && cfg.lag.mergeBase; if (!M || !M.on || (g.userData.merged && rooms !== 'rooms')) return 0; g.userData.merged = true;
+    const DATA = (M.roomData || rooms === 'rooms') ? ['plantSpots', 'densityB'] : [], tagged = (p) => { const ks = Object.keys(p.userData); return ks.length > 0 && !ks.every((k) => DATA.includes(k)); }, inRoomG = (o) => { for (let p = o.parent; p && p !== g; p = p.parent) if (Object.keys(p.userData).length) return true; return false; }; g.updateMatrixWorld(true); yield;
     const off = new Set([scoutG, sky.mesh, ...npcs.map((o) => o.n), ...Object.values(npcG), ...hiddenCats.map((o) => o.cg), ...homeCats.map((h) => h.cg), ...towers, jn && jn.ribbon, jn && jn.glow].filter(Boolean));
     const H = cfg.opening && cfg.opening.wake && cfg.opening.wake.hide, v = new THREE.Vector3(), base = THREE.Object3D.prototype.onBeforeRender;
-    const skip = (o) => { if (Object.keys(o.userData).length || o.onBeforeRender !== base) return true; for (let p = o; p && p !== g; p = p.parent) if (off.has(p) || (p !== o && Object.keys(p.userData).length)) return true;
+    const skip = (o) => { if (Object.keys(o.userData).length || o.onBeforeRender !== base) return true; for (let p = o; p && p !== g; p = p.parent) if (off.has(p) || (p !== o && tagged(p))) return true; if (DATA.length && o.material.side !== THREE.FrontSide && inRoomG(o)) return true;
       if (H) { o.getWorldPosition(v); if (Math.hypot(v.x - H[0], v.z - H[1]) < H[2] + M.hidePad) return true; } return false; };
     // the base makes a new material for nearly every box; pieces whose materials are alike in every setting share one first (so they can be drawn together); a material
     // with its own shader hook or data stays its own. A replaced material no other piece uses is freed.
@@ -152,7 +155,10 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       const n = new THREE.Group(), stand = new THREE.Group(), body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 1.2, 8), mat(ROLE_COL[p.role] || 0xaaaaaa)); body.position.y = 0.8; stand.add(body);
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 6), mat(0xe0b890)); head.position.y = 1.65; stand.add(head); n.add(stand);
       // every recruit is their own person: one of the nine recruit models (gen1..gen9) by the order they joined; a soft blob is their shadow as they walk
-      const key = 'gen' + cfg.base.recruitOrder[(p.id - 1) % Math.min(cfg.base.recruitModels, cfg.base.recruitOrder.length)], ch = makeChar ? (chars[key] || (chars[key] = makeChar(key))) : null;
+      // (owner Nov 22: a crate floating with a name over it and no one carrying it) the model goes by the order they joined (their place in the list), as said above;
+      // it went by p.id, but ids come from save.nextId, which quests use too (ids 100, 101, 105, 109...), so two recruits whose ids were 9 apart got the SAME model
+      // object: it can stand in one place only, so the other was a name and (for a researcher) a crate in mid-air
+      const key = 'gen' + cfg.base.recruitOrder[save.personnel.indexOf(p) % Math.min(cfg.base.recruitModels, cfg.base.recruitOrder.length)], ch = makeChar ? (chars[key] || (chars[key] = makeChar(key))) : null;
       // a person kept from the last build starts over (restart): the same motion as on a fresh page, whatever it did before
       if (ch) ch.whenReady(() => { if (tok !== buildN) return; n.remove(stand); n.rotation.set(0, 0, 0); ch.root.position.set(0, 0, 0); if (ch.restart) ch.restart(); ch.root.traverse((o) => { o.castShadow = false; }); n.add(ch.root); });
       { const bl = new THREE.Mesh(new THREE.CircleGeometry(0.42, 14), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })); bl.rotation.x = -Math.PI / 2; bl.position.y = 0.035; bl.userData.blob = true; n.add(bl); }
@@ -183,9 +189,11 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       for (let k = 0; k < n; k++) { const top = rn() < 0.55, lx = (rn() - 0.5) * w * (top ? 1 : 1.1), lz = top ? (rn() - 0.5) * d : (rn() < 0.5 ? -1 : 1) * d * 0.5, ly = top ? h * 0.5 : (rn() - 0.3) * h * 0.6, sz = 0.7 + rn() * 0.7, o = card(sz, sz, k % 3 ? canM : canD, x + lx * c + lz * s2, y + ly, z - lx * s2 + lz * c, rn() * 3, g); o.rotation.x = (rn() - 0.5) * 1.2; } };
     // a station house: white plaster walls that have weathered, a barrel roof that is a garden on one side and leaf-shaped solar cells on the sunny side,
     // an arched glazed door, round windows that glow, a ceramic plinth. (No comments inside the long lines below: a comment there cuts off the rest of the line.)
+    // (owner Nov 22, z-fighting in the base) every green vault is an open half tube (openEnded true): its own end caps lay exactly on the end walls (the half
+    // discs in the wall colour at the same place), and the two fought, showing green or cream by draw order. The end walls are unchanged.
     const house = function* (s, col, roof) {
       bx(5, 3, 4, col, s.x, 1.5, s.z, g); bx(5.2, 0.3, 4.2, 0x5a3d28, s.x, 0.15, s.z, g); shadeAt(g, s.x, s.z, cfg.depth.baseHouse[0], cfg.depth.baseHouse[1]);
-      const vault = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 5.5, 18, 1, false, 0, Math.PI), mat(0x4aa84a)); vault.material.side = THREE.DoubleSide; vault.rotation.z = Math.PI / 2; vault.scale.set(0.6, 1, 1); vault.position.set(s.x, 3.0, s.z); g.add(vault);
+      const vault = new THREE.Mesh(new THREE.CylinderGeometry(2.25, 2.25, 5.5, 18, 1, true, 0, Math.PI), mat(0x4aa84a)); vault.material.side = THREE.DoubleSide; vault.rotation.z = Math.PI / 2; vault.scale.set(0.6, 1, 1); vault.position.set(s.x, 3.0, s.z); g.add(vault);
       for (const sx of [-1, 1]) { const end = new THREE.Mesh(new THREE.CircleGeometry(2.25, 18, 0, Math.PI), mat(col)); end.scale.y = 0.6; end.position.set(s.x + sx * 2.75, 3.0, s.z); end.material.side = THREE.DoubleSide; end.rotation.y = sx * Math.PI / 2; g.add(end); }
       for (let r = 0; r < 3; r++) for (let c = 0; c < 7; c++) { const a = 0.35 + r * 0.38, pg = new THREE.Group(); pg.position.set(s.x - 2.25 + c * 0.75 + (r % 2) * 0.37, 3.0 + Math.sin(a) * 2.25 * 0.6 + 0.03, s.z - Math.cos(a) * 2.25); pg.rotation.x = -(Math.PI / 2 - a) - 0.5; g.add(pg); petal(pg, 0.95, 0.62, BM.cell); }
       for (let k = 0; k < 6; k++) for (let c = 0; c < 2; c++) card(1.0, 0.9, flM[(k + (s.x > 0 ? 2 : 0)) % 5], s.x - 2.2 + k * 0.85 + (c ? 0.2 : 0), 4.2 - Math.abs(k - 2.5) * 0.03, s.z + 0.9 + (c ? 0.25 : 0), c * 1.57 + k * 0.7, g);
@@ -208,9 +216,11 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       bx(I.w, h, tw, col, 0, h / 2, -hd + tw / 2, rg); bx(tw, h, I.d - 2 * tw, col, -hw + tw / 2, h / 2, 0, rg); bx(tw, h, I.d - 2 * tw, col, hw - tw / 2, h / 2, 0, rg);
       { const sh = new THREE.Shape(); sh.moveTo(-hw, 0); sh.lineTo(-rw, 0); sh.lineTo(-rw, I.dh); sh.absarc(0, I.dh, rw, Math.PI, 0, true); sh.lineTo(rw, 0); sh.lineTo(hw, 0); sh.lineTo(hw, h); sh.lineTo(-hw, h); sh.lineTo(-hw, 0);
         const fg = new THREE.ExtrudeGeometry(sh, { depth: tw, bevelEnabled: false, curveSegments: 18 }), uv = fg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 2.6, uv.getY(i) / 2.6); fg.translate(0, 0, hd - tw); rg.add(new THREE.Mesh(fg, mat(col))); }
-      bx(I.w + 0.2, 0.3, tw + 0.1, 0x5a3d28, 0, 0.15, -hd + tw / 2 - 0.05, rg); for (const sx of [-1, 1]) { bx(tw + 0.1, 0.3, I.d + 0.2, 0x5a3d28, sx * (hw - tw / 2 + 0.05), 0.15, 0, rg); bx(hw - rw + 0.1, 0.3, tw + 0.1, 0x5a3d28, sx * ((hw + rw) / 2 + 0.05), 0.15, hd - tw / 2 + 0.05, rg); }
+      // (owner Nov 22, z-fighting) the plinth band's inner faces stop 3 mm short of the room's inner wall faces and of the doorway's sides (they lay exactly on them
+      // and fought); its outside is where it was
+      bx(I.w + 0.2, 0.3, tw + 0.097, 0x5a3d28, 0, 0.15, -hd + tw / 2 - 0.0515, rg); for (const sx of [-1, 1]) { bx(tw + 0.097, 0.3, I.d + 0.2, 0x5a3d28, sx * (hw - tw / 2 + 0.0515), 0.15, 0, rg); bx(hw - rw + 0.097, 0.3, tw + 0.097, 0x5a3d28, sx * ((hw + rw) / 2 + 0.0515), 0.15, hd - tw / 2 + 0.0515, rg); }
       bx(I.w - 2 * tw, I.floor, I.d - 2 * tw, 0x8a6a3a, 0, I.floor / 2, 0, rg); bx(I.dw, I.floor, tw, 0x8a6a3a, 0, I.floor / 2, hd - tw / 2, rg);
-      const vault = new THREE.Mesh(new THREE.CylinderGeometry(R, R, I.w + 0.5, 18, 1, false, 0, Math.PI), mat(0x4aa84a)); vault.material.side = THREE.DoubleSide; vault.rotation.z = Math.PI / 2; vault.scale.set(kk, 1, 1); vault.position.set(0, h, 0); rg.add(vault);
+      const vault = new THREE.Mesh(new THREE.CylinderGeometry(R, R, I.w + 0.5, 18, 1, true, 0, Math.PI), mat(0x4aa84a)); vault.material.side = THREE.DoubleSide; vault.rotation.z = Math.PI / 2; vault.scale.set(kk, 1, 1); vault.position.set(0, h, 0); rg.add(vault);
       for (const sx of [-1, 1]) { const end = new THREE.Mesh(new THREE.CircleGeometry(R, 18, 0, Math.PI), mat(col)); end.scale.y = kk; end.position.set(sx * (hw + 0.25), h, 0); end.material.side = THREE.DoubleSide; end.rotation.y = sx * Math.PI / 2; rg.add(end); }
       yield;
       const nc = Math.floor((I.w - 0.5) / 0.75) + 1; for (let r = 0; r < 3; r++) for (let c = 0; c < nc; c++) { const a = 0.35 + r * 0.38, pg = new THREE.Group(); pg.position.set(-hw + 0.25 + c * 0.75 + (r % 2) * 0.37, h + Math.sin(a) * R * kk + 0.03, -Math.cos(a) * R); pg.rotation.x = -(Math.PI / 2 - a) - 0.5; rg.add(pg); petal(pg, 0.95, 0.62, BM.cell); }
@@ -297,7 +307,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     { const hx = HOME.x, hz = HOME.z, wc = 0x9a8a6a;
       bx(6.4, 3, 0.4, wc, hx, 1.5, hz - 2, g); bx(0.4, 3, 4.4, wc, hx - 3.2, 1.5, hz, g); bx(0.4, 3, 4.4, wc, hx + 3.2, 1.5, hz, g);
       bx(2.0, 3, 0.4, wc, hx - 2.2, 1.5, hz + 2, g); bx(2.0, 3, 0.4, wc, hx + 2.2, 1.5, hz + 2, g); bx(2.4, 0.6, 0.4, wc, hx, 2.7, hz + 2, g);
-      { const vault = new THREE.Mesh(new THREE.CylinderGeometry(2.45, 2.45, 7.2, 20, 1, false, 0, Math.PI), mat(0x4aa84a)); vault.material.side = THREE.DoubleSide; vault.rotation.z = Math.PI / 2; vault.scale.set(0.55, 1, 1); vault.position.set(hx, 3.0, hz); g.add(vault);
+      { const vault = new THREE.Mesh(new THREE.CylinderGeometry(2.45, 2.45, 7.2, 20, 1, true, 0, Math.PI), mat(0x4aa84a)); vault.material.side = THREE.DoubleSide; vault.rotation.z = Math.PI / 2; vault.scale.set(0.55, 1, 1); vault.position.set(hx, 3.0, hz); g.add(vault);
         for (const sx of [-1, 1]) { const end = new THREE.Mesh(new THREE.CircleGeometry(2.45, 20, 0, Math.PI), mat(wc)); end.material.side = THREE.DoubleSide; end.scale.y = 0.55; end.position.set(hx + sx * 3.6, 3.0, hz); end.rotation.y = sx * Math.PI / 2; g.add(end); }
         for (let r = 0; r < 3; r++) for (let c = 0; c < 9; c++) { const a = 0.35 + r * 0.36, pg = new THREE.Group(); pg.position.set(hx - 3.1 + c * 0.76 + (r % 2) * 0.38, 3.0 + Math.sin(a) * 2.45 * 0.55 + 0.03, hz - Math.cos(a) * 2.45); pg.rotation.x = -(Math.PI / 2 - a) - 0.5; g.add(pg); petal(pg, 0.95, 0.62, BM.cell); }
         for (let k = 0; k < 8; k++) for (let c = 0; c < 2; c++) card(1.0, 0.9, flM[k % 5], hx - 3.0 + k * 0.85 + (c ? 0.2 : 0), 4.1, hz + 0.9 + (c ? 0.25 : 0), c * 1.57 + k * 0.7, g);
@@ -491,9 +501,14 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // (R4 worker 10, owner recording Nov 20: the box floated apart from the carrier's hands, also in a4bc250) the crate sits between the two hand bones, turned square to
   // the line between them, every frame for every carrier (a model without hand bones keeps the fixed place in front); only the two arms' parent chains are worked out
   const HV = [new THREE.Vector3(), new THREE.Vector3()];
-  const crateInHands = (o) => { if (o.hands === undefined) { let l = null, r = null; o.ch.root.traverse((q) => { if (q.isBone && q.name === 'hand_l') l = q; if (q.isBone && q.name === 'hand_r') r = q; }); o.hands = l && r ? [l, r] : null; }
+  // (owner Nov 22: a carrier's head and chest were inside the crate) the crate is also pushed forward, along the way it faces, until its back face is
+  // CONFIG.base.crateClear m in front of the chest bone (spine_03): the hands then hold it nearer its back edge, as one holds a deep box
+  const HV2 = new THREE.Vector3();
+  const crateInHands = (o) => { if (o.hands === undefined) { let l = null, r = null, c = null; o.ch.root.traverse((q) => { if (q.isBone && q.name === 'hand_l') l = q; if (q.isBone && q.name === 'hand_r') r = q; if (q.isBone && q.name === 'spine_03') c = q; }); o.hands = l && r ? [l, r] : null; o.chest = c; }
     if (!o.hands) return; const [a, b] = HV; o.hands[0].updateWorldMatrix(true, false); o.hands[1].updateWorldMatrix(true, false); a.setFromMatrixPosition(o.hands[0].matrixWorld); b.setFromMatrixPosition(o.hands[1].matrixWorld); o.n.worldToLocal(a); o.n.worldToLocal(b);
-    o.crate.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2); o.crate.rotation.y = Math.atan2(b.x - a.x, b.z - a.z) + Math.PI / 2; };
+    const ry = Math.atan2(b.x - a.x, b.z - a.z) + Math.PI / 2, fx = Math.sin(ry), fz = Math.cos(ry), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, mz = (a.z + b.z) / 2; let push = 0;
+    if (o.chest) { o.chest.updateWorldMatrix(false, false); const c = HV2.setFromMatrixPosition(o.chest.matrixWorld); o.n.worldToLocal(c); push = Math.max(0, (cfg.base.crateClear || 0) + 0.2 - ((mx - c.x) * fx + (mz - c.z) * fz)); }
+    o.crate.position.set(mx + fx * push, my, mz + fz * push); o.crate.rotation.y = ry; };
   let viewCam = null; const FAR = cfg.lag && cfg.lag.farStep;
   const live = (x, z, px, pz) => { if (!FAR || !viewCam) return true; if (Math.hypot(x - px, z - pz) < FAR.dist) return true; FS.center.set(x, 0.9, z); FS.radius = 1.3; return FR.intersectsSphere(FS); };
   const stepDt = (o, on, dt) => { const a = (o.facc || 0) + dt; if (on || a >= 1 / FAR.hz) { o.facc = 0; return a; } o.facc = a; return 0; };
@@ -580,7 +595,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // read-only view of the people for tools/animcheck.cjs (the villagers' and recruits' models, their holders, and Marla's spot)
   // meshes and triangles under some objects (for the cost report of the hatchery, its birds and the village cats)
   const meshCost = (roots) => { let meshes = 0, tris = 0; for (const r of roots) r.traverse((o) => { if (!o.isMesh) return; meshes++; const gq = o.geometry; tris += (gq.index ? gq.index.count : gq.attributes.position.count) / 3; }); return { meshes, tris: Math.round(tris) }; };
-  const peek = () => ({ cost: { hatchery: hatch ? meshCost([hatch.group]) : null, birds: flock ? meshCost(flock.birds.map((b) => b.root)) : null, cats: vcats ? meshCost(vcats.cats.map((c) => c.root)) : null }, chars, npcG, npcs, scoutG, rooms: { WS, MH }, journal: jn && { ribbon: jn.ribbon.visible, glow: !!jn.glow.userData.show, at: jn.at }, avians: flock && { shown: flock.shown(), birds: flock.birds.map((b) => ({ id: b.id, kind: b.kind, st: b.st, x: b.x, z: b.z, gone: b.gone })), eveT, layout: AV }, vcats: vcats && vcats.cats.map((c) => ({ x: c.b.x, y: c.b.y, z: c.b.z, mode: c.b.mode, act: c.b.act })), life: life && { cost: life.cost, plots: life.plots, wheel: life.water ? life.water.angle() : null } });
+  const peek = () => ({ boxes, cost: { hatchery: hatch ? meshCost([hatch.group]) : null, birds: flock ? meshCost(flock.birds.map((b) => b.root)) : null, cats: vcats ? meshCost(vcats.cats.map((c) => c.root)) : null }, chars, npcG, npcs, scoutG, rooms: { WS, MH }, journal: jn && { ribbon: jn.ribbon.visible, glow: !!jn.glow.userData.show, at: jn.at }, avians: flock && { shown: flock.shown(), birds: flock.birds.map((b) => ({ id: b.id, kind: b.kind, st: b.st, x: b.x, z: b.z, gone: b.gone })), eveT, layout: AV }, vcats: vcats && vcats.cats.map((c) => ({ x: c.b.x, y: c.b.y, z: c.b.z, mode: c.b.mode, act: c.b.act })), life: life && { cost: life.cost, plots: life.plots, wheel: life.water ? life.water.angle() : null } });
   // preChars (owner 11:40): the villagers' models are made ahead (during the opening film), so the base's first build does not load and parse them in the dawn shot
   return { bgStart, bgStep, bgWorst, get bgBusy() { return !!bg; }, recruitsChanged, mergeStill, mergeStillIter, free, get kept() { return keptSig !== null; }, preChars: () => { if (makeChar) for (const n of Object.values(NPCS)) if (!chars[n.id]) chars[n.id] = makeChar(n.id); }, setView: (c) => { viewCam = c; }, build, dispose, update, pushOut, hideCat, refreshHome, refreshNpcs, refreshJournal, refreshAvians, setEvening: (t) => { eveT = t; }, evening: () => eveE, catSet: (i, o) => { if (vcats && vcats.cats[i]) Object.assign(vcats.cats[i].b, { t: 0, dur: 999, actT: 0, actDur: 999, leave: false, fleeing: false }, o); }, peek, group: g, growth: () => growN, rooms: { WS, MH } };
 }
