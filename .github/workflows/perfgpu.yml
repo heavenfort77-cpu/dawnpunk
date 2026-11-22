@@ -68,7 +68,7 @@ jobs:
           echo "refs=$(j "$REFS")" >> "$GITHUB_OUTPUT"; echo "tiers=$(j "$TIERS")" >> "$GITHUB_OUTPUT"; echo "spots=$(j "$SPOTS")" >> "$GITHUB_OUTPUT"
   probe:
     # (test branch ab only, never merged) SAME-MACHINE A/B: the two commits in inputs.refs built side by side on ONE Mac runner and measured in turns
-    # A, B, A, B, A, B (inputs.secs/settle, spots inputs.spots as one job each turn), so runner speed differences cancel out
+    # A, B, then B, A, four turns (inputs.secs/settle, spots inputs.spots as one job each turn), so runner speed differences cancel out
     needs: plan
     runs-on: ${{ inputs.os }}
     timeout-minutes: 150
@@ -99,4 +99,5 @@ jobs:
           CSECS: "20"
           NOEXTRA: "1"
         run: |
-          for turn in 1 2 3; do for x in A B; do echo "TURN $turn $x"; (cd "$x" && set +e; node tools/perfcheck.cjs "${{ inputs.tiers }}" > perf_$turn.log 2>&1; set -e; grep -E "^FPS|^PERF" perf_$turn.log | sed "s/^/AB $x $turn /" | cut -c1-260); done; done
+          # the order alternates (A,B then B,A) so a runner that warms up or slows down over the run does not favour one side
+          for turn in 1 2 3 4; do if [ $((turn % 2)) = 1 ]; then ord="A B"; else ord="B A"; fi; for x in $ord; do echo "TURN $turn $x"; (cd "$x" && set +e; node tools/perfcheck.cjs "${{ inputs.tiers }}" > perf_$turn.log 2>&1; set -e; grep -E "^FPS|^PERF" perf_$turn.log | sed "s/^/AB $x $turn /" | cut -c1-260); done; done
