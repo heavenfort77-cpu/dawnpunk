@@ -882,7 +882,7 @@ function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT
 // lights and the kept base) and its pieces drawn for the first time while the video plays: the 3D picture is hidden then and the page has nothing else to do.
 // The pieces are drawn a few at a time into a small hidden target, frustum culling off for that draw, so each one's buffers and pictures are on the GPU before
 // Skip; the home card after Skip then only does what Enter's card does (0.7-1.0 s). CONFIG.lag.vidWarm: after (s into the video), ms (work a frame), on
-const VWARM = { it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false, long: [], last: '' };
+const VWARM = { tex: 0, dwait: 0, it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false, long: [], last: '' };
 // (Mac fv2 45021132181: one step of 6.2 s, 126 of 763 video frames dropped) in parts: the base built a part at a time if it is not the kept one, its shaders
 // built in parallel (compileAsync, waited on without blocking), then every piece drawn as the title and the card draw them (drawPieces, a 2x2 scissor), the
 // part size kept near ms a frame; the home card after Skip then skips its own turns and all-pieces draws (VWARM.ok)
@@ -902,6 +902,9 @@ function depthPre(list, i0, i1) { const out = [], pairs = [], rbd = renderer.ren
       const om = o.material, k0 = nProg(); o.material = m; try { renderer.compile({ traverseVisible() {}, traverse(cb) { cb(o); } }, cam, DPRE.ts); } finally { o.material = om; }
       DPRE.n++; if (nProg() > k0) { DPRE.built += nProg() - k0; const pr = renderer.properties.get(m).currentProgram; if (pr && pr.isReady && !pr.isReady()) out.push(pr); } } });
   return out; }
+// the pictures of the pieces i0..i1 not yet on the GPU and at least `px` pixels large
+const TEXKEYS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'alphaMap', 'bumpMap', 'clearcoatNormalMap', 'sheenColorMap', 'specularIntensityMap'];
+function texPre(list, i0, i1, px) { const out = []; for (let k = i0; k < i1; k++) { const o = list[k]; for (const m of (Array.isArray(o.material) ? o.material : [o.material])) { if (!m) continue; for (const key of TEXKEYS) { const t = m[key], im = t && t.isTexture && t.image; if (!im || !(im.width * im.height >= px) || out.includes(t)) continue; if (t.version > 0 && renderer.properties.get(t).__version !== t.version) out.push(t); } } } return out; }
 function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   if (bview.bgStart(save)) while (bview.bgBusy && !bview.bgStep(C.ms)) yield 'build';
   if (intro && intro.video) introToBase(true); yield 'setup';
@@ -910,7 +913,15 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   if (renderer.compileAsync) { let ok = false; const hid = []; scene.traverse((o) => { if (!o.visible && o !== sky.mesh) { hid.push(o); o.visible = true; } });
     try { renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); } finally { for (const o of hid) o.visible = false; } while (!ok) yield 'compile'; }
   const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); VWARM.pieces = list.length; let i = 0, n = 1;
-  while (i < list.length) { if (C.depthPre && renderer.compileAsync) { const pend = depthPre(list, i, Math.min(list.length, i + n)); while (pend.some((p) => !p.isReady())) yield 'depth'; }
+  // (next8 45036628749: the warm did not finish in the video in 5 of 5 runs, the steps spent waiting on the depth shaders' links; parts of 107-197 ms held a
+  // scan-face piece's 1024 pictures, 3 to 8 uploads in one draw) the depth shaders are now built for the pieces up to C.depthAhead ahead of the part being drawn,
+  // at most 8 pieces a step, so they link while earlier parts draw (a part waits only if its own are not ready yet); and a picture of C.texAlone pixels or
+  // more is sent to the GPU in a step of its own before its piece is drawn (texPre)
+  let dj = 0; const pend = [];
+  while (i < list.length) { const e0 = Math.min(list.length, i + n);
+    if (C.depthPre && renderer.compileAsync) { const to = Math.min(list.length, Math.max(e0, Math.min(dj + 8, i + (C.depthAhead || 0)))); if (to > dj) { for (const p of depthPre(list, dj, to)) pend.push([p, dj]); dj = to; }
+      while (pend.some(([p, at]) => at < e0 && !p.isReady())) { VWARM.dwait++; yield 'depth'; } }
+    if (C.texAlone) for (const t of texPre(list, i, e0, C.texAlone)) { try { renderer.initTexture(t); } catch (er) { /* sent at its first draw instead */ } VWARM.tex++; yield 'tex'; }
     const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
     VWARM.last = list.slice(i, e).map((o) => { const m = Array.isArray(o.material) ? o.material[0] : o.material, mp = m && m.map, im = mp && mp.image; return (o.name || o.type) + (im ? ' tex ' + (im.width || '?') + 'x' + (im.height || '?') : ''); }).slice(0, 4).join(' | ') + (e - i > 4 ? ' +' + (e - i - 4) : '');
     try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } i = e; const ms = performance.now() - t0;
@@ -2394,7 +2405,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
-window.__game.vidWarm = () => ({ depth: [DPRE.n, DPRE.built], done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
+window.__game.vidWarm = () => ({ depth: [DPRE.n, DPRE.built, VWARM.dwait], tex: VWARM.tex, done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock
