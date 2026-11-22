@@ -1,0 +1,16 @@
+$ LIMIT=20 node tools/zfightcheck.cjs dist high   (limit 40 min)
+views 56, fighting pixels per view: 28 42 17 73 60 28 93 51 32 5 27 56 17 24 41 28 48 11 24 30 113 37 45 38 30 54 66 52 57 19 62 45 27 31 32 2 105 7 43 29 39 53 15 87 50 6 9 22 24 1 1 0 0 0 1 11
+FAIL surfaces fight (drawn order decides the colour) in 39 of 56 views over 20 px (worst 113 px):
+  9,1.6,14,3.1,0.1 fighting 28
+    1x Mesh<Group<LOD<Group [Buffer @24.0,0.0,24.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  13.9,1.6,11.9,3.9,0.1 fighting 42
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes
+  13.9,1.6,2,5.5,0.1 fighting 73
+    1x Mesh<Group<LOD<Group [Buffer @24.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  9,1.6,0,6.3,0.1 fighting 60
+    1x Mesh<Group<Scene [Box w0.08,h2.4,d0.5,w1 @1.2,1.2,-7.3 s1.00] MeshPhysical f2ecdc map glaze
+  4,1.6,2,7.1,0.1 fighting 28
+    1x Mesh<Group<Group<Group [Buffer @-1.9,0.2,2.0 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<Group<Group [Buffer @-2.0,0.2,2.1 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<Scene [Circle r3.4,s48,t0,t6.28 @0.0,0.0,0.0 s1.00] MeshStandard f6e8c0 map block
+  2,1.6,7,7.9,0.1 fighting 93
+    1x Mesh<Group<LOD<Group [Buffer @-4.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+exit code 1
