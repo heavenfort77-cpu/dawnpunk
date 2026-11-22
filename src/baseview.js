@@ -66,6 +66,20 @@ function markTex(ch) { if (MARKS[ch]) return MARKS[ch]; const s = label(ch, ch =
 const SPV = { b: -1, n: -1, k: 0, list: [], c: new THREE.Vector3(), w: new THREE.Vector3() };
 const ROLE_COL = { hunter: 0xc0583a, gatherer: 0xc8b43a, researcher: 0x3a7ac0 };
 const PATROL = { hunter: [[-15, -15], [15, -15], [15, 15], [-15, 15]], gatherer: [[-9, -8], [0, -16], [-9, -8]], researcher: [[6.0, 3.9], [9, 3.4], [9.55, 2.2], [9, 3.4]] }; // researchers walk past the workshop door (it faces the plaza since Nov 17), clear of its step and urns, and stop to read the quest board beside it
+// (owner Nov 22: two researchers carrying crates walked through each other on their one shared line) recruits who share a route walk it apart (CONFIG.people.patrol).
+// routeFor: a route that turns straight back on itself (out and back along one line) becomes a thin loop: each leg is moved lane m to the right of its walk, a
+// turn-back point becomes the two ends of its legs and a bend the mean of them, so the way out and the way back are 2 x lane apart; a loop route is kept as it is
+function routeFor(wp, lane) { const q = wp.filter((a, j) => { const r = wp[(j + wp.length - 1) % wp.length]; return Math.hypot(a[0] - r[0], a[1] - r[1]) > 1e-3; }), n = q.length; if (!lane || n < 2) return wp;
+  const dir = (j) => { const a = q[j], c = q[(j + 1) % n], dx = c[0] - a[0], dz = c[1] - a[1], l = Math.hypot(dx, dz); return [dx / l, dz / l]; };
+  let back = n === 2; for (let j = 0; j < n && !back; j++) { const u = dir((j + n - 1) % n), v = dir(j); if (u[0] * v[0] + u[1] * v[1] < -0.9) back = true; } if (!back) return wp;
+  const out = []; for (let j = 0; j < n; j++) { const u = dir((j + n - 1) % n), v = dir(j), a = q[j], ru = [-u[1] * lane, u[0] * lane], rv = [-v[1] * lane, v[0] * lane];
+    if (u[0] * v[0] + u[1] * v[1] < -0.5) { out.push([a[0] + ru[0], a[1] + ru[1]], [a[0] + rv[0], a[1] + rv[1]]); continue; }
+    const mx = ru[0] + rv[0], mz = ru[1] + rv[1], ml = Math.hypot(mx, mz) || 1; out.push([a[0] + mx / ml * lane, a[1] + mz / ml * lane]); }
+  return out; }
+// routeStart: walker k of n on one route starts k / n of the way round it (times spread), on the leg that point falls on: its spot and the waypoint it walks to
+function routeStart(wp, k, n, spread) { const m = wp.length, seg = []; let L = 0; for (let j = 0; j < m; j++) { const a = wp[j], c = wp[(j + 1) % m], l = Math.hypot(c[0] - a[0], c[1] - a[1]); seg.push(l); L += l; }
+  let s = n > 1 ? k / n * L * spread : 0; for (let j = 0; j < m; j++) { if (s <= seg[j] || j === m - 1) { const a = wp[j], c = wp[(j + 1) % m], f = seg[j] ? Math.min(1, s / seg[j]) : 0; return { x: a[0] + (c[0] - a[0]) * f, z: a[1] + (c[1] - a[1]) * f, i: (j + 1) % m }; } s -= seg[j]; }
+  return { x: wp[0][0], z: wp[0][1], i: 1 % m }; }
 
 // LAG FIX Nov 19 (owner 11:27, CONFIG.lag.farStep): a villager out of view AND farther than farStep.dist m (Oko: also while you are not in the workshop) takes her motion
 // steps farFrom.hz times a second with the time added up (the motion decides in fixed slices, so the same choices); in view or near, every frame as before.
@@ -124,7 +138,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // the kept pieces point at this save's own records (a cat found or a recruit's role is written to the save the game keeps)
     for (const h of hiddenCats) { const c = (sv.cats || []).find((x) => x.id === h.c.id); if (c) h.c = c; h.cg.visible = h.c.state === 'hidden'; }
     // the recruits start their rounds again where a fresh build puts them, each person restarted (as a fresh build does)
-    for (const o of npcs) { const p = (sv.personnel || []).find((x) => x.id === o.p.id); if (p) o.p = p; o.i = o.i0; o.n.position.set(o.wp[o.i0][0], 0, o.wp[o.i0][1]); o.n.rotation.set(0, 0, 0); o.facc = 0; if (o.ch && o.ch.restart && o.ch.root.parent === o.n) o.ch.restart(); }
+    for (const o of npcs) { const p = (sv.personnel || []).find((x) => x.id === o.p.id); if (p) o.p = p; o.i = o.i0; o.wt = 0; o.n.position.set(o.x0, 0, o.z0); o.n.rotation.set(0, 0, 0); o.facc = 0; if (o.ch && o.ch.restart && o.ch.root.parent === o.n) o.ch.restart(); }
     // Marla back at her spot (she walks the street with you while you are out)
     if (marla && scoutG) marla.whenReady(() => { if (!scoutG || !g.parent) return; shadowDirty = true; if (scoutG.userData.stand) scoutG.remove(scoutG.userData.stand); marla.root.position.set(0, 0, 0); marla.root.rotation.set(0, 0, 0); scoutG.add(marla.root); });
     // the villagers' own turn-to-you and work-loop state starts over, as their nodes did in a fresh build (owner 12:49)
@@ -151,6 +165,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     const rule = (o, cast) => { if (!o.isMesh || o === sky.mesh || o.isSkinnedMesh || o.userData.blob || o.userData.scenery) return; o.receiveShadow = !o.material.transparent; o.castShadow = cast && !o.material.transparent; };
     for (const c of lifeKids) c.traverse((o) => rule(o, true)); for (const q of npcs) q.n.traverse((o) => rule(o, false)); }
   function addRecruits(tok) {
+    const roleN = new Map(), roleK = new Map(); for (const p of save.personnel) roleN.set(p.role, (roleN.get(p.role) || 0) + 1);
     for (const p of save.personnel) {
       const n = new THREE.Group(), stand = new THREE.Group(), body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 1.2, 8), mat(ROLE_COL[p.role] || 0xaaaaaa)); body.position.y = 0.8; stand.add(body);
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 6), mat(0xe0b890)); head.position.y = 1.65; stand.add(head); n.add(stand);
@@ -164,9 +179,11 @@ export function createBaseView(scene, cfg, marla, makeChar) {
       { const bl = new THREE.Mesh(new THREE.CircleGeometry(0.42, 14), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false })); bl.rotation.x = -Math.PI / 2; bl.position.y = 0.035; bl.userData.blob = true; n.add(bl); }
       const lab = label(p.name + ' (' + p.role + ')', '#fff', 2.6); lab.position.y = 2.4; lab.userData.kind = 'npc'; n.add(lab);
       // (owner Nov 22: "the hands are sunken into the box") the crate's size is CONFIG.base.crateSize: as wide as the space between the carrier's palms
-      const CS = cfg.base.crateSize || [0.4, 0.3, 0.4], crate = bx(CS[0], CS[1], CS[2], 0xb08a4a, 0, 1.05, 0.4, n); crate.visible = p.role === 'researcher';
-      const wp = p.role === 'hunter' && cfg.baseWater && cfg.baseWater.on && cfg.baseLife && cfg.baseLife.rounds ? [PATROL.hunter[0], PATROL.hunter[1], ...cfg.baseLife.rounds, PATROL.hunter[2], PATROL.hunter[3]] : PATROL[p.role] || PATROL.hunter, i = p.id % wp.length; n.position.set(wp[i][0], 0, wp[i][1]);
-      g.add(n); npcs.push({ n, p, wp, i, i0: i, crate, ch });
+      const CS = cfg.base.crateSize || [0.4, 0.3, 0.4], crate = bx(CS[0], CS[1], CS[2], cfg.base.crateCol || 0x8a6a3a, 0, 1.05, 0.4, n); crate.visible = p.role === 'researcher';
+      const wp0 = p.role === 'hunter' && cfg.baseWater && cfg.baseWater.on && cfg.baseLife && cfg.baseLife.rounds ? [PATROL.hunter[0], PATROL.hunter[1], ...cfg.baseLife.rounds, PATROL.hunter[2], PATROL.hunter[3]] : PATROL[p.role] || PATROL.hunter;
+      // one route per role: walker k of the role's n walks its lanes, k / n of the way round (CONFIG.people.patrol); was every walker on the centre line from waypoint p.id % length
+      const PT = cfg.people.patrol, rk = roleK.get(p.role) || 0, rn = roleN.get(p.role) || 1; roleK.set(p.role, rk + 1); const wr = PT ? routeFor(wp0, PT.lane) : wp0, st0 = routeStart(wr, rk, rn, PT ? PT.spread : 0), i = st0.i; n.position.set(st0.x, 0, st0.z);
+      g.add(n); npcs.push({ n, p, wp: wr, i, i0: i, x0: st0.x, z0: st0.z, crate, ch, ord: npcs.length, wt: 0 });
     }
   }
   // LAG FIX Nov 19 (owner 12:45): the build is a generator that stops (yield) between its parts, so it can run in time slices in the background (bgStart / bgStep,
@@ -495,7 +512,12 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     // a footbridge deck: the body stands at its height, each slice (the walk slows on its ramps below, from M.deckLook m before them until 0.6 m past them, where its trailing foot still stands, so it never climbs faster than M.deckRise)
     if (life) o.n.position.y = life.deckY(o.n.position.x, o.n.position.z);
     let rise = 1; if (life && d > 1e-6) for (let k = -2; k < M.deckLook / 0.3; k++) { const at = (j) => life.deckY(o.n.position.x + dx / d * 0.3 * j, o.n.position.z + dz / d * 0.3 * j), sl = Math.abs(at(k + 1) - at(k)) / 0.3; if (sl > 1e-4) rise = Math.min(rise, Math.max(0.35, M.deckRise / (1.2 * sl))); }
-    return { face: Math.atan2(dx, dz), go: true, move: true, carry: o.p.role === 'researcher', slow: Math.min(1 - (1 - keep) * near, rise), groundAt: o.gAt || (o.gAt = (x, z) => (life ? life.deckY(x, z) : 0)) }; }
+    // (owner Nov 22) a walker waits while another recruit stands within patrol.gap m ahead in its lane; when two face each other there, the one who joined later waits
+    // (the other comes on); a walker kept waiting patrol.waitMax s goes on for patrol.goOn s whatever is ahead, so no two wait for each other for ever
+    const PT = cfg.people.patrol, hold = PT && d > 1e-6 && waitFor(o, dx / d, dz / d, PT); o.wt = hold ? o.wt + M.slice : (o.wt > PT.waitMax ? o.wt + M.slice : 0); if (o.wt > PT.waitMax + PT.goOn) o.wt = 0;
+    return { face: Math.atan2(dx, dz), go: !(hold && o.wt <= PT.waitMax), move: true, carry: o.p.role === 'researcher', slow: Math.min(1 - (1 - keep) * near, rise), groundAt: o.gAt || (o.gAt = (x, z) => (life ? life.deckY(x, z) : 0)) }; }
+  function waitFor(o, fx, fz, PT) { const P = o.n.position; for (const q of npcs) { if (q === o) continue; const ox = q.n.position.x - P.x, oz = q.n.position.z - P.z, f = ox * fx + oz * fz; if (f <= 0 || f > PT.gap || Math.abs(ox * fz - oz * fx) > PT.ahead) continue;
+      const qy = q.yaw == null ? null : q.yaw, toMe = qy != null && Math.sin(qy) * -ox + Math.cos(qy) * -oz > 0; if (!toMe || o.ord > q.ord) return true; } return false; }
   // posAt (optional): a function of the share of this frame done (0..1] giving the player's [x, z] at that moment, for callers that know the path between frames
   // (without it the slices take the spot on a line from last frame's)
   const yawChk = (o, k) => { if (!o) return k; const y = o.rotation.y, was = bakedYaw[k] === undefined ? y : bakedYaw[k]; if (Math.abs(y - was) > 0.06) { shadowDirty = true; bakedYaw[k] = y; } else if (bakedYaw[k] === undefined) bakedYaw[k] = y; return k + 1; };
@@ -546,7 +568,7 @@ export function createBaseView(scene, cfg, marla, makeChar) {
     for (const n of Object.values(NPCS)) { const o = npcG[n.id]; if (!o) continue; o.mk.position.y = 3.1 + Math.sin(t * 3 + n.z) * 0.12; }
     // recruits on patrol: the person's own motion decides the pace (eases in and out, slows in a bend, stops and turns on the spot in pivot steps at a sharp corner); the holder moves along their facing
     for (const o of npcs) {
-      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { plan: () => patrolStep(o) }); if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; if (o.crate.visible) crateInHands(o); continue; }
+      if (o.ch && o.ch.drive && o.ch.ready && o.ch.root.parent === o.n) { const r = o.ch.drive(dt, { plan: () => patrolStep(o) }); o.yaw = r.yaw; if (!r.moved) { o.n.position.x += Math.sin(r.yaw) * r.speed * dt; o.n.position.z += Math.cos(r.yaw) * r.speed * dt; } o.crate.position.set(Math.sin(r.yaw) * 0.4, 1.05, Math.cos(r.yaw) * 0.4); o.crate.rotation.y = r.yaw; if (o.crate.visible) crateInHands(o); continue; }
       const tgt = o.wp[o.i], dx = tgt[0] - o.n.position.x, dz = tgt[1] - o.n.position.z, d = Math.hypot(dx, dz); if (d < 0.6) o.i = (o.i + 1) % o.wp.length;
       if (d >= 0.6) { o.n.position.x += (dx / d) * 1.2 * dt; o.n.position.z += (dz / d) * 1.2 * dt; o.n.rotation.y = Math.atan2(dx, dz); }
     }

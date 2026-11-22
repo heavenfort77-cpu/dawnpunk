@@ -177,6 +177,12 @@ export const CONFIG = {
     // stepLead: a pivot step's foot lifts for this share of the step before the body turns, and sets down for the same share after; recenter: after pivoting on one foot the body settles back over its middle in about this many s (while stepping or walking)
     motion: { slice: 1 / 120, maxSlices: 30, turnAcc: 30, stepAcc: 80, stepRate: 7, marlaRate: 5.5, swingRamp: 0.15, lockRelease: 0.12, lockSlip: 0.3, plantV: 0.05, stepLead: 0.15, recenter: 0.8, heelOff: 0.35, heelOffAt: 0.3, swingLift: 0.07, liftMin: 0.8, walkLock: true, landAhead: 0.42, heelRise: 0.1, walkCrouch: 0.04, crouchTime: 0.31, reachMax: 1.08, stepTurn: 0.35, decideEvery: 1, stepThigh: 1, deckEase: 10, deckRise: 0.25, deckLook: 1.2, slopeTime: 0.12, reseat: 0.35, reseatLift: 0.06, haltV: 0.45, haltTime: 0.12, cornerDist: 2.0, cornerCos: 0.7, wpReach: 0.6 },
     pose: { armDown: 0.62, elbow: 0.10, elbowFwd: 0.18 },
+    // patrol (owner Nov 22: two researchers carrying crates walked through each other on their shared line): base recruits who share a route walk it apart.
+    // lane: on a there-and-back route each walker keeps this many m to the right of the line, so walkers going opposite ways pass 2 x lane apart (src/baseview.js routeFor)
+    // gap: a walker waits while another recruit stands within this many m ahead of it in its own lane; spread: walkers of one route start this share of the route apart (1 = evenly round it)
+    // ahead: the width (m, either side of the walk line) in which another recruit counts as ahead
+    // waitMax: the longest a walker waits (s) before it goes on anyway for goOn s
+    patrol: { lane: 0.35, gap: 1.1, spread: 1, ahead: 0.4, waitMax: 4, goOn: 1.5 },
     // Bram scan face sample 4, approved by the owner 2026-11-17 (scan lists Bram only, so every other person keeps their face; the models carry no face controls, so none is driven in the game)
     scanFaces: true, scan: { bram: { hi: 'models/bram_scan_hi.glb', lo: 'models/bram_scan_lo.glb' } },
     hiMat: { bump: 1.0, skinRough: 0.95, skinSpec: 0.5, skinTint: 0xe6e3d8, sheen: 0.06, env: 0.3, wrap: 0.35, scatter: 0.06, scatterCol: 0xff8068, eyeRough: 0.3, cut: 0.42, hairRough: 0.62, hairSheen: 0.15,
@@ -1148,6 +1154,8 @@ export const CONFIG = {
     // crateSize (owner Nov 22: "the hands are sunken into the box"): a carried crate's width, height, depth (m). Was 0.4 wide: the carriers' palms are about 0.26 m
     // apart, so they sank 6.6 cm into its sides (tools/crateprobe.cjs measures the skinned hand against the box)
     crateSize: [0.255, 0.3, 0.4],
+    // crateCol (owner Nov 22, crates showed white): the carried crate's colour key in the base's SKIN table (src/baseview.js); 0x8a6a3a = the wood texture, warm tint
+    crateCol: 0x8a6a3a,
     maxPersonnel: 9, recruitModels: 9, recruitOrder: [3, 2, 11, 5, 6, 7, 9, 8, 12], // recruitOrder: which recruit model (art/models/genN) the 1st, 2nd, ... person gets, chosen so the model suits the name: Ines, Tomas, Wen, Aroha, Kofi, Mei, Sol, Dara, Jun. All nine are adults.
     // recruitModels: how many different recruit models ship (art/models/gen1..gen9); keep it at or above maxPersonnel so no two people look the same
     speed: 4, bound: 19.5,
