@@ -59,6 +59,8 @@ async function finish(p, browser, tier, S) {
   const fr = F.frames, first = fr[0][0], endT = (F.baseAt || F.skip || fr[fr.length - 1][0]) + 2000;
   // 1 the film's first picture after the click
   const d0 = F.click !== null ? first - F.click : null; out.push([T + 'the film\'s first picture ' + d0 + ' ms after the click (target <= ' + START_MS + ')', d0 !== null && d0 <= START_MS]);
+  // the film MOVING (its first shown frame after the first one): the first picture above is also shown while the video waits under the loading card
+  { const mv = fr.find((x) => x[1] > fr[0][1]); F.moving = F.click !== null && mv ? mv[0] - F.click : null; }
   // 2 the video: pictures a second, longest wait, dropped
   const until = F.skip || fr[fr.length - 1][0], seen = fr.filter((q) => q[0] <= until); let gap = 0, gapAt = 0; for (let k = 1; k < seen.length; k++) { const g = seen[k][0] - seen[k - 1][0]; if (g > gap) { gap = g; gapAt = (seen[k][0] - first) / 1000; } }
   // (Mac fv1 45014118394: the page's video-frame callbacks come at the runner's idle pacing, 14.7 a second, while the decoder showed 725 of 743 frames) so the
@@ -78,6 +80,6 @@ async function finish(p, browser, tier, S) {
     const ref = Math.max(lastFilm ? lastFilm[3] : 0, base === null ? 0 : base), after = scr.filter((q) => q[0] >= F.skip && q[0] <= endT); let hi = 0, hiAt = 0; for (const [t, l] of after) if (l > hi) { hi = l; hiAt = t; }
     out.push([T + 'brightest screen after Skip ' + hi.toFixed(0) + ' at ' + ((hiAt - F.skip) / 1000).toFixed(2) + ' s (film\'s last picture ' + (lastFilm ? lastFilm[3].toFixed(0) : '-') + ', the base once shown ' + (base === null ? '-' : base.toFixed(0)) + '; target <= ' + (ref + FLASH).toFixed(0) + ', no flash)', hi <= ref + FLASH]);
   }
-  return { lines: out, info: { dropT: F.dropT, vidWarm: W, video: true, callbacksPerSecond: +rate.toFixed(1), longestCallbackGap: gap, shots: scr.length, filmPictures: fr.length, click: F.click, first: first - (F.click || first), skip: F.skip && F.skip - (F.click || 0), baseAt: F.baseAt && F.baseAt - (F.skip || 0), dbg: F.dbg } };
+  return { lines: out, info: { dropT: F.dropT, vidWarm: W, video: true, callbacksPerSecond: +rate.toFixed(1), longestCallbackGap: gap, shots: scr.length, filmPictures: fr.length, click: F.click, moving: F.moving, first: first - (F.click || first), skip: F.skip && F.skip - (F.click || 0), baseAt: F.baseAt && F.baseAt - (F.skip || 0), dbg: F.dbg } };
 }
 module.exports = { setup, finish };

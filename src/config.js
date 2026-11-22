@@ -1312,7 +1312,9 @@ export const CONFIG = {
     // the video's frames; 4: worst part 17 ms, 1 frame dropped); the loading page keeps the old growth (up to 64)
     // depthPre: the shadow pass's own shaders for a part are built in the background before the part is drawn (Mac probe3 45035746982: 5-7 shadow depth programs,
     // for the scan-face people's skinned and morphing pieces, were built at the draw itself, each a 77-418 ms wait on its link: the dropped frames at 10-16 s)
-    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0, maxPart: 4, depthPre: true },
+    // maxPart 8 (Mac 45037773470): with 4 the warm was not finished at Skip in 5 of 5 runs (Skip 834-1916 ms), with 8 it was (737-978 ms)
+    // watchWait: Watch pressed before the title's own warm-up is finished: the loading card stays up while it is finished, at most this many s (0 = no wait)
+    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0, maxPart: 8, depthPre: true, watchWait: 8 },
     // filmBase: the film's black also draws the base's pieces once (src/main.js filmWarm), so the home card after the film finds them drawn
     filmBase: false,
     // filmCompileParts: the film's black builds the street's shaders one top-level piece at a time (src/main.js filmWarm), not all in one frame

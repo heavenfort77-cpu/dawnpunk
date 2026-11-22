@@ -877,7 +877,16 @@ function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT
       const C = CONFIG.lag.vidWarm; if (C && C.on && C.loading && !VWARM.done) { if (!VWARM.it) VWARM.it = vidWarmIter(); const w0 = performance.now(); const r = VWARM.it.next(); VWARM.steps++; VWARM.ms += performance.now() - w0; if (r.done) VWARM.done = true; else { filmCardFill(0.9 + 0.1 * Math.min(1, VWARM.steps / 60)); requestAnimationFrame(step); return; } }
       FILM.preDone = true; FILM.frac = 1; };
     step(); }
-  else { intro.hold = false; if (FILM.card) filmCardOff(); } }
+  // (owner Nov 22 22:42 / Nov 23 00:08; Mac probe3 45043831190: with Watch pressed after the title's own warm-up had finished, 0.1-1.8 % of the film's frames
+  // dropped and Skip took 745-896 ms in 5 of 5 runs; pressed 2-3 s after the title appeared, the base's first draws ran during the video and each held the
+  // screen's next frame 121-899 ms: 2.6-9.8 % dropped, trace 45042225228) Watch pressed before that warm-up is finished: the loading card stays up, with its bar,
+  // while what the title left is finished (as before the begin button on the first visit), at most CONFIG.lag.vidWarm.watchWait s; then the video starts
+  else { const I = intro, TD = CONFIG.lag.titleDraw, W = CONFIG.lag.vidWarm, tf = performance.now();
+    if (W && W.on && W.watchWait && TD && TD.on && TD.film && TB.phase && TB.phase !== 'done') { FILM.watch0 = TB.phase; filmCardOn();
+      const step = () => { if (intro !== I) return; if (TB.phase && TB.phase !== 'done' && performance.now() - tf < W.watchWait * 1000) { baseSlice0(true); filmCardFill(TB.phase === 'draw' && TB.dl ? 0.3 + 0.7 * TB.di / Math.max(1, TB.dl.length) : TB.phase === 'compile' ? 0.2 : 0.1); requestAnimationFrame(step); return; }
+        FILM.watchLeft = [Math.round(performance.now() - tf), FILM.watch0, TB.phase || 'none']; intro.hold = false; if (FILM.card) filmCardOff(); };
+      step(); }
+    else { FILM.watchLeft = [0, TB.phase || 'none', TB.phase || 'none']; intro.hold = false; if (FILM.card) filmCardOff(); } } }
 // (owner Nov 22 19:54: "cut the wait after Skip (2.5-3.2 s) by building the base while the video plays") the base the film ends in is set up (introToBase, its
 // lights and the kept base) and its pieces drawn for the first time while the video plays: the 3D picture is hidden then and the page has nothing else to do.
 // The pieces are drawn a few at a time into a small hidden target, frustum culling off for that draw, so each one's buffers and pictures are on the GPU before
@@ -2394,7 +2403,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
-window.__game.vidWarm = () => ({ depth: [DPRE.n, DPRE.built], done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
+window.__game.vidWarm = () => ({ watchWait: FILM.watchLeft || null, depth: [DPRE.n, DPRE.built], done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock
