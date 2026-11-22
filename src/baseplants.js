@@ -69,7 +69,7 @@ const GEO = {};
 export function plantGeo(kind, hi) { const key = kind + (hi ? 'h' : 'l'); if (GEO[key]) return GEO[key]; const M = Mesh(); BUILD[kind](M, rng(31 + kind.length * 7), hi);
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(M.P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(M.C, 3)); g.setIndex(M.I); g.computeVertexNormals(); g.userData.keep = true; return (GEO[key] = g); }
 let MAT = null;
-const plantMat = () => { if (MAT) return MAT; MAT = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.72, envMapIntensity: 0.5 }); MAT.userData.pbr = true; MAT.userData.shared = true; return MAT; };
+const plantMat = () => { if (MAT) return MAT; MAT = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.72, envMapIntensity: 0.5 }); { const B = CONFIG.lag && CONFIG.lag.plants && CONFIG.lag.plants.bias; if (B) { MAT.polygonOffset = true; MAT.polygonOffsetFactor = B[0]; MAT.polygonOffsetUnits = B[1]; } } MAT.userData.pbr = true; MAT.userData.shared = true; return MAT; };
 // the base build's shared kit while plants are rolled out (src/basevillage.js startPlants sets it; src/basehi.js puts the density pass's window-box and urn plants into it)
 export const LIFE_PLANTS = { kit: null };
 // a kit that collects placements and makes one instanced mesh per kind: add(kind, x, y, z, size, turn, tint 0xRRGGBB or null, tilt)
