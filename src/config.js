@@ -1310,7 +1310,9 @@ export const CONFIG = {
     // picture is at least this dark by design (fade or eyelids); 0 = all through the video (Mac probe3 45029979358: dark-only never finished, Skip 2.9-3.8 s)
     // maxPart: during the video at most this many pieces in one part (Mac 45030572985: parts grown to 64 pieces took 371-1291 ms on the GPU side and dropped
     // the video's frames; 4: worst part 17 ms, 1 frame dropped); the loading page keeps the old growth (up to 64)
-    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0, maxPart: 4 },
+    // depthPre: the shadow pass's own shaders for a part are built in the background before the part is drawn (Mac probe3 45035746982: 5-7 shadow depth programs,
+    // for the scan-face people's skinned and morphing pieces, were built at the draw itself, each a 77-418 ms wait on its link: the dropped frames at 10-16 s)
+    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0, maxPart: 4, depthPre: true },
     // filmBase: the film's black also draws the base's pieces once (src/main.js filmWarm), so the home card after the film finds them drawn
     filmBase: false,
     // filmCompileParts: the film's black builds the street's shaders one top-level piece at a time (src/main.js filmWarm), not all in one frame
