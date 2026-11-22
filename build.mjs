@@ -44,6 +44,11 @@ const { VOICE_LINES } = await import('./src/voicelines.js'), VWANT = new Set(VOI
 for (const f of fs.existsSync('art/voice/mp3') ? fs.readdirSync('art/voice/mp3') : []) { if (!f.endsWith('.mp3') || !VWANT.has(f)) continue; const buf = fs.readFileSync('art/voice/mp3/' + f); fs.writeFileSync('dist/voice/' + f, buf); vb += buf.length; const uri = 'data:audio/mpeg;base64,' + buf.toString('base64'); single = single.split('"voice/' + f + '"').join('"' + uri + '"').split("'voice/" + f + "'").join("'" + uri + "'"); nv++; }
 console.log('Marla voice clips', nv, 'files', (vb / 1024).toFixed(0) + ' KB in dist/voice');
 fs.writeFileSync('dist/index_single.html', single);
+// VIDEO OPENING (owner Nov 22): art/film/*.mp4 (tools/filmrender.cjs + tools/filmencode.sh) go to dist/film/ beside index.html; not inside the single-file build
+// (a page opened alone from a folder plays the 3D film instead)
+fs.rmSync('dist/film', { recursive: true, force: true }); fs.mkdirSync('dist/film', { recursive: true }); let nf = 0;
+for (const f of fs.existsSync('art/film') ? fs.readdirSync('art/film') : []) { if (!f.endsWith('.mp4')) continue; fs.copyFileSync('art/film/' + f, 'dist/film/' + f); nf++; }
+console.log('opening video files', nf);
 // (H, release check) a failed itch zip fails the build (it was only logged, and an old zip could have gone out)
-const { execSync } = await import('child_process'); try { fs.rmSync('dist/solardg-itch.zip', { force: true }); for (const f of ['LICENSE', 'ASSETS-LICENSE.md']) fs.copyFileSync(f, 'dist/' + f); fs.cpSync('licenses', 'dist/licenses', { recursive: true }); execSync('cd dist && zip -q -r solardg-itch.zip index.html physics.js music tex models voice LICENSE ASSETS-LICENSE.md licenses'); } catch (e) { console.error('zip failed', String(e).slice(0, 200)); process.exit(1); }
+const { execSync } = await import('child_process'); try { fs.rmSync('dist/solardg-itch.zip', { force: true }); for (const f of ['LICENSE', 'ASSETS-LICENSE.md']) fs.copyFileSync(f, 'dist/' + f); fs.cpSync('licenses', 'dist/licenses', { recursive: true }); execSync('cd dist && zip -q -r solardg-itch.zip index.html physics.js music tex models voice film LICENSE ASSETS-LICENSE.md licenses'); } catch (e) { console.error('zip failed', String(e).slice(0, 200)); process.exit(1); }
 console.log('music files', n, '| single-file build', (single.length / 1024).toFixed(0) + ' KB', '| itch zip', (fs.statSync('dist/solardg-itch.zip').size / 1024).toFixed(0) + ' KB');

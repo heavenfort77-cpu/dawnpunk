@@ -688,7 +688,7 @@ const FILM = { it: null, ready: false, worst: 0, ms: 0, t0: 0 };
 function filmPreWanted() { if (BOTRUN() || NOFILM || !CONFIG.lag.loadFilm || !CONFIG.lag.loadFilm.on || !CONFIG.lag.filmWarm || !CONFIG.opening.on) return false; try { return !(storage && storage.getItem('solardg.save')); } catch (e) { return true; } }
 function filmMenuOver() { if (!FILM.pre) return; const m = $('menu'); m.style.display = 'flex'; m.style.zIndex = '45'; }
 function filmPre() { if (FILM.pre || FILM.it || BOTRUN() || NOFILM || !CONFIG.lag.loadFilm || !CONFIG.lag.loadFilm.on || !CONFIG.lag.filmWarm || !CONFIG.opening.on || state !== 'menu') return false; let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } if (had) return false;
-  if (!preSave) titleBase(); if (!preSave) return false; save = preSave; carry = save.carry || null; FILM.pre = true; FILM.preDone = false; FILM.frac = 0; startIntro(); if (!FILM.it) { FILM.pre = false; save = null; return false; } filmMenuOver(); return true; }
+  if (!preSave) titleBase(); if (!preSave) return false; save = preSave; carry = save.carry || null; FILM.pre = true; FILM.preDone = false; FILM.frac = 0; startIntro(); if (!FILM.it && !(intro && intro.video)) { FILM.pre = false; save = null; return false; } filmMenuOver(); return true; }
 function filmGo() { const m = $('menu'); m.style.display = 'none'; m.style.zIndex = ''; const done = FILM.preDone; FILM.pre = false; FILM.preDone = false; if (done) { if (intro) intro.hold = false; } else filmCardOn(); }
 function filmCardOn() { if (!CONFIG.lag.card || !CONFIG.lag.card.on || !CONFIG.lag.filmCard || FILM.pre) return; FILM.card = true; $('lct').textContent = CONFIG.lag.card.titles.film || ''; $('lfill').style.width = Math.round((FILM.frac || 0.02) * 100) + '%'; $('lcard').style.display = 'flex'; }
 function filmCardFill(k) { FILM.frac = Math.max(0.02, Math.min(1, k)); if (FILM.card) $('lfill').style.width = Math.round(Math.max(0.02, Math.min(1, k)) * 100) + '%'; }
@@ -715,7 +715,7 @@ function filmSlice() { if (!FILM.it) return; const S = CONFIG.lag.slice, t0 = pe
   for (;;) { let r; try { r = FILM.it.next(); } catch (e) { r = { done: true }; FILM.err = String(e && e.stack || e).slice(0, 300); }
     if (r.done) { FILM.it = null; FILM.ready = !FILM.err; const ts = performance.now(); try { startIntro(); filmMenuOver(); if (!(intro && intro.hold)) { filmCardOff(); if (FILM.pre) FILM.preDone = true; } } finally { FILM.ready = false; startIntro.go = false; FILM.ms = Math.round(ts - FILM.t0); FILM.introMs = Math.round(performance.now() - ts); } return; }
     if (r.value === 'frame' || performance.now() - t0 >= S.film) { FILM.worst = Math.max(FILM.worst, performance.now() - t0); return; } } }
-function startIntro() { if (!BOTRUN() && CONFIG.lag.filmWarm && !startIntro.go && CONFIG.opening.on && save) { $('menu').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; $('hud').style.display = 'none'; state = 'intro'; intro = { t: 0, hold: true, prep: true }; startIntro.go = true; FILM.worst = 0; FILM.err = null; FILM.t0 = performance.now(); FILM.it = filmPrep(); filmCardOn(); return; }
+function startIntro() { if (CONFIG.opening.on && save && vidOn()) { startVideoIntro(); return; } if (!BOTRUN() && CONFIG.lag.filmWarm && !startIntro.go && CONFIG.opening.on && save) { $('menu').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; $('hud').style.display = 'none'; state = 'intro'; intro = { t: 0, hold: true, prep: true }; startIntro.go = true; FILM.worst = 0; FILM.err = null; FILM.t0 = performance.now(); FILM.it = filmPrep(); filmCardOn(); return; }
   if (!FILM.ready) { gloomPreload(FILM_KINDS); bview.preChars(); }
   if (!CONFIG.opening.on) { startIntroOld(); return; }
   if (!save) return; if (!FILM.ready) { introClear(); const it = introBase(); while (!it.next().done); }
@@ -810,11 +810,52 @@ function opWake(I, w) {
   // Marla faces you; her marker beam and halo and every label are hidden for the shot; the plant inside the door too (phone tier)
   const mg = marla.root.parent; if (mg && mg !== scene && mg !== bview.group) { mg.rotation.y = Math.atan2(cam.position.x - mg.position.x, cam.position.z - mg.position.z); for (const c of mg.children) if (c !== marla.root && c.visible) { c.visible = false; I.hide.push(c); } }
   if (!I.pot) { I.pot = true; const H = K.hide, v = new THREE.Vector3(); bview.group.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const r = o.geometry.boundingSphere.radius * o.getWorldScale(v).x; if (r > H[2]) return; o.getWorldPosition(v); if (Math.hypot(v.x - H[0], v.z - H[1]) < H[2] && v.y < 1.6) { o.visible = false; I.hide.push(o); } }); }
-  let lid = 0; const L = K.lids; for (let i = 0; i < L.length - 1; i++) if (w >= L[i][0] && w <= L[i + 1][0]) lid = L[i][1] + (L[i + 1][1] - L[i][1]) * OP_SM((w - L[i][0]) / (L[i + 1][0] - L[i][0])); if (w > L[L.length - 1][0]) lid = L[L.length - 1][1];
-  opLids(lid); sty(cvs, 'filter', QUALITY === 'high' && w < K.blur[1] ? 'blur(' + (K.blur[0] * (1 - w / K.blur[1])).toFixed(2) + 'px)' : '');
+  opLids(lidAt(w)); sty(cvs, 'filter', QUALITY === 'high' && w < K.blur[1] ? 'blur(' + (K.blur[0] * (1 - w / K.blur[1])).toFixed(2) + 'px)' : '');
+}
+// the eyelids' closed share at the wake's time w (s), from CONFIG.opening.wake.lids (used by the 3D film and the video)
+function lidAt(w) { const L = CONFIG.opening.wake.lids; let lid = 0; for (let i = 0; i < L.length - 1; i++) if (w >= L[i][0] && w <= L[i + 1][0]) lid = L[i][1] + (L[i + 1][1] - L[i][1]) * OP_SM((w - L[i][0]) / (L[i + 1][0] - L[i][0])); if (w > L[L.length - 1][0]) lid = L[L.length - 1][1]; return lid; }
+// ---- VIDEO OPENING (owner Nov 22: "can't it be saved as a fixed item?"): the 3D opening recorded once (tools/filmrender.cjs) and played as a video; the captions,
+// black fades, eyelids and music stay live, driven by the video's clock. No street is built and the film's machines are not fetched. If the video cannot play
+// (no file, a page opened from a folder without it, a codec the browser lacks) the 3D film plays as before. ?film3d=1 asks for the 3D film; the scripted checks
+// (webdriver) get the 3D film unless ?filmvideo=1 or ?cards=1 (the player's path)
+const VID = { el: null, failed: false, ready: false, src: '' };
+const VIDQ = (() => { try { const q = new URLSearchParams(location.search); return { v: q.get('filmvideo') === '1', d: q.get('film3d') === '1' }; } catch (e) { return { v: false, d: false }; } })();
+function vidOn() { const V = CONFIG.opening.video; if (!V || !V.on || FILMREC || VID.failed || VIDQ.d || (BOTRUN() && !VIDQ.v)) return false; try { return !!document.createElement('video').canPlayType(V.type); } catch (e) { return false; } }
+function vidFail(why) { if (VID.failed) return; VID.failed = true; VID.why = why; const v = VID.el; VID.el = null; VID.ready = false; if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) { /* gone */ } v.remove(); }
+  // the 3D film instead, from where the video was asked for (the loading page or after Enter)
+  if (intro && intro.video) { const pre = FILM.pre; intro = null; startIntro.go = false; startIntro(); if (pre && !FILM.it && !intro) { FILM.pre = false; filmMenuOver(); } } }
+function startVideoIntro() {
+  const V = CONFIG.opening.video; $('menu').style.display = 'none'; $('hud').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; $('cineCap').textContent = ''; opLids(0); state = 'intro';
+  intro = { t: 0, video: true, part: 'town', hold: true, hide: [], stands: [] };
+  const src = QUALITY === 'low' ? V.lo : V.hi; let v = VID.el;
+  if (!v || VID.src !== src) { if (v) v.remove(); v = VID.el = document.createElement('video'); VID.src = src; VID.ready = false; v.id = 'filmVid'; v.muted = true; v.defaultMuted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', ''); v.preload = 'auto';
+    v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:' + (V.fit || 'contain') + ';background:#000;pointer-events:none';
+    v.addEventListener('error', () => vidFail('error ' + (v.error ? v.error.code : '?')));
+    const ok = () => { if (VID.ready || VID.el !== v) return; VID.ready = true; vidReady(); };
+    v.addEventListener('canplaythrough', ok); v.addEventListener('progress', () => { if (FILM.pre || FILM.card) { try { const b = v.buffered, d = v.duration; if (b.length && d) filmCardFill(b.end(b.length - 1) / d); } catch (e) { /* not known yet */ } } });
+    v.src = src; v.load(); clearTimeout(VID.waitT); VID.waitT = setTimeout(() => { if (!VID.ready && VID.el === v && v.readyState >= 3) ok(); else if (!VID.ready && VID.el === v) vidFail('slow'); }, V.waitMs);
+  } else { try { v.currentTime = 0; } catch (e) { /* not seekable yet */ } }
+  // the 3D picture behind the video is not shown (nothing in it belongs to the film): it comes back under the home card at the end
+  $('cine').insertBefore(v, $('cine').firstChild); v.style.display = 'block'; FILM.err = null; cvs.style.visibility = 'hidden';
+  if (VID.ready) vidReady(); else if (!FILM.pre) filmCardOn();
+}
+// the video can play through: on the loading page it waits for Enter (filmGo lets go of the hold); after Enter it starts at once
+function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT); if (FILM.pre) { FILM.preDone = true; FILM.frac = 1; } else { intro.hold = false; if (FILM.card) filmCardOff(); } }
+function videoFrame(dt) {
+  const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
+  if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
+  if (v.paused && !v.ended) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => vidFail('play')); }
+  const t = Math.min(v.currentTime || 0, P[4]); I.t = t;
+  let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
+  const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
+  I.part = part >= 2 ? 'base' : 'town';
+  sty($('cineFade'), 'opacity', String(Math.max(0, Math.min(1, part === 3 ? Math.max(0, 1 - (t - P[3]) / 0.4) : fade))));
+  opLids(part === 3 ? lidAt(t - P[3]) : 0); musicTick(dt);
+  if (v.ended || t >= P[4] - 0.02) finishIntro();
 }
 function finishIntro() {
-  if (!intro || intro.prep) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } const skipTown = intro.part === 'town', warming = !!intro.hold; if (skipTown) introToBase(true); const I0 = intro; intro = null; opLids(0); cvs.style.filter = '';
+  if (!intro || intro.prep) return; if (!CONFIG.opening.on) { finishIntroOld(); return; } const wasVid = !!intro.video, skipTown = intro.part === 'town' || wasVid, warming = !!intro.hold && !wasVid; if (skipTown) introToBase(true); const I0 = intro;
+  if (wasVid && VID.el) { clearTimeout(VID.waitT); try { VID.el.pause(); } catch (e) { /* gone */ } VID.el.style.display = 'none'; } intro = null; opLids(0); cvs.style.filter = '';
   for (const o of (I0.hide || []).concat(I0.stands || [])) o.visible = true; if (I0.fov0 && cam.fov !== I0.fov0) { cam.fov = I0.fov0; cam.updateProjectionMatrix(); }
   scene.background = new THREE.Color(0xbfe6f0); scene.fog = new THREE.Fog(0xf6e8c8, 30, 95); hemi.intensity = CONFIG.baseLight.power; hemi.color.setHex(CONFIG.baseLight.sky); if (CONFIG.render.tone) renderer.toneMappingExposure = CONFIG.render.exposure;
   $('cine').style.display = 'none'; state = 'base'; ui = null; bp = { x: -0.6, z: -9.3 }; baseCamY = 1.6; bview.group.traverse((o) => { if (o.isSprite && o.renderOrder === 10) o.material.opacity = 1; }); const sp = B.scoutPos(save); yaw = Math.atan2(-(sp.x - bp.x), -(sp.z - bp.z)); pitch = 0; camY = 1.6; cam.rotation.set(0, yaw, 0, 'YXZ');
@@ -823,9 +864,11 @@ function finishIntro() {
   // uploads 6018 ms, 11 programs) the base's first frames are made under the home card instead (sliced parts, each waiting for the GPU), as Enter does
   // (R4 worker 6, lead 21:15) the first-time job card comes after the home card ends (both are z-index 40: under the card it closed unseen after jobCardSecs)
   // (owner Nov 22) a skip while the film's warm-up still runs (the dawn or wake hold) also goes through the home card: its draws were stopped part-way (gone())
-  if ((skipTown || warming) && CONFIG.lag.skipCard) sceneCard('home').then(() => jobCard(), () => jobCard()); else jobCard(); }
+  const back = () => { if (wasVid) cvs.style.visibility = ''; jobCard(); };
+  if ((skipTown || warming) && CONFIG.lag.skipCard) { const c = sceneCard('home'); if (wasVid) requestAnimationFrame(() => { cvs.style.visibility = ''; }); c.then(back, back); } else back(); }
 function introFrame(dt) {
   if (!CONFIG.opening.on) { introFrameOld(dt); return; }
+  if (intro.video) { videoFrame(dt); return; }
   const I = intro, C = CONFIG.opening, P = C.parts; if (I.hold || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) return; I.t += dt; const t = I.t; // I.hold: filmWarm is still preparing under the black
   let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
   const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
@@ -838,7 +881,7 @@ function introFrame(dt) {
   // with the eyes still shut, the scene is warmed again under a hold (filmWarm: shaders, then every piece drawn in parts)
   if (part === 3 && !I.wakeWarm && t - P[3] < 0.5 && opStands(I) === 0) { I.wakeWarm = true; filmWarm(I); if (I.hold) return; }
   if (part === 0) opGrid(I, t); else if (part === 1) opTurning(I, t, dt);
-  if (part <= 1) { sky.follow(cam, 0, dt); sty($('cineFade'), 'opacity', String(Math.max(0, Math.min(1, fade)))); musicTick(dt); draw(); if (part === 1 && C.turning.hands > 0) { hands.update(dt, false, C.turning.hands, true); hands.render(renderer, cam.aspect); } return; }
+  if (part <= 1) { sky.follow(cam, 0, dt); sty($('cineFade'), 'opacity', String(Math.max(0, Math.min(1, fade)))); musicTick(dt); draw(); if (part === 1 && C.turning.hands > 0) { hands.update(dt, false, C.turning.hands, true); if (!REC_NODRAW) hands.render(renderer, cam.aspect); } return; }
   // the people decide inside the motion's slices on where the camera is at each moment of the frame (dawn path, then the bed at the wake), the same at any frame rate
   const filmAt = (a) => { const tt = t - dt + a * dt; if (tt >= P[3]) return [-0.6, -9.3]; const c = opPath(CONFIG.opening.dawn.cam, Math.max(P[2], tt)); return [c[0], c[2]]; };
   if (part === 2) { bview.update(dt, cam.position.x, cam.position.z, cam.position.y, filmAt); opDawn(I, t); opLids(0); for (const o of I.hide || []) o.visible = false; opStands(I); }
@@ -1663,7 +1706,7 @@ function marlaPass() {
 }
 // her own programs under the loading card (the street's are built without her lights): only her pieces, with the scene's lights plus her two
 function marlaCompile() { if (!ML.on || !renderer.compileAsync) return Promise.resolve(); const cm = cam.layers.mask; cam.layers.set(ML.bit); try { return renderer.compileAsync(marla.root, cam, scene).catch(() => {}); } finally { cam.layers.mask = cm; } }
-function draw() { pshadow.tick(cam, (state === 'base' || state === 'play') && !window.__noBodyShadow, pshadowFloor());if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (holdDraw) return; fitFar(); if (QUALITY === 'high') lodTick(cam); marlaSync(); ML.sh = renderer.shadowMap.needsUpdate; if (fx && fx.render) { if (fx.setAfterMain && !ML.fxSet) { ML.fxSet = true; fx.setAfterMain(marlaPass, ML.bit); } fx.render(); } else { renderer.render(scene, cam); marlaPass(); } }
+function draw() { if (REC_NODRAW) return; pshadow.tick(cam, (state === 'base' || state === 'play') && !window.__noBodyShadow, pshadowFloor());if (FINE) { const bpe = $('bprompt'); if (bpe.textContent.startsWith('USE:')) bpe.textContent = 'E:' + bpe.textContent.slice(4); const can = (state === 'play' && !paused) || (state === 'base' && !ui && !paused); if (mouseHeld() && !can) freeMouse(); if (mouseHeld()) everHeld = true; $('mlook').style.display = can && !mouseHeld() && !mlookQuiet() ? 'block' : 'none'; } tickCentre(); if (Q.fx && !FXOFF && !fx) { try { fx = createFx(renderer, scene, cam, Q.fx, Q.pbr, hemi); fx.setSize(innerWidth, innerHeight); } catch (e) { console.warn('picture pass off', e); fx = { render: null }; } } if (holdDraw) return; fitFar(); if (QUALITY === 'high') lodTick(cam); marlaSync(); ML.sh = renderer.shadowMap.needsUpdate; if (fx && fx.render) { if (fx.setAfterMain && !ML.fxSet) { ML.fxSet = true; fx.setAfterMain(marlaPass, ML.bit); } fx.render(); } else { renderer.render(scene, cam); marlaPass(); } }
 // the far plane follows the fog (CONFIG.lag.farPad): nothing past the fog's end is drawn; the sky dome (40 m) shrinks to stay inside the far plane
 const FAR0 = cam.far; function fitFar() { const f = scene.fog && scene.fog.isFog ? Math.min(FAR0, scene.fog.far + CONFIG.lag.farPad) : FAR0; if (Math.abs(cam.far - f) > 0.25) { cam.far = f; cam.updateProjectionMatrix(); } sky.mesh.scale.setScalar(Math.min(1, (cam.far - 1) / 40)); }
 // (owner 13:10, premortem J) a new size clears the canvas: a held picture (pause, run end) is drawn once again and the run-end blur taken again from it
@@ -1695,6 +1738,10 @@ const CARDS_REAL = (() => { try { return new URLSearchParams(location.search).ge
 // programs made under it (LCARD.proofs, last 12: kind, renders, calls, programs)
 const RSTAT = { renders: 0, calls: 0 }; { const r0 = renderer.render.bind(renderer); renderer.render = (s2, c2) => { const I = renderer.info.render, b = renderer.info.autoReset ? 0 : I.calls; r0(s2, c2); RSTAT.renders++; RSTAT.calls += I.calls - b; }; }
 const nProg = () => (renderer.info.programs ? renderer.info.programs.length : 0);
+// (owner Nov 22, video opening) ?filmrec=1: tools/filmrender.cjs records the 3D film frame by frame at a fixed clock; the page's own loop then leaves the film
+// alone and window.__game.filmRec(dt) runs one film frame (it draws); not a player path
+let REC_NODRAW = false;
+const FILMREC = (() => { try { return new URLSearchParams(location.search).get('filmrec') === '1'; } catch (e) { return false; } })();
 const LCARD = { on: false, n: 0, proofs: [] }, BOTRUN = () => { if (CARDS_REAL) return false; try { return !!window.__dtMax || !!navigator.webdriver; } catch (e) { return false; } };
 // (owner 13:10, the shader built during a fight) ?proglog=1 (perfcheck): every NEW shader program is logged with the material and the piece that asked for it
 // (window.__progLog, first 300: time, game state, under a card or not, material type, name, colour and maps, the piece and its owners up the tree, its userData keys);
@@ -2038,7 +2085,7 @@ function frame(now) {
     tickWsTip(dt); tickHud(dt); tickAim(dt); tickCharge(dt); tickMap(dt);
     lfMark('logic'); draw(); lfMark('draw'); lfEnd(); return;
   }
-  if (state === 'intro') { introFrame(dt); lfMark('logic'); LF.last = null; lfEnd(); if (LF.last) LF.last.part = intro ? intro.part + ' ' + (intro.t || 0).toFixed(1) : 'end'; return; }
+  if (state === 'intro') { if (FILMREC) { lfEnd(); return; } introFrame(dt); lfMark('logic'); LF.last = null; lfEnd(); if (LF.last) LF.last.part = intro ? intro.part + ' ' + (intro.t || 0).toFixed(1) : 'end'; return; }
   if (state === 'play' && !sim && run) { townFrame(dt); return; }
   if (state === 'play' && sim && sim.done) endScreen();
   if (state === 'play' && sim && !sim.done && !paused) {
@@ -2252,6 +2299,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
+window.__game.filmRec = (dt, nodraw) => { if (!FILMREC) return 'off'; if (!intro) return 'done'; if (intro.prep || intro.hold) return 'hold'; const t0 = intro.t || 0; REC_NODRAW = !!nodraw; try { introFrame(dt); } finally { REC_NODRAW = false; } if (!intro) return 'done'; return intro.t > t0 + dt * 0.5 ? 'drew' : 'wait'; };
 window.__game.baseFar = () => ({ pieces: BFC.recs.length, hidden: BFC.recs.filter((r) => r.cull).length }); window.__game.cardOn = () => LCARD.on; window.__game.introT = () => (intro ? intro.t : null); window.__game.filmPre = () => ({ pre: !!FILM.pre, done: !!FILM.preDone, frac: FILM.frac || 0 }); window.__game.cardStep = () => (LCARD.on ? (LCARD.kind || '') + ':' + LCARD.steps.length : ''); window.__game.frameCost = (reset) => { const n = Math.max(1, FC.n), o = { frames: FC.n }; for (const k of ['js', 'logic', 'draw', 'hands', 'shadow', 'matrix']) o[k] = +(FC[k] / n).toFixed(2); o.renderRest = +((FC.draw - FC.shadow - FC.matrix) / n).toFixed(2); if (reset) for (const k in FC) FC[k] = 0; return o; }; window.__game.uploads = () => ({ n: UPL.n, ms: Math.round(UPL.ms), bn: UPL.bn, bms: Math.round(UPL.bms), big: UPL.big.slice() }); window.__game.filmHold = () => !!(FILM.it || (intro && intro.hold)); window.__game.filmPrepInfo = () => ({ worst: Math.round(FILM.worst), ms: FILM.ms, err: FILM.err || null, compileMs: FILM.compileMs, compileCut: FILM.compileCut, modelWait: FILM.modelWait, introMs: FILM.introMs, upgradeMs: FILM.upgradeMs, titleLeft: FILM.titleLeft, compileParts: FILM.compileParts, compileSyncMax: FILM.compileSyncMax, compileSyncSum: FILM.compileSyncSum, compileNew: FILM.compileNew, compileWaitMax: FILM.compileWaitMax, drawParts: FILM.parts, drawSyncMax: FILM.drawSyncMax, gpuWaitMax: FILM.gpuWaitMax, listMs: FILM.listMs });
 // the impact sound proof (tools/perfcheck.cjs, local probes): each kind rendered live and as a rendered variant through a pooled chain, RMS difference / RMS
 window.__game.impactSelfTest = (ph) => impactSelfTest(44100, CONFIG.sfx.impact, !!ph, 12345);
