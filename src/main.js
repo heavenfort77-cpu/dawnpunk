@@ -883,6 +883,7 @@ function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT
 // Skip; the home card after Skip then only does what Enter's card does (0.7-1.0 s). CONFIG.lag.vidWarm: after (s into the video), ms (work a frame), on
 if (/[?&]nowarm=1/.test(location.search) && CONFIG.lag.vidWarm) CONFIG.lag.vidWarm.on = false; // (probe3 only, never merged)
 if (/[?&]warmall=1/.test(location.search) && CONFIG.lag.vidWarm) CONFIG.lag.vidWarm.darkOnly = 0; // (probe3 only)
+const WMAX = +((/[?&]wmax=(\d+)/.exec(location.search) || [])[1] || 64), WFENCE = /[?&]wfence=1/.test(location.search); // (probe3 only)
 const OVF = /[?&]ovf=1/.test(location.search); // (probe3 only) the film's overlay (fade, eyelids, caption) set once per presented video frame
 const VWARM = { it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false, long: [], last: '' };
 // (Mac fv2 45021132181: one step of 6.2 s, 126 of 763 video frames dropped) in parts: the base built a part at a time if it is not the kept one, its shaders
@@ -899,12 +900,14 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   while (i < list.length) { const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
     VWARM.last = list.slice(i, e).map((o) => { const m = Array.isArray(o.material) ? o.material[0] : o.material, mp = m && m.map, im = mp && mp.image; return (o.name || o.type) + (im ? ' tex ' + (im.width || '?') + 'x' + (im.height || '?') : ''); }).slice(0, 4).join(' | ') + (e - i > 4 ? ' +' + (e - i - 4) : '');
     try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } i = e; const ms = performance.now() - t0;
-    n = ms < C.ms / 2 ? Math.min(n * 2, 64) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
+    n = ms < C.ms / 2 ? Math.min(n * 2, WMAX) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
   VWARM.ok = true; }
 // during the video (the title's Watch: no loading page) a part is drawn only while the picture is dark by design (the black fade between parts, closed eyelids):
 // a frame the video drops there is not seen
-function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (C.darkOnly) { const fo = parseFloat($('cineFade').style.opacity) || 0, lt = $('cineLidT'); let cover = fo; if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) cover = Math.max(cover, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (cover < C.darkOnly) return; } if (!VWARM.it) VWARM.it = vidWarmIter(); const t0 = performance.now();
-  const r = VWARM.it.next(); if (r.done) VWARM.done = true; VWARM.steps++; const ms = performance.now() - t0; VWARM.ms += ms; if (ms > VWARM.worst) { VWARM.worst = ms; VWARM.worstAt = r.value || 'end'; } if (ms > 60 && VWARM.long.length < 12) VWARM.long.push([r.value || 'end', Math.round(ms), Math.round(t * 10) / 10, VWARM.last]); }
+function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (C.darkOnly) { const fo = parseFloat($('cineFade').style.opacity) || 0, lt = $('cineLidT'); let cover = fo; if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) cover = Math.max(cover, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (cover < C.darkOnly) return; } if (!VWARM.it) VWARM.it = vidWarmIter(); const gl = renderer.getContext();
+  if (WFENCE && VWARM.fence) { if (gl.getSyncParameter(VWARM.fence, gl.SYNC_STATUS) !== gl.SIGNALED) { VWARM.waits = (VWARM.waits || 0) + 1; return; } gl.deleteSync(VWARM.fence); VWARM.fence = null; }
+  const t0 = performance.now();
+  const r = VWARM.it.next(); if (WFENCE && !r.done) { VWARM.fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); } if (r.done) VWARM.done = true; VWARM.steps++; const ms = performance.now() - t0; VWARM.ms += ms; if (ms > VWARM.worst) { VWARM.worst = ms; VWARM.worstAt = r.value || 'end'; } if (ms > 60 && VWARM.long.length < 12) VWARM.long.push([r.value || 'end', Math.round(ms), Math.round(t * 10) / 10, VWARM.last]); }
 function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
@@ -2376,7 +2379,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
-window.__game.vidWarm = () => ({ done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
+window.__game.vidWarm = () => ({ waits: VWARM.waits || 0, done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock
