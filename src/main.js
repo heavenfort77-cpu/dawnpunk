@@ -32,7 +32,7 @@ import { createNightCull } from './nightcull.js';
 import { installHouseLamps, bindHouseLamps, houseLamp, addLamp, listHouseLamps, unlistHouseLamps, houseLampState, houseLampList, houseLampsDrawn, houseLampsForceOff } from './houselamps.js';
 import { freezeStillBones } from './glbmerge.js';
 import { unifyStd } from './unifymat.js';
-import { mergeStatic, HIT_LAYER, splitVariants, singlePassFlat, twoPassGroups } from './mergestatic.js';
+import { mergeStatic, mergeUnder, HIT_LAYER, splitVariants, singlePassFlat, twoPassGroups } from './mergestatic.js';
 import { gloomPreload, glbHooks, glbCopy, glbState } from './gloomglb.js';
 import { openBook, loadBookFonts, closeBook } from './book.js';
 import { MODELS } from './modeldata.js';
@@ -137,8 +137,9 @@ function needDormant() {
 function tickDormant(night) { if (!dormG) return; dormG.visible = !night; dormG.matrixWorldAutoUpdate = !night; if (night) return; const t = performance.now() / 1000, f2 = cam.far * cam.far; for (const o of dormG.children) if (!o.userData.awake && o.position.distanceToSquared(SLV.copy(cam.position).sub(world.g.position)) < f2) o.userData.anim(t, null); } // (owner 10:50) only the sleepers within the far plane are animated
 const SLV = new THREE.Vector3();
 // light sleepers: by day a dormant machine wakes if you pass close with a heavy pack, lurches after you, can hit once, then powers down in the sun
-// mergeDormant: a sleeping machine's opaque pieces merged per parent and material (pieces on the head merge under the head, which the jerk turns); a head that is itself a piece is left alone
-function mergeDormant(o) { if (!(CONFIG.lag.mergeDormant && CONFIG.lag.mergeDormant.on)) return; const hs = new Set(o.userData.heads || []); mergeStatic(o, null, true, { transparent: false, skip: (q) => hs.has(q) }); }
+// mergeDormant: a sleeping machine's opaque pieces merged per material under its movers: the root, the body (its first child, src/gloomkit.js g.add(b)) and the head(s),
+// the only nodes its sleep animation turns (the jerk); a head that is itself a piece stays a piece
+function mergeDormant(o) { if (!(CONFIG.lag.mergeDormant && CONFIG.lag.mergeDormant.on)) return; mergeUnder(o, [o, o.children[0], ...(o.userData.heads || [])].filter(Boolean), { transparent: CONFIG.lag.mergeDormant.transparent }); }
 function sleeperBuild(d, awake) { const o = GK.gloomMachine(d.kind, { dormant: !awake }); if (!awake) mergeDormant(o); shadeUnder(o, d.r * 3.4, 0.03); o.position.set(d.x, 0, d.z); o.rotation.y = d.ry; o.userData.awake = !!awake; o.traverse((q) => { if (q.isMesh && !q.material.transparent) q.castShadow = true; }); return o; }
 function dropSleeperPre() { if (run && run.dormant) for (const d of run.dormant) if (d.pre) { for (const k of ['a', 's']) if (d.pre[k] && !d.pre[k].parent) drop(d.pre[k]); d.pre = null; } }
 function sleeperMesh(i, awake) { const d = run.dormant[i], old = dormM[i]; if (old) { dormG.remove(old); drop(old); } const k = awake ? 'a' : 's', o = d.pre && d.pre[k] ? d.pre[k] : sleeperBuild(d, awake); if (d.pre) d.pre[k] = null; dormG.add(o); o.updateMatrixWorld(true); dormM[i] = o; renderer.shadowMap.needsUpdate = true; }

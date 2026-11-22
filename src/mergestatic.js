@@ -99,3 +99,21 @@ export function twoPassGroups(root) { let n = 0;
     if (!g.userData.twoPass) { g.addGroup(0, cnt, 0); g.addGroup(0, cnt, 1); g.userData.twoPass = true; } o.material = p; o.userData.twoPassOf = m;
     const ob = o.onBeforeRender; o.onBeforeRender = function (...a) { p[0].opacity = p[1].opacity = m.opacity; p[0].visible = p[1].visible = m.visible; return ob.apply(this, a); }; n++; });
   return n; }
+
+// mergeUnder (owner Nov 22, street draw calls: perfgpu 45003084654, one sleeping lantern machine drew 94 pieces): mergeStatic groups pieces by their direct
+// parent, but a machine nests each piece in its own groups, so nothing shared a parent and nothing merged. Here every piece is merged with the other pieces of
+// its material under its nearest MOVER (movers: the nodes the caller knows can move, e.g. a sleeper's root, body and head), with its transform taken relative
+// to that mover. The movers keep moving the merged meshes; the originals stay as hit shapes (layer HIT_LAYER), as in mergeStatic. Returns the meshes made.
+export function mergeUnder(root, movers, opt) { const M = new Set(movers), inv = new THREE.Matrix4(), rel = new THREE.Matrix4();
+  try { root.updateMatrixWorld(true); const groups = new Map();
+    root.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || o.children.length || !o.geometry || Array.isArray(o.material) || o.userData.blob || o.userData.mergedDraw || o.userData.hitOnly || !o.visible) return;
+      const m = o.material; if (!m || (m.transparent && !(opt && opt.transparent)) || m.blending !== THREE.NormalBlending || o.morphTargetInfluences || M.has(o)) return;
+      let a = o.parent, vis = true; while (a && !M.has(a)) { if (!a.visible) vis = false; a = a.parent; } if (!a || !vis) return;
+      const k = a.uuid + '|' + m.uuid + '|' + o.castShadow + o.receiveShadow + o.frustumCulled + o.renderOrder + '|' + sigOf(o.geometry); const l = groups.get(k) || []; l.push([o, a]); groups.set(k, l); });
+    let made = 0;
+    for (const l of groups.values()) { if (l.length < 2) continue; const a = l[0][1]; inv.copy(a.matrixWorld).invert();
+      const geos = l.map(([o]) => { const g = o.geometry.clone(); rel.multiplyMatrices(inv, o.matrixWorld); g.applyMatrix4(rel); return g; }), merged = mergeGeometries(geos, false); for (const g of geos) g.dispose(); if (!merged) { mergeState.failed++; continue; }
+      const o0 = l[0][0], mesh = new THREE.Mesh(merged, o0.material); mesh.castShadow = o0.castShadow; mesh.receiveShadow = o0.receiveShadow; mesh.frustumCulled = o0.frustumCulled; mesh.renderOrder = o0.renderOrder; mesh.userData.mergedDraw = true; mesh.raycast = () => {}; a.add(mesh); mesh.updateMatrix(); mesh.matrixAutoUpdate = false;
+      for (const [o] of l) { o.layers.set(HIT_LAYER); o.userData.hitOnly = true; o.updateMatrix(); o.matrixAutoUpdate = false; } made++; mergeState.pieces += l.length; }
+    mergeState.meshes += made; return made;
+  } catch (e) { mergeState.failed++; return 0; } }

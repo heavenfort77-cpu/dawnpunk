@@ -1362,7 +1362,8 @@ export const CONFIG = {
     // transparent: see-through pieces (wear decals) of one material are merged too (only their drawing order among themselves can change)
     mergeGloom: { on: true, probes: 8, perFrame: 2, transparent: true },
     // mergeDormant (owner Nov 22, street draw calls): a daytime sleeping machine's opaque pieces drawn as one mesh per parent and material (src/main.js mergeDormant); on: the switch
-    mergeDormant: { on: true },
+    // transparent: its see-through pieces (wear decals) merged too, per material (as mergeGloom.transparent: only their order among themselves can change)
+    mergeDormant: { on: true, transparent: true },
     // smallCaster: a static piece smaller than this (bounding sphere radius, m) casts no sun shadow (owner's rule: small props castShadow off; their shadows were a few pixels)
     smallCaster: 0.12,
     // dtMax: longest game step one frame may take (s; was 0.1): after a long frame the game slows for a moment instead of jumping (all tiers; the checks set their own)
