@@ -321,6 +321,9 @@ export function* baseSceneryIter(o) {
   const height = (x, z) => { const R = Math.hypot(x, z); if (R < B.plaza) return B.lawn * (0.85 + 0.4 * fbm(x * 0.12, z * 0.12)); return R > HEDGE + 1 ? B.tallOut * (0.8 + 0.5 * fbm(x * 0.05, z * 0.05)) : B.tall * (0.85 + 0.4 * fbm(x * 0.09 + 3, z * 0.09)); };
   const flower = (x, z) => { const R = Math.hypot(x, z), drift = fbm(x * 0.06 - 9, z * 0.06 + 4); return Math.max(0, Math.min(1, (R > HEDGE + 1 ? B.flowersOut : B.flowersIn) * (0.4 + 1.4 * drift))); };
   const grassMat = plantMat(C.grass.sway);
+  // (owner Nov 22, z-fighting: zfightlist run 45005110419 named the meadow chunks' blade feet, at y 0, against the base lawn in far views) the blades' depth is pulled
+  // a little toward the eye (CONFIG.lag.plants.bias; GL state only, no new shader), so a blade foot on the ground always draws over it
+  { const B = CONFIG.lag && CONFIG.lag.plants && CONFIG.lag.plants.bias; if (B) { grassMat.polygonOffset = true; grassMat.polygonOffsetFactor = B[0]; grassMat.polygonOffsetUnits = B[1]; } }
   yield;
   const m1 = yield* meadowIter(grp, { width: (x, z) => (Math.hypot(x, z) < B.plaza ? B.lawnSpread : C.grass.spread), maxD: C.grass.density * Math.max(1, B.lawnDensity), x0: -B.meadowR, z0: -B.meadowR, x1: B.meadowR, z1: B.meadowR, seed: B.seed + 1, density: (x, z) => (Math.hypot(x, z) > B.meadowR ? 0 : dens(x, z)), height, flower, mat: grassMat });
   stat.meadow = m1.n; stat.grassTris = m1.tris; stat.grassDraws = m1.draws;
