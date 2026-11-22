@@ -1,0 +1,112 @@
+$ node tools/zfightlist.cjs dist high   (limit 40 min)
+views 56, fighting pixels per view: 27 42 17 73 60 24 95 52 32 6 25 55 17 26 39 26 49 11 23 32 111 36 45 37 31 52 70 49 56 19 61 46 25 34 34 2 104 5 43 30 36 52 14 88 51 3 10 21 24 1 1 0 0 0 1 9
+FAIL surfaces fight (drawn order decides the colour) in 53 of 56 views over 0 px (worst 111 px):
+  9,1.6,14,3.1,0.1 fighting 27
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes
+  13.9,1.6,11.9,3.9,0.1 fighting 42
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes
+  16,1.6,7,4.7,0.1 fighting 17
+    1x Mesh<Group<LOD<Group [Buffer @24.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  13.9,1.6,2,5.5,0.1 fighting 73
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  9,1.6,0,6.3,0.1 fighting 60
+    1x Mesh<Group<Scene [Box w0.08,h2.4,d0.5,w1 @1.2,1.2,-7.3 s1.00] MeshPhysical f2ecdc map glaze
+  4,1.6,2,7.1,0.1 fighting 24
+    1x Mesh<Group<Group<Group [Buffer @-1.9,0.2,2.0 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<Group<Group [Buffer @-2.0,0.2,2.1 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<Scene [Circle r3.4,s48,t0,t6.28 @0.0,0.0,0.0 s1.00] MeshStandard f6e8c0 map block
+  2,1.6,7,7.9,0.1 fighting 95
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<LOD<Group [Buffer @-4.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  4,1.6,11.9,8.6,0.1 fighting 52
+    1x Mesh<Group<Group<Group [Cylinder r0.1,r0.1,h0.02,r36 @1.1,0.3,16.0 s1.00] MeshStandard e0b450 map yes  VS  Mesh<Group<Group<Scene [Lathe s40,p0,p6.28 @1.1,0.0,16.2 s1.00] MeshPhysical ffffff map catkutani_b
+  9,1.6,19,3.1,0.1 fighting 32
+    1x Mesh<Group<LOD<Group [Buffer @-4.0,0.0,24.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  17.5,1.6,15.5,3.9,0.1 fighting 6
+    1x Mesh<Group<LOD<Group [Buffer @24.0,0.0,24.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  21,1.6,7,4.7,0.1 fighting 25
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  17.5,1.6,-1.5,5.5,0.1 fighting 55
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map block  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map grass  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  9,1.6,-5,6.3,0.1 fighting 17
+    1x Mesh<Group<Scene [Cylinder r1.9,r1.9,h6.6,r20 @9.0,0.0,-5.0 s1.30] MeshStandard bfeee6 map yes 2side
+  0.5,1.6,-1.5,7.1,0.1 fighting 26
+    1x Mesh<Group<Scene [Box w5.2,h0.3,d4.2,w1 @-9.0,0.1,-5.0 s1.00] MeshStandard ece6d6 map glaze
+  -3,1.6,7,7.9,0.1 fighting 39
+    1x Mesh<Group<Group<Scene [Buffer @-12.5,0.0,0.4 s1.00] MeshPhysical ffffff map glaze  VS  Mesh<Group<Group<Scene [Buffer @-12.5,0.0,0.4 s1.00] MeshStandard ffffff map wood  VS  Mesh<Group<LOD<Group [Buffer @-4.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side
+  0.5,1.6,15.5,8.6,0.1 fighting 26
+    1x Mesh<Group<LOD<Group [Buffer @-4.0,0.0,24.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  9,1.6,25,3.1,0.1 fighting 49
+    1x Mesh<Group<LOD<Group [Buffer @-4.0,0.0,52.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  21.7,1.6,19.7,3.9,0.1 fighting 11
+    1x Mesh<Group<LOD<Group [Buffer @24.0,0.0,24.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  27,1.6,7,4.7,0.1 fighting 23
+    1x Mesh<Group<LOD<Group [Buffer @24.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  21.7,1.6,-5.7,5.5,0.1 fighting 32
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<LOD<Group [Buffer @24.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  9,1.6,-11,6.3,0.1 fighting 111
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map block  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map wood  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass  VS  Mesh<LOD<Group<Group [Buffer @11.0,0.0,-10.4 s1.00] MeshStandard ffffff map yes 2side poff
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -3.7,1.6,-5.7,7.1,0.1 fighting 36
+    1x Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  -9,1.6,7,7.9,0.1 fighting 45
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map render  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map wood  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<LOD<Group [Buffer @-32.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  -3.7,1.6,19.7,8.6,0.1 fighting 37
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -12.5,1.6,7.4,3.1,0.1 fighting 31
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -7.5,1.6,5.3,3.9,0.1 fighting 52
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  -5.5,1.6,0.4,4.7,0.1 fighting 70
+    1x Mesh<Group<LOD<Group [Buffer @-4.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  -7.5,1.6,-4.5,5.5,0.1 fighting 49
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<Scene [Plane w1,h1,w1,h1 @-9.0,0.1,-5.0 s8.60] MeshBasic ffffff map shade poff
+  -12.5,1.6,-6.6,6.3,0.1 fighting 56
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map fabric 2side  VS  Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -17.4,1.6,-4.5,7.1,0.1 fighting 19
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -19.5,1.6,0.4,7.9,0.1 fighting 61
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -17.4,1.6,5.3,8.6,0.1 fighting 46
+    1x Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  -12.5,1.6,12.4,3.1,0.1 fighting 25
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map fabric 2side  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map wood  VS  Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -4,1.6,8.9,3.9,0.1 fighting 34
+    1x Mesh<Group<Group<Group [Cylinder r0.1,r0.1,h0.02,r36 @1.1,0.3,16.0 s1.00] MeshStandard e0b450 map yes  VS  Mesh<Group<Group<Scene [Lathe s40,p0,p6.28 @1.1,0.0,16.2 s1.00] MeshPhysical ffffff map catkutani_b
+  -0.5,1.6,0.4,4.7,0.1 fighting 34
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshBasic ffffff  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map fabric 2side  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map render  VS  Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes
+  -4,1.6,-8.1,5.5,0.1 fighting 2
+    1x Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes 2side
+  -12.5,1.6,-11.6,6.3,0.1 fighting 104
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map wood  VS  Mesh<Group<LOD<Group [Buffer @-4.0,0.0,-32.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -21,1.6,-8.1,7.1,0.1 fighting 5
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -24.5,1.6,0.4,7.9,0.1 fighting 43
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -21,1.6,8.9,8.6,0.1 fighting 30
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -12.5,1.6,18.4,3.1,0.1 fighting 36
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes
+  0.2,1.6,13.1,3.9,0.1 fighting 52
+    1x Mesh<Group<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard ffffff map yes
+  5.5,1.6,0.4,4.7,0.1 fighting 14
+    1x Mesh<Group<Group<Scene [Box w2.3,h0.12,d0.5,w1 @9.0,0.1,4.7 s1.00] MeshStandard d8d0c0 map block  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  0.2,1.6,-12.3,5.5,0.1 fighting 88
+    1x Mesh<Group<LOD<Group [Buffer @-4.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  -12.5,1.6,-17.6,6.3,0.1 fighting 51
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -25.2,1.6,-12.3,7.1,0.1 fighting 3
+    1x Mesh<Group<LOD<Group [Buffer @-32.0,0.0,-4.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  -30.5,1.6,0.4,7.9,0.1 fighting 10
+    1x Mesh<Group<Scene [Sphere r40,w24,h16,p0 @3.0,1.6,7.0 s1.00] Shader  back
+  -25.2,1.6,13.1,8.6,0.1 fighting 21
+    1x Mesh<Group<LOD<Group [Buffer @-32.0,0.0,24.0 s1.00] MeshStandard ffffff map yes 2side  VS  Mesh<Group<Scene [Buffer @0.0,0.0,0.0 s1.00] MeshStandard 86b04e map grass
+  9,1.6,7.6,0,0.1 fighting 24
+    1x Mesh<Group<Scene [Cylinder r1.9,r1.9,h6.6,r20 @9.0,0.0,-5.0 s1.30] MeshStandard bfeee6 map yes 2side
+  9.6,1.6,7,1.6,0.1 fighting 1
+    1x Mesh<Group<Group<Scene [Buffer @9.0,0.0,7.0 s1.00] MeshStandard ffffff map wood
+  9,1.6,6.4,3.1,0.1 fighting 1
+    1x Mesh<Group<Group<Scene [Buffer @9.0,0.0,7.0 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<Group<Scene [Buffer @9.0,0.0,7.0 s1.00] MeshStandard ffffff map yes poff
+  -12.5,1.6,-0.2,3.1,0.1 fighting 1
+    1x Mesh<Group<Group<Scene [Buffer @-12.5,0.0,0.4 s1.00] MeshStandard ffffff map yes  VS  Mesh<Group<Group<Scene [Buffer @-12.5,0.0,0.4 s1.00] MeshStandard ffffff map yes poff  VS  Mesh<Group<Group<Scene [Extrude  @-12.5,0.0,0.4 s1.00] MeshStandard fff8ea map render
+  -13.1,1.6,0.4,4.7,0.1 fighting 9
+    1x Mesh<Group<Group<Scene [Buffer @-12.5,0.0,0.4 s1.00] MeshStandard ffffff map metal  VS  Mesh<Group<Group<Scene [Buffer @-12.5,0.0,0.4 s1.00] MeshStandard ffffff map wood
+exit code 1
