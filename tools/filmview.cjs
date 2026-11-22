@@ -23,7 +23,7 @@ async function setup(p) {
     // the video is meant to play (not paused, not ended)
     F.stall = 0; F.stallAt = 0; F.waiting = 0; let lastT = null, lastMove = null; setInterval(() => { const v = document.querySelector('#cine video'); if (!v || F.skip !== null) return; const now = Date.now();
       if (v.paused || v.ended || v.currentTime === 0) { lastT = v.currentTime; lastMove = now; return; } if (lastT === null || v.currentTime !== lastT) { lastT = v.currentTime; lastMove = now; return; } const st = now - lastMove; if (st > F.stall) { F.stall = st; F.stallAt = v.currentTime; } }, 25);
-    document.addEventListener('waiting', (e) => { if (e.target && e.target.tagName === 'VIDEO') F.waiting++; }, true);
+    document.addEventListener('waiting', (e) => { if (e.target && e.target.tagName === 'VIDEO' && F.frames.length && F.skip === null) F.waiting++; }, true);
     const look = () => { for (const v of document.querySelectorAll('video')) hook(v); }; look(); new MutationObserver(look).observe(document.documentElement, { childList: true, subtree: true });
     document.addEventListener('click', (e) => { if (e.target && e.target.id === 'cineSkip' && F.skip === null) { F.skip = Date.now(); const v = document.querySelector('#cine video'); if (v && v.getVideoPlaybackQuality) { const q = v.getVideoPlaybackQuality(); F.q = [q.totalVideoFrames, q.droppedVideoFrames]; }
       const w = () => { const g = window.__game, cine = document.getElementById('cine'), cs = cine && getComputedStyle(cine), off = !cine || cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < 0.05; F.dbg = { card: g && g.cardOn(), cine: cs ? [cs.display, cs.visibility, cs.opacity] : null, t: Date.now() - F.skip };
@@ -47,7 +47,7 @@ async function finish(p, browser, tier, S) {
   // (Mac fv1 45014118394: the page's video-frame callbacks come at the runner's idle pacing, 14.7 a second, while the decoder showed 725 of 743 frames) so the
   // video's smoothness is judged by its own clock (stalls) and the browser's count of dropped frames; the callback rate is information only
   const rate = seen.length > 1 ? (seen.length - 1) / ((seen[seen.length - 1][0] - seen[0][0]) / 1000) : 0;
-  out.push([T + 'the video never stood still: longest stall of its clock ' + F.stall + ' ms at ' + (+F.stallAt).toFixed(1) + ' s, ' + F.waiting + ' waits for data (target <= ' + GAP_MS + ' ms, 0 waits)', F.stall <= GAP_MS && !F.waiting]);
+  out.push([T + 'the video never stood still: longest stall of its clock ' + F.stall + ' ms at ' + (+F.stallAt).toFixed(1) + ' s, ' + F.waiting + ' waits for data once playing (target <= ' + GAP_MS + ' ms, 0 waits)', F.stall <= GAP_MS && !F.waiting]);
   if (F.q) { const dr = F.q[1] / Math.max(1, F.q[0]); out.push([T + F.q[1] + ' of ' + F.q[0] + ' video frames dropped (' + (100 * dr).toFixed(1) + ' %, target <= ' + 100 * DROP_MAX + ' %)', dr <= DROP_MAX]); }
   // 3 black screens: near-black screen pictures (from the click to 2 s after the base) while the film's own picture at that moment was not dark
   const filmLumAt = (t) => { let best = null; for (const q of fr) { if (q[0] > t) break; best = q; } return best && best[0] > (F.skip || Infinity) ? null : best; };
