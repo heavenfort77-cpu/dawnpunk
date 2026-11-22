@@ -2069,7 +2069,8 @@ function frame(now) {
   // snapshot was only taken away by endSnap() at the end of a night frame; the base, the street, the film and the cards leave this function earlier, so after
   // any night it stayed over the base. It is now taken away here, on every frame, as soon as the run-end screen is not showing
   if (ENDS.on && !(state === 'end' && $('end').style.display === 'flex')) endSnap();
-  lfStart(now); playProgs(); baseSlice(); filmSlice(); nightBgSlice(); glbFlush(); marlaSync(); baseFar(now);
+  { const L = window.__fl || (window.__fl = []), T = (nm, fn) => { const t0 = performance.now(); fn(); const ms = performance.now() - t0; if (ms > 6 && L.length < 400) L.push([Math.round(t0), nm, Math.round(ms), TB.phase, TB.post || 0]); };
+    T('lfStart', () => lfStart(now)); T('playProgs', playProgs); T('baseSlice', baseSlice); T('filmSlice', filmSlice); T('nightBgSlice', nightBgSlice); T('glbFlush', glbFlush); T('marlaSync', marlaSync); T('baseFar', () => baseFar(now)); }
   if (LCARD.on) { last = now; return; }
   // window.__dtMax is set only by the slow headless checks (software renderer, under 1 frame a second) so game time keeps up; players never set it.
   const rawMs = now - last, dt = Math.min(window.__dtMax || CONFIG.lag.dtMax, rawMs / 1000); last = now; const holdNow = paused || state === 'end' || (state === 'menu' && MENU_EL.style.display !== 'none'); holdDraw = (holdNow && pauseDrawn) || ctxLost; pauseDrawn = holdNow; perfHud(rawMs); perf.tick(rawMs, (state === 'base' || state === 'play') && !paused);

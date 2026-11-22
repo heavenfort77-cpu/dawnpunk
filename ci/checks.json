@@ -646,6 +646,18 @@
    "quality": "low",
    "timeout": 30,
    "note": "owner Nov 22: loot orbs that do not go away; in each house of a run all crates taken, nothing in loot colours may still show (the cat's cover was a loot capsule)"
+  },
+  {
+   "name": "titleprobe",
+   "script": "tools/titleprobe.cjs",
+   "args": [
+    "{dist}",
+    "medium"
+   ],
+   "tier": "desktop",
+   "quality": "medium",
+   "timeout": 25,
+   "note": "probe branch only: what runs in the title's long frames"
   }
  ]
 }
