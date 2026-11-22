@@ -1,0 +1,9 @@
+$ FR=1500 node tools/crateprobe.cjs   (limit 40 min)
+base set 2026-11-22T04:25:15.956Z
+base up 2026-11-22T04:25:47.322Z
+page.evaluate: Target page, context or browser has been closed
+    at /home/runner/work/dawnpunk/dawnpunk/tools/crateprobe.cjs:15:21 {
+  log: []
+}
+TIMED OUT after 40 min
+exit code 124
