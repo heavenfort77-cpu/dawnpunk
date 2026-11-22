@@ -902,6 +902,10 @@ function depthPre(list, i0, i1) { const out = [], pairs = [], rbd = renderer.ren
       const om = o.material, k0 = nProg(); o.material = m; try { renderer.compile({ traverseVisible() {}, traverse(cb) { cb(o); } }, cam, DPRE.ts); } finally { o.material = om; }
       DPRE.n++; if (nProg() > k0) { DPRE.built += nProg() - k0; const pr = renderer.properties.get(m).currentProgram; if (pr && pr.isReady && !pr.isReady()) out.push(pr); } } });
   return out; }
+// every drawable piece of the scene, the people's pieces first (every piece under a rig that holds a skinned mesh); .np = how many of them are the people's
+function peopleFirst() { const all = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) all.push(o); });
+  const rigs = new Set(); for (const o of all) if (o.isSkinnedMesh && o.parent) rigs.add(o.parent); const ofRig = (o) => { for (let q = o; q; q = q.parent) if (rigs.has(q)) return true; return false; };
+  const list = all.filter(ofRig); list.np = list.length; for (const o of all) if (!ofRig(o)) list.push(o); return list; }
 // the pictures of the pieces i0..i1 not yet on the GPU and at least `px` pixels large
 const TEXKEYS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'alphaMap', 'bumpMap', 'clearcoatNormalMap', 'sheenColorMap', 'specularIntensityMap'];
 function texPre(list, i0, i1, px) { const out = []; for (let k = i0; k < i1; k++) { const o = list[k]; for (const m of (Array.isArray(o.material) ? o.material : [o.material])) { if (!m) continue; for (const key of TEXKEYS) { const t = m[key], im = t && t.isTexture && t.image; if (!im || !(im.width * im.height >= px) || out.includes(t)) continue; if (t.version > 0 && renderer.properties.get(t).__version !== t.version) out.push(t); } } } return out; }
@@ -912,9 +916,7 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   // list) every piece drawPieces will show is shown while compileAsync takes its list (it reads the scene at once), then put back
   // (next8 45038918268: with the big pictures sent before the video, 20-45 frames still dropped at 8-14 s, where the warm first drew the people, in 5 of 5 runs)
   // the people's pieces (every piece under a rig that holds a skinned mesh) come first in the list and are first drawn before the video starts playing too
-  const all = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) all.push(o); });
-  const rigs = new Set(); for (const o of all) if (o.isSkinnedMesh && o.parent) rigs.add(o.parent); const ofRig = (o) => { for (let q = o; q; q = q.parent) if (rigs.has(q)) return true; return false; };
-  const list = all.filter(ofRig), np = list.length; for (const o of all) if (!ofRig(o)) list.push(o); VWARM.pieces = list.length; VWARM.people = np; let i = 0, n = 1;
+  const list = peopleFirst(), np = list.np; VWARM.pieces = list.length; VWARM.people = np; let i = 0, n = 1;
   // (next8 / next8b 45037773470: the dropped frames sat where the warm reached the scan-face people, and followed the count of big pictures sent in the film:
   // 3 sent 0.3 and 0.9 %, 7 sent 2.9-4.4 %, 12 sent 5.0 and 6.1 %) the big pictures of every piece go to the GPU first, one a step, and the people's shadow
   // shaders are started next: on the title's Watch both happen before the video starts playing (videoFrame holds it at most C.hold ms after the click), so
@@ -941,14 +943,14 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
 // during the video (the title's Watch: no loading page) a part is drawn only while the picture is dark by design (the black fade between parts, closed eyelids):
 // a frame the video drops there is not seen
 function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (C.darkOnly) { const fo = parseFloat($('cineFade').style.opacity) || 0, lt = $('cineLidT'); let cover = fo; if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) cover = Math.max(cover, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (cover < C.darkOnly) return; } if (!VWARM.it) VWARM.it = vidWarmIter(); const t0 = performance.now();
-  const r = VWARM.it.next(); if (r.done) VWARM.done = true; VWARM.steps++; const ms = performance.now() - t0; VWARM.ms += ms; if (ms > VWARM.worst) { VWARM.worst = ms; VWARM.worstAt = r.value || 'end'; } if (ms > 60 && VWARM.long.length < 12) VWARM.long.push([r.value || 'end', Math.round(ms), Math.round(t * 10) / 10, VWARM.last]); }
+  const r = VWARM.it.next(); VWARM.stage = r.value; if (r.done) VWARM.done = true; VWARM.steps++; const ms = performance.now() - t0; VWARM.ms += ms; if (ms > VWARM.worst) { VWARM.worst = ms; VWARM.worstAt = r.value || 'end'; } if (ms > 60 && VWARM.long.length < 12) VWARM.long.push([r.value || 'end', Math.round(ms), Math.round(t * 10) / 10, VWARM.last]); }
 function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
   // (owner Nov 22 22:42) the video's start is held, at most CONFIG.lag.vidWarm.hold ms after the click, while the warm sends the big pictures to the GPU and starts
   // the people's shadow shaders (VWARM.pre: done); the GPU is then waited on once (finish), so that work is over before the first video frame
   if (v.paused && !v.ended && v.currentTime < 0.05) { const H = CONFIG.lag.vidWarm; if (H && H.on && H.hold && !H.darkOnly && !VWARM.pre && !VWARM.done) { const now = performance.now(); if (!VWARM.h0) VWARM.h0 = now;
-    if (now - VWARM.h0 < H.hold) { while (!VWARM.pre && !VWARM.done && performance.now() - now < 40 && performance.now() - VWARM.h0 < H.hold) vidWarmStep(0); if (!VWARM.pre && !VWARM.done) return; }
+    if (now - VWARM.h0 < H.hold) { while (!VWARM.pre && !VWARM.done && performance.now() - now < 40 && performance.now() - VWARM.h0 < H.hold) { vidWarmStep(0); if (VWARM.stage === 'compile' || VWARM.stage === 'depth') break; } if (!VWARM.pre && !VWARM.done) return; }
     VWARM.held = Math.round(performance.now() - VWARM.h0); try { renderer.getContext().finish(); } catch (e) { /* no wait */ } } }
   if (v.paused && !v.ended) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => vidFail('play')); }
   // (Mac probe3 45029979358) the film's overlay (black fade, eyelids, caption) is set once per video frame shown, on that frame's own time (VID.mt from
@@ -1679,7 +1681,12 @@ function baseSlice0(force) { const S = CONFIG.lag.slice, SB = S ? (force ? S.fil
   // pieces are then drawn ON SCREEN a few at a time (the card's own drawPieces, shadow maps included) into a 2 px corner, each part waiting for the GPU to finish
   // the one before (gpuDone), so the draw states the home card needs exist before Enter; the card still makes its own passes (whatever is left is made there)
   if (TB.phase === 'draw') { const D = CONFIG.lag.titleDraw; if (TB.wait) return; const inS = !!g.parent; if (!inS) scene.add(g);
-    try { if (!TB.dl) { TB.dl = []; TB.di = 0; TB.dn = 0; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) TB.dl.push(o); }); }
+    // (owner Nov 22 22:42) the title's own first draws take the people first, with the film warm's two steps before a part: the part's shadow shaders built
+    // in the background (depthPre; the part waits a frame at a time until they are linked) and a big picture sent in a frame of its own (texPre)
+    try { if (!TB.dl) { TB.dl = peopleFirst(); TB.di = 0; TB.dn = 0; TB.dp = []; TB.dpAt = -1; }
+      { const W = CONFIG.lag.vidWarm, e1 = Math.min(TB.dl.length, TB.di + (force ? D.filmPieces : TB.dn < D.single ? 1 : D.pieces));
+        if (W && W.depthPre && renderer.compileAsync) { if (TB.dpAt < e1) { for (const p of depthPre(TB.dl, Math.max(TB.di, TB.dpAt), e1)) TB.dp.push(p); TB.dpAt = e1; } if (TB.dp.some((p) => !p.isReady())) return; TB.dp.length = 0; }
+        if (W && W.texAlone) { const tx = texPre(TB.dl, TB.di, e1, W.texAlone); if (tx.length) { try { renderer.initTexture(tx[0]); } catch (er) { /* sent at its first draw instead */ } TB.wait = true; gpuDone(D.cap).then(() => { TB.wait = false; }); return; } } }
       // the first parts are one piece each (the very first draws carry the scene's one-time costs: 141-362 ms in one part on the Mac); under the film's black
       // (force) the parts are larger, since no frame is shown there
       const e = Math.min(TB.dl.length, TB.di + (force ? D.filmPieces : TB.dn < D.single ? 1 : D.pieces)), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);

@@ -59,6 +59,9 @@ async function finish(p, browser, tier, S) {
   const fr = F.frames, first = fr[0][0], endT = (F.baseAt || F.skip || fr[fr.length - 1][0]) + 2000;
   // 1 the film's first picture after the click
   const d0 = F.click !== null ? first - F.click : null; out.push([T + 'the film\'s first picture ' + d0 + ' ms after the click (target <= ' + START_MS + ')', d0 !== null && d0 <= START_MS]);
+  // (next8: the video's start is held while the base's people are prepared, CONFIG.lag.vidWarm.hold) the first picture above is shown while the video is still
+  // held, so the film MOVING is timed too: the first shown frame after the video's first one, same target
+  { const mv = fr.find((x) => x[1] > fr[0][1]), d1 = F.click !== null && mv ? mv[0] - F.click : null; out.push([T + 'the film moving ' + d1 + ' ms after the click (target <= ' + START_MS + ')', d1 !== null && d1 <= START_MS]); }
   // 2 the video: pictures a second, longest wait, dropped
   const until = F.skip || fr[fr.length - 1][0], seen = fr.filter((q) => q[0] <= until); let gap = 0, gapAt = 0; for (let k = 1; k < seen.length; k++) { const g = seen[k][0] - seen[k - 1][0]; if (g > gap) { gap = g; gapAt = (seen[k][0] - first) / 1000; } }
   // (Mac fv1 45014118394: the page's video-frame callbacks come at the runner's idle pacing, 14.7 a second, while the decoder showed 725 of 743 frames) so the
