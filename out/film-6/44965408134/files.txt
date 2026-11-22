@@ -1,0 +1,2 @@
+out/seg_06.mp4 23361034
+out/render_06.json 162
