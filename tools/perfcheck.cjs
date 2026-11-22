@@ -85,7 +85,7 @@ const BREAKDOWN = (spot) => {
 };
 (async () => {
   await new Promise((ok) => srv.listen(0, '127.0.0.1', ok)); const URL0 = 'http://127.0.0.1:' + srv.address().port + '/index.html';
-  const b = await chromium.launch({ args: GPU ? ['--ignore-gpu-blocklist', '--enable-gpu', '--enable-webgl', '--use-angle=metal', '--disable-gpu-vsync', '--disable-frame-rate-limit'] : ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const out = [], rows = [];
+  const b = await chromium.launch({ args: GPU ? ['--ignore-gpu-blocklist', '--enable-gpu', '--enable-webgl', '--use-angle=metal'].concat(ONLY.includes('vsync') ? [] : ['--disable-gpu-vsync', '--disable-frame-rate-limit']) : ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] }); const out = [], rows = [];
   { const files = ['index.html', 'index_single.html', 'solardg-itch.zip']; for (const d of ['models', 'tex', 'music', 'voice']) { const p = path.join(DIST, d); if (fs.existsSync(p)) files.push(d + '/'); }
     const size = (f) => { const p = path.join(DIST, f); if (!fs.existsSync(p)) return 0; if (!fs.statSync(p).isDirectory()) return fs.statSync(p).size; return fs.readdirSync(p).reduce((a, x) => a + size(path.join(f, x)), 0); };
     info('dist sizes MB: ' + files.map((f) => f + ' ' + MB(size(f))).join(', ')); }
@@ -220,10 +220,21 @@ const BREAKDOWN = (spot) => {
       // (owner 13:10) the film timed from its click (its sliced preparation under the black counts as held; the first visible frame is reported); PROFILE: its first 4 s
       try { let stopP = null; if (process.env.PROFILE) { const cdp = await p.context().newCDPSession(p); await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 }); await cdp.send('Profiler.start'); stopP = (async () => { await new Promise((r) => setTimeout(r, 4000)); const { profile } = await cdp.send('Profiler.stop'); showProf(profile, 'film start'); await cdp.detach(); })(); }
         let FV = null; if (GPU && tier === TT) { try { FV = await require('./filmview.cjs').setup(p); } catch (e) { err(e); } }
-        const ff = await flow('film', 25, 'watch'); if (GPU && CARDMS[tier]) out.push([tier + ' film: longest held frame (under its black) ' + ff.heldWorst + ' ms (card budget <= ' + CARDMS[tier] + ')', ff.heldWorst <= CARDMS[tier]]); if (stopP) await stopP; const fp = await p.evaluate(() => (window.__game.filmPrepInfo ? window.__game.filmPrepInfo() : null)); info('flow ' + tier + ' film preparation under the black: ' + JSON.stringify(fp) + ' (longest prep frame of work, whole prep ms)');
+        // (probe3) FTRACE: browser trace windows around the film (click to 4.5 s, 14 to 20.5 s, Skip to 3.5 s after), reported after the film (tools/ftrace.cjs)
+        const FTR = require('./ftrace.cjs'), FTON = GPU && ONLY.includes('ftrace'), ftBufs = []; let ftP = null;
+        info('FTRACE title at Watch: ' + JSON.stringify(await p.evaluate(() => window.__game.cardInfo().title).catch((e) => String(e).slice(0, 80))) + ' vidWarm ' + JSON.stringify(await p.evaluate(() => window.__game.vidWarm()).catch(() => null)));
+        if (FTON) { await b.startTracing(p, { categories: FTR.CATS }); const tc = Date.now(); ftP = (async () => { const w = (ms) => new Promise((r) => setTimeout(r, Math.max(0, tc + ms - Date.now())));
+          await w(4500); ftBufs.push(['film start (click to 4.5 s)', await b.stopTracing()]); await w(14000); await b.startTracing(p, { categories: FTR.CATS }); await w(20500); ftBufs.push(['film 14 to 20.5 s', await b.stopTracing()]); })().catch((e) => info('FTRACE window failed ' + String(e).slice(0, 160))); }
+        const ff = await flow('film', 25, 'watch'); if (ftP) await ftP; if (GPU && CARDMS[tier]) out.push([tier + ' film: longest held frame (under its black) ' + ff.heldWorst + ' ms (card budget <= ' + CARDMS[tier] + ')', ff.heldWorst <= CARDMS[tier]]); if (stopP) await stopP; const fp = await p.evaluate(() => (window.__game.filmPrepInfo ? window.__game.filmPrepInfo() : null)); info('flow ' + tier + ' film preparation under the black: ' + JSON.stringify(fp) + ' (longest prep frame of work, whole prep ms)');
         if (GPU && tier === TT) out.push([TT + ' film: first visible frame ' + ff.firstVis + ' ms (target < 100)', ff.firstVis !== null && ff.firstVis < 100]);
+        if (FTON) await b.startTracing(p, { categories: FTR.CATS });
         await p.evaluate(() => { const b = document.getElementById('cineSkip'); if (b) b.click(); }); await p.waitForTimeout(500);
-        if (FV) { const R = await require('./filmview.cjs').finish(p, b, TT, FV); info('flow ' + TT + ' film as seen: ' + JSON.stringify(R.info)); for (const l of R.lines) out.push(l); } } catch (e) { err(e); }
+        if (FTON) { await p.waitForTimeout(3000); ftBufs.push(['Skip to 3.5 s after', await b.stopTracing()]); }
+        if (FV) { const R = await require('./filmview.cjs').finish(p, b, TT, FV); info('flow ' + TT + ' film as seen: ' + JSON.stringify(R.info)); for (const l of R.lines) out.push(l); }
+        info('FTRACE home card after Skip: ' + JSON.stringify(await p.evaluate(() => { const c = window.__game.cardInfo(); return { ms: c.ms, steps: c.steps, settle: c.settle, buildMs: c.buildMs, title: c.title, proof: c.proof }; }).catch((e) => String(e).slice(0, 80))).slice(0, 1500));
+        for (const [l, buf] of ftBufs) FTR.report(l, buf); ftBufs.length = 0;
+        // (probe3) the same file on a bare page in this job (nothing else on it): the decoder's own drop timeline over the film's length
+        if (GPU && ONLY.includes('bare')) { try { info('FTRACE bare page, same AV1 file, 26 s: ' + JSON.stringify(await FTR.bare(ctx, URL0.replace('index.html', 'film/opening_hi_av1.mp4'), p.viewportSize(), 26))); } catch (e) { info('FTRACE bare failed ' + String(e).slice(0, 160)); } } } catch (e) { err(e); }
       // night 1 with the drill on (a fresh save's first night from the base)
       try { await p.evaluate(() => { try { localStorage.setItem('dawnpunk.drill', '{}'); } catch (e) { /* none */ } const g = window.__game; if (g.homeCard) g.homeCard(); else g.enterBase(); g.save.nights = 0; g.save.day = 1; });
         // (R4 worker 5, item 1) PROFILE: the first ride card's 'first frame' step traced (5 s from its start, ANGLE and decoder categories)
