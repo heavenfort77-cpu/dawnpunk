@@ -847,7 +847,7 @@ function vidFail(why) { if (VID.failed) return; VID.failed = true; VID.why = why
   if (intro && intro.video) { const pre = FILM.pre; intro = null; startIntro.go = false; startIntro(); if (pre && !FILM.it && !intro) { FILM.pre = false; filmMenuOver(); } } }
 function startVideoIntro() {
   const V = CONFIG.opening.video; $('menu').style.display = 'none'; $('hud').style.display = 'none'; $('cine').style.display = 'block'; $('cineFade').style.opacity = 1; $('cineCap').textContent = ''; opLids(0); state = 'intro';
-  intro = { t: 0, video: true, part: 'town', hold: true, hide: [], stands: [] };
+  intro = { t: 0, video: true, part: 'town', hold: true, hide: [], stands: [] }; VID.vfOk = false; VID.vfNew = false; VID.mt = 0;
   const src = vidSrc(); let v = VID.el;
   if (!v || VID.src !== src) { if (v) v.remove(); v = VID.el = document.createElement('video'); VID.src = src; VID.ready = false; v.id = 'filmVid'; v.muted = true; v.defaultMuted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', ''); v.preload = 'auto';
     v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:' + (V.fit || 'contain') + ';background:#000;pointer-events:none';
@@ -856,6 +856,8 @@ function startVideoIntro() {
     // (owner Nov 22 19:54, "shorten the film's start after the click": 1.5 s on the Mac from the title's Watch) on the loading page the video waits until it can
     // play through; after a click it starts as soon as it can play (canplay), the rest still arriving while it plays
     v.addEventListener('canplaythrough', ok); v.addEventListener('canplay', () => { if (!FILM.pre) ok(); }); v.addEventListener('progress', () => { if (FILM.pre || FILM.card) { try { const b = v.buffered, d = v.duration; if (b.length && d) filmCardFill(b.end(b.length - 1) / d); } catch (e) { /* not known yet */ } } });
+    // the time of each video frame shown (videoFrame sets the overlay from it); browsers without requestVideoFrameCallback keep the page-frame updates
+    if (v.requestVideoFrameCallback) { const vf = (now, md) => { if (VID.el !== v) return; VID.mt = md.mediaTime; VID.vfNew = true; VID.vfOk = true; v.requestVideoFrameCallback(vf); }; v.requestVideoFrameCallback(vf); }
     v.src = src; v.load(); clearTimeout(VID.waitT); VID.waitT = setTimeout(() => { if (!VID.ready && VID.el === v && v.readyState >= 3) ok(); else if (!VID.ready && VID.el === v) vidFail('slow'); }, V.waitMs);
   } else { try { v.currentTime = 0; } catch (e) { /* not seekable yet */ } }
   // the 3D picture behind the video is not shown (nothing in it belongs to the film): it comes back under the home card at the end
@@ -895,7 +897,7 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   while (i < list.length) { const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
     VWARM.last = list.slice(i, e).map((o) => { const m = Array.isArray(o.material) ? o.material[0] : o.material, mp = m && m.map, im = mp && mp.image; return (o.name || o.type) + (im ? ' tex ' + (im.width || '?') + 'x' + (im.height || '?') : ''); }).slice(0, 4).join(' | ') + (e - i > 4 ? ' +' + (e - i - 4) : '');
     try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } i = e; const ms = performance.now() - t0;
-    n = ms < C.ms / 2 ? Math.min(n * 2, 64) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
+    n = ms < C.ms / 2 ? Math.min(n * 2, FILM.pre || !C.maxPart ? 64 : C.maxPart) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
   VWARM.ok = true; }
 // during the video (the title's Watch: no loading page) a part is drawn only while the picture is dark by design (the black fade between parts, closed eyelids):
 // a frame the video drops there is not seen
@@ -905,7 +907,12 @@ function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
   if (v.paused && !v.ended) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => vidFail('play')); }
-  const t = Math.min(v.currentTime || 0, P[4]); I.t = t; vidWarmStep(t);
+  // (Mac probe3 45029979358) the film's overlay (black fade, eyelids, caption) is set once per video frame shown, on that frame's own time (VID.mt from
+  // requestVideoFrameCallback): set at every page frame (about 900 a second on the Mac runner, 30 video frames a second) each fade step made the browser draw the
+  // whole screen again over the video and it dropped the video's frames at every fade (16.8-18 s: 19 dropped, 2 with this)
+  const tc = Math.min(v.currentTime || 0, P[4]);
+  if (VID.vfOk) { if (!VID.vfNew) { I.t = tc; vidWarmStep(tc); musicTick(dt); if (v.ended || tc >= P[4] - 0.02) finishIntro(); return; } VID.vfNew = false; }
+  const t = VID.vfOk ? Math.min(VID.mt, P[4]) : tc; I.t = t; vidWarmStep(t);
   let cap = ''; for (const [a, z, tx] of C.lines) if (t >= a && t <= z) cap = tx; const ce = $('cineCap'); if (ce.textContent !== cap) ce.textContent = cap; ce.classList.toggle('who', /^MARLA/.test(cap));
   const part = t < P[1] ? 0 : t < P[2] ? 1 : t < P[3] ? 2 : 3, fade = Math.max(0, 1 - (t - P[part]) / C.fade, part === 3 ? 0 : 1 - (P[part + 1] - t) / C.fade);
   I.part = part >= 2 ? 'base' : 'town';

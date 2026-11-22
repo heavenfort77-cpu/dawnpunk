@@ -1307,8 +1307,10 @@ export const CONFIG = {
     // vidWarm (owner Nov 22 19:54, the wait after Skip): the base the film ends in is set up and first drawn, a few pieces a frame (about ms of work each), while the
     // video plays, from `after` s into it (src/main.js vidWarmIter)
     // loading: on the loading page (first visit) it is done there before the begin button; darkOnly: during the video (the title's Watch) a part only while the
-    // picture is at least this dark by design (fade or eyelids)
-    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0.85 },
+    // picture is at least this dark by design (fade or eyelids); 0 = all through the video (Mac probe3 45029979358: dark-only never finished, Skip 2.9-3.8 s)
+    // maxPart: during the video at most this many pieces in one part (Mac 45030572985: parts grown to 64 pieces took 371-1291 ms on the GPU side and dropped
+    // the video's frames; 4: worst part 17 ms, 1 frame dropped); the loading page keeps the old growth (up to 64)
+    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0, maxPart: 4 },
     // filmBase: the film's black also draws the base's pieces once (src/main.js filmWarm), so the home card after the film finds them drawn
     filmBase: false,
     // filmCompileParts: the film's black builds the street's shaders one top-level piece at a time (src/main.js filmWarm), not all in one frame

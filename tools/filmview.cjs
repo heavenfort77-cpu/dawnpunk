@@ -14,17 +14,18 @@ async function setup(p) {
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 40, maxWidth: 160, maxHeight: 90, everyNthFrame: 1 });
   await p.evaluate(() => { const F = window.__fv = { click: null, skip: null, baseAt: null, frames: [], q: null };
     const mark = () => { if (F.click === null) F.click = Date.now(); }; document.addEventListener('pointerdown', mark, true); document.addEventListener('click', mark, true);
-    const cv = document.createElement('canvas'); cv.width = 16; cv.height = 9; const cx = cv.getContext('2d', { willReadFrequently: true });
-    const hook = (v) => { if (v.__fv || !v.requestVideoFrameCallback) return; v.__fv = 1; const cb = (now, md) => { let lum = null; try { cx.drawImage(v, 0, 0, 16, 9); const d = cx.getImageData(0, 0, 16, 9).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; lum = s / (d.length / 4); } catch (e) { /* none */ }
+    const hook = (v) => { if (v.__fv || !v.requestVideoFrameCallback) return; v.__fv = 1; const cb = (now, md) => { const lum = null;
+      // (Mac probe3 45028551610) the picture is NOT read back here: drawing the video into a canvas and reading it waited on the GPU 250-780 ms at the film's
+      // start and 1871 ms after Skip, in the game's own page; its brightness is measured after the film on a page of its own (filmLum)
       // the film's own designed darkness at this moment: the eyelids (cineLidT closed when not moved away) and the black fade (cineFade opacity)
       let des = 0; try { const lt = document.getElementById('cineLidT'), fd = document.getElementById('cineFade'); if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) des = Math.max(des, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (fd) des = Math.max(des, +getComputedStyle(fd).opacity || 0); } catch (e) { /* none */ }
       F.frames.push([Date.now(), md.mediaTime, md.presentedFrames, lum, des]); if (v.isConnected) v.requestVideoFrameCallback(cb); }; v.requestVideoFrameCallback(cb); };
     // the video's own clock sampled every 25 ms (timers are not held back like the page's drawing on an idle runner): a stall is the clock standing still while
     // the video is meant to play (not paused, not ended)
     // dropped frames split by what the player saw then: under the film's own black fade or closed eyelids a dropped frame is not seen
-    F.dropSeen = 0; F.dropDark = 0; let d0 = null; const cover = () => { let des = 0; try { const lt = document.getElementById('cineLidT'), fd = document.getElementById('cineFade'); if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) des = Math.max(des, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (fd) des = Math.max(des, +getComputedStyle(fd).opacity || 0); } catch (e) { /* none */ } return des; };
+    F.dropSeen = 0; F.dropDark = 0; F.dropT = []; let d0 = null; const cover = () => { let des = 0; try { const lt = document.getElementById('cineLidT'), fd = document.getElementById('cineFade'); if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) des = Math.max(des, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (fd) des = Math.max(des, +getComputedStyle(fd).opacity || 0); } catch (e) { /* none */ } return des; };
     F.stall = 0; F.stallAt = 0; F.waiting = 0; let lastT = null, lastMove = null; setInterval(() => { const v = document.querySelector('#cine video'); if (!v || F.skip !== null) return; const now = Date.now();
-      if (v.getVideoPlaybackQuality) { const dq = v.getVideoPlaybackQuality().droppedVideoFrames; if (d0 !== null && dq > d0) { if (cover() >= 0.85) F.dropDark += dq - d0; else F.dropSeen += dq - d0; } d0 = dq; }
+      if (v.getVideoPlaybackQuality) { const dq = v.getVideoPlaybackQuality().droppedVideoFrames; if (d0 !== null && dq > d0) { const cv0 = cover(); if (cv0 >= 0.85) F.dropDark += dq - d0; else F.dropSeen += dq - d0; if (F.dropT.length < 60) F.dropT.push([F.click ? now - F.click : -1, dq - d0, +cv0.toFixed(2)]); } d0 = dq; }
       if (v.paused || v.ended || v.currentTime === 0) { lastT = v.currentTime; lastMove = now; return; } if (lastT === null || v.currentTime !== lastT) { lastT = v.currentTime; lastMove = now; return; } const st = now - lastMove; if (st > F.stall) { F.stall = st; F.stallAt = v.currentTime; } }, 25);
     document.addEventListener('waiting', (e) => { if (e.target && e.target.tagName === 'VIDEO' && F.frames.length && F.skip === null) F.waiting++; }, true);
     const look = () => { for (const v of document.querySelectorAll('video')) hook(v); }; look(); new MutationObserver(look).observe(document.documentElement, { childList: true, subtree: true });
@@ -35,10 +36,21 @@ async function setup(p) {
         if (off && !cardUp && cv && cv.style.visibility !== 'hidden') { F.baseAt = Date.now(); return; } if (Date.now() - F.skip < 10000) requestAnimationFrame(w); }; requestAnimationFrame(w); } }, true); });
   return { cdp, shots };
 }
+// the film's own picture brightness at each shown frame's time: the same file played on a page of its own after the film (2x speed), one sample per frame shown
+async function filmLum(p, browser, fr) {
+  const src = await p.evaluate(() => { const v = document.querySelector('#filmVid') || document.querySelector('video'); return v ? v.currentSrc : null; }).catch(() => null); if (!src || !fr.length) return;
+  // the file opened on its own (a media page of the same origin, so its picture can be read)
+  const lp = await browser.newPage(); try { await lp.goto(src);
+    const L = await lp.evaluate((end) => new Promise((res) => { const v = document.querySelector('video'); v.pause(); v.muted = true; v.currentTime = 0; const c = document.createElement('canvas'); c.width = 16; c.height = 9; const x = c.getContext('2d', { willReadFrequently: true }), out = [];
+      const cb = (now, md) => { try { x.drawImage(v, 0, 0, 16, 9); const d = x.getImageData(0, 0, 16, 9).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; out.push([md.mediaTime, s / (d.length / 4)]); } catch (e) { /* none */ }
+        if (md.mediaTime >= end || v.ended) res(out); else v.requestVideoFrameCallback(cb); };
+      const go = () => { v.playbackRate = 2; v.requestVideoFrameCallback(cb); v.play(); setTimeout(() => res(out), 60000); }; if (v.readyState >= 3) go(); else v.addEventListener('canplay', go, { once: true }); }), fr[fr.length - 1][1] + 0.1);
+    let k = 0; for (const q of fr) { while (k + 1 < L.length && Math.abs(L[k + 1][0] - q[1]) <= Math.abs(L[k][0] - q[1])) k++; q[3] = L.length && Math.abs(L[k][0] - q[1]) < 0.1 ? L[k][1] : null; } } finally { await lp.close(); } }
 async function finish(p, browser, tier, S) {
   await p.waitForTimeout(3000); try { await S.cdp.send('Page.stopScreencast'); } catch (e) { /* none */ }
   const F = await p.evaluate(() => window.__fv), out = [], T = tier + ' film (as the player sees it): ', W = await p.evaluate(() => (window.__game && window.__game.vidWarm ? window.__game.vidWarm() : null)).catch(() => null);
   if (!F || !F.frames.length) return { lines: [], info: { video: false, shots: S.shots.length } };
+  try { await filmLum(p, browser, F.frames); } catch (e) { /* the lines below then count the film's own dark pictures too */ }
   // the screen pictures' brightness, decoded in a blank page
   const dp = await browser.newPage(); const lum = [];
   for (let i = 0; i < S.shots.length; i += 40) { const part = S.shots.slice(i, i + 40); lum.push(...await dp.evaluate(async (L) => { const c = document.createElement('canvas'); c.width = 160; c.height = 90; const x = c.getContext('2d'); const r = [];
@@ -66,6 +78,6 @@ async function finish(p, browser, tier, S) {
     const ref = Math.max(lastFilm ? lastFilm[3] : 0, base === null ? 0 : base), after = scr.filter((q) => q[0] >= F.skip && q[0] <= endT); let hi = 0, hiAt = 0; for (const [t, l] of after) if (l > hi) { hi = l; hiAt = t; }
     out.push([T + 'brightest screen after Skip ' + hi.toFixed(0) + ' at ' + ((hiAt - F.skip) / 1000).toFixed(2) + ' s (film\'s last picture ' + (lastFilm ? lastFilm[3].toFixed(0) : '-') + ', the base once shown ' + (base === null ? '-' : base.toFixed(0)) + '; target <= ' + (ref + FLASH).toFixed(0) + ', no flash)', hi <= ref + FLASH]);
   }
-  return { lines: out, info: { vidWarm: W, video: true, callbacksPerSecond: +rate.toFixed(1), longestCallbackGap: gap, shots: scr.length, filmPictures: fr.length, click: F.click, first: first - (F.click || first), skip: F.skip && F.skip - (F.click || 0), baseAt: F.baseAt && F.baseAt - (F.skip || 0), dbg: F.dbg } };
+  return { lines: out, info: { dropT: F.dropT, vidWarm: W, video: true, callbacksPerSecond: +rate.toFixed(1), longestCallbackGap: gap, shots: scr.length, filmPictures: fr.length, click: F.click, first: first - (F.click || first), skip: F.skip && F.skip - (F.click || 0), baseAt: F.baseAt && F.baseAt - (F.skip || 0), dbg: F.dbg } };
 }
 module.exports = { setup, finish };
