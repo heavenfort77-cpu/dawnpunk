@@ -67,48 +67,36 @@ jobs:
           j() { python3 -c 'import json,sys; print(json.dumps([x.strip() for x in sys.argv[1].split(",") if x.strip()]))' "$1"; }
           echo "refs=$(j "$REFS")" >> "$GITHUB_OUTPUT"; echo "tiers=$(j "$TIERS")" >> "$GITHUB_OUTPUT"; echo "spots=$(j "$SPOTS")" >> "$GITHUB_OUTPUT"
   probe:
+    # (test branch ab only, never merged) SAME-MACHINE A/B: the two commits in inputs.refs built side by side on ONE Mac runner and measured in turns
+    # A, B, A, B, A, B (inputs.secs/settle, spots inputs.spots as one job each turn), so runner speed differences cancel out
     needs: plan
     runs-on: ${{ inputs.os }}
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix:
-        ref: ${{ fromJSON(needs.plan.outputs.refs) }}
-        tier: ${{ fromJSON(needs.plan.outputs.tiers) }}
-        spot: ${{ fromJSON(needs.plan.outputs.spots) }}
-    name: "${{ matrix.ref }} ${{ matrix.tier }} ${{ matrix.spot }}"
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ matrix.ref }}
-      - name: Use main's perfcheck script
-        shell: bash
-        run: |
-          git fetch --depth 1 origin main
-          git show FETCH_HEAD:tools/perfcheck.cjs > tools/perfcheck.cjs
+          ref: main
+          path: tools_main
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - run: npm ci --no-audit --no-fund
-      - name: Build
+      - name: Build both
         shell: bash
-        run: if [ -n "${{ inputs.prof }}" ]; then MINIFY=0 node build.mjs; else node build.mjs; fi
-      - run: npm install --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install chromium
-      - name: Measure
+        env:
+          REFS: ${{ inputs.refs }}
+        run: |
+          IFS=, read -r A B <<< "$REFS"
+          for x in A B; do r=${!x}; git clone -q "https://github.com/${{ github.repository }}.git" "$x"; (cd "$x" && git checkout -q "$r" && npm ci --no-audit --no-fund >/dev/null && node build.mjs | tail -1 && cp ../tools_main/tools/perfcheck.cjs tools/perfcheck.cjs); echo "$x = $r"; done
+          (cd A && npm install --no-save --no-audit --no-fund playwright@1.63.0 >/dev/null && npx playwright install chromium >/dev/null)
+          (cd B && npm install --no-save --no-audit --no-fund playwright@1.63.0 >/dev/null)
+      - name: Measure in turns
         shell: bash
         env:
           GPU: "1"
-          SPOTS: ${{ matrix.spot }}
+          SPOTS: ${{ inputs.spots }}
           SECS: ${{ inputs.secs }}
           SETTLE: ${{ inputs.settle }}
           CSECS: "20"
-          BREAK: ${{ inputs.brk }}
-          PROFILE: ${{ inputs.prof }}
-          NOEXTRA: ${{ matrix.spot != 'hub' && '1' || '' }}
+          NOEXTRA: "1"
         run: |
-          echo "JOB ref=${{ matrix.ref }} tier=${{ matrix.tier }} spot=${{ matrix.spot }}"
-          # (H) the gates' FAIL lines do not fail the job (exit 1, measurements), a spot that could not run does (exit 3: crashed)
-          set +e; node tools/perfcheck.cjs "${{ matrix.tier }}" > perf.log 2>&1; rc=$?; set -e
-          grep -E "^JOB|RENDERER|^PERF|^FPS|^PASS|^FAIL|^REPORT|^LEDGER|^BREAK|^PROFILE|^  |^   \\.|^ BY|INFO (dist|cost |.* card (flow|enter) |.*GPU uploads|.*during play|.*downloaded|.*files over|.*title usable|flow|drill on|run end|returning|programs built during.*page errors|Gloom present|boss view|combat)" perf.log || true
-          if [ "$rc" = 3 ]; then echo "perfcheck crashed (a spot could not run)"; exit 1; fi
+          for turn in 1 2 3; do for x in A B; do echo "TURN $turn $x"; (cd "$x" && set +e; node tools/perfcheck.cjs "${{ inputs.tiers }}" > perf_$turn.log 2>&1; set -e; grep -E "^FPS|^PERF" perf_$turn.log | sed "s/^/AB $x $turn /" | cut -c1-260); done; done
