@@ -1213,6 +1213,8 @@ export const CONFIG = {
     // uploaded, every shader of the scene built, and the sun shadow map drawn once. on: the switch; min: shortest time each card shows (s); titles: the card's line per change
     // mergeCell: the street's static pieces are merged per material and per square cell of this size (m) on the desktop builds (src/world.js), so out-of-view cells are culled
     mergeCell: 16,
+    // trimJoin (owner Nov 22, frame rate): each street house's footing boxes drawn as one mesh (src/main.js buildTrim); false = one per piece
+    trimJoin: true,
     // sceneryJoin (Nov 20): the street's still scenery meshes are joined per material in cells of this many m (src/scenehi.js joinCells; 0 = off)
     sceneryJoin: 48,
     // housePad: a street piece within a house's half size plus this (m) belongs to that house's own merged meshes (gutters, sills, steps), never to the street's
