@@ -27,7 +27,9 @@ async function setup(p) {
     const look = () => { for (const v of document.querySelectorAll('video')) hook(v); }; look(); new MutationObserver(look).observe(document.documentElement, { childList: true, subtree: true });
     document.addEventListener('click', (e) => { if (e.target && e.target.id === 'cineSkip' && F.skip === null) { F.skip = Date.now(); const v = document.querySelector('#cine video'); if (v && v.getVideoPlaybackQuality) { const q = v.getVideoPlaybackQuality(); F.q = [q.totalVideoFrames, q.droppedVideoFrames]; }
       const w = () => { const g = window.__game, cine = document.getElementById('cine'), cs = cine && getComputedStyle(cine), off = !cine || cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < 0.05; F.dbg = { card: g && g.cardOn(), cine: cs ? [cs.display, cs.visibility, cs.opacity] : null, t: Date.now() - F.skip };
-        if (g && !g.cardOn() && off) { F.baseAt = Date.now(); return; } if (Date.now() - F.skip < 10000) requestAnimationFrame(w); }; requestAnimationFrame(w); } }, true); });
+        const lc = document.getElementById('lcard'), cv = document.querySelector('canvas'), cardUp = lc && getComputedStyle(lc).display !== 'none' && +getComputedStyle(lc).opacity > 0.05; F.dbg.lcard = !!cardUp; F.dbg.cvs = cv ? cv.style.visibility : null;
+        // the base is on screen: the film gone, the loading card gone and the 3D picture shown (a first-time job card over the base still shows the base)
+        if (off && !cardUp && cv && cv.style.visibility !== 'hidden') { F.baseAt = Date.now(); return; } if (Date.now() - F.skip < 10000) requestAnimationFrame(w); }; requestAnimationFrame(w); } }, true); });
   return { cdp, shots };
 }
 async function finish(p, browser, tier, S) {

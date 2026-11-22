@@ -874,18 +874,21 @@ function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT
 // lights and the kept base) and its pieces drawn for the first time while the video plays: the 3D picture is hidden then and the page has nothing else to do.
 // The pieces are drawn a few at a time into a small hidden target, frustum culling off for that draw, so each one's buffers and pictures are on the GPU before
 // Skip; the home card after Skip then only does what Enter's card does (0.7-1.0 s). CONFIG.lag.vidWarm: after (s into the video), ms (work a frame), on
-const VWARM = { it: null, done: false, steps: 0, ms: 0, worst: 0, pieces: 0 };
-function* vidWarmIter() {
-  if (intro && intro.video) introToBase(true); const g = bview.group; if (!g || !g.parent) return; const list = []; g.traverse((o) => { if ((o.isMesh || o.isLine || o.isPoints) && o.visible) list.push(o); }); VWARM.pieces = list.length; yield;
-  const rt = new THREE.WebGLRenderTarget(64, 64), C = CONFIG.lag.vidWarm, sun = renderer.shadowMap.autoUpdate; let i = 0, n = 8;
-  try { renderer.shadowMap.autoUpdate = false; for (const o of list) o.visible = false;
-    while (i < list.length) { const t0 = performance.now(), part = list.slice(i, i + n); for (const o of part) { o.visible = true; o.userData.__fc = o.frustumCulled; o.frustumCulled = false; }
-      const rt0 = renderer.getRenderTarget(); renderer.setRenderTarget(rt); renderer.render(scene, cam); renderer.setRenderTarget(rt0);
-      for (const o of part) { o.visible = false; o.frustumCulled = o.userData.__fc; delete o.userData.__fc; } i += part.length; const ms = performance.now() - t0; VWARM.worst = Math.max(VWARM.worst, ms);
-      n = ms < C.ms / 2 ? Math.min(n * 2, 256) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield; } }
-  finally { for (const o of list) o.visible = true; renderer.shadowMap.autoUpdate = sun; rt.dispose(); } }
+const VWARM = { it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false };
+// (Mac fv2 45021132181: one step of 6.2 s, 126 of 763 video frames dropped) in parts: the base built a part at a time if it is not the kept one, its shaders
+// built in parallel (compileAsync, waited on without blocking), then every piece drawn as the title and the card draw them (drawPieces, a 2x2 scissor), the
+// part size kept near ms a frame; the home card after Skip then skips its own turns and all-pieces draws (VWARM.ok)
+function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
+  if (bview.bgStart(save)) while (bview.bgBusy && !bview.bgStep(C.ms)) yield 'build';
+  if (intro && intro.video) introToBase(true); yield 'setup';
+  if (renderer.compileAsync) { let ok = false; renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); while (!ok) yield 'compile'; }
+  const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); VWARM.pieces = list.length; let i = 0, n = 1;
+  while (i < list.length) { const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
+    try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } i = e; const ms = performance.now() - t0;
+    n = ms < C.ms / 2 ? Math.min(n * 2, 64) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
+  VWARM.ok = true; }
 function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (!VWARM.it) VWARM.it = vidWarmIter(); const t0 = performance.now();
-  if (VWARM.it.next().done) VWARM.done = true; VWARM.steps++; VWARM.ms += performance.now() - t0; }
+  const r = VWARM.it.next(); if (r.done) VWARM.done = true; VWARM.steps++; const ms = performance.now() - t0; VWARM.ms += ms; if (ms > VWARM.worst) { VWARM.worst = ms; VWARM.worstAt = r.value || 'end'; } }
 function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
@@ -2025,7 +2028,8 @@ async function sceneCard(kind) {
       // (owner 12:35) the home card over a base already drawn at the title (titleBase: shaders built, every piece uploaded) skips the turn-round and all-pieces passes
       // (H round 2, Enter on medium: "3338 ms drawArrays < render < renderBufferDirect" in the first frame after the card) the title's off-screen draws (a 64 px target)
       // uploaded the data but did not make the draws the screen needs (the GPU builds its draw states per target), so the home card always makes its own passes on screen
-      const preDrawn = false;
+      // (owner Nov 22 19:54) the home card right after the video: every piece was drawn during the video (vidWarmIter), so its turns and all-pieces draws are skipped
+      const preDrawn = kind === 'home' && VWARM.ok && !VWARM.used; if (preDrawn) VWARM.used = true;
       // (Nov 20, home card 4.7-10.6 s on the Mac, its four turns 2.3-5.7 s of it: run 44692193700) CONFIG.lag.cardTurns[kind] === false: that card skips the four
       // quarter turns; the next step still draws every piece once with the scene's lights and shadows (to be proven by the enter and hub first-use frames)
       const noTurns = !!(CONFIG.lag.cardTurns && CONFIG.lag.cardTurns[kind] === false);
@@ -2353,7 +2357,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
-window.__game.vidWarm = () => ({ done: VWARM.done, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), pieces: VWARM.pieces });
+window.__game.vidWarm = () => ({ done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock
