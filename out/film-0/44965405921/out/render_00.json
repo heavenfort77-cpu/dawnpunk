@@ -1,0 +1,14 @@
+{
+ "frames": 180,
+ "fps": 30,
+ "film": 6.033333333333322,
+ "from": 0,
+ "to": 6,
+ "canvas": [
+  1920,
+  1080
+ ],
+ "tier": "high",
+ "end": "drew",
+ "errors": []
+}
