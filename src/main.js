@@ -882,7 +882,7 @@ function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT
 // lights and the kept base) and its pieces drawn for the first time while the video plays: the 3D picture is hidden then and the page has nothing else to do.
 // The pieces are drawn a few at a time into a small hidden target, frustum culling off for that draw, so each one's buffers and pictures are on the GPU before
 // Skip; the home card after Skip then only does what Enter's card does (0.7-1.0 s). CONFIG.lag.vidWarm: after (s into the video), ms (work a frame), on
-const VWARM = { tex: 0, dwait: 0, it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false, long: [], last: '' };
+const VWARM = { pre: false, h0: 0, held: 0, tex: 0, dwait: 0, it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, worstAt: '', pieces: 0, used: false, long: [], last: '' };
 // (Mac fv2 45021132181: one step of 6.2 s, 126 of 763 video frames dropped) in parts: the base built a part at a time if it is not the kept one, its shaders
 // built in parallel (compileAsync, waited on without blocking), then every piece drawn as the title and the card draw them (drawPieces, a 2x2 scissor), the
 // part size kept near ms a frame; the home card after Skip then skips its own turns and all-pieces draws (VWARM.ok)
@@ -910,14 +910,22 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   if (intro && intro.video) introToBase(true); yield 'setup';
   // (Mac fv2c 45023628513: a 789 ms part drawing a face's cornea and crinkle pieces: their shaders were built at that draw, since a hidden piece is not in compileAsync's
   // list) every piece drawPieces will show is shown while compileAsync takes its list (it reads the scene at once), then put back
-  if (renderer.compileAsync) { let ok = false; const hid = []; scene.traverse((o) => { if (!o.visible && o !== sky.mesh) { hid.push(o); o.visible = true; } });
-    try { renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); } finally { for (const o of hid) o.visible = false; } while (!ok) yield 'compile'; }
   const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); VWARM.pieces = list.length; let i = 0, n = 1;
+  // (next8 / next8b 45037773470: the dropped frames sat where the warm reached the scan-face people, and followed the count of big pictures sent in the film:
+  // 3 sent 0.3 and 0.9 %, 7 sent 2.9-4.4 %, 12 sent 5.0 and 6.1 %) the big pictures of every piece go to the GPU first, one a step, and the people's shadow
+  // shaders are started next: on the title's Watch both happen before the video starts playing (videoFrame holds it at most C.hold ms after the click), so
+  // none of it shares a frame with the video
+  const pend = [];
+  if (C.texAlone) for (const t of texPre(list, 0, list.length, C.texAlone)) { try { renderer.initTexture(t); } catch (er) { /* sent at its first draw instead */ } VWARM.tex++; yield 'tex'; }
+  if (C.depthPre && renderer.compileAsync) { const sk = list.filter((o) => o.castShadow && (o.isSkinnedMesh || o.morphTargetInfluences)); if (sk.length) { const at = list.indexOf(sk[0]); for (const p of depthPre(sk, 0, sk.length)) pend.push([p, at]); yield 'depth'; } }
+  if (renderer.compileAsync) { let ok = false; const hid = []; scene.traverse((o) => { if (!o.visible && o !== sky.mesh) { hid.push(o); o.visible = true; } });
+    try { renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); } finally { for (const o of hid) o.visible = false; } VWARM.pre = true; while (!ok) yield 'compile'; }
+  VWARM.pre = true;
   // (next8 45036628749: the warm did not finish in the video in 5 of 5 runs, the steps spent waiting on the depth shaders' links; parts of 107-197 ms held a
   // scan-face piece's 1024 pictures, 3 to 8 uploads in one draw) the depth shaders are now built for the pieces up to C.depthAhead ahead of the part being drawn,
   // at most 8 pieces a step, so they link while earlier parts draw (a part waits only if its own are not ready yet); and a picture of C.texAlone pixels or
   // more is sent to the GPU in a step of its own before its piece is drawn (texPre)
-  let dj = 0; const pend = [];
+  let dj = 0;
   while (i < list.length) { const e0 = Math.min(list.length, i + n);
     if (C.depthPre && renderer.compileAsync) { const to = Math.min(list.length, Math.max(e0, Math.min(dj + 8, i + (C.depthAhead || 0)))); if (to > dj) { for (const p of depthPre(list, dj, to)) pend.push([p, dj]); dj = to; }
       while (pend.some(([p, at]) => at < e0 && !p.isReady())) { VWARM.dwait++; yield 'depth'; } }
@@ -934,6 +942,11 @@ function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM
 function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
   if (I.hold || paused || document.hidden || (document.body.classList.contains('tall') && !document.body.classList.contains('portraitOk'))) { if (!v.paused) v.pause(); return; }
+  // (owner Nov 22 22:42) the video's start is held, at most CONFIG.lag.vidWarm.hold ms after the click, while the warm sends the big pictures to the GPU and starts
+  // the people's shadow shaders (VWARM.pre: done); the GPU is then waited on once (finish), so that work is over before the first video frame
+  if (v.paused && !v.ended && v.currentTime < 0.05) { const H = CONFIG.lag.vidWarm; if (H && H.on && H.hold && !H.darkOnly && !VWARM.pre && !VWARM.done) { const now = performance.now(); if (!VWARM.h0) VWARM.h0 = now;
+    if (now - VWARM.h0 < H.hold) { while (!VWARM.pre && !VWARM.done && performance.now() - now < 40 && performance.now() - VWARM.h0 < H.hold) vidWarmStep(0); if (!VWARM.pre && !VWARM.done) return; }
+    VWARM.held = Math.round(performance.now() - VWARM.h0); try { renderer.getContext().finish(); } catch (e) { /* no wait */ } } }
   if (v.paused && !v.ended) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => vidFail('play')); }
   // (Mac probe3 45029979358) the film's overlay (black fade, eyelids, caption) is set once per video frame shown, on that frame's own time (VID.mt from
   // requestVideoFrameCallback): set at every page frame (about 900 a second on the Mac runner, 30 video frames a second) each fade step made the browser draw the
@@ -2405,7 +2418,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
-window.__game.vidWarm = () => ({ depth: [DPRE.n, DPRE.built, VWARM.dwait], tex: VWARM.tex, done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
+window.__game.vidWarm = () => ({ depth: [DPRE.n, DPRE.built, VWARM.dwait], tex: VWARM.tex, held: VWARM.held, done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock
