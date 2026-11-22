@@ -1306,7 +1306,9 @@ export const CONFIG = {
     slice: { ms: 4, draws: 40, film: 40, card: 40, cardDraws: 40, filmDraws: 8 },
     // vidWarm (owner Nov 22 19:54, the wait after Skip): the base the film ends in is set up and first drawn, a few pieces a frame (about ms of work each), while the
     // video plays, from `after` s into it (src/main.js vidWarmIter)
-    vidWarm: { on: true, after: 2, ms: 8 },
+    // loading: on the loading page (first visit) it is done there before the begin button; darkOnly: during the video (the title's Watch) a part only while the
+    // picture is at least this dark by design (fade or eyelids)
+    vidWarm: { on: true, after: 0, ms: 8, loading: true, darkOnly: 0.85 },
     // filmBase: the film's black also draws the base's pieces once (src/main.js filmWarm), so the home card after the film finds them drawn
     filmBase: false,
     // filmCompileParts: the film's black builds the street's shaders one top-level piece at a time (src/main.js filmWarm), not all in one frame

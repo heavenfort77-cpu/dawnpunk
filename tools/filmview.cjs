@@ -21,7 +21,10 @@ async function setup(p) {
       F.frames.push([Date.now(), md.mediaTime, md.presentedFrames, lum, des]); if (v.isConnected) v.requestVideoFrameCallback(cb); }; v.requestVideoFrameCallback(cb); };
     // the video's own clock sampled every 25 ms (timers are not held back like the page's drawing on an idle runner): a stall is the clock standing still while
     // the video is meant to play (not paused, not ended)
+    // dropped frames split by what the player saw then: under the film's own black fade or closed eyelids a dropped frame is not seen
+    F.dropSeen = 0; F.dropDark = 0; let d0 = null; const cover = () => { let des = 0; try { const lt = document.getElementById('cineLidT'), fd = document.getElementById('cineFade'); if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) des = Math.max(des, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (fd) des = Math.max(des, +getComputedStyle(fd).opacity || 0); } catch (e) { /* none */ } return des; };
     F.stall = 0; F.stallAt = 0; F.waiting = 0; let lastT = null, lastMove = null; setInterval(() => { const v = document.querySelector('#cine video'); if (!v || F.skip !== null) return; const now = Date.now();
+      if (v.getVideoPlaybackQuality) { const dq = v.getVideoPlaybackQuality().droppedVideoFrames; if (d0 !== null && dq > d0) { if (cover() >= 0.85) F.dropDark += dq - d0; else F.dropSeen += dq - d0; } d0 = dq; }
       if (v.paused || v.ended || v.currentTime === 0) { lastT = v.currentTime; lastMove = now; return; } if (lastT === null || v.currentTime !== lastT) { lastT = v.currentTime; lastMove = now; return; } const st = now - lastMove; if (st > F.stall) { F.stall = st; F.stallAt = v.currentTime; } }, 25);
     document.addEventListener('waiting', (e) => { if (e.target && e.target.tagName === 'VIDEO' && F.frames.length && F.skip === null) F.waiting++; }, true);
     const look = () => { for (const v of document.querySelectorAll('video')) hook(v); }; look(); new MutationObserver(look).observe(document.documentElement, { childList: true, subtree: true });
@@ -50,7 +53,7 @@ async function finish(p, browser, tier, S) {
   // video's smoothness is judged by its own clock (stalls) and the browser's count of dropped frames; the callback rate is information only
   const rate = seen.length > 1 ? (seen.length - 1) / ((seen[seen.length - 1][0] - seen[0][0]) / 1000) : 0;
   out.push([T + 'the video never stood still: longest stall of its clock ' + F.stall + ' ms at ' + (+F.stallAt).toFixed(1) + ' s, ' + F.waiting + ' waits for data once playing (target <= ' + GAP_MS + ' ms, 0 waits)', F.stall <= GAP_MS && !F.waiting]);
-  if (F.q) { const dr = F.q[1] / Math.max(1, F.q[0]); out.push([T + F.q[1] + ' of ' + F.q[0] + ' video frames dropped (' + (100 * dr).toFixed(1) + ' %, target <= ' + 100 * DROP_MAX + ' %)', dr <= DROP_MAX]); }
+  if (F.q) { const dr = F.dropSeen / Math.max(1, F.q[0]); out.push([T + F.dropSeen + ' of ' + F.q[0] + ' video frames dropped while seen (' + (100 * dr).toFixed(1) + ' %, target <= ' + 100 * DROP_MAX + ' %; ' + F.dropDark + ' more under the film\'s own black, ' + F.q[1] + ' in all)', dr <= DROP_MAX]); }
   // 3 black screens: near-black screen pictures (from the click to 2 s after the base) while the film's own picture at that moment was not dark
   const filmLumAt = (t) => { let best = null; for (const q of fr) { if (q[0] > t) break; best = q; } return best && best[0] > (F.skip || Infinity) ? null : best; };
   let run = 0, runAt = 0, worst = 0, worstAt = 0; for (let k = 0; k < scr.length; k++) { const [t, l] = scr[k]; if (F.click === null || t < F.click || t > endT) continue; const dur = (k + 1 < scr.length ? scr[k + 1][0] : endT) - t;

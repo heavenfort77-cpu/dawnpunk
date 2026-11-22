@@ -869,7 +869,11 @@ function startVideoIntro() {
 function vidReady() { if (!intro || !intro.video) return; clearTimeout(VID.waitT);
   if (FILM.pre) { const I = intro, TD = CONFIG.lag.titleDraw, tf = performance.now(); FILM.frac = 0.5;
     const step = () => { if (intro !== I || !FILM.pre) return; if (TD && TD.on && TD.film && TB.phase && TB.phase !== 'done' && performance.now() - tf < TD.filmCap * 1000) { baseSlice0(true); filmCardFill(0.5 + 0.4 * (TB.phase === 'draw' && TB.dl ? TB.di / Math.max(1, TB.dl.length) : 0)); requestAnimationFrame(step); return; }
-      FILM.titleLeft = [Math.round(performance.now() - tf), TB.phase || 'none']; FILM.preDone = true; FILM.frac = 1; };
+      FILM.titleLeft = [Math.round(performance.now() - tf), TB.phase || 'none'];
+      // (owner Nov 22 19:54) on the loading page the base the film ends in is also set up and first drawn here (vidWarmIter), a part a frame, before the begin
+      // button: the video then plays with nothing else to do (Mac fv2: drawing during the video dropped 3.4-7.8 % of its frames against 2.2-3.5 %)
+      const C = CONFIG.lag.vidWarm; if (C && C.on && C.loading && !VWARM.done) { if (!VWARM.it) VWARM.it = vidWarmIter(); const w0 = performance.now(); const r = VWARM.it.next(); VWARM.steps++; VWARM.ms += performance.now() - w0; if (r.done) VWARM.done = true; else { filmCardFill(0.9 + 0.1 * Math.min(1, VWARM.steps / 60)); requestAnimationFrame(step); return; } }
+      FILM.preDone = true; FILM.frac = 1; };
     step(); }
   else { intro.hold = false; if (FILM.card) filmCardOff(); } }
 // (owner Nov 22 19:54: "cut the wait after Skip (2.5-3.2 s) by building the base while the video plays") the base the film ends in is set up (introToBase, its
@@ -893,7 +897,9 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
     try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } i = e; const ms = performance.now() - t0;
     n = ms < C.ms / 2 ? Math.min(n * 2, 64) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
   VWARM.ok = true; }
-function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (!VWARM.it) VWARM.it = vidWarmIter(); const t0 = performance.now();
+// during the video (the title's Watch: no loading page) a part is drawn only while the picture is dark by design (the black fade between parts, closed eyelids):
+// a frame the video drops there is not seen
+function vidWarmStep(t) { const C = CONFIG.lag.vidWarm; if (!C || !C.on || VWARM.done || t < C.after) return; if (C.darkOnly) { const fo = parseFloat($('cineFade').style.opacity) || 0, lt = $('cineLidT'); let cover = fo; if (lt) { const m = /translateY\((-?[\d.]+)%\)/.exec(lt.style.transform || ''); if (m) cover = Math.max(cover, 1 - Math.min(1, Math.abs(+m[1]) / 115)); } if (cover < C.darkOnly) return; } if (!VWARM.it) VWARM.it = vidWarmIter(); const t0 = performance.now();
   const r = VWARM.it.next(); if (r.done) VWARM.done = true; VWARM.steps++; const ms = performance.now() - t0; VWARM.ms += ms; if (ms > VWARM.worst) { VWARM.worst = ms; VWARM.worstAt = r.value || 'end'; } if (ms > 60 && VWARM.long.length < 12) VWARM.long.push([r.value || 'end', Math.round(ms), Math.round(t * 10) / 10, VWARM.last]); }
 function videoFrame(dt) {
   const I = intro, C = CONFIG.opening, P = C.parts, v = VID.el; if (!v) return;
