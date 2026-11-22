@@ -1248,7 +1248,9 @@ export const CONFIG = {
     // nothing visible is lost; at night (fog ends at 34 m) the far street, woods and hills are no longer drawn at all. The sky dome is scaled to fit inside it.
     farPad: 2,
     // plants: the base's garden plants (src/baseplants.js) per square cell of `cell` m, each drawn in full within `near` m of you and as the phone's lighter plant beyond
-    plants: { cell: 8, near: 12 },
+    // bias (owner Nov 22, z-fighting: zfightcheck named the plant cells' low leaves against the base grass at y 0, far views): the plants' depth is pulled this much
+    // toward the eye ([polygon offset factor, units]; GL state only, no new shader), so a leaf lying on the ground always draws over it
+    plants: { cell: 8, near: 12, bias: [-1, -2] },
     // woodsSectors: the far trees round the base and the street are cut into this many slices round the ring (src/scenehi.js), so the slices behind you are not drawn
     woodsSectors: 12,
     // nightCull: at night inside a house only what can be seen is drawn (src/nightcull.js): on = the switch; housePad = metres round the house that always count as the house
