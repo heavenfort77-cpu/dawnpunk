@@ -7,7 +7,8 @@ const { chromium } = require('playwright');
   // the night-1 drill holds back every spawn but its own Walker (src/main.js drillBegin): skip it, or only Walkers come in this check's window (phonefix Nov 18)
   await p.evaluate(() => { try { localStorage.setItem('dawnpunk.drill', '{"skip":true}'); } catch (e) { /* none */ } });
   const K = ['walker', 'lurcher', 'hauler', 'stilt', 'lantern', 'ticks', 'warden'], tris = await p.evaluate((K) => K.map((k) => window.__game.gloomTris(k)), K);
-  const budget = await p.evaluate(() => { const q = window.__game.quality(); return { tier: q.tier, max: window.CONFIG.quality[q.tier].machineTris }; });
+  // (Nov 23, high removed) medium's values are laid over CONFIG.quality.high in place (src/quality.js), so medium's budget is read from that block
+  const budget = await p.evaluate(() => { const q = window.__game.quality(); return { tier: q.tier, max: window.CONFIG.quality[q.tier === 'medium' ? 'high' : q.tier].machineTris }; });
   out.push(['triangles per machine within ' + budget.max + ' (' + budget.tier + ' graphics tier): ' + K.map((k, i) => k + ' ' + tris[i]).join(', '), tris.every((n) => n > 300 && n <= budget.max)]);
   await p.evaluate(() => { window.__game.enterBase(); document.getElementById('selRing').value = '2'; window.__game.startRun(0); }); await p.waitForTimeout(2000);
   const h = await p.evaluate(() => { const r = window.__game.run, h = r.houses[0]; return [h.doorX, h.doorZ, h.row]; }); await p.evaluate(([x, z, row]) => window.__game.setTown(x, z - row * 0.4), h); await p.waitForTimeout(900); await p.evaluate(() => window.__game.nightfall());
