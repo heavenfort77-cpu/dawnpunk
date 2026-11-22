@@ -95,10 +95,13 @@ export function createBaseView(scene, cfg, marla, makeChar) {
   // round the plant inside the door (CONFIG.opening.wake.hide). Called after the small-shadow pass (src/main.js), once per build.
   // mergeStillIter: the same in steps (the title's sliced passes); mergeStill runs it at once
   function mergeStill() { const it = mergeStillIter(); let x = it.next(); while (!x.done) x = it.next(); return x.value; }
-  function* mergeStillIter() { const M = cfg.lag && cfg.lag.mergeBase; if (!M || !M.on || g.userData.merged) return 0; g.userData.merged = true; g.updateMatrixWorld(true); yield;
+  // (owner Nov 22, frame rate) roomData: a room group's own bookkeeping (plantSpots: where its plants stand, densityB: its triangle counts, written by src/basehi.js
+  // vaultHi on the group it is given) no longer keeps that room's still pieces apart; any other tag on a group still does. rooms = 'rooms': the test hook's second pass
+  function* mergeStillIter(rooms) { const M = cfg.lag && cfg.lag.mergeBase; if (!M || !M.on || (g.userData.merged && rooms !== 'rooms')) return 0; g.userData.merged = true;
+    const DATA = (M.roomData || rooms === 'rooms') ? ['plantSpots', 'densityB'] : [], tagged = (p) => { const ks = Object.keys(p.userData); return ks.length > 0 && !ks.every((k) => DATA.includes(k)); }, inRoomG = (o) => { for (let p = o.parent; p && p !== g; p = p.parent) if (Object.keys(p.userData).length) return true; return false; }; g.updateMatrixWorld(true); yield;
     const off = new Set([scoutG, sky.mesh, ...npcs.map((o) => o.n), ...Object.values(npcG), ...hiddenCats.map((o) => o.cg), ...homeCats.map((h) => h.cg), ...towers, jn && jn.ribbon, jn && jn.glow].filter(Boolean));
     const H = cfg.opening && cfg.opening.wake && cfg.opening.wake.hide, v = new THREE.Vector3(), base = THREE.Object3D.prototype.onBeforeRender;
-    const skip = (o) => { if (Object.keys(o.userData).length || o.onBeforeRender !== base) return true; for (let p = o; p && p !== g; p = p.parent) if (off.has(p) || (p !== o && Object.keys(p.userData).length)) return true;
+    const skip = (o) => { if (Object.keys(o.userData).length || o.onBeforeRender !== base) return true; for (let p = o; p && p !== g; p = p.parent) if (off.has(p) || (p !== o && tagged(p))) return true; if (DATA.length && o.material.side !== THREE.FrontSide && inRoomG(o)) return true;
       if (H) { o.getWorldPosition(v); if (Math.hypot(v.x - H[0], v.z - H[1]) < H[2] + M.hidePad) return true; } return false; };
     // the base makes a new material for nearly every box; pieces whose materials are alike in every setting share one first (so they can be drawn together); a material
     // with its own shader hook or data stays its own. A replaced material no other piece uses is freed.

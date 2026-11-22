@@ -2069,7 +2069,7 @@ function frame(now) {
   ground.position.y = bview.group && bview.group.parent && CONFIG.baseWater && CONFIG.baseWater.on ? -CONFIG.baseWater.under : -0.08;
   // Marla's voice: only in a run (state 'play'), stopped while paused or hidden; it plays the clip of the line her card (or a "Marla: " centre line) shows
   MV.tick(dt, state === 'play' && !!(run || sim), paused || document.hidden, $('marla').classList.contains('hq') ? '' : $('marla').textContent, $('csay').textContent);
-  waterSnd.tick(dt, mus.ready ? audio() : null, { base: state === 'base' && !!baseU, paused, ui: !!ui, hidden: document.hidden, music: mus.on, volume: CONFIG.music.volume, near: baseU && baseU.water, indoor: baseU && baseU.indoor });
+  waterSnd.tick(dt, mus.ready ? audio() : null, { base: state === 'base' && !!baseU, paused, ui: !!ui, hidden: document.hidden, music: mus.on, volume: CONFIG.music.ambient || CONFIG.music.volume, near: baseU && baseU.water, indoor: baseU && baseU.indoor });
   if (state === 'base') {
     let mx = stick.x, mz = stick.y;
     if (keys.KeyW) mz -= 1; if (keys.KeyS) mz += 1; if (keys.KeyA) mx -= 1; if (keys.KeyD) mx += 1;
@@ -2313,6 +2313,16 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
+// baseRoomTest (needs the base built with CONFIG.lag.mergeBase.roomData false): the same frame drawn with the rooms' pieces apart, then merged; changed pixels and draw calls
+window.__game.baseRoomTest = (poses, waitMs) => { if (!bview || !scene) return { err: 'no base' }; const gl = renderer.getContext(), W = gl.drawingBufferWidth, H = gl.drawingBufferHeight, P0 = cam.position.clone(), R0 = cam.rotation.clone();
+  // the clock is held while drawing (the wind reads performance.now() as it draws), so wind is the same in every picture
+  const PN = performance.now, FIX = PN.call(performance); const grab = (q) => { performance.now = () => FIX; try { return grab0(q); } finally { performance.now = PN; } }, grab0 = (q) => { if (q) { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); cam.updateMatrixWorld(); } renderer.render(scene, cam); const a = new Uint8Array(W * H * 4); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, a); return [a, renderer.info.render.calls]; };
+  const PS = poses || [null], A = PS.map((q) => { grab(q); grab(q); const [a, ca] = grab(q), [a2] = grab(q); return { a, a2, ca }; });
+  // waitMs (control): no merge, the same real time waited instead, so what changes with time alone (wind) is seen
+  const t0 = performance.now(); let x = { value: 0 }; if (waitMs) { while (performance.now() - t0 < waitMs); } else { const it = bview.mergeStillIter('rooms'); x = it.next(); while (!x.done) x = it.next(); twoPassGroups(scene); } const took = performance.now() - t0;
+  const res = PS.map((q, k) => { grab(q); const [b, cb] = grab(q), { a, a2, ca } = A[k]; let noise = 0, ch = 0, max = 0, stable = 0; for (let i = 0; i < a.length; i += 4) { let d = 0, n = 0; for (let c = 0; c < 3; c++) { d = Math.max(d, Math.abs(a[i + c] - b[i + c])); n = Math.max(n, Math.abs(a[i + c] - a2[i + c])); } if (n) { noise++; continue; } stable++; if (d > 8) ch++; max = Math.max(max, d); }
+    (window.__rt || (window.__rt = []))[k] = { W, H, a, b, a2 }; return { pose: q, callsApart: ca, callsMerged: cb, stable, noise, changed: ch, maxDiff: max }; });
+  cam.position.copy(P0); cam.rotation.copy(R0); return { made: x.value, took: Math.round(took), res }; };
 // trimJoinTest (needs a street built with CONFIG.lag.trimJoin false): the same frame drawn with the pieces apart, then joined; changed pixels and draw calls
 window.__game.trimJoinTest = (which = 'both') => { if (!TRIM_RAW.length) return { err: 'no unjoined trim (build the street with trimJoin false)' }; const gl = renderer.getContext(), W = gl.drawingBufferWidth, H = gl.drawingBufferHeight;
   const grab = () => { renderer.render(scene, cam); const a = new Uint8Array(W * H * 4); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, a); return [a, renderer.info.render.calls]; };

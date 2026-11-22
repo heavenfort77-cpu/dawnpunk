@@ -194,7 +194,11 @@ export const CONFIG = {
   // rotate: the rotate screen shows on touch devices when the visible height is more than ratio times the width; pollMs: how often that is rechecked (ms)
   rotate: { ratio: 1.05, pollMs: 500 },
   marlaTalk: { streakHits: 3, streakWindow: 8, streakCd: 20, hintDelay: 25, hintTimes: 2 },
-  music: { on: true, volume: 0.35, pausedVolume: 0.2, fade: 2.5 }, // which track plays where is set in tools/makemusic.py (base, day, night)
+  // which track plays where is set in tools/makemusic.py (base, day, night)
+  // volume (owner Nov 22: music too loud; was 0.35, now 4.9 dB quieter): the tracks are about -12 LUFS, so 0.2 puts them near -26 LUFS, about 6 dB under the voice clips
+  // pausedVolume: the same share lower while paused (was 0.2); ambient: the level the base's stream sound is set against (src/basesound.js), kept at the old music
+  // volume so the water is as loud as before
+  music: { on: true, volume: 0.2, pausedVolume: 0.11, ambient: 0.35, fade: 2.5 },
   depth: { wallOut: 0.2, wallLen: 1.3, wallW: 4.6, car: [4.2, 6.6], baseHouse: [8.6, 7.6], basePost: 1.3, baseTree: 3.2, shade: 0.5, shadeNight: 0.34, furn: 2.7, device: 1.5, gloom: 1.9, crate: 1.25, pool: 0.55, poolNight: 0.26, poolSun: 0xffe2a8, poolMoon: 0x7f9cff, poolW: 2.3, poolL: 3.6, doorW: 2.0, doorL: 4.4 }, // light and depth inside houses: soft contact shadows (klad 'shade') under things, light pools (klad 'pool') on the floor at every opening; sizes in metres (shadow sizes are times the thing's radius)
   // shot: the hand cannon's old shot sound (plays only when impact.on is false): pitch drop (Hz), length (s), loudness
   sfx: { shot: { from: 620, to: 150, len: 0.11, vol: 0.1 },
@@ -1310,7 +1314,8 @@ export const CONFIG = {
     // (not with the page), so the film shows the same machines and pictures as before
     filmModelWait: 60,
     // mergeBase: the base's still pieces drawn as one mesh per material and cell m of ground (src/baseview.js mergeStill); hidePad: extra m kept clear round the film's hidden plant
-    mergeBase: { on: true, cell: 16, hidePad: 1.5 },
+    // roomData (owner Nov 22, frame rate): the two rooms' still pieces are merged too (their groups only carry plant spots and triangle counts); false = left apart as before
+    mergeBase: { on: true, cell: 16, hidePad: 1.5, roomData: false },
     // gloomPool: destroyed Gloom machines kept per kind for reuse at the next spawn (src/main.js gloomTake / gloomPut); most kept per kind
     // longFrame: with ?proglog=1 a frame starting more than this many ms after the one before is logged with what the frame before it did (src/main.js lfStart)
     longFrame: 80,
