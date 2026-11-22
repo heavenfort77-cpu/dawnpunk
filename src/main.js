@@ -684,10 +684,10 @@ function shadowSets(list) { if (!ML.on || !CONFIG.lag.shadowSets) return 0; cons
 // once the night cull has put its layer on a shadow camera (src/nightcull.js), three.js draws that camera's layers, not the main camera's layer 7, so every
 // caster in the scene was drawn into the shadow map again for each part. The shadow cameras now take layer 7 alone while a part is drawn (only the part's
 // pieces go into the shadow maps, which still builds their depth programs); put back after.
-function drawPieces(list, i0, i1, target) { const lights = [], was = [], lods = [], shm = []; scene.traverse((o) => { if (o.isLight && !(ML.on && ML.lights.includes(o))) { lights.push(o); o.layers.enable(7); if (o.castShadow && o.shadow && o.shadow.camera) { shm.push([o.shadow.camera, o.shadow.camera.layers.mask]); o.shadow.camera.layers.set(7); } } });
+function drawPieces(list, i0, i1, target, only) { const lights = [], was = [], lods = [], shm = []; scene.traverse((o) => { if (o.isLight && !(ML.on && ML.lights.includes(o))) { lights.push(o); o.layers.enable(7); if (o.castShadow && o.shadow && o.shadow.camera) { shm.push([o.shadow.camera, o.shadow.camera.layers.mask]); o.shadow.camera.layers.set(7); } } });
   for (let k = i0; k < i1; k++) { const o = list[k]; if (ML.on && marlaHas(o)) continue; was.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; o.layers.enable(7); for (let q = o.parent; q && q !== scene; q = q.parent) { if (q.isLOD && q.autoUpdate) { q.autoUpdate = false; lods.push(q); } if (!q.visible) { was.push([q, false, q.frustumCulled]); q.visible = true; } } }
   const cm = cam.layers.mask, c0 = RSTAT.calls, pt = renderer.getRenderTarget(), ao = fx && fx.ao && fx.aoOn && fx.ao.normalRenderTarget ? fx.ao : null; cam.layers.set(7); renderer.setRenderTarget(target);
-  try { renderer.render(scene, cam); if (ao) { const hid = []; for (let k = i0; k < i1; k++) { const o = list[k], m = o.material; if (o.isSprite || o.isPoints || o.isLine || o.userData.noAO || (m && !Array.isArray(m) && (m.transparent || m.alphaTest > 0))) { hid.push(o); o.visible = false; } }
+  try { if (only) { only(); return 0; } renderer.render(scene, cam); if (ao) { const hid = []; for (let k = i0; k < i1; k++) { const o = list[k], m = o.material; if (o.isSprite || o.isPoints || o.isLine || o.userData.noAO || (m && !Array.isArray(m) && (m.transparent || m.alphaTest > 0))) { hid.push(o); o.visible = false; } }
     // the shading pass's own rule (src/fx.js: no sprites, points, lines, see-through or cut-out pieces, noAO), but NOT its distance cut: a piece far at the card can be near in play
     scene.overrideMaterial = ao.normalMaterial; renderer.setRenderTarget(ao.normalRenderTarget); try { renderer.render(scene, cam); } finally { for (const o of hid) o.visible = true; } } } catch (e) { /* drawn at first use instead */ } finally { scene.overrideMaterial = null; renderer.setRenderTarget(pt); cam.layers.mask = cm; for (const [o, v, f] of was) { o.visible = v; o.frustumCulled = f; o.layers.disable(7); } for (const l of lights) l.layers.disable(7); for (const [c, m] of shm) c.layers.mask = m; for (const q of lods) q.autoUpdate = true; }
   return RSTAT.calls - c0; }
@@ -886,6 +886,22 @@ const VWARM = { it: null, done: false, ok: false, steps: 0, ms: 0, worst: 0, wor
 // (Mac fv2 45021132181: one step of 6.2 s, 126 of 763 video frames dropped) in parts: the base built a part at a time if it is not the kept one, its shaders
 // built in parallel (compileAsync, waited on without blocking), then every piece drawn as the title and the card draw them (drawPieces, a 2x2 scissor), the
 // part size kept near ms a frame; the home card after Skip then skips its own turns and all-pieces draws (VWARM.ok)
+// (owner Nov 22 22:42, probe3 wprobe 45035746982) the shadow pass draws a piece with three's own depth material, whose shader varies with the piece (bones,
+// morph count, a picture or not, side): compileAsync never builds those, so each was built at the piece's first draw and the page waited on its link. depthPre
+// runs the part's draw with every draw call left out (only to learn which depth material each piece gets), builds the shaders not met before through three's
+// compile() under the shadow pass's own conditions (a shadow map as the target, a scene with no fog, the same lights), and returns the programs still linking
+const DPRE = { seen: new WeakMap(), n: 0, built: 0, ts: { isScene: true, background: null, fog: null, environment: null, overrideMaterial: null, traverseVisible: (cb) => scene.traverseVisible(cb) } };
+function depthPre(list, i0, i1) { const out = [], pairs = [], rbd = renderer.renderBufferDirect;
+  renderer.renderBufferDirect = function (c, s, g, m, o) { if (s === null && o && m && (m.isMeshDepthMaterial || m.isMeshDistanceMaterial)) pairs.push([o, m, g, m.map, m.alphaMap, m.alphaTest, m.side, m.displacementMap, m.wireframe]); };
+  try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i0, i1, null); } catch (e) { return out; } finally { renderer.renderBufferDirect = rbd; }
+  const fresh = []; for (const q of pairs) { const [o, m, g] = q, sig = [q[3] ? 1 : 0, q[4] ? 1 : 0, q[5] > 0 ? 1 : 0, q[6], q[7] ? 1 : 0, q[8] ? 1 : 0, o.isSkinnedMesh ? 1 : 0, o.isInstancedMesh ? (o.instanceColor ? 2 : 1) : 0, Object.keys(g.attributes).sort().join('.'), Object.keys(g.morphAttributes).map((k) => k + g.morphAttributes[k].length).join('.')].join('|');
+    let S = DPRE.seen.get(m); if (!S) { S = new Set(); DPRE.seen.set(m, S); } if (!S.has(sig)) { S.add(sig); fresh.push(q); } }
+  if (!fresh.length) return out;
+  drawPieces(list, i0, i1, null, () => { let rt = null; scene.traverseVisible((l) => { if (!rt && l.isLight && l.castShadow && l.shadow && l.shadow.map) rt = l.shadow.map; }); if (!rt) return; renderer.setRenderTarget(rt);
+    for (const [o, m, g, map, alphaMap, alphaTest, side, displacementMap, wireframe] of fresh) { m.map = map; m.alphaMap = alphaMap; m.alphaTest = alphaTest; m.side = side; m.displacementMap = displacementMap; m.wireframe = wireframe;
+      const om = o.material, k0 = nProg(); o.material = m; try { renderer.compile({ traverseVisible() {}, traverse(cb) { cb(o); } }, cam, DPRE.ts); } finally { o.material = om; }
+      DPRE.n++; if (nProg() > k0) { DPRE.built += nProg() - k0; const pr = renderer.properties.get(m).currentProgram; if (pr && pr.isReady && !pr.isReady()) out.push(pr); } } });
+  return out; }
 function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   if (bview.bgStart(save)) while (bview.bgBusy && !bview.bgStep(C.ms)) yield 'build';
   if (intro && intro.video) introToBase(true); yield 'setup';
@@ -894,7 +910,8 @@ function* vidWarmIter() { const C = CONFIG.lag.vidWarm;
   if (renderer.compileAsync) { let ok = false; const hid = []; scene.traverse((o) => { if (!o.visible && o !== sky.mesh) { hid.push(o); o.visible = true; } });
     try { renderer.compileAsync(scene, cam).then(() => { ok = true; }, () => { ok = true; }); } finally { for (const o of hid) o.visible = false; } while (!ok) yield 'compile'; }
   const list = []; scene.traverse((o) => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && o !== sky.mesh) list.push(o); }); VWARM.pieces = list.length; let i = 0, n = 1;
-  while (i < list.length) { const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
+  while (i < list.length) { if (C.depthPre && renderer.compileAsync) { const pend = depthPre(list, i, Math.min(list.length, i + n)); while (pend.some((p) => !p.isReady())) yield 'depth'; }
+    const t0 = performance.now(), e = Math.min(list.length, i + n), V = new THREE.Vector4(), on = renderer.getScissorTest(); renderer.getScissor(V); renderer.setScissorTest(true); renderer.setScissor(0, 0, 2, 2);
     VWARM.last = list.slice(i, e).map((o) => { const m = Array.isArray(o.material) ? o.material[0] : o.material, mp = m && m.map, im = mp && mp.image; return (o.name || o.type) + (im ? ' tex ' + (im.width || '?') + 'x' + (im.height || '?') : ''); }).slice(0, 4).join(' | ') + (e - i > 4 ? ' +' + (e - i - 4) : '');
     try { renderer.shadowMap.needsUpdate = true; drawPieces(list, i, e, null); } finally { renderer.setScissor(V); renderer.setScissorTest(on); } i = e; const ms = performance.now() - t0;
     n = ms < C.ms / 2 ? Math.min(n * 2, FILM.pre || !C.maxPart ? 64 : C.maxPart) : ms > C.ms * 2 ? Math.max(1, n >> 1) : n; yield 'draw'; }
@@ -2377,7 +2394,7 @@ window.__game.uploadTest = async (blob) => { if (!PROGLOG) return null; const gl
   const one = (src, kind) => { const t = new THREE.Texture(src); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; const t0 = performance.now(); renderer.initTexture(t); const t1 = performance.now(); gl.finish(); out.push([kind, Math.round(t1 - t0), Math.round(performance.now() - t0)]); t.dispose(); };
   for (let k = 0; k < 2; k++) { const bm = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }); one(bm, 'ImageBitmap'); bm.close(); }
   for (let k = 0; k < 2; k++) one(img, 'img'); URL.revokeObjectURL(u); return out; };
-window.__game.vidWarm = () => ({ done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
+window.__game.vidWarm = () => ({ depth: [DPRE.n, DPRE.built], done: VWARM.done, ok: VWARM.ok, used: VWARM.used, steps: VWARM.steps, ms: Math.round(VWARM.ms), worst: Math.round(VWARM.worst), worstAt: VWARM.worstAt, pieces: VWARM.pieces, long: VWARM.long });
 // shotAt (test hook): the scene drawn once from pose [x, y, z, yaw, pitch, fov] (the camera put back after), as a PNG data URL
 window.__game.shotAt = (q) => { const P0 = cam.position.clone(), R0 = cam.rotation.clone(), F0 = cam.fov; try { cam.position.set(q[0], q[1], q[2]); cam.rotation.set(q[4] || 0, q[3], 0, 'YXZ'); if (q[5]) { cam.fov = q[5]; cam.updateProjectionMatrix(); } cam.updateMatrixWorld(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } finally { cam.position.copy(P0); cam.rotation.copy(R0); if (q[5]) { cam.fov = F0; cam.updateProjectionMatrix(); } } };
 // zfightTest (owner Nov 22, z-fighting in the base): each pose drawn twice in the same frame, the solid pieces in the usual order and then in the reverse order (clock
