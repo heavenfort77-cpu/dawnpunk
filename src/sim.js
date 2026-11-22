@@ -401,7 +401,7 @@ export function createSim(opts = {}) {
       } else if (g.phase === 'block') {
         if (!b.panel || b.panel.hp <= 0) { g.phase = 'cross'; g.timer = g.dl = delay(); }
         else if (g.cd <= 0) { g.cd = cfg.gloom.cooldown; const ov = KD(g).over; // a Stilt held at a panel reaches over it for a player who stands close behind
-          if (ov && p.floor === b.floor && !p.climb && Math.hypot(p.x - b.inX, p.z - b.inZ) <= ov) { p.hp -= dmg * KD(g).dmg * (g.tm ? g.tm.dmg : 1); s.log.push({ e: 'hurt', over: true }); } else hurtDevice(b.panel, dmg * KD(g).wall); }
+          if (ov && p.floor === b.floor && !p.climb && Math.hypot(p.x - b.inX, p.z - b.inZ) <= ov) { p.hp -= dmg * KD(g).dmg * (g.tm ? g.tm.dmg : 1); s.log.push({ e: 'hurt', over: true, id: g.id, kind: g.kind }); } else hurtDevice(b.panel, dmg * KD(g).wall); }
       } else if (g.phase === 'cross') {
         g.timer -= dt; g.prog = g.dl > 0 ? Math.max(0, Math.min(1, 1 - g.timer / g.dl)) : 1; // visible climb through the opening
         g.x = b.outX + (b.inX - b.outX) * g.prog; g.z = b.outZ + (b.inZ - b.outZ) * g.prog;
@@ -421,7 +421,7 @@ export function createSim(opts = {}) {
           // a tamed lesson machine halts this far short of you (g.tm.stop), facing you, and does not strike
           if (g.tm && g.tm.stop > 0 && tgt === p && dist(g, p) <= g.tm.stop) g.face = Math.atan2(g.x - p.x, g.z - p.z);
           else if (dist(g, tgt) > cfg.gloom.reach * KD(g).reach) moveToward(g, tgt.x, tgt.z, dt);
-          else if (g.cd <= 0) { g.cd = cfg.gloom.cooldown; if (tgt === p) { p.hp -= dmg * KD(g).dmg * (g.tm ? g.tm.dmg : 1); s.log.push({ e: 'hurt' }); } else hurtDevice(tgt, dmg * KD(g).wall); }
+          else if (g.cd <= 0) { g.cd = cfg.gloom.cooldown; if (tgt === p) { p.hp -= dmg * KD(g).dmg * (g.tm ? g.tm.dmg : 1); s.log.push({ e: 'hurt', id: g.id, kind: g.kind }); } else hurtDevice(tgt, dmg * KD(g).wall); }
         } else {
           // different floor: use the stairs (never the ladder)
           const up = tgt.floor > g.floor, st = stairs.find((q) => q.f === (up ? g.floor : g.floor - 1));
