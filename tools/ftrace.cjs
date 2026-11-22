@@ -11,6 +11,7 @@ function report(label, buf) {
   const th = (e) => (pn.get(e.pid) || e.pid) + '/' + (tn.get(e.pid + ':' + e.tid) || e.tid);
   const msg = (e) => (e.args && e.args.data && e.args.data.message) || (e.args && e.args.message) || '';
   const marks = evs.filter((e) => e.name === 'TimeStamp' && /^(FT|DROP|CLICK|SKIP)/.test(msg(e)));
+  const wps = evs.filter((e) => e.name === 'TimeStamp' && /^WP /.test(msg(e))).sort((x, y) => x.ts - y.ts);
   const offs = marks.filter((e) => /^FT \d/.test(msg(e))).map((e) => e.ts / 1000 - +msg(e).slice(3)).sort((a, b) => a - b), off = offs.length ? offs[offs.length >> 1] : null;
   const at = (us) => (off === null ? 'trace ' + (us / 1000).toFixed(0) + ' ms' : ((us / 1000 - off) / 1000).toFixed(2) + ' s');
   const main = marks[0] ? marks[0].pid + ':' + marks[0].tid : null;
@@ -35,6 +36,14 @@ function report(label, buf) {
   for (const [ts, n] of dm) { const c = cl[cl.length - 1]; if (c && ts - c[1] < 200000) { c[1] = ts; c[2] += n; } else cl.push([ts, ts, n]); }
   console.log('  drops in this window: ' + dm.reduce((s, q) => s + q[1], 0) + ' in ' + cl.length + ' clusters' + (cl.length ? ' (' + cl.map((c) => c[2] + ' @' + at(c[0])).join(', ') + ')' : ''));
   for (const c of cl.slice(0, 8)) show(c[2] + ' dropped', c[0] - 80000, c[1]);
+  // (wmark) the warm's parts on the film clock, and the longest single events of the GPU process and the display compositor in the window, each with the warm
+  // part drawn last before it started
+  if (wps.length) { const lastWp = (ts) => { let r = null; for (const w of wps) { if (w.ts <= ts) r = w; else break; } return r ? msg(r).slice(3, 80) + ' (' + ((ts - r.ts) / 1000).toFixed(0) + ' ms earlier)' : 'none'; };
+    console.log('  warm parts in this window: ' + wps.length + ', first @' + at(wps[0].ts) + ' ' + msg(wps[0]).slice(3, 60) + ', last @' + at(wps[wps.length - 1].ts));
+    const ppl = wps.filter((w) => /rig|hair|scan_|brow|cornea|crinkle|lashes|body|eye_|buckle|belt|coat|collar|suit/.test(msg(w))); if (ppl.length) console.log('  people parts: ' + ppl.length + ' from @' + at(ppl[0].ts) + ' to @' + at(ppl[ppl.length - 1].ts));
+    const G = X.filter((e) => /Gpu|GPU|viz|Viz|Compositor/i.test(th(e)) && e.dur >= 12000 && !/RunTask|ThreadPool|ThreadController|SequenceManager|Scheduler::|TaskGraphRunner/.test(e.name)).sort((x, y) => y.dur - x.dur).slice(0, 40);
+    console.log('  longest GPU / compositor events (ms, name, thread, when, warm part before it):'); for (const e of G) console.log('    ' + (e.dur / 1000).toFixed(0) + ' ' + name(e).slice(0, 80) + ' | ' + th(e).slice(0, 40) + ' @' + at(e.ts) + ' | ' + lastWp(e.ts));
+    for (const c of cl.slice(0, 12)) console.log('  cluster ' + c[2] + ' dropped @' + at(c[0]) + ': warm part before it: ' + lastWp(c[0])); }
   // the same listing for a quiet stretch with no drop and no long frame (what normal looks like), and the media/compositor events by name
   const busyNames = new Map(); for (const e of X) if (/media|Video|viz|Compositor|Gpu|GPU/i.test(th(e))) { const k = th(e).slice(0, 40) + ' | ' + e.name; const q = busyNames.get(k) || [0, 0, 0]; q[0] += e.dur / 1000; q[1]++; q[2] = Math.max(q[2], e.dur / 1000); busyNames.set(k, q); }
   console.log('  GPU / viz / media / compositor events by name (ms in all, count, longest): ' + [...busyNames.entries()].sort((a, b) => b[1][0] - a[1][0]).slice(0, 24).map(([k, q]) => k + ' ' + q[0].toFixed(0) + 'x' + q[1] + ' max ' + q[2].toFixed(0)).join(' ; '));
