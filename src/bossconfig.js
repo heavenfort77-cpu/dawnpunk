@@ -63,6 +63,8 @@ export const BOSS_CONFIG = {
   // endNight: breaking the core ends the night at once after the collapse (false: it lies in a heap and the night goes on to dawn, with its waves)
   dawn: { hold: 4.5 }, wreck: { hold: 4.5, endNight: false, throe: 4 },
   // SUN SPILL at once into the player's battery (capped by CONFIG.player.energyCap) when a paw or the coin-core breaks: breaking them costs about 7 and 13 cannon shots, so this makes the hunt worth doing (tuned with the pawhunter bot: src/bots.js)
+  // (Nov 24, turret armour) at paw 18 hunting no longer pays for the strategy bots (test.js 'breaking the paws is worth it' FAILS); paw 40 makes it pay but then the boss night is not
+  //   the hardest night for the src/bots.js profiles. Boss tuning is open (docs/turret-fairness-panel.md), so 18 is kept.
   spill: { paw: 18, core: 20 },
   // BONUS on a won night (fits the economy: about one Workshop upgrade for the full break): per broken paw, for the broken coin-core
   bonus: { paw: { ess: 5, food: 2 }, core: { ess: 10, food: 4 } },

@@ -71,3 +71,8 @@ Bots only; reaction and aim numbers are assumptions. Armour changes no attack, s
 - CONFIG.tough re-tuned with armour on: hp [1.3, 1.2, 1.1, 1, 1] (was [1.5, 1.35, 1.2]: rings 1-3 became as hard as ring 4 at average aim).
 - test.js: the stacker's ring-1 window and ring curve and the runBot expert tough window are replaced by four strategy-suite checks (local, 48 nights per ring per strategy): at average aim >= 80% wins on rings 1-3 by 3 / 4 / 3 of 6 strategies; no strategy unhit on rings 1-3; best-strategy ring curve 94/98/85/79/56; expert aim ring 1 hit on >= 10% of nights by 3 of 6 (panels 29%, flask 17%, gunner 19%).
 - Average aim, rings 1-3 win %: turtle 77/85/73, spread 90/90/85, traps 94/96/83, panels 65/73/56, flask 67/60/44, gunner 90/98/83.
+
+## Boss night after armour (open)
+- test.js 'breaking the paws is worth it' (pawhunter vs expertNB, both 0-13% now) is ported to the strategy bots (traps, gunner; tools/wallbot.mjs BOSS=hunt). It FAILS at paw spill 18: average traps 54->38 / 21->25 / 17->25%, gunner 63->58 / 25->25 / 38->38% (no hunt -> hunt, houses 5/3/0); expert breaks 1.8-1.9 paws.
+- Paw spill 40 makes it pass (traps 54->63 / 21->38 / 17->33%) but then the src/bots.js 'boss night is the hardest night' check fails (pawhunter on houses 3 and 0). Kept at 18.
+- tools/bosshard.mjs: with the strategy bots the boss night is often not harder than a plain ring-5 night even without hunting (e.g. average turtle house 5 33 vs 29%, expert traps house 0 100 vs 96%). Needs a boss tuning pass on the strategy bots.

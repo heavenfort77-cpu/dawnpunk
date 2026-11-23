@@ -644,8 +644,15 @@ check('eating heals and costs carried food', (() => { const e = createSim({ cfg:
     const rate = (cfg, sk, h) => { let k = 0, paws = 0; for (let i = 1; i <= M; i++) { const r = runBot(sk, cfg, BC.ring, h, i); if (r.win) k++; if (r.boss) paws += (r.boss.paws.beckon.broken ? 1 : 0) + (r.boss.paws.slam.broken ? 1 : 0); } return { w: Math.round(100 * k / M), paws: paws / M }; };
     for (const h of [5, 3, 0]) for (const sk of ['novice', 'average', 'averageNB', 'expert', 'expertNB', 'pawhunter']) { const B = rate(CONFIG, sk, h), b = B.w, o = rate(NB0, sk, h).w, ok = b < o || (sk.startsWith('novice') && b <= o) || (o === 0 && b === 0); br[h + sk] = B; cells.push('h' + h + ' ' + sk + ' ' + b + '/' + o); if (!ok) bad.push('h' + h + ' ' + sk); }
     check('boss: balance: the boss night is the hardest night: every house and every bot profile wins less often than without the boss', bad.length === 0, (bad.length ? 'NOT HARDER: ' + bad.join(', ') + ' | ' : '') + cells.join(', '));
-    for (const h of [5, 3, 0]) { const P = br[h + 'pawhunter'], E = br[h + 'expertNB']; hunt.push({ h, ok: P.w > E.w && P.paws >= 1 && P.paws <= 2, txt: 'h' + h + ' pawhunter ' + P.w + '% (' + P.paws.toFixed(1) + ' paws) vs expertNB ' + E.w + '%' }); }
-    check('boss: balance: breaking the paws is worth it: the pawhunter wins the boss night more often than expertNB on every house and breaks 1-2 paws a night', hunt.every((x) => x.ok), hunt.map((x) => x.txt + (x.ok ? '' : ' !')).join(', ')); }
+    // (OWNER DECISION Nov 24, turret armour) the pawhunter / expertNB comparison measured the lance build that armour now limits (both 0-13%); the same rule on the strategy suite
+    // (tools/wallbot.mjs BOSS=hunt): at average aim, hunting the paws wins at least as often on every house and more often in total, for traps and for the gunner; at expert aim 1-2 paws a night
+    { const { STRATS } = await import('./tools/strategysuite.mjs'), { wallNight } = await import('./tools/wallbot.mjs'), WM = 24, EK = ['DEV', 'SPOT', 'PLACE', 'BOSS', 'SKILL', 'TPOS', 'BUILD'];
+      const one = (st, sk, mode, h) => { for (const k of EK) delete process.env[k]; Object.assign(process.env, STRATS[st], { SKILL: sk, BOSS: mode }); let w = 0, paws = 0; for (let i = 1; i <= WM; i++) { const x = wallNight(CONFIG, BC.ring, h, i * 97 + h); if (x.win) w++; paws += x.paws; } for (const k of EK) delete process.env[k]; return { w: Math.round(100 * w / WM), paws: paws / WM }; };
+      const rows = []; let ok = true;
+      for (const st of ['traps', 'gunner']) { let tn = 0, th = 0, ge = true; const cells = [];
+        for (const h of [5, 3, 0]) { const a = one(st, 'average', 'no', h), b = one(st, 'average', 'hunt', h), e = one(st, 'expert', 'hunt', h); tn += a.w; th += b.w; if (b.w < a.w) ge = false; if (e.paws < 1 || e.paws > 2) ok = false; cells.push('h' + h + ' ' + a.w + '->' + b.w + '% (' + e.paws.toFixed(1) + ' paws)'); }
+        if (!ge || th <= tn) ok = false; rows.push(st + ': ' + cells.join(' ')); }
+      check('boss: balance: breaking the paws is worth it: at average aim hunting wins >= on every house and more in total (traps, gunner); expert breaks 1-2 paws a night', ok, rows.join(' | ')); } }
 }
 // fresh-player fixes (owner Nov 18, desktop player test): drill wording, the waking prompt, Marla's first talk, the Keys card, the pause menu, the drill machine's start point
 { const D = CONFIG.drill, F = CONFIG.fresh, fs = await import('fs'), tpl = fs.readFileSync('./index.template.html', 'utf8'), src = fs.readFileSync('./src/main.js', 'utf8');
