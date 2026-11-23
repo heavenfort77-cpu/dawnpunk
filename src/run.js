@@ -13,7 +13,7 @@ export function createRun(cfg, ring, seed = 1, opts = {}) {
   const houses = [], er = mulberry32((seed ^ 0xe47a) >>> 0);
   for (let i = 0; i < 6; i++) {
     // opts.boss: src/base.js bossNight (OWNER DECISION lead 00:25); left undefined, the sim keeps its ring rule (balance bots)
-    const sim = createSim({ cfg, ring, house: i, seed: (seed + 101 * (i + 1)) >>> 0, day: true, noPack: true, hand: true, furniture: true, noCat: i !== catHouse, gloomMult: opts.gloomMult, lootMul: lootMul[i], loadTotal, boss: opts.boss });
+    const sim = createSim({ cfg, ring, house: i, seed: (seed + 101 * (i + 1)) >>> 0, day: true, noPack: true, hand: true, furniture: true, noCat: i !== catHouse, gloomMult: opts.gloomMult, toughHp: opts.toughHp, lootMul: lootMul[i], loadTotal, boss: opts.boss });
     const slot = slots[i], row = slot < 3 ? -1 : 1, x = ((slot % 3) - 1) * T.gapX, z = row * T.rowZ; // two rows facing the street (z = 0)
     // the house is turned so that its real front door faces the street: town = (x, z) + R(local). cs/sn are that quarter turn.
     const d = exitDoor(sim); let cs = 1, sn = 0;

@@ -253,6 +253,18 @@ check('eating heals and costs carried food', (() => { const e = createSim({ cfg:
   const before = t.gloom[0].hp; t.fireCannon('auto', 1);
   check('cannon cannot hit a Gloom through a solid wall (no opening on the line)', t.gloom[0].hp === before, 'hp ' + t.gloom[0].hp); }
 
+// TOUGH (OWNER DECISION Nov 23 23:26, CONFIG.tough): rings 1-3 tougher machines from the second night, eased after a lost night, same number alive (frame rate)
+{ const TB = await import('./src/base.js'), sv = TB.newSave(CONFIG, 5), t0 = TB.toughHp(CONFIG, sv, 0); sv.nights = 1; sv.lossRun = 0; const t1 = TB.toughHp(CONFIG, sv, 0), t4 = TB.toughHp(CONFIG, sv, 3);
+  sv.lossRun = 1; const tl = TB.toughHp(CONFIG, sv, 0), want = 1 + (CONFIG.tough.hp[0] - 1) * CONFIG.tough.ease;
+  check('tough: first night 1, ring 1 later CONFIG.tough.hp[0], ring 4 1, after a lost night eased by CONFIG.tough.ease', t0 === 1 && t1 === CONFIG.tough.hp[0] && t4 === 1 && Math.abs(tl - want) < 1e-9, [t0, t1, t4, tl].join('/'));
+  const sim = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 3, toughHp: 1.5 }), b = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 3 }); for (let i = 0; i < 200; i++) { sim.step(0.1); b.step(0.1); }
+  check('tough: a tougher night spawns the same number of Gloom with toughHp x the health', sim.spawns.length === b.spawns.length && sim.gloom.length > 0 && sim.gloom.every((g, i) => Math.abs(g.maxhp - 1.5 * b.gloom[i].maxhp) < 1e-6), sim.gloom.length + ' alive');
+  const M = Math.min(N, 24), peak = (th) => { const a = []; for (let h = 0; h < 6; h++) for (let i = 1; i <= Math.ceil(M / 6); i++) { let m = 0; const k = SKILLS.average; SKILLS.average = { ...k, probe: (q) => { if (q.gloom.length > m) m = q.gloom.length; } }; runBot('average', CONFIG, 2, h, i * 97 + h, { toughHp: th }); SKILLS.average = k; a.push(m); } a.sort((x, y) => x - y); return a[a.length >> 1]; };
+  const p0 = peak(1), p1 = peak(CONFIG.tough.hp[2]);
+  check('tough: most Gloom alive at once on ring 3 (average bot, median) not above the old health + 1 (frame-rate budget)', p1 <= p0 + 1, p0 + ' -> ' + p1);
+  const wr = (th) => { let k = 0; for (let h = 0; h < 6; h++) for (let sd = 1; sd <= 8; sd++) if (runBot('expert', CONFIG, 0, h, sd * 97 + h, { toughHp: th }).win) k++; return Math.round(100 * k / 48); }, e1 = wr(CONFIG.tough.hp[0]);
+  check('tough: ring 1 from the second night is a challenge for the expert bot (wins 70-96% over 48 nights; was 100%)', e1 >= 70 && e1 <= 96, e1 + '%'); }
+
 // ring curve: no cliff between neighbouring rings for the stacker bot (starter kit)
 // (measured without the final-night boss: the curve is about the rings' own nights; the boss night has its own gates below)
 { const NB = { ...CONFIG, boss: { ...CONFIG.boss, on: false } }, w = [0, 1, 2, 3, 4].map((r) => { let k = 0; const M = Math.min(N, 60); for (let i = 1; i <= M; i++) if (runBot('stacker', NB, r, 0, i).win) k++; return Math.round(100 * k / M); });

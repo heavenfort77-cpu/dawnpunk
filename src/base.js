@@ -61,12 +61,12 @@ export function newSave(cfg, seed = (Math.random() * 1e9) | 0) {
     personnel: b.start.personnel.map((p, i) => ({ id: i + 1, name: p.name, role: p.role })),
     cats: makeCats(cfg, rnd), revealed: { energy: false, lure: false }, noteSeen: false, up: Object.fromEntries(Object.keys(cfg.base.upgrades).map((k) => [k, 0])), loadout: cfg.loadout.first.slice(), project: null, helped: 0,
     scoutSpot: (rnd(), 3), // day 1: Marla waits by the pond, a few steps from where you wake, so the first ride-out is quick
-    quests: [], nextId: 100, nights: 0, nightsMet: 0, essTotal: 0, killsTotal: 0, trips: 0, mjRead: 0, avians: cfg.avians ? newFlock(cfg) : undefined,
+    quests: [], nextId: 100, nights: 0, nightsMet: 0, lossRun: 0, essTotal: 0, killsTotal: 0, trips: 0, mjRead: 0, avians: cfg.avians ? newFlock(cfg) : undefined,
   };
 }
 
 // newer fields get their defaults, so older saves keep working
-function fill(cfg, s) { if (cfg.avians) fillFlock(cfg, s); for (const k of ['nights', 'killsTotal', 'essTotal']) if (typeof s[k] !== 'number' || !isFinite(s[k])) s[k] = 0; if (typeof s.nightsMet !== 'number' || !isFinite(s.nightsMet)) s.nightsMet = s.nights; if (Array.isArray(s.quests)) s.quests = s.quests.filter((q) => q && (!q.giver || NPCS[q.giver])); if (typeof s.trips !== 'number') s.trips = s.nights || 0; if (typeof s.mjRead !== 'number') s.mjRead = 0; if (!s.up) return true; for (const k of Object.keys(cfg.base.upgrades)) if (typeof s.up[k] !== 'number') s.up[k] = 0; if (!Array.isArray(s.loadout)) s.loadout = cfg.loadout.first.slice(); fixRanges(cfg, s); return true; }
+function fill(cfg, s) { if (cfg.avians) fillFlock(cfg, s); for (const k of ['nights', 'killsTotal', 'essTotal', 'lossRun']) if (typeof s[k] !== 'number' || !isFinite(s[k])) s[k] = 0; if (typeof s.nightsMet !== 'number' || !isFinite(s.nightsMet)) s.nightsMet = s.nights; if (Array.isArray(s.quests)) s.quests = s.quests.filter((q) => q && (!q.giver || NPCS[q.giver])); if (typeof s.trips !== 'number') s.trips = s.nights || 0; if (typeof s.mjRead !== 'number') s.mjRead = 0; if (!s.up) return true; for (const k of Object.keys(cfg.base.upgrades)) if (typeof s.up[k] !== 'number') s.up[k] = 0; if (!Array.isArray(s.loadout)) s.loadout = cfg.loadout.first.slice(); fixRanges(cfg, s); return true; }
 // (bug probe Nov 21, tools/bugprobe_logic.mjs V0/V3/V5) a damaged save could hold an upgrade level outside 0..max or not whole (the level indexes the cost and
 // days tables, so a night turned essentials into NaN), a research project naming no upgrade, a person, quest or cat entry of the wrong shape, or a cat whose spot is not a hiding place (the base crashed on
 // open, every time, until the site data was cleared). Each such field gets its default (a new save's value); a save the game wrote itself is left exactly as it is
@@ -100,6 +100,8 @@ export const placedCats = (save, type) => save.cats.filter((c) => c.state === 'p
 export const carriedCats = (save) => save.cats.filter((c) => c.state === 'carried').length;
 // OWNER DECISION (lead 00:25, Card 50): the boss's night = the boss ring AND night >= CONFIG.boss.fromNight AND at least CONFIG.boss.minUpgrades upgrades finished
 export const bossNight = (cfg, save, ring) => !!(cfg.boss && cfg.boss.on && ring === cfg.boss.ring && save && (save.nightsMet || 0) + 1 >= (cfg.boss.fromNight || 1) && Object.values(save.up || {}).reduce((a, v) => a + (+v || 0), 0) >= (cfg.boss.minUpgrades || 0));
+// rings 1-3 tougher machines (CONFIG.tough): health x for tonight's Gloom on this ring; 1 on the first night ever, and eased after lost nights in a row
+export const toughHp = (cfg, save, ring) => { const t = cfg.tough; if (!t || !save || !save.nights) return 1; const x = Math.max(0, ((t.hp && t.hp[ring]) || 1) - 1); return 1 + x * Math.pow(t.ease, save.lossRun || 0); };
 export const nightEnergyBonus = (cfg, save) => placedCats(save, 'energy') * cfg.cat.energyBonus + save.up.energy * cfg.base.upgrades.energy.per; // only cats that sit in your home count
 export const lootMult = (cfg, save) => 1 + placedCats(save, 'lure') * cfg.cat.lureLoot;
 // the sim config for a night: research upgrades change panels and turbines
@@ -236,7 +238,7 @@ export function applyNight(cfg, save, result, kills) {
     if (q.type === 'collect') { q.got = Math.min(q.target, q.got + (win ? result.essentials : 0)); if (q.got >= q.target) complete(save, q); }
   }
   save.day++; const flock = cfg.avians && cfg.avians.on ? flockDay(cfg, save, !left) : null; save.scoutSpot = (save.scoutSpot + 1 + Math.floor(mulberry32(save.seed + save.day)() * 3)) % 4;
-  save.lastWin = win;
+  save.lastWin = win; save.lossRun = win ? 0 : (save.lossRun || 0) + 1; // lost nights in a row (CONFIG.tough.ease)
   const keep = save.quests.filter((q) => !q.giver && q.state === 'active'); const old = save.quests; makeQuests(cfg, save);
   for (const q of keep) { const i = save.quests.findIndex((n) => !n.giver && n.type === q.type); if (i >= 0) save.quests[i] = q; }
   q_text(save); void old;

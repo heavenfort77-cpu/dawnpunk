@@ -26,9 +26,9 @@ function walkTo(s, x, z, fl, dt) {
   s.move((up ? st.bx : st.tx) - p.x, (up ? st.bz : st.tz) - p.z, dt); return 99;
 }
 
-export function runBot(skillName, cfg, ring, house, seed) {
+export function runBot(skillName, cfg, ring, house, seed, xo) { // xo: extra createSim options (measuring: toughHp)
   // noFall: a bot does not drop through the open stair and ladder gaps upstairs (it has no way-finding to walk round them; src/sim.js playerTravel)
-  const k = SKILLS[skillName], s = createSim({ cfg, ring, house, seed, day: true, noFall: true });
+  const k = SKILLS[skillName], s = createSim({ cfg, ring, house, seed, day: true, noFall: true, ...(xo || {}) });
   s.botDay(k.scav);
   const dt = cfg.night.dt;
   let nextBuild = k.startAt, bi = 0, lance = 0, turbine = 0, goal = null;

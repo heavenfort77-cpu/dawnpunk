@@ -61,7 +61,7 @@ export function createSim(opts = {}) {
   const n = breachCount(cfg, ring, house);
   const L = levelsFor(cfg, n);
   const H = cfg.room.base + (cfg.room.perBP * n) / L;
-  const strength = Math.pow(cfg.ring.gloomStrength, ring);
+  const strength = Math.pow(cfg.ring.gloomStrength, ring), toughHp = opts.toughHp || 1; // toughHp: rings 1-3 tougher machines (src/base.js toughHp)
   const breaches = makeBreaches(cfg, n, H, L);
   // stairs (player + Gloom) near the south wall, ladder (player only) near the north wall; one pair per floor gap
   const stairs = [], ladders = [];
@@ -382,7 +382,7 @@ export function createSim(opts = {}) {
       const tx = -b.nz, tz = b.nx, j = (s.rng() - 0.5) * 3;
       const kind = kindOf(s.nextId), khp = (KINDS[kind] || ONE).hp * (cfg.gloom.kindHp || 1); if (!kindSeen[kind]) { kindSeen[kind] = true; s.log.push({ e: "kind", kind }); }
       const fr = sp.from; // summoned by the boss: they step off at its feet
-      s.gloom.push({ id: s.nextId++, kind, x: fr ? fr.x : b.outX - b.nx * 9 + tx * j, z: fr ? fr.z : b.outZ - b.nz * 9 + tz * j, floor: 0, hp: cfg.gloom.hp * strength * sp.hpv * khp, maxhp: cfg.gloom.hp * strength * sp.hpv * khp, phase: 'approach', bp: sp.bp, timer: 0, cd: 0, face: 0 }); s.log.push({ e: 'alert', k: b.floor > 0 ? 'upper' : 'inbound', floor: b.floor, x: b.x, z: b.z });
+      s.gloom.push({ id: s.nextId++, kind, x: fr ? fr.x : b.outX - b.nx * 9 + tx * j, z: fr ? fr.z : b.outZ - b.nz * 9 + tz * j, floor: 0, hp: cfg.gloom.hp * strength * toughHp * sp.hpv * khp, maxhp: cfg.gloom.hp * strength * toughHp * sp.hpv * khp, phase: 'approach', bp: sp.bp, timer: 0, cd: 0, face: 0 }); s.log.push({ e: 'alert', k: b.floor > 0 ? 'upper' : 'inbound', floor: b.floor, x: b.x, z: b.z });
     }
     // gloom
     const dmg = cfg.gloom.dmg * strength, FP = cfg.floorPenalty;

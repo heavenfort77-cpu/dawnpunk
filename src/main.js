@@ -1019,7 +1019,7 @@ addEventListener('click', (e) => { if (performance.now() < opSwallow) { e.preven
 $('watch').textContent = 'Watch the opening';
 function startRun() { perfRest(); runModels(); queueMicrotask(() => sceneCard('ride'));
   fromBase = true; bview.dispose(); dropWorld(); $('scout').style.display = 'none'; ui = null;
-  run = RUN.createRun(B.makeCfg(CONFIG, save), +$('selRing').value, (() => { try { const q = new URLSearchParams(location.search).get('seed'); if (q) return +q; } catch (e) { /* no address */ } return (Math.random() * 1e9) | 0; })(), { gloomMult: B.gloomMult(CONFIG, save), extraEnergy: B.nightEnergyBonus(CONFIG, save), boss: B.bossNight(CONFIG, save, +$('selRing').value) });
+  run = RUN.createRun(B.makeCfg(CONFIG, save), +$('selRing').value, (() => { try { const q = new URLSearchParams(location.search).get('seed'); if (q) return +q; } catch (e) { /* no address */ } return (Math.random() * 1e9) | 0; })(), { gloomMult: B.gloomMult(CONFIG, save), toughHp: B.toughHp(CONFIG, save, +$('selRing').value), extraEnergy: B.nightEnergyBonus(CONFIG, save), boss: B.bossNight(CONFIG, save, +$('selRing').value) });
   if (run.houses.some((h) => h.sim && h.sim.boss)) bossPreload(); // desktop: the boss model loads while you walk the street (src/bosshi.js)
   $('msg').textContent = ''; flashT = 0;
   // a base line still on Marla's card (a base tip, said just before riding out) is cleared: it held back her first street line for the rest of its time, and base talk stays in the base
@@ -1116,7 +1116,7 @@ function start(viaBase) {
   fromBase = !!viaBase; run = null; hintQ.length = 0; clearScene(); dropWorld(); bview.dispose(); scene.remove(marla.root); kitOpen = false; $('kit').style.display = 'none'; sky.mesh.visible = false; scene.background = new THREE.Color(0x0b1020); scene.fog = new THREE.Fog(0x0b1020, 8, 34);
   $('hud').className = ''; $('bFire').textContent = 'FIRE'; $('scout').style.display = 'none';
   const ring = +$('selRing').value, house = +$('selHouse').value;
-  sim = createSim(fromBase ? { cfg: B.makeCfg(CONFIG, save), ring, house, seed: (Math.random() * 1e9) | 0, gloomMult: B.gloomMult(CONFIG, save), extraEnergy: B.nightEnergyBonus(CONFIG, save), day: true, boss: B.bossNight(CONFIG, save, ring) } : { cfg: CONFIG, ring, house, seed: (Math.random() * 1e9) | 0, boss: false });
+  sim = createSim(fromBase ? { cfg: B.makeCfg(CONFIG, save), ring, house, seed: (Math.random() * 1e9) | 0, gloomMult: B.gloomMult(CONFIG, save), toughHp: B.toughHp(CONFIG, save, ring), extraEnergy: B.nightEnergyBonus(CONFIG, save), day: true, boss: B.bossNight(CONFIG, save, ring) } : { cfg: CONFIG, ring, house, seed: (Math.random() * 1e9) | 0, boss: false });
   yaw = 0; pitch = 0; camY = 1.6; buildRoom(); buildBreaches();
   $('menu').style.display = 'none'; $('end').style.display = 'none'; $('hud').style.display = 'block';
   state = 'play'; hurtT = 0; paused = false; $('pause').style.display = 'none';

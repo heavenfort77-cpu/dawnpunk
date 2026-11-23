@@ -70,6 +70,12 @@ export const CONFIG = {
     gloomStrength: 1.0,              // hp and damage x per ring (flat on purpose; difficulty comes from count and floors)
     countMult: [1, 1.04, 1.1, 1.22, 1.36],   // must rise with the ring
   },
+  // TOUGH (balance Fault B, OWNER DECISION Nov 23 23:26 "Tougher + catch-up"): rings 1-3 gave a player with built defences no challenge. More machines are out
+  // (no frame-rate headroom), so each machine has more health instead and the number alive at once stays as before (docs/balance-fault-b.md, bots on rings 1-3).
+  // hp: health x per ring (index 0 = ring 1; 1 = as before). Never on the very first night (save.nights 0, the night-1 lesson). src/base.js toughHp
+  // ease: catch-up: the extra health is multiplied by ease once for every lost night in a row (0 = a lost night brings back the old health for the next try; 0.5 = half the extra); a won night restores it
+  //   (bots, 40 saves: ease 0 leaves novice and average about one night behind on the ring climb; 0.25 and 0.5 left them further behind)
+  tough: { hp: [1.5, 1.35, 1.2, 1, 1], ease: 0 },
   gloom: {
     hp: 20, speed: 1.4, dmg: 8, cooldown: 1.0, reach: 1.0,
     // maxAlive (OWNER DECISION Nov 20 14:51): most Gloom alive at once on any night, spawns and boss summons wait above it (src/sim.js); set from the Mac fps runs
