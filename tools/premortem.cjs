@@ -113,6 +113,9 @@ const SETTLED = () => {
 };
 async function settle(p, capS) { const ok = await waitFor(p, SETTLED, undefined, capS || 40, 500); if (!ok) console.log('INFO settle: loads not done after ' + (capS || 40) + ' s (state ' + await stateOf(p) + ')'); await frames(p, 3, 30); return ok; }
 const gpu = (p) => p.evaluate(() => { const m = window.__game.gpu(); return { geometries: m.geometries, textures: m.textures }; });
+// (OWNER DECISION Nov 23 13:10) tier_change reads the counts once the sharp pictures have arrived (KTX2 pictures arrive after the base is up: read in flight, the
+// count moved 42 -> 76 -> 64 -> 105 over 30 s on one page); waits at most 90 s, and says so if they never settle
+const gpuSettled = async (p, t, what) => { for (let k = 0; k < 180; k++) { const ok = await p.evaluate(() => { const q = window.__game.quality().hi; return q.ok + q.failed >= q.asked; }).catch(() => true); if (ok) break; if (k === 179) t.info(what + ': sharp pictures still arriving after 90 s'); await p.waitForTimeout(500); } await p.waitForTimeout(500); return gpu(p); };
 const heap = (p) => p.evaluate(() => { if (window.gc) { window.gc(); window.gc(); } return performance.memory ? performance.memory.usedJSHeapSize : -1; });
 const grew = (a, b, pct, slack) => b > a * (1 + pct) + (slack || 0);
 const MB = (b) => (b / 1048576).toFixed(1) + ' MB';
@@ -282,8 +285,8 @@ async function tier_change(t) {
       await frames(p, 2, 60);
     }
     const got = await p.evaluate(() => window.__game.quality().tier); if (got !== tier) t.fail('step ' + (i + 1) + ': tier is ' + got + ', wanted ' + tier);
-    await toBase(p, 'hook'); const gb = await gpu(p); errsSince(t, k, tier + ' (step ' + (i + 1) + ') base');
-    const k2 = t.errs.length; await toNight(p); const gn = await gpu(p); errsSince(t, k2, tier + ' (step ' + (i + 1) + ') night');
+    await toBase(p, 'hook'); const gb = await gpuSettled(p, t, tier + ' (step ' + (i + 1) + ') base'); errsSince(t, k, tier + ' (step ' + (i + 1) + ') base');
+    const k2 = t.errs.length; await toNight(p); const gn = await gpuSettled(p, t, tier + ' (step ' + (i + 1) + ') night'); errsSince(t, k2, tier + ' (step ' + (i + 1) + ') night');
     res.push({ gb, gn }); t.info('step ' + (i + 1) + ' ' + tier + ': base gpu ' + JSON.stringify(gb) + ', night gpu ' + JSON.stringify(gn));
   }
   for (const [w, lb] of [['gb', 'base'], ['gn', 'night']]) for (const k of ['geometries', 'textures']) if (grew(res[0][w][k], res[2][w][k], TOL.flat, 2)) t.fail(lb + ' gpu ' + k + ' grew from the first medium to the second: ' + res[0][w][k] + ' -> ' + res[2][w][k]);
