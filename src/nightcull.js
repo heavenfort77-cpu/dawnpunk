@@ -59,10 +59,12 @@ export function createNightCull() {
       if (!on) { on = true; g.traverse((l) => { if (l.isLight && l.shadow && l.shadow.camera) l.shadow.camera.layers.enable(L1); }); }
       let hidden = 0;
       for (const it of items) {
-        const vis = !(it.sc && Math.hypot(it.c.x, it.c.z) - it.r - sim.H > C.sceneryFar) && seen(it.c, it.r, sim, cam.position, it.lo);
+        const far = Math.hypot(it.c.x, it.c.z) - it.r - sim.H, vis = !(it.sc && far > C.sceneryFar) && !(C.streetFar && far > C.streetFar) && seen(it.c, it.r, sim, cam.position, it.lo);
         if (vis === it.hid) { it.hid = !vis; it.o.layers.set(vis ? 0 : L1); } if (it.hid) hidden++;
       }
       stats.hidden = hidden; return true;
     },
-    reset() { restore(); on = false; items = null; root = null; KY.n = -1; KY.e = null; } };
+    reset() { restore(); on = false; items = null; root = null; KY.n = -1; KY.e = null; },
+    // test only: test every piece again on the next frame (after a CONFIG.lag.nightCull distance is changed while playing)
+    retest() { KY.e = null; } };
 }

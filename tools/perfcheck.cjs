@@ -453,7 +453,9 @@ const BREAKDOWN = (spot) => {
             streetAll: sw(W ? [W] : [], 'visible', false),
             gloomAll: sw(sc.children.filter(isGloom), 'visible', false),
             bodyShadowOff: { on: () => { window.__noBodyShadow = true; }, off: () => { window.__noBodyShadow = false; }, n: 1 },
-            handsOff: { on: () => { window.__noHands = true; }, off: () => { window.__noHands = false; }, n: 1 } };
+            handsOff: { on: () => { window.__noHands = true; }, off: () => { window.__noHands = false; }, n: 1 },
+            // (owner 15:49) the street cut's cost: switched to the old distances (scenery 15 m, the rest unlimited) and back
+            streetCutUndo: g.nightCullRetest ? (() => { const C = (typeof g.cfg === 'function' ? g.cfg() : g.cfg).lag.nightCull, s0 = C.sceneryFar, f0 = C.streetFar; return { on: () => { C.sceneryFar = 15; C.streetFar = null; g.nightCullRetest(); }, off: () => { C.sceneryFar = s0; C.streetFar = f0; g.nightCullRetest(); }, n: 1 }; })() : { n: 0 } };
           const med = (a) => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; }, out = [];
           for (const [k, P] of Object.entries(cand)) { if (!P.n) { out.push({ k, n: 0 }); continue; } const d = [], base = [], f = [];
             for (let r = 0; r < REPS; r++) { const a = await meas(); P.on(); const b = await meas(); P.off(); const c = await meas(); const bs = (a.js + c.js) / 2; base.push(bs); d.push(b.js - bs); f.push(b.fps - (a.fps + c.fps) / 2); }

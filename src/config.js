@@ -1281,8 +1281,9 @@ export const CONFIG = {
     // of the machine's test sphere above its feet, gloomR: its radius (m), generous so a tall Warden or a Stilt's head showing at a window always counts as seen
     // roofCull: a piece of the house you are in whose lowest point is above the top floor's ceiling less this (m) is taken as roof (behind the ceiling, seen only through an opening)
     // sceneryFar (owner decision Nov 19 09:20, option A): at night, street scenery (grass, tufts, hedge, tree and wood cells) wholly farther than this (m) from the house's walls is not drawn
+    // (OWNER DECISION Nov 23 15:49: 15 -> 8 m, and streetFar: every other street piece, other houses, walls and road cells, wholly farther than streetFar m is not drawn either; null = off)
     // eyeMove: the pieces are tested again only once the eye has moved more than this (m) since the last test
-    nightCull: { eyeMove: 0.05, on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2, roofCull: 0.02, sceneryFar: 15 },
+    nightCull: { eyeMove: 0.05, on: true, housePad: 1.2, roof: 4, pad: 0.4, doorway: 0.35, gloom: true, gloomY: 1.3, gloomR: 2.2, roofCull: 0.02, sceneryFar: 8, streetFar: 25 },
     // mergeGloom: phone tier, the still pieces of each Gloom machine drawn as one mesh per parent and material (src/mergestatic.js); on: the switch; probes: test poses
     // run to find the pieces that never move; perFrame: machines merged per frame at most (a burst of arrivals is spread over a few frames)
     // fxPool: short-lived effect objects (shot jets, splash drops, kill smoke, mine flashes, press marks) kept per kind for reuse (src/main.js opTake); most kept per kind
