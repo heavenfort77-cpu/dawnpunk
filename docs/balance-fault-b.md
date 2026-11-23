@@ -64,3 +64,19 @@ Plan: back to a ground-floor wall, turbine beside, lance in front; with spare Su
 - One traced night per ring: all 2 turbines + 3 lances are down by second 3 of the night (the starting Sun pays for them); lances fire 194-326 shots against 50-96 from the player; the nearest Gloom gets to 0.8-2.8 m and never lands a hit.
 - What does the work (same bot): standing in the room's centre instead of at the wall: still 100% / 0% hurt. Only 1 turbine + 1 lance: ring 1 92%, ring 3 42%, ring 5 0%. Lance cap 3: still 100% everywhere; cap 2: rings 1-4 100%, boss night 92%. Lance damage 5 -> 3: rings 1-3 98-100%, ring 4 90%, ring 5 44%.
 - So the cause is not the wall: it is two turbines plus several lances, all bought in the first seconds of the night. The earlier bots lost because they built slowly and spent Sun on panels, which keep the Gloom outside where the lances cannot see them.
+
+## 8. Owner 23:59: the same wall bot, two turbines plus another device in the lance's place (DEV=..., 48 nights per ring, win % / hurt % of nights)
+| device | ring 1 | ring 2 | ring 3 | ring 4 | ring 5 (boss) |
+|---|---|---|---|---|---|
+| lance (before) | 100/0 | 100/0 | 100/0 | 100/0 | 100/0 |
+| sling | 100/0 | 100/0 | 100/0 | 100/0 | 100/0 |
+| twin | 100/0 | 100/0 | 100/0 | 100/0 | 92/8 |
+| mist | 100/0 | 100/0 | 100/0 | 96/4 | 60/42 |
+| prism | 98/27 | 96/40 | 83/60 | 58/73 | 19/90 |
+| chime | 98/21 | 98/33 | 75/69 | 50/90 | 21/96 |
+| press | 92/40 | 85/46 | 65/75 | 40/81 | 6/100 |
+| shard | 90/60 | 90/71 | 71/79 | 46/92 | 29/100 |
+| mine | 85/65 | 83/81 | 50/90 | 19/100 | 0/100 |
+| moon (2nd power maker, no weapon) | 79/85 | 77/94 | 42/96 | 13/100 | 4/100 |
+- Every device that shoots by itself (lance, sling, twin, mist) carries the weakest bot through rings 1-3 untouched; the sling even through the boss. The others need the player's own aim and behave like a real game.
+- Not placeable beside him, so not tested: panel, trellis (they go on an opening), flask (thrown).
