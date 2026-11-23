@@ -288,13 +288,17 @@ export function hiBuilders(E) {
   const ramGlb = (cm, rm2) => { const Cg = rm2.parent, A = cm.position.clone(), B = rm2.position.clone(), d = new THREE.Vector3(), qi = new THREE.Quaternion();
     const aim = () => { d.copy(B).applyQuaternion(Cg.quaternion).add(Cg.position).sub(A).normalize(); cm.quaternion.setFromUnitVectors(DOWNG, d); rm2.quaternion.setFromUnitVectors(UPG, d.negate().applyQuaternion(qi.copy(Cg.quaternion).invert())); };
     for (const o of [cm, rm2]) o.onBeforeRender = () => { aim(); o.updateMatrix(); o.matrixWorld.multiplyMatrices(o.parent.matrixWorld, o.matrix); };
-    aim(); };
+    aim(); return aim; };
+  // (Nov 23, owner's list item 2: about 12 of a machine's 15 draws were its pistons) the pistons are drawn by the model's merged mesh like every other part
+  // (src/glbmerge.js), so their aim is worked out in the pose itself (src/gloomkit.js pose: P.aims), before the frame's matrices, not in onBeforeRender
+  // (a merged part is never drawn on its own); a model without pistons switched on keeps them hidden with zero size (the merged mesh still holds their triangles)
+  const ramAims = (rams) => (DT.rams ? rams.map(([c2, r2]) => ramGlb(c2, r2)) : (rams.forEach(([c2, r2]) => { for (const o of [c2, r2]) { o.visible = false; o.scale.setScalar(1e-6); } }), []));
   function walkerGlb(b, K, face) {
     const S = W.shape, hipY = S.hip, thigh = S.thigh, shin = S.shin, DP = W.paints, base = new THREE.Color(DP.walker), sh = base.clone().offsetHSL((rnd() - 0.5) * DP.hue, (rnd() - 0.5) * DP.sat, (rnd() - 0.5) * DP.light);
     const sc = tinted('walker', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), pelvis = n('pelvis'), torso = n('torso'), head = n('head');
     const legs = [0, 1].map((i) => ({ hip: n('hip' + i), knee: n('knee' + i), fwd: 1 })), arms = [0, 1].map((i) => { const a = n('arm' + i); a.userData.fore = n('fore' + i); return a; });
-    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
+    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); const aims = ramAims(rams);
     // the display: the screen at the back of the model's recess, the glass across its opening, the glow in front
     const sa = n('screen'), z0 = sa.position.z, w = S.head[0] - 0.1, h = S.head[1] - 0.09, D2 = E.displayTex('walker', K, W); face.map = D2.tex;
     const scr = new THREE.Mesh(new THREE.PlaneGeometry(w, h), face); scr.position.set(0, sa.position.y, z0 + H.recess); scr.rotation.y = PI; head.add(scr);
@@ -302,7 +306,7 @@ export function hiBuilders(E) {
     if (DT.glass) { const gl = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.012, h + 0.012), M.glass); gl.position.set(0, sa.position.y, z0 + 0.002); gl.rotation.y = PI; head.add(gl); }
     let ph = 0, tw = 0, twT = 0;
     const step = () => legs.forEach((L, i) => { const lim = i === S.limpLeg ? S.limp : 1, p = ((ph + i * 0.5) % 1); let th, k = 0; if (p < 0.65) th = S.stride - 2 * S.stride * (p / 0.65); else { const e = (p - 0.65) / 0.35; th = -S.stride + 2 * S.stride * e; k = S.knee * Math.sin(PI * e) * lim; } L.hip.rotation.x = th * lim; L.knee.rotation.x = k + 0.08; });
-    return { head, arms, legs, top: S.top, keepScale: true, glb: true, say: (text) => D2.draw(text), night(q, u, mv) {
+    return { aims, head, arms, legs, top: S.top, keepScale: true, glb: true, say: (text) => D2.draw(text), night(q, u, mv) {
       const wv = within(u, 1, 9.4), up = wv ? 1 : 0; ph += mv / (2 * S.stride * (thigh + shin) / 0.6); step();
       const sway = Math.sin(ph * 2 * PI), lim = Math.sin(ph * 2 * PI + S.limpLeg * PI);
       pelvis.rotation.z = S.sway * sway; pelvis.position.y = hipY - S.dip * Math.abs(Math.sin(ph * 2 * PI)) - (lim > 0.6 ? S.limpDrop * (lim - 0.6) : 0); torso.rotation.x = S.lean; torso.rotation.z = -S.sway * 0.6 * sway;
@@ -362,14 +366,14 @@ export function hiBuilders(E) {
     const n = (k) => sc.getObjectByName(k), pelvis = n('pelvis'), torso = n('torso'), head = n('head');
     const legs = [0, 1].map((i) => ({ hip: n('hip' + i), knee: n('knee' + i), fwd: -1 })), arms = [0, 1].map((i) => { const a = n('arm' + i); a.userData.fore = n('fore' + i); a.rotation.x = 0.6; return a; });
     torso.rotation.x = -0.5;
-    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
+    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); const aims = ramAims(rams);
     // the display: a round-cornered screen at the back of the pod's well, the glass across it, the glow in front
     const sa = n('screen'), z0 = sa.position.z, w = 0.26, h = 0.19, D2 = E.displayTex('lurcher', K, W); face.map = D2.tex;
     const scr = new THREE.Mesh(roundScreen(w, h, 0.05), face); scr.position.set(0, sa.position.y, z0 + H.recess); scr.rotation.y = PI; head.add(scr);
     const hl = E.halo(head, 0, sa.position.y, z0 - 0.06, Math.max(w, h) * H.halo[0], K.screen); hl.material = hl.material.clone(); hl.material.opacity = 0; scr.onBeforeRender = () => { hl.material.opacity = H.halo[1] * Math.min(1, face.color.r); };
     if (DT.glass) { const gl = new THREE.Mesh(roundScreen(w + 0.012, h + 0.012, 0.055), M.glass); gl.position.set(0, sa.position.y, z0 + 0.002); gl.rotation.y = PI; head.add(gl); }
     let ph = 0;
-    return { head, arms, legs, top: 1.9, keepScale: true, glb: true, lamp: [1.45, -0.6], say: (t) => D2.draw(t), night(q, u, mv) { const lunge = within(u, 4, 4.35) || within(u, 8.2, 8.5); ph += mv / 0.5; gait(legs, ph, 0.3, 0.7, 0, 0.8);
+    return { aims, head, arms, legs, top: 1.9, keepScale: true, glb: true, lamp: [1.45, -0.6], say: (t) => D2.draw(t), night(q, u, mv) { const lunge = within(u, 4, 4.35) || within(u, 8.2, 8.5); ph += mv / 0.5; gait(legs, ph, 0.3, 0.7, 0, 0.8);
       pelvis.position.y = 0.92 - 0.04 * Math.abs(Math.sin(ph * 2 * PI)); torso.rotation.x = lunge ? -0.95 : -0.5 + 0.04 * Math.sin(ph * 4 * PI); head.position.z = lunge ? -0.4 : -0.12; head.rotation.x = lunge ? 0.4 : 0.15 + 0.08 * Math.sin(q * 3.1);
       arms.forEach((a, i) => { a.rotation.x = lunge ? -0.4 : 0.6 + 0.2 * Math.sin(ph * 2 * PI + i * PI); }); flick(face, u, 2.5, 6.6); } };
   }
@@ -404,13 +408,13 @@ export function hiBuilders(E) {
     const sc = tinted('hauler', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), pelvis = n('pelvis'), torso = n('torso'), head = n('head');
     const legs = [0, 1].map((i) => ({ hip: n('hip' + i), knee: n('knee' + i), fwd: 1 })), arms = [0, 1].map((i) => { const a = n('arm' + i); a.userData.fore = n('fore' + i); a.rotation.x = 0.15; return a; });
-    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
+    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); const aims = ramAims(rams);
     const sa = n('screen'), z0 = sa.position.z, w = 0.42, h = 0.28, D = E.displayTex('hauler', K, W); face.map = D.tex;
     const scr = new THREE.Mesh(roundScreen(w, h, 0.06), face); scr.position.set(0, sa.position.y, z0 + H.recess); scr.rotation.y = PI; head.add(scr);
     const hl = E.halo(head, 0, sa.position.y, z0 - 0.06, Math.max(w, h) * H.halo[0], K.screen); hl.material = hl.material.clone(); hl.material.opacity = 0; scr.onBeforeRender = () => { hl.material.opacity = H.halo[1] * Math.min(1, face.color.r); };
     if (DT.glass) { const gl = new THREE.Mesh(roundScreen(w + 0.012, h + 0.012, 0.065), M.glass); gl.position.set(0, sa.position.y, z0 + 0.002); gl.rotation.y = PI; head.add(gl); }
     let ph = 0;
-    return { head, arms, legs, top: 2.47, keepScale: true, glb: true, lamp: [2.12, -0.5], say: (t) => D.draw(t), night(q, u, mv) { const ham = within(u, 7, 9.8), k = ham ? (u - 7) % 0.7 : 0, dn = ham && k > 0.4; ph += mv / 0.75; gait(legs, ph, 0.18, 0.4, 1, 0.7);
+    return { aims, head, arms, legs, top: 2.47, keepScale: true, glb: true, lamp: [2.12, -0.5], say: (t) => D.draw(t), night(q, u, mv) { const ham = within(u, 7, 9.8), k = ham ? (u - 7) % 0.7 : 0, dn = ham && k > 0.4; ph += mv / 0.75; gait(legs, ph, 0.18, 0.4, 1, 0.7);
       pelvis.position.y = PELY - 0.05 * Math.abs(Math.sin(ph * 2 * PI)); torso.rotation.z = 0.04 * Math.sin(ph * 2 * PI);
       arms.forEach((a) => { a.rotation.x = ham ? (dn ? 0.2 : -2.3) : 0.15 + 0.06 * Math.sin(ph * 2 * PI); }); torso.rotation.x = dn ? 0.12 : 0; flick(face, u, 3, 5.8); } };
   }
@@ -444,13 +448,13 @@ export function hiBuilders(E) {
     const sc = tinted('stilt', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), pelvis = n('pelvis'), torso = n('torso'), head = n('head'), up = n('arm0'), fa = n('fore0'), off = n('arm1');
     const legs = [0, 1].map((i) => ({ hip: n('hip' + i), knee: n('knee' + i), fwd: 1 })), arms = [up, off]; up.userData.fore = fa;
-    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
+    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); const aims = ramAims(rams);
     const sa = n('screen'), z0 = sa.position.z, w = 0.3, h = 0.21, D = E.displayTex('stilt', K, W); face.map = D.tex;
     const scr = new THREE.Mesh(roundScreen(w, h, 0.045), face); scr.position.set(0, sa.position.y, z0 + H.recess); scr.rotation.y = PI; head.add(scr);
     const hl = E.halo(head, 0, sa.position.y, z0 - 0.06, Math.max(w, h) * H.halo[0], K.screen); hl.material = hl.material.clone(); hl.material.opacity = 0; scr.onBeforeRender = () => { hl.material.opacity = H.halo[1] * Math.min(1, face.color.r); };
     if (DT.glass) { const gl = new THREE.Mesh(roundScreen(w + 0.012, h + 0.012, 0.05), M.glass); gl.position.set(0, sa.position.y, z0 + 0.002); gl.rotation.y = PI; head.add(gl); }
     let ph = 0;
-    return { head, arms, legs, top: 3.5, keepScale: true, glb: true, lamp: [3.12, -0.3], say: (t) => D.draw(t), night(q, u, mv) { const reach = within(u, 5, 7.4), away = within(u, 3, 5); ph += mv / 1.1; gait(legs, ph, 0.14, 0.35, 0, 0.85);
+    return { aims, head, arms, legs, top: 3.5, keepScale: true, glb: true, lamp: [3.12, -0.3], say: (t) => D.draw(t), night(q, u, mv) { const reach = within(u, 5, 7.4), away = within(u, 3, 5); ph += mv / 1.1; gait(legs, ph, 0.14, 0.35, 0, 0.85);
       pelvis.position.y = 2.2 - 0.03 * Math.abs(Math.sin(ph * 2 * PI)); torso.rotation.z = 0.05 * Math.sin(ph * 2 * PI); head.rotation.y = away ? 1.6 : 0.15 * Math.sin(q * 0.3);
       up.rotation.x = reach ? -1.9 : 0.1; fa.rotation.x = reach ? -0.3 : 0.05; flick(face, u, 2, 8.5); } };
   }
@@ -484,7 +488,7 @@ export function hiBuilders(E) {
     const sc = tinted('lantern', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), hub = n('hub'), armG = n('arm0'), pend = n('pend'), head = n('head'), arms = [armG];
     const legs = [0, 1, 2].map((k) => { const m = n('mount' + k); m.rotation.y = k * 2.094 + 0.5; m.rotation.x = 0.35; return { hip: n('hip' + k), knee: n('knee' + k), fwd: 1 }; });
-    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
+    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); const aims = ramAims(rams);
     const sa = n('screen'), z0 = sa.position.z, w = 0.3, h = 0.22, D = E.displayTex('lantern', K, W); face.map = D.tex;
     const scr = new THREE.Mesh(roundScreen(w, h, 0.045), face); scr.position.set(0, sa.position.y, z0 + H.recess); scr.rotation.y = PI; head.add(scr);
     const hs = E.halo(head, 0, sa.position.y, z0 - 0.06, Math.max(w, h) * H.halo[0], K.screen); hs.material = hs.material.clone(); hs.material.opacity = 0; scr.onBeforeRender = () => { hs.material.opacity = H.halo[1] * Math.min(1, face.color.r); };
@@ -492,7 +496,7 @@ export function hiBuilders(E) {
     const glob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 12), E.glow('amber', 0xffc040)); glob.position.set(0, -0.25, 0); head.add(glob);
     const hl = E.halo(head, 0, -0.26, 0, 0.5, 0xffc040); hl.material = hl.material.clone(); hl.material.opacity = 0.08;
     let ph = 0;
-    return { head: pend, arms, legs, top: 2.6, keepScale: true, glb: true, lamp: [1.85, -0.58], say: (t) => D.draw(t), night(q, u, mv) { const rg = within(u, 4, 5.2) || within(u, 9, 9.6); ph += mv / 0.5; gait(legs, ph, 0.12, 0.3, 2, 0.8);
+    return { aims, head: pend, arms, legs, top: 2.6, keepScale: true, glb: true, lamp: [1.85, -0.58], say: (t) => D.draw(t), night(q, u, mv) { const rg = within(u, 4, 5.2) || within(u, 9, 9.6); ph += mv / 0.5; gait(legs, ph, 0.12, 0.3, 2, 0.8);
       hub.position.y = 1.0 - 0.03 * Math.abs(Math.sin(ph * 3 * PI)); pend.rotation.z = rg ? 0.35 * Math.sin(q * 11) : 0.14 * Math.sin(q * 1.1); pend.rotation.x = 0.08 * Math.sin(q * 0.7);
       hl.material.opacity = rg ? 0.35 : 0.08; hl.scale.setScalar(rg ? 1.5 + 0.3 * Math.sin(q * 20) : 1); flick(face, u, 7, 10.2); } };
   }
@@ -567,13 +571,13 @@ export function hiBuilders(E) {
     const sc = tinted('warden', base, sh); b.add(sc);
     const n = (k) => sc.getObjectByName(k), torso = n('torso'), g1 = n('g1'), g2 = n('g2');
     const arms = [0, 1].map((i) => { const a = n('arm' + i); a.userData.fore = n('fore' + i); return a; });
-    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); if (DT.rams) for (const [c2, r2] of rams) ramGlb(c2, r2); else for (const [c2, r2] of rams) { c2.visible = false; r2.visible = false; }
+    const rams = []; sc.traverse((o) => { if (o.name.startsWith('ramc_') && n('ramr_' + o.name.slice(5))) rams.push([o, n('ramr_' + o.name.slice(5))]); }); const aims = ramAims(rams);
     const w = 0.34, h = 0.27, D = E.displayTex('warden', K, W); face.map = D.tex;
     for (const [g, sa, live] of [[g1, n('screen'), true], [g2, n('screen2'), false]]) { const z0 = sa.position.z, scr = new THREE.Mesh(roundScreen(w, h, 0.05), live ? face : M.dark); scr.position.set(sa.position.x, sa.position.y, z0 + H.recess); scr.rotation.y = PI; g.add(scr);
       if (live) { const hl = E.halo(g, sa.position.x, sa.position.y, z0 - 0.06, Math.max(w, h) * H.halo[0], K.screen); hl.material = hl.material.clone(); hl.material.opacity = 0; scr.onBeforeRender = () => { hl.material.opacity = H.halo[1] * Math.min(1, face.color.r); }; }
       if (DT.glass) { const gl = new THREE.Mesh(roundScreen(w + 0.012, h + 0.012, 0.055), M.glass); gl.position.set(sa.position.x, sa.position.y, z0 + 0.002); gl.rotation.y = PI; g.add(gl); } }
     let ph = 0;
-    return { head: torso, arms, top: 3.0, keepScale: true, glb: true, lamp: [2.4, -0.55], say: (t) => D.draw(t), night(q, u, mv) { const greet = within(u, 3, 6.5), ram = within(u, 6.5, 7); ph += mv;
+    return { aims, head: torso, arms, top: 3.0, keepScale: true, glb: true, lamp: [2.4, -0.55], say: (t) => D.draw(t), night(q, u, mv) { const greet = within(u, 3, 6.5), ram = within(u, 6.5, 7); ph += mv;
       arms[0].rotation.z = greet ? -1.9 : 0.05 * Math.sin(ph * 2); arms[1].rotation.z = greet ? 1.9 : -0.05 * Math.sin(ph * 2); arms[0].userData.fore.rotation.z = greet ? -0.5 * (Math.floor(u * 1.2) % 2) : 0;
       torso.rotation.x = ram ? -0.25 : 0.02 * Math.sin(q * 1.4); torso.rotation.y = within(u, 9, 11) ? 0.45 : 0; torso.position.y = 0.7 + 0.01 * Math.sin(ph * 12); flick(face, u, 4, 10); } };
   }

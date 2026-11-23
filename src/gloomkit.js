@@ -498,7 +498,7 @@ export function gloomMachine(kind, opts) {
   let next = ph % gap, until = -1, line = null;
   if (dormant) { face.color.setScalar(0.03); P.night(0, 0.5, 0); face.color.setScalar(0.03); b.rotation.x = -D.lean * (P.low ? 0 : 1); b.rotation.z = (seed - 0.5) * 0.2 * (P.low ? 0 : 1); if (!P.low) P.head.rotation.x = -D.headDrop; for (const a of P.arms) { a.rotation.set(0.12, 0, 0); if (a.userData.fore) a.userData.fore.rotation.set(-0.15, 0, 0); } }
   // the builder's own pose at time t, mv metres walked since the last pose
-  let M = null; const pose = (t, mv) => { const q = Math.floor((t + ph) * K.fps) / K.fps; P.night(q, q % K.loop, mv); if (face.userData.dim) face.color.multiplyScalar(face.userData.dim); g.userData.glow = Math.min(1.6, face.color.r); };
+  let M = null; const pose = (t, mv) => { const q = Math.floor((t + ph) * K.fps) / K.fps; P.night(q, q % K.loop, mv); if (P.aims) for (let i = 0; i < P.aims.length; i++) P.aims[i](); if (face.userData.dim) face.color.multiplyScalar(face.userData.dim); g.userData.glow = Math.min(1.6, face.color.r); };
   g.userData.anim = (t, gl) => {
     if (dormant) { const j = (t + ph) % jgap < D.jerkLen, s = Math.floor((t + ph) / jgap) % 2 ? 1 : -1; b.rotation.z = (seed - 0.5) * 0.2 * (P.low ? 0 : 1) + (j ? 0.07 * s : 0); if (P.low) P.head.rotation.x = j ? 0.5 : 1.0; else P.head.rotation.z = j ? 0.4 * s : 0; if (P.arms[0]) P.arms[0].rotation.x = j ? -0.5 : 0.12; face.color.setScalar(j && seed > 0.5 ? 0.3 : 0.03); return; }
     let mv = 0; if (gl) { if (lx !== null) mv = Math.min(0.2, Math.hypot(gl.x - lx, gl.z - lz)); lx = gl.x; lz = gl.z; }

@@ -2,7 +2,7 @@
 // about 25 rigid parts, each its own draw. Here every part of one material is drawn by ONE skinned mesh: each part is a "bone" of that mesh (its vertices follow the
 // part's own matrix, weight 1), so whatever moves a part (the walk, the arms, the head) moves its triangles exactly as before. Same geometry, same material,
 // same place: the picture is unchanged. The original parts stay in the model as invisible hit shapes on layer HIT_LAYER (src/mergestatic.js): the aimed shot
-// (src/main.js drawnHit) raycasts them as before, and the walk code still moves them. Parts named ram* (pistons aimed in onBeforeRender) are left as they are.
+// (src/main.js drawnHit) raycasts them as before, and the walk code still moves them. (Nov 23) The pistons (parts named ram*) are merged too: their aim runs in the pose (src/gloomhi.js ramAims, src/gloomkit.js pose).
 // Done once per kind on the loaded model; each machine's copy gets its own skeleton over its own parts (rebindMerged). Switch: CONFIG.lag.glbMerge.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -25,7 +25,6 @@ function partGeo(o, bone, keys) {
 }
 // rays (the aimed shot) never test the skinned draw mesh: the parts are the hit shapes, and a skinned ray test poses every vertex on the CPU
 const noRay = () => {};
-const isRam = (o) => { for (let p = o; p; p = p.parent) if (p.name && p.name.startsWith('ram')) return true; return false; };
 
 // sc: a loaded model (not in the scene, its root at rest). Adds the skinned draw meshes and hides the parts' draws.
 // keep(o): optional, false leaves that part as it is (the boss's lens parts, which each copy gives its own glow material); pad: extra metres on the culling sphere
@@ -33,7 +32,7 @@ export function mergeGlb(sc, keep, pad) {
   const C = CONFIG.lag.glbMerge; if (!C || !C.on || !sc) return;
   try {
     sc.updateMatrixWorld(true); const parts = [];
-    sc.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || !o.geometry || Array.isArray(o.material) || o.morphTargetInfluences || !o.visible || isRam(o)) return; const m = o.material; if (!m || m.transparent || (keep && !keep(o))) return; parts.push(o); });
+    sc.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh || !o.geometry || Array.isArray(o.material) || o.morphTargetInfluences || !o.visible) return; const m = o.material; if (!m || m.transparent || (keep && !keep(o))) return; parts.push(o); });
     if (parts.length < 2) return;
     const byMat = new Map(); for (const o of parts) { const l = byMat.get(o.material) || []; l.push(o); byMat.set(o.material, l); }
     for (const [m, l] of byMat) { if (l.length < 2) continue;
