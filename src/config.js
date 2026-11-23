@@ -313,7 +313,7 @@ export const CONFIG = {
     low: { windows: 14, lamps: 3, lights: false }, high: { windows: 40, lamps: 4, lights: true },
   },
   // render.power: which graphics chip the browser is asked for ('high-performance' = the fast one on a laptop with two; Nov 23, owner's list item 6)
-  render: { power: 'high-performance', relief: true, reliefPower: 1.0, tone: true, exposure: 1.55, exposureNight: 1.05 }, // relief: surface relief maps on klad-textured things (turn off if a phone is slow); tone: film-like light response, exposure = overall brightness // edge smoothing, sharpness cap, shadow size, texture size and the other detail settings are per graphics tier: see quality below
+  render: { power: 'default', relief: true, reliefPower: 1.0, tone: true, exposure: 1.55, exposureNight: 1.05 }, // relief: surface relief maps on klad-textured things (turn off if a phone is slow); tone: film-like light response, exposure = overall brightness // edge smoothing, sharpness cap, shadow size, texture size and the other detail settings are per graphics tier: see quality below
   // GRAPHICS TIERS (2026-11-15; user: "it is reasonable for mobile to be less detail but on desktop and laptop details and texture cannot skim"). One tier is picked at start (src/quality.js):
   // phones (primary pointer coarse) get `low`, which is exactly the phone settings from before tiers; desktops and laptops (primary pointer fine, touch laptops included) get `high`.
   // Override: ?quality=high or ?quality=low in the address, or the Graphics link on the title screen and in the pause menu (kept in localStorage, applied by reloading).
