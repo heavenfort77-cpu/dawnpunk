@@ -41,7 +41,9 @@ export function peopleHiCornea(sc, H) { const add = [];
     const out = new THREE.BufferAttribute(new Float32Array(n * 3), 3); for (let i = 0; i < n; i++) { v.fromBufferAttribute(pa, i).sub(c).multiplyScalar(H.corneaScale).add(c); out.setXYZ(i, v.x, v.y, v.z); }
     g.setAttribute('position', out); g.deleteAttribute('color');
     const m = new THREE.MeshPhysicalMaterial({ color: 0x000000, roughness: H.corneaRough, metalness: 0, ior: 1.376, specularIntensity: H.corneaSpec !== undefined ? H.corneaSpec : 1, envMapIntensity: H.eyeEnv, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-    m.userData.keep = true; const k = new THREE.SkinnedMesh(g, m); k.name = 'cornea_' + o.name.slice(4); k.bind(o.skeleton, o.bindMatrix); k.castShadow = false; k.receiveShadow = false; k.renderOrder = 3; k.frustumCulled = false; k.userData.keep = true; add.push([o.parent, k]); });
+    m.userData.keep = true; const k = new THREE.SkinnedMesh(g, m); k.name = 'cornea_' + o.name.slice(4); k.bind(o.skeleton, o.bindMatrix); k.castShadow = false; k.receiveShadow = false; k.renderOrder = 3; k.userData.keep = true;
+    // (Nov 23, owner's rule 35: never frustumCulled = false) culled with its eyeball's grown sphere (src/lod.js cullSkinned), widened by the cornea's own scale
+    if (o.boundingSphere) { k.boundingSphere = o.boundingSphere.clone(); k.boundingSphere.radius *= Math.max(1, H.corneaScale); } add.push([o.parent, k]); });
   for (const [p, k] of add) p.add(k); return add.length; }
 // (OWNER DECISION Nov 20 14:15, CONFIG.lag.shaderLamps) the same key worked out in each person's materials, switched on for the one person who holds it (the same
 // nearest-person rule as the real light below), so no light object and no light-count change; returns the same bid function

@@ -31,7 +31,7 @@ export function cullSkinned(o) {
   // the same local frame the GPU draws in), then grown as before
   const t0 = performance.now(); try { let b; if (o.isSkinnedMesh && o.skeleton) { let r = o; while (r.parent) r = r.parent; r.updateMatrixWorld(true); o.boundingSphere = null; o.computeBoundingSphere(); b = o.boundingSphere.clone(); }
     else { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); b = o.geometry.boundingSphere.clone(); }
-    b.radius = b.radius * C.grow + C.pad; o.boundingSphere = b; o.frustumCulled = true; } catch (e) { o.frustumCulled = false; }
+    b.radius = b.radius * C.grow + C.pad; o.boundingSphere = b; o.frustumCulled = true; } catch (e) { o.frustumCulled = false; lodState.cullFailed = (lodState.cullFailed || 0) + 1; } // error path only: counted, tools/audit_page.js reports it (Nov 23: 0 expected)
   lodState.cullMs = (lodState.cullMs || 0) + performance.now() - t0; lodState.cullWorst = Math.max(lodState.cullWorst || 0, performance.now() - t0);
 }
 

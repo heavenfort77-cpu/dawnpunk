@@ -57,6 +57,8 @@ export function hiHair(root, H) { const U = H.hairUnder; if (!U) return; let hai
   // the under-layer keeps only the cards below topY (a separate triangle list over the same points), so it also stays off the crown in the contact-shading pass
   if (src) for (let t = 0; t < src.length; t += 3) { if (P.getY(src[t]) <= topY && P.getY(src[t + 1]) <= topY && P.getY(src[t + 2]) <= topY) keepT.push(src[t], src[t + 1], src[t + 2]); }
   const g2 = new THREE.BufferGeometry(); for (const k in g.attributes) g2.setAttribute(k, g.attributes[k]); g2.morphAttributes = g.morphAttributes; g2.morphTargetsRelative = g.morphTargetsRelative; g2.setIndex(src ? keepT : null); g2.boundingSphere = g.boundingSphere; g2.boundingBox = g.boundingBox;
-  const under = new THREE.SkinnedMesh(g2, m); under.name = 'hair_under'; under.bind(hair.skeleton, hair.bindMatrix); under.frustumCulled = false; under.castShadow = false; under.receiveShadow = !!H.hairShadow; under.renderOrder = -1; mark(m, H);
+  const under = new THREE.SkinnedMesh(g2, m); under.name = 'hair_under'; under.bind(hair.skeleton, hair.bindMatrix);
+  // (Nov 23, owner's rule 35: never frustumCulled = false) the under layer sits inside her strands, so it is culled with the strands' own grown sphere (src/lod.js cullSkinned)
+  under.boundingSphere = hair.boundingSphere ? hair.boundingSphere.clone() : null; under.castShadow = false; under.receiveShadow = !!H.hairShadow; under.renderOrder = -1; mark(m, H);
   if (hair.morphTargetInfluences) under.morphTargetInfluences = hair.morphTargetInfluences; under.morphTargetDictionary = hair.morphTargetDictionary; m.userData.keep = true; m.userData.pbr = true; under.userData.keep = true; hair.parent.add(under); }
 
