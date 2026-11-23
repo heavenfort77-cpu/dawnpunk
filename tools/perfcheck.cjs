@@ -441,7 +441,7 @@ const BREAKDOWN = (spot) => {
         for (const r of res) console.log('GSPLIT ' + tier + ' ' + spot + ' ' + r.part + ' (' + r.pieces + ' pieces): shown ' + r.shown.fps + ' fps, GPU main ' + r.shown.main + ' ms, all ' + r.shown.gpu + ' ms | hidden ' + r.hidden.fps + ' fps, GPU main ' + r.hidden.main + ' ms, all ' + r.hidden.gpu + ' ms | saves ' + (r.shown.gpu !== null && r.hidden.gpu !== null ? (r.shown.gpu - r.hidden.gpu).toFixed(2) : '?') + ' ms GPU a frame');
       } catch (e) { console.log('INFO GSPLIT failed: ' + String(e).slice(0, 200)); } }
       // CSPLIT=1: candidate trims switched on and off in the same fight, the main thread's JS ms a frame for each (report only; median of REPS on/off pairs)
-      if (process.env.CSPLIT) { try { const res = await p.evaluate(async ([S, REPS]) => { const g = window.__game, sc = g.scene, C = window.__cput, raf = () => new Promise((r) => requestAnimationFrame(r));
+      if (process.env.CSPLIT) { try { await p.evaluate((o) => { window.__csOnly = o; }, process.env.CS_ONLY || ''); const res = await p.evaluate(async ([S, REPS]) => { const g = window.__game, sc = g.scene, C = window.__cput, raf = () => new Promise((r) => requestAnimationFrame(r));
           const meas = async () => { await raf(); const m0 = C.ms, f0 = C.frames, t0 = performance.now(); while (performance.now() - t0 < S * 1000) await raf(); const fr = C.frames - f0; return { js: (C.ms - m0) / Math.max(1, fr), fps: fr / ((performance.now() - t0) / 1000) }; };
           const W = g.world && g.world.g, isGloom = (o) => !!(o.userData && o.userData.kind && o.userData.anim && o.parent === sc);
           const sw = (list, prop, val) => { const old = list.map((o) => o[prop]); return { on: () => list.forEach((o) => { o[prop] = val; }), off: () => list.forEach((o, i) => { o[prop] = old[i]; }), n: list.length }; };
@@ -457,7 +457,8 @@ const BREAKDOWN = (spot) => {
             // (owner 15:49) the street cut's cost: switched to the old distances (scenery 15 m, the rest unlimited) and back
             streetCutUndo: g.nightCullRetest ? (() => { const C = (typeof g.cfg === 'function' ? g.cfg() : g.cfg).lag.nightCull, s0 = C.sceneryFar, f0 = C.streetFar; return { on: () => { C.sceneryFar = 15; C.streetFar = null; g.nightCullRetest(); }, off: () => { C.sceneryFar = s0; C.streetFar = f0; g.nightCullRetest(); }, n: 1 }; })() : { n: 0 } };
           const med = (a) => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; }, out = [];
-          for (const [k, P] of Object.entries(cand)) { if (!P.n) { out.push({ k, n: 0 }); continue; } const d = [], base = [], f = [];
+          const ONLYC = (window.__csOnly || '').split(',').filter(Boolean);
+          for (const [k, P] of Object.entries(cand)) { if (ONLYC.length && !ONLYC.includes(k)) continue; if (!P.n) { out.push({ k, n: 0 }); continue; } const d = [], base = [], f = [];
             for (let r = 0; r < REPS; r++) { const a = await meas(); P.on(); const b = await meas(); P.off(); const c = await meas(); const bs = (a.js + c.js) / 2; base.push(bs); d.push(b.js - bs); f.push(b.fps - (a.fps + c.fps) / 2); }
             out.push({ k, n: P.n, base: +med(base).toFixed(2), delta: +med(d).toFixed(2), fps: +med(f).toFixed(1), all: d.map((x) => +x.toFixed(2)) }); }
           return { nodes, out }; }, [+(process.env.CS_S || 2), +(process.env.CS_REPS || 4)]);
