@@ -1,8 +1,9 @@
 // KTX2 copies of the desktop pictures (Nov 23, owner's list item 1; rule 37: KTX2/Basis). The sources stay as they are; the copies are made once and kept in art/:
 //   art/texhi/<name>.jpg|png      -> art/texhi_ktx2/<name>.ktx2      (the street, house and base pictures, CONFIG.quality.high.hiTex)
 //   art/models_hi/<model>.glb     -> art/models_hi_ktx2/<model>.glb  (the same model, its pictures stored as KTX2 under KHR_texture_basisu)
-// Encoding: UASTC (the near-lossless Basis mode) with mipmaps and Zstandard; colour pictures sRGB with RDO lambda CONFIG-free value COLOR_RDO, normal maps linear in
-// normal-map mode with the lighter NORMAL_RDO. Street pictures are stored Y-flipped (three draws them with flipY = true; a compressed picture cannot be flipped
+// Encoding (owner's list item 1, the download kept near today's): normal maps are NOT converted (UASTC quadruples their download, ETC1S breaks their shading);
+// street and machine colour pictures: ETC1S at quality 255 (about 1.5x a JPEG's bytes); people and Marla (faces): UASTC, the near-lossless mode, RDO lambda COLOR_RDO.
+// A copy whose PSNR is under MIN_PSNR is made again in UASTC; still under: refused. All with mipmaps; UASTC with Zstandard. Street pictures are stored Y-flipped (three draws them with flipY = true; a compressed picture cannot be flipped
 // at upload); model pictures are not (glTF's top-left origin, flipY false). Each copy is checked: decoded again with three's own transcoder and compared with
 // its source, PSNR printed; a copy under MIN_PSNR dB is refused (its source is used by the game instead).
 // Usage: node tools/makektx2.mjs [tex|models|all] [only-name-substring]   needs: npm i --no-save ktx2-encoder@0.6.0, python3 with Pillow
@@ -23,10 +24,10 @@ fs.writeFileSync(btCjs, fs.readFileSync(btSrc)); const BT = await req(btCjs)({ w
 const PY = 'import sys;from PIL import Image;im=Image.open(sys.stdin.buffer).convert("RGBA")\nif sys.argv[1]=="1": im=im.transpose(Image.FLIP_TOP_BOTTOM)\nsys.stdout.buffer.write(im.size[0].to_bytes(4,"little")+im.size[1].to_bytes(4,"little")+im.tobytes())';
 const rgba = (buf, flip) => { const raw = execFileSync('python3', ['-c', PY, flip ? '1' : '0'], { input: buf, maxBuffer: 1 << 29 }); return { width: raw.readUInt32LE(0), height: raw.readUInt32LE(4), data: new Uint8Array(raw.buffer, raw.byteOffset + 8, raw.length - 8) }; };
 // encode one picture; normal: linear normal-map mode; flip: stored upside down (street pictures)
-async function encode(buf, normal, flip) {
+async function encode(buf, normal, flip, etc, linear) {
   const src = rgba(buf, false); let alpha = false; for (let i = 3; i < src.data.length; i += 4) if (src.data[i] < 255) { alpha = true; break; }
-  const k = await encodeToKTX2(new Uint8Array(1), { isUASTC: true, generateMipmap: true, needSupercompression: true, enableRDO: true, rdoQualityLevel: normal ? NORMAL_RDO : COLOR_RDO, uastcLDRQualityLevel: 1,
-    isNormalMap: normal, isPerceptual: !normal, isSetKTX2SRGBTransferFunc: !normal, isYFlip: flip, imageDecoder: async () => src });
+  const k = await encodeToKTX2(new Uint8Array(1), { isUASTC: !etc, qualityLevel: 255, compressionLevel: 2, generateMipmap: true, needSupercompression: true, enableRDO: true, rdoQualityLevel: normal ? NORMAL_RDO : COLOR_RDO, uastcLDRQualityLevel: 1,
+    isNormalMap: normal, isPerceptual: !normal && !linear, isSetKTX2SRGBTransferFunc: !normal && !linear, isYFlip: flip, imageDecoder: async () => src });
   // check: decode level 0 to RGBA (format 13) and compare with the source as the game would see it
   const f = new BT.KTX2File(new Uint8Array(k)); if (!f.isValid() || !f.startTranscoding()) throw new Error('not a valid KTX2'); const w = f.getWidth(), h = f.getHeight(), out = new Uint8Array(f.getImageTranscodedSizeInBytes(0, 0, 0, 13)); f.transcodeImage(out, 0, 0, 0, 13, 0, -1, -1); f.close(); f.delete();
   const ref = flip ? rgba(buf, true) : src; let se = 0, n = 0; for (let i = 0; i < w * h * 4; i++) { if (!alpha && i % 4 === 3) continue; const d = out[i] - ref.data[i]; se += d * d; n++; }
@@ -38,7 +39,8 @@ const note = (name, a, r) => { inB += a; outB += r.k.length; const px = r.w * r.
 if (what === 'tex' || what === 'all') {
   const dir = path.join(ROOT, 'art/texhi'), outD = path.join(ROOT, 'art/texhi_ktx2'); fs.mkdirSync(outD, { recursive: true });
   for (const f of fs.readdirSync(dir).sort()) { if (!/\.(jpg|png)$/.test(f) || (only && !f.includes(only))) continue; const buf = fs.readFileSync(path.join(dir, f)), name = f.replace(/\.(jpg|png)$/, '');
-    const r = await encode(buf, /_n$/.test(name), true); note('tex ' + f, buf.length, r);
+    if (/_n$/.test(name)) { log.push('tex ' + f + ' kept (normal map)'); continue; }
+    let r = await encode(buf, false, true, true); if (r.psnr < MIN_PSNR) r = await encode(buf, false, true, false); note('tex ' + f, buf.length, r);
     const o = path.join(outD, name + '.ktx2'); if (r.psnr < MIN_PSNR) { console.log('REFUSED ' + f + ' (PSNR under ' + MIN_PSNR + ')'); if (fs.existsSync(o)) fs.rmSync(o); } else fs.writeFileSync(o, r.k); }
 }
 if (what === 'models' || what === 'all') {
@@ -50,8 +52,9 @@ if (what === 'models' || what === 'all') {
       tag(m.normalTexture, 'n'); tag(m.occlusionTexture, 'l'); tag(m.pbrMetallicRoughness && m.pbrMetallicRoughness.metallicRoughnessTexture, 'l'); tag(m.pbrMetallicRoughness && m.pbrMetallicRoughness.baseColorTexture, 'c'); tag(m.emissiveTexture, 'c');
       for (const e of Object.values(m.extensions || {})) for (const [k, v] of Object.entries(e)) if (v && typeof v === 'object' && v.index !== undefined) tag(v, /color|Color/.test(k) ? 'c' : 'l'); }
     const parts = [], views = J.bufferViews.map((v) => bin.slice(v.byteOffset || 0, (v.byteOffset || 0) + v.byteLength)); let changed = 0;
-    for (let i = 0; i < (J.images || []).length; i++) { const im = J.images[i], u = use[i] || new Set(['c']); if (im.bufferView === undefined || u.size > 1 && !(u.size === 2 && u.has('n') && u.has('l'))) { log.push(f + ' image ' + i + ' kept (' + [...u] + ')'); continue; }
-      const buf = views[im.bufferView], r = await encode(buf, !u.has('c'), false); note('model ' + f + ' #' + i + ' ' + (im.name || '') + ' (' + [...u] + ')', buf.length, r); if (r.psnr < MIN_PSNR) { console.log('REFUSED ' + f + ' #' + i); continue; }
+    for (let i = 0; i < (J.images || []).length; i++) { const im = J.images[i], u = use[i] || new Set(['c']); if (im.bufferView === undefined || u.size > 1) { log.push(f + ' image ' + i + ' kept (' + [...u] + ')'); continue; }
+      if (u.has('n')) { log.push(f + ' image ' + i + ' kept (normal map)'); continue; }
+      const buf = views[im.bufferView], etc = /^(gloom_|boss_)/.test(f), lin = !u.has('c'); let r = await encode(buf, false, false, etc, lin); if (etc && r.psnr < MIN_PSNR) r = await encode(buf, false, false, false, lin); note('model ' + f + ' #' + i + ' ' + (im.name || '') + ' (' + [...u] + ')', buf.length, r); if (r.psnr < MIN_PSNR) { console.log('REFUSED ' + f + ' #' + i); continue; }
       views.push(r.k); J.bufferViews.push({ buffer: 0, byteLength: r.k.length }); im.bufferView = J.bufferViews.length - 1; im.mimeType = 'image/ktx2'; changed++;
       for (const t of J.textures) if (t.source === i) { t.extensions = { ...(t.extensions || {}), KHR_texture_basisu: { source: i } }; delete t.source; } }
     if (!changed) { console.log(f + ': no picture changed'); continue; }
