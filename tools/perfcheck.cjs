@@ -46,6 +46,8 @@ const sumB = () => served.reduce((a, s) => a + s.n, 0);
 const TRO = /trisReportOnly: true/.test(fs.readFileSync(path.join(__dirname, '..', 'src', 'config.js'), 'utf8'));
 const triGate = (out, m, ok) => { if (TRO) console.log('REPORT ' + (ok ? 'within ' : 'OVER ') + m + ' (report only, owner Nov 19)'); else out.push([m, ok]); };
 // counts every draw on the WebGL context (installed before the page's own scripts run)
+// CSPLIT=1 (Nov 23, owner 15:28 "trim"): main-thread JS per frame, every requestAnimationFrame callback timed (the game's loop and anything else in the frame)
+const CPUT = () => { const R = window.requestAnimationFrame.bind(window), C = window.__cput = { ms: 0, n: 0, frames: 0, last: -1 }; window.requestAnimationFrame = (cb) => R((t) => { if (t !== C.last) { C.last = t; C.frames++; } const a = performance.now(); try { return cb(t); } finally { C.ms += performance.now() - a; C.n++; } }); };
 const INIT = ({ seed }) => { let s = seed; Math.random = () => { s |= 0; s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   window.__fakeLock = true; try { if (!/keepSave/.test(window.name || '')) { localStorage.clear(); localStorage.setItem('dawnpunk.drill', '{"skip":true}'); } } catch (e) { /* none */ } // keepSave: the returning-player page (flow 'enter')
   // (owner 14:25) the whole-run long-frame ledger: every frame starting more than 100 ms after the one before, with the spot perfcheck is in (window.__spot) and whether a
@@ -106,7 +108,7 @@ const BREAKDOWN = (spot) => {
           if (tier === TT) out.push([TT + ' ' + who + ': downloaded before the base ' + mb + ' MB (target < ' + TARGET.startMB + ')', +mb < TARGET.startMB]);
           if (who === 'first visit') sv0 = await q.evaluate(() => localStorage.getItem('solardg.save')); } catch (e) { info(tier + ' ' + who + ' download: ' + String(e && e.message || e).slice(0, 160)); } finally { await cx.close(); } } }
     served = []; T0 = Date.now(); const errs = [];
-    const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); await ctx.addInitScript(INIT, { seed: SEED });
+    const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); await ctx.addInitScript(INIT, { seed: SEED }); if (process.env.CSPLIT) await ctx.addInitScript(CPUT);
     const p = await ctx.newPage(); p.setDefaultTimeout(900000); p.on('pageerror', (e) => errs.push(String(e).slice(0, 200))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 200)); });
     const tGo = Date.now(); await p.goto(URL0 + '?quality=' + tier + '&seed=' + SEED + (GPU ? '&cards=1' : '') + ((process.env.PROFILE === '3') ? '&fdtime=1' : '') + (process.env.PROFILE ? '&proglog=1&gputime=1' : (process.env.GSPLIT ? '&gputime=1' : '')), { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info(tier + ': page up ' + el() + ', ' + MB(sumB()) + ' MB so far');
     const frames = (n) => p.evaluate((n) => new Promise((res) => { let k = 0; const f = () => (++k >= n ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
@@ -438,6 +440,28 @@ const BREAKDOWN = (spot) => {
           return out; }, S);
         for (const r of res) console.log('GSPLIT ' + tier + ' ' + spot + ' ' + r.part + ' (' + r.pieces + ' pieces): shown ' + r.shown.fps + ' fps, GPU main ' + r.shown.main + ' ms, all ' + r.shown.gpu + ' ms | hidden ' + r.hidden.fps + ' fps, GPU main ' + r.hidden.main + ' ms, all ' + r.hidden.gpu + ' ms | saves ' + (r.shown.gpu !== null && r.hidden.gpu !== null ? (r.shown.gpu - r.hidden.gpu).toFixed(2) : '?') + ' ms GPU a frame');
       } catch (e) { console.log('INFO GSPLIT failed: ' + String(e).slice(0, 200)); } }
+      // CSPLIT=1: candidate trims switched on and off in the same fight, the main thread's JS ms a frame for each (report only; median of REPS on/off pairs)
+      if (process.env.CSPLIT) { try { const res = await p.evaluate(async ([S, REPS]) => { const g = window.__game, sc = g.scene, C = window.__cput, raf = () => new Promise((r) => requestAnimationFrame(r));
+          const meas = async () => { await raf(); const m0 = C.ms, f0 = C.frames, t0 = performance.now(); while (performance.now() - t0 < S * 1000) await raf(); const fr = C.frames - f0; return { js: (C.ms - m0) / Math.max(1, fr), fps: fr / ((performance.now() - t0) / 1000) }; };
+          const W = g.world && g.world.g, isGloom = (o) => !!(o.userData && o.userData.kind && o.userData.anim && o.parent === sc);
+          const sw = (list, prop, val) => { const old = list.map((o) => o[prop]); return { on: () => list.forEach((o) => { o[prop] = val; }), off: () => list.forEach((o, i) => { o[prop] = old[i]; }), n: list.length }; };
+          const coll = (root, pred) => { const l = []; if (root) root.traverse((o) => { if (pred(o)) l.push(o); }); return l; };
+          let nodes = 0; sc.traverse(() => nodes++);
+          const cand = {
+            hitLeavesHidden: sw(coll(sc, (o) => o.isMesh && o.userData.hitOnly && !o.children.length && o.visible), 'visible', false),
+            nightCulledHidden: sw(coll(W, (o) => o.isMesh && o.visible && o.layers.mask === 2), 'visible', false),
+            streetAll: sw(W ? [W] : [], 'visible', false),
+            gloomAll: sw(sc.children.filter(isGloom), 'visible', false),
+            bodyShadowOff: { on: () => { window.__noBodyShadow = true; }, off: () => { window.__noBodyShadow = false; }, n: 1 },
+            handsOff: { on: () => { window.__noHands = true; }, off: () => { window.__noHands = false; }, n: 1 } };
+          const med = (a) => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; }, out = [];
+          for (const [k, P] of Object.entries(cand)) { if (!P.n) { out.push({ k, n: 0 }); continue; } const d = [], base = [], f = [];
+            for (let r = 0; r < REPS; r++) { const a = await meas(); P.on(); const b = await meas(); P.off(); const c = await meas(); const bs = (a.js + c.js) / 2; base.push(bs); d.push(b.js - bs); f.push(b.fps - (a.fps + c.fps) / 2); }
+            out.push({ k, n: P.n, base: +med(base).toFixed(2), delta: +med(d).toFixed(2), fps: +med(f).toFixed(1), all: d.map((x) => +x.toFixed(2)) }); }
+          return { nodes, out }; }, [+(process.env.CS_S || 2), +(process.env.CS_REPS || 4)]);
+        console.log('CSPLIT ' + tier + ' ' + spot + ' scene nodes ' + res.nodes);
+        for (const r of res.out) console.log('CSPLIT ' + tier + ' ' + spot + ' ' + r.k + ' (' + r.n + ' pieces): JS a frame ' + r.base + ' ms, switched: ' + (r.delta > 0 ? '+' : '') + r.delta + ' ms (pairs ' + (r.all || []).join(', ') + '), fps ' + (r.fps > 0 ? '+' : '') + r.fps);
+      } catch (e) { console.log('INFO CSPLIT failed: ' + String(e).slice(0, 200)); } }
       // scene nodes per kind at this moment (owner 09:50: the matrix pass is a top cost): street, room, each Gloom machine, boss, devices, the rest; and bones
       console.log('INFO combat ' + tier + ' ' + spot + ' scene nodes: ' + await p.evaluate(() => { const g = window.__game, sc = (() => { let q = g.world.g; while (q.parent) q = q.parent; return q; })(); const cnt = (o) => { let n = 0; o.traverse(() => n++); return n; };
         const out = { street: 0, frozenStreet: 0, gloom: 0, gloomN: 0, gloomCulled: 0, boss: 0, other: 0 }, bones = { n: 0, max: 0 }; const dev = new Set();
