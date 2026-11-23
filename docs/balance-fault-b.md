@@ -87,3 +87,25 @@ Plan: back to a ground-floor wall, turbine beside, lance in front; with spare Su
 | flask | 35/81 | 25/83 | 6/100 | 0/100 | 2/100 | 3-5 throws |
 | panel | 46/79 | 42/88 | 6/96 | 2/100 | 4/100 | 9-18 panels |
 - With either, the turbines are mostly gone by dawn (0-1 standing). Without a device that shoots by itself, the weakest bot loses most nights from ring 1.
+
+## 10. Owner 00:03: "Lance, Sling, Twin, Mist are broken with this strategy" (fairness pass; bots only; tools/turretprobe.mjs, 6 houses x 6-8 seeds per ring)
+Cause, measured:
+- Turret Sun per 100 damage: lance 10, twin 9, sling 8.3, mist 16.7; the cannon 10, but turrets never miss. Two turbines make 270 Sun a night = about 2,700 damage of perfect fire; all Gloom health per night is about 910 (ring 1), 1,390 (ring 3), 2,090 (ring 5, without the boss).
+- The turtle wins because of the cluster: Gloom inside go for the nearest device, so they walk into the turrets, and the turrets keep the turbines alive. Same build with the turbines on the src/bots.js corner spots: 86 / 83 / 61 / 36 / 0%. Shooting range of the player (3-14 m) changes nothing.
+- Two Sun makers and no turret at all (DEV=moon): expert aim wins 100% on every ring incl. the boss; average 100 / 100 / 89 / 78 / 58; novice 83 / 75 / 44 / 14 / 6.
+Levers (win % rings 1-5, wall turtle novice aim vs src/bots.js novice):
+| lever | turtle lance (novice) | src/bots.js novice |
+|---|---|---|
+| none | 100 100 100 100 100 | 94 81 56 27 6 |
+| shot Sun x2 | 100 98 81 38 2 | 48 8 6 0 0 |
+| shot Sun x3 | 79 58 23 8 0 | 35 13 4 0 0 |
+| range 5 m | 100 100 100 100 100 | 50 22 25 3 0 |
+| fire rate x0.5 | 100 100 100 100 97 | 86 50 28 0 0 |
+| damage x0.5 | 100 97 89 61 11 | 44 11 14 0 0 |
+| 1 of each turret kind | 100 97 94 86 61 (expert aim, and any two kinds mixed: 100 everywhere) | 83 53 31 3 0 |
+| turbine Sun x0.5 | 89 75 50 14 0 | 11 3 0 0 0 |
+| shoot outside only (temporary sim patch) | 89 100 78 47 11 (expert aim: 100 everywhere) | 42 11 17 3 0 |
+| 20 shots per turret (temporary sim patch) | 100 100 100 89 50 | 69 33 28 0 0 |
+| shot Sun x1.5 + CONFIG.tough | 86 94 89 97 64 (expert two-moon turtle hurt 17-28% on rings 1-3) | 14 3 8 3 0 |
+- Every turret lever takes more from the src/bots.js players than from the turtle: they fire at range through panels (30% cover hits) and build slowly, so turrets and cannon starve on one battery. They measure poor building, not low skill.
+- Not changed in the game: the outside-only and shots-per-turret patches were reverted.

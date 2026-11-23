@@ -3,9 +3,9 @@
 // Wall spot: ground floor, 0.6 m off a wall, the point along the walls farthest from every opening, stair and ladder foot.
 // Builds: turbine beside, lance in front, then (Sun >= cost + reserve) the second turbine, then lances up to the cap, spread in front of him.
 // Shoots only at a Gloom within CLOSE m on his floor. Eats below the novice's eatBelow.
-// Usage: node tools/wallbot.mjs [seeds per house]   env CLOSE (m, default 6), TOUGH=1 (CONFIG.tough as from the second night), SKILL (default novice), LANCE (JSON overrides of CONFIG.devices.lance, measuring only), BUILD (build only the first N of the plan), SPOT=centre (stand in the room's centre instead), DEV (the device in the lance's place, e.g. mist; DEV=flask: throws at the nearest Gloom within FLASK m (default 4); DEV=panel: walks to the nearest open ground-floor opening and panels it whenever the Sun covers one)
+// Usage: node tools/wallbot.mjs [seeds per house]   env CLOSE (m, default 6), TOUGH=1 (CONFIG.tough as from the second night), SKILL (default novice), LANCE (JSON overrides of CONFIG.devices.lance, measuring only), BUILD (build only the first N of the plan), SPOT=centre (stand in the room's centre instead), TPOS=corner (turbines on the src/bots.js spots), DEV (the device in the lance's place, e.g. mist; DEV=flask: throws at the nearest Gloom within FLASK m (default 4); DEV=panel: walks to the nearest open ground-floor opening and panels it whenever the Sun covers one)
 import { createSim } from '../src/sim.js'; import { SKILLS } from '../src/bots.js'; import { CONFIG } from '../src/config.js';
-const SEEDS = +process.argv[2] || 8, CLOSE = +(process.env.CLOSE || 6), K = SKILLS[process.env.SKILL || 'novice'];
+const SEEDS = +process.argv[2] || 8, CLOSE = +(process.env.CLOSE || 6);
 function walkTo(s, x, z, fl, dt) { const p = s.player;
   if (p.floor === fl) { s.move(x - p.x, z - p.z, dt); return Math.hypot(x - p.x, z - p.z); }
   const up = fl > p.floor, st = s.stairs.find((q) => q.f === (up ? p.floor : p.floor - 1)); s.move((up ? st.bx : st.tx) - p.x, (up ? st.bz : st.tz) - p.z, dt); return 99; }
@@ -15,10 +15,11 @@ function wallSpot(s) { const W = s.H - 0.6, avoid = s.breaches.filter((b) => b.f
     const x = nx ? nx * W : u, z = nz ? nz * W : u, d = Math.min(...avoid.map(([ax, az]) => Math.hypot(ax - x, az - z)));
     if (d > bd) { bd = d; best = { x, z, ix: -nx, iz: -nz, ax: nz ? 1 : 0, az: nx ? 1 : 0 }; } } // ix,iz: into the room; ax,az: along the wall
   return best; }
-export function wallNight(cfg, ring, house, seed, toughHp = 1) {
+export function wallNight(cfg, ring, house, seed, toughHp = 1) { const K = SKILLS[process.env.SKILL || 'novice'];
   const s = createSim({ cfg, ring, house, seed, day: true, noFall: true, toughHp }); s.botDay(K.scav);
   const dt = cfg.night.dt, w = process.env.SPOT === 'centre' ? { x: 0, z: 0, ix: 0, iz: -1, ax: 1, az: 0 } : wallSpot(s), at = (along, inward) => ({ x: w.x + w.ax * along + w.ix * inward, z: w.z + w.az * along + w.iz * inward });
-  const D = process.env.DEV || 'lance', plan = [['turbine', at(1.0, 0)], [D, at(0, 1.5)], ['turbine', at(-1.0, 0)], [D, at(1.2, 1.8)], [D, at(-1.2, 1.8)], [D, at(0, 2.6)], [D, at(2.2, 1.2)], [D, at(-2.2, 1.2)]].slice(0, process.env.BUILD !== undefined ? +process.env.BUILD : 99), ACT = D === 'panel' || D === 'flask'; // panel / flask: the two turbines first, then the action below
+  const D = process.env.DEV || 'lance', DK = D.split('+'), dk = (i) => DK[i % DK.length], plan = [['turbine', at(1.0, 0)], [dk(0), at(0, 1.5)], ['turbine', at(-1.0, 0)], [dk(1), at(1.2, 1.8)], [dk(2), at(-1.2, 1.8)], [dk(3), at(0, 2.6)], [dk(4), at(2.2, 1.2)], [dk(5), at(-2.2, 1.2)], [dk(6), at(1.2, 3.2)], [dk(7), at(-1.2, 3.2)]].slice(0, process.env.BUILD !== undefined ? +process.env.BUILD : 99), ACT = D === 'panel' || D === 'flask'; // panel / flask: the two turbines first, then the action below
+  if (process.env.TPOS === 'corner') { plan[0][1] = { x: -3.5, z: -3.5 }; plan[2][1] = { x: 3.5, z: -3.5 }; } // the src/bots.js turbine spots
   if (ACT) plan.splice(0, plan.length, ['turbine', at(1.0, 0)], ['turbine', at(-1.0, 0)]);
   let goal = null, panels = 0, flasks = 0, bi = 0, reactAt = 0, dmg = 0, lh = null, peak = 0, li = 0, shots = 0, lances = 0, close = 99, lost = 0; const placedAt = [];
   while (!s.done) { const p = s.player;
@@ -35,7 +36,7 @@ export function wallNight(cfg, ring, house, seed, toughHp = 1) {
     if (near) { if (!reactAt) reactAt = s.t + K.react; if (s.t >= reactAt) s.fireCannon('auto', K.hit); } else reactAt = 0;
     if (p.hp < K.eatBelow && s.food > 0) s.eat();
     const nD = s.devices.length; s.step(dt); if (s.devices.length < nD) lost++; for (; li < s.log.length; li++) { const e = s.log[li]; if (e.e === 'lance') lances++; if (e.e === 'shot') shots++; } for (const g of s.gloom) if (g.floor === p.floor) close = Math.min(close, Math.hypot(g.x - p.x, g.z - p.z)); if (lh !== null && p.hp < lh) dmg += lh - p.hp; lh = p.hp; if (s.gloom.length > peak) peak = s.gloom.length; }
-  return { win: s.win, dmg, peak, panels, flasks, placedAt, lances, shots, close, lost, killed: s.killed, total: s.spawns.length, boss: !!s.boss, placed: s.devices.filter((q) => q.kind === 'turbine' || q.kind === (process.env.DEV || 'lance')).length };
+  return { win: s.win, dmg, peak, panels, flasks, placedAt, lances, shots, close, lost, killed: s.killed, total: s.spawns.length, boss: !!s.boss, placed: s.devices.filter((q) => q.kind === 'turbine' || DK.includes(q.kind)).length };
 }
 if (import.meta.url === 'file://' + process.argv[1]) {
   const med = (a) => a.slice().sort((x, y) => x - y)[a.length >> 1];
