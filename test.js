@@ -236,7 +236,7 @@ console.log('house  skill     win%   avgHP  zeroEnergy(s)  energy%');
 for (const k of Object.keys(res)) { const [h, sk] = k.split(':'); const r = res[k]; console.log(`${String(bp(+h)).padStart(2)}-BP  ${sk.padEnd(8)} ${r.win.toFixed(0).padStart(4)}  ${r.hp.toFixed(0).padStart(6)}  ${r.zero.toFixed(1).padStart(8)}  ${r.energy.toFixed(0).padStart(8)}`); }
 console.log('');
 const w = (h, sk) => res[`${h}:${sk}`].win;
-check('14-BP stacker (2 turbines + 2 lances, the strategy a player found) is not invincible: 75-95%', w(0, 'stacker') >= 75 && w(0, 'stacker') <= 95, w(0, 'stacker').toFixed(0) + '%');
+// (OWNER DECISION Nov 24, turret fairness panel) the stacker check '14-BP stacker is not invincible: 75-95%' is replaced by the strategy checks below (tools/strategysuite.mjs)
 check('14-BP stacker energy bar is not always full (mean <= 60% of cap)', res['0:stacker'].energy <= 60, res['0:stacker'].energy.toFixed(0) + '%');
 check('14-BP novice wins less than the stacker', w(0, 'novice') < w(0, 'stacker'), w(0, 'novice').toFixed(0) + '%');
 check('4-BP novice wins >= 85% (target about 90)', w(5, 'novice') >= 85, w(5, 'novice').toFixed(0) + '%');
@@ -262,13 +262,18 @@ check('eating heals and costs carried food', (() => { const e = createSim({ cfg:
   const M = Math.min(N, 24), peak = (th) => { const a = []; for (let h = 0; h < 6; h++) for (let i = 1; i <= Math.ceil(M / 6); i++) { let m = 0; const k = SKILLS.average; SKILLS.average = { ...k, probe: (q) => { if (q.gloom.length > m) m = q.gloom.length; } }; runBot('average', CONFIG, 2, h, i * 97 + h, { toughHp: th }); SKILLS.average = k; a.push(m); } a.sort((x, y) => x - y); return a[a.length >> 1]; };
   const p0 = peak(1), p1 = peak(CONFIG.tough.hp[2]);
   check('tough: most Gloom alive at once on ring 3 (average bot, median) not above the old health + 1 (frame-rate budget)', p1 <= p0 + 1, p0 + ' -> ' + p1);
-  const wr = (th) => { let k = 0; for (let h = 0; h < 6; h++) for (let sd = 1; sd <= 8; sd++) if (runBot('expert', CONFIG, 0, h, sd * 97 + h, { toughHp: th }).win) k++; return Math.round(100 * k / 48); }, e1 = wr(CONFIG.tough.hp[0]);
-  check('tough: ring 1 from the second night is a challenge for the expert bot (wins 70-96% over 48 nights; was 100%)', e1 >= 70 && e1 <= 96, e1 + '%'); }
+  /* (Nov 24) the runBot expert ring-1 window (70-96%) moved to the strategy checks below (expert aim over six strategies) */ }
 
-// ring curve: no cliff between neighbouring rings for the stacker bot (starter kit)
-// (measured without the final-night boss: the curve is about the rings' own nights; the boss night has its own gates below)
-{ const NB = { ...CONFIG, boss: { ...CONFIG.boss, on: false } }, w = [0, 1, 2, 3, 4].map((r) => { let k = 0; const M = Math.min(N, 60); for (let i = 1; i <= M; i++) if (runBot('stacker', NB, r, 0, i).win) k++; return Math.round(100 * k / M); });
-  check('ring curve: stacker win rate falls gently ring 1..5 (no step over 50 points, ring 1 >= 60, ring 5 <= 40)', w.every((v, i) => i === 0 || w[i - 1] - v <= 50) && w[0] >= 60 && w[4] <= 40, w.join('/')); }
+// STRATEGIES (OWNER DECISION Nov 24, turret fairness panel, docs/turret-fairness-panel.md): replaces the stacker's ring-1 window and ring curve.
+// Six ways to hold a house (tools/strategysuite.mjs: turtle, spread, traps, panels, flask, gunner), the same nights for each, CONFIG.tough as from the second night.
+{ const { suite } = await import('./tools/strategysuite.mjs'), SD = 8, A = suite(CONFIG, SD, ['average'], undefined, true), E = suite(CONFIG, SD, ['expert'], undefined, true);
+  const good = [0, 1, 2].map((r) => A.filter((x) => x.win[r] >= 80).length), alone = A.filter((x) => [0, 1, 2].every((r) => x.win[r] === 100 && x.hurt[r] === 0)).map((x) => x.st);
+  check('strategies: at average aim, at least 3 of the 6 win >= 80% on each of rings 1-3 (not one answer)', good.every((g) => g >= 3), 'per ring ' + good.join('/') + ' | ' + A.map((x) => x.st + ' ' + x.win.slice(0, 3).join('/')).join(', '));
+  check('strategies: no strategy at average aim wins every night unhit on rings 1-3 (the wall turtle was)', alone.length === 0, alone.join(',') || 'none');
+  const best = [0, 1, 2, 3, 4].map((r) => Math.max(...A.map((x) => x.win[r])));
+  check('strategies: ring curve at average aim (best strategy) falls gently ring 1..5 (no step over 50 points, ring 1 >= 80, ring 5 <= 80)', best.every((v, i) => i === 0 || best[i - 1] - v <= 50) && best[0] >= 80 && best[4] <= 80, best.join('/'));
+  const hit1 = E.filter((x) => x.hurt[0] >= 10).length;
+  check('tough: ring 1 from the second night is a challenge at expert aim (at least 2 of 6 strategies hit on >= 10% of nights)', hit1 >= 2, E.map((x) => x.st + ' ' + x.win[0] + '/' + x.hurt[0]).join(', ')); }
 { const q = createSim({ cfg: CONFIG, ring: 4, house: 0, seed: 1 }); q.abandon();
   check('quitting the night pays the loss payout (1 food, 0 essentials), never a win', q.done && q.win === false && q.result.food === CONFIG.loot.minPayoutFood && q.result.essentials === 0); }
 { const q = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 1 }), b = q.breaches.find((x) => x.floor === 1);

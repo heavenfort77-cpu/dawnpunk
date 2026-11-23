@@ -65,3 +65,9 @@ Cause (measured, docs/balance-fault-b.md s.10): turrets never miss at the cannon
 
 ## Limits
 Bots only; reaction and aim numbers are assumptions. Armour changes no attack, so no new hit to time (the warning-time metric is unchanged). Not judged by a human, on a phone or by ear.
+
+## BUILT (owner 00:3x: "Yes, build it")
+- CONFIG.gloom.kinds walker / hauler / warden turret 0.4; their texts say turrets barely scratch them; the night card's second line names tonight's armoured kinds (CONFIG.gloom.armourLine, #lcs under "Night falls").
+- CONFIG.tough re-tuned with armour on: hp [1.3, 1.2, 1.1, 1, 1] (was [1.5, 1.35, 1.2]: rings 1-3 became as hard as ring 4 at average aim).
+- test.js: the stacker's ring-1 window and ring curve and the runBot expert tough window are replaced by four strategy-suite checks (local, 48 nights per ring per strategy): at average aim >= 80% wins on rings 1-3 by 3 / 4 / 3 of 6 strategies; no strategy unhit on rings 1-3; best-strategy ring curve 94/98/85/79/56; expert aim ring 1 hit on >= 10% of nights by 3 of 6 (panels 29%, flask 17%, gunner 19%).
+- Average aim, rings 1-3 win %: turtle 77/85/73, spread 90/90/85, traps 94/96/83, panels 65/73/56, flask 67/60/44, gunner 90/98/83.

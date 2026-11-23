@@ -1979,6 +1979,8 @@ const GPUQ = { waits: 0, ms: 0, worst: 0 };
 function gpuDone(cap) { const gl = renderer.getContext(); let f = null; try { if (gl.fenceSync) { f = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush(); } } catch (e) { f = null; } if (!f) return Promise.resolve(0);
   const t0 = performance.now(); return new Promise((res) => { const poll = () => { let ok = true; try { ok = gl.isContextLost() || gl.getSyncParameter(f, gl.SYNC_STATUS) === gl.SIGNALED; } catch (e) { ok = true; } const ms = performance.now() - t0;
     if (ok || ms > cap) { try { gl.deleteSync(f); } catch (e) { /* lost */ } GPUQ.waits++; GPUQ.ms += ms; GPUQ.worst = Math.max(GPUQ.worst, ms); res(ms); } else requestAnimationFrame(poll); }; requestAnimationFrame(poll); }); }
+// the night card's second line (CONFIG.gloom.armourLine): the kinds tonight's ring can send that turrets barely scratch (kinds' turret < 1), e.g. 'Walkers, Haulers and Wardens'
+function armourLine(ring) { const K = CONFIG.gloom.kinds, n = Object.keys(K).filter((k) => K[k].turret !== undefined && K[k].turret < 1 && (K[k].minRing || 0) <= ring).map((k) => K[k].name + 's'); return n.length && CONFIG.gloom.armourLine ? CONFIG.gloom.armourLine.replace('{names}', n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0]) : ''; }
 async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
   // (owner 12:35) the card's time per step (LCARD.steps: [step, ms]), for perfcheck
@@ -2004,7 +2006,7 @@ async function sceneCard(kind) {
     add('hud', { up: 1 }); add('arc', { on: 1 }); add('darrow', { on: 1, up: 1 }); for (const k of ['marla', 'aim', 'msg']) add(k, { text: 1 }); }
   // (H, owner 13:04: the home card's draws were no-ops: draw() returns while holdDraw is set, and the held title menu left it set) the card's own draws always draw
   holdDraw = false; pauseDrawn = false; const pf0 = [RSTAT.renders, RSTAT.calls, nProg(), UPL.n, UPL.ms, UPL.bn, UPL.bms, GPUQ.waits, GPUQ.ms]; GPUQ.worst = 0;
-  LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
+  LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; $('lcs').textContent = kind === 'night' ? armourLine(run ? run.ring || 0 : 0) : ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
   try {
     // the night's models are waited for under the NIGHT card only: the ride card shows the day street, which does not need them (they keep loading behind it).
     // (Waiting on the ride card held the street hidden for up to maxWait s in the checks: playershadowcheck_desktop saw the card, not the street.)

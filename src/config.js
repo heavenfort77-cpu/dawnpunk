@@ -41,6 +41,7 @@ export const CONFIG = {
     // shapePad: m added round each shape (sides and top, not the bottom) because the parts sway as the machines move
     shapePad: 0.05,
     charge: { time: 0.8, dmg: 3, cost: 3, width: 1.4 } }, // hold FIRE this long (s), then let go: damage x, battery x, and the jet is this much wider; it goes through every Gloom on its line                 // headshot damage x2; bots hit covered Gloom this fraction as often (they cannot aim over cover)
+  turretPrefer: 0, // m an armoured Gloom (kinds' turret < 1) counts as farther when a turret picks a target (0 = nearest first; panel: off for now)
   devices: {
     collector: { text: 'fills your Sun while the sun is up. Daylight only.', name: 'Solar collector', cost: 0, hp: 30, chargePerSec: 0.15, max: 3 },  // daytime only: free, charges the battery while the sun is up; dead at night but Gloom still smash it
     turbine: { text: 'makes Sun all night; place it first. At most 2 Sun makers.', name: 'Turbine', cost: 12, hp: 30, energyPerSec: 0.9, max: 2, group: 'power' },
@@ -75,7 +76,8 @@ export const CONFIG = {
   // hp: health x per ring (index 0 = ring 1; 1 = as before). Never on the very first night (save.nights 0, the night-1 lesson). src/base.js toughHp
   // ease: catch-up: the extra health is multiplied by ease once for every lost night in a row (0 = a lost night brings back the old health for the next try; 0.5 = half the extra); a won night restores it
   //   (bots, 40 saves: ease 0 leaves novice and average about one night behind on the ring climb; 0.25 and 0.5 left them further behind)
-  tough: { hp: [1.5, 1.35, 1.2, 1, 1], ease: 0 },
+  //   (Nov 24, with the turret armour on: re-tuned on tools/strategysuite.mjs so the rings still rise; [1.5, 1.35, 1.2] made rings 1-3 as hard as ring 4 at average aim)
+  tough: { hp: [1.3, 1.2, 1.1, 1, 1], ease: 0 },
   gloom: {
     hp: 20, speed: 1.4, dmg: 8, cooldown: 1.0, reach: 1.0,
     // maxAlive (OWNER DECISION Nov 20 14:51): most Gloom alive at once on any night, spawns and boss summons wait above it (src/sim.js); set from the Mac fps runs
@@ -90,15 +92,20 @@ export const CONFIG = {
     // The seven machines. share: how often it comes (any numbers). hp, speed, dmg (to you), wall (to panels and devices), reach: each x the base values above.
     // over: a Stilt held at a panel hits a player standing within this many m behind it. hurry / hurryR: a Lantern makes every other Gloom within hurryR m this much faster. minRing: first ring (0 = ring 1) it appears on.
     // kindHp: one factor on all of them, set so the average Gloom is as tough as before the kinds (bots).
+    // TURRET ARMOUR (OWNER DECISION Nov 24 00:3x, turret fairness panel, docs/turret-fairness-panel.md): turret = share of a turret's damage (lance, twin, mist, sling) this kind takes;
+    //   the player's cannon always does full damage. 0.4 on Walker, Hauler, Warden: the wall turtle (2 turbines + lances) is no longer the only way to win (tools/strategysuite.mjs).
+    // Off unless set (measuring only, panel levers B and C): splash = m round a device it strikes within which other devices are hit too; seekPower = m nearer a Sun maker counts as (they go for power).
+    // armourLine: the night card's second line, naming tonight's armoured kinds ({names})
+    armourLine: 'Turrets barely scratch {names}. Shoot them yourself.',
     kindHp: 1.03,
     kinds: {
-      walker: { name: 'Walker', text: 'the common one. Any device stops it.', share: 38, hp: 1, speed: 1, dmg: 1, wall: 1, reach: 1 },
+      walker: { name: 'Walker', text: 'the common one. Turrets barely scratch it: shoot it yourself.', turret: 0.4, share: 38, hp: 1, speed: 1, dmg: 1, wall: 1, reach: 1 },
       lurcher: { name: 'Lurcher', text: 'fast and light. It reaches you first; slow it or block it.', share: 16, hp: 0.7, speed: 1.35, dmg: 1, wall: 0.8, reach: 1 },
-      hauler: { name: 'Hauler', text: 'slow and tough. It breaks shields and devices quickly.', share: 10, hp: 1.6, speed: 0.7, dmg: 1.2, wall: 1.5, reach: 1 },
+      hauler: { name: 'Hauler', text: 'slow and tough. It breaks shields and devices quickly, and turrets barely scratch it.', turret: 0.4, share: 10, hp: 1.6, speed: 0.7, dmg: 1.2, wall: 1.5, reach: 1 },
       stilt: { name: 'Stilt', text: 'long reach. Held at a shield, it hits you if you stand close behind it.', share: 10, hp: 0.9, speed: 1, dmg: 1, wall: 0.8, reach: 1.5, over: 1.6 },
       lantern: { name: 'Lantern', text: 'waits outside and makes the others near it faster. Shoot it first.', share: 6, hp: 0.8, speed: 0.85, dmg: 0.6, wall: 0.6, reach: 1, hurry: 1.2, hurryR: 6, hang: 4.5 }, // hang: it stops this many m outside its opening and waits there while other Gloom are still coming
       ticks: { name: 'Ticks', text: 'weak, quick and low to the ground.', share: 15, hp: 0.45, speed: 1.25, dmg: 0.6, wall: 0.6, reach: 1 },
-      warden: { name: 'Warden', text: 'rare and very tough, from ring 3 on. Put everything on it.', share: 2, hp: 2.2, speed: 0.6, dmg: 1.3, wall: 1.5, reach: 1.2, minRing: 2 },
+      warden: { name: 'Warden', text: 'rare and very tough, from ring 3 on. Turrets barely scratch it: put everything you have on it.', turret: 0.4, share: 2, hp: 2.2, speed: 0.6, dmg: 1.3, wall: 1.5, reach: 1.2, minRing: 2 },
     },
   },
   breachDelay: { door: 0, window: 2, gap: 0.5, hatch: 3, upper: 2.5 }, // + upper = extra seconds per floor to climb up // seconds to get through
