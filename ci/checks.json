@@ -661,6 +661,52 @@
    "quality": "low",
    "timeout": 30,
    "note": "owner Nov 22: two crate carriers walked through each other; nine recruits stepped 150 s: no two bodies within 0.5 m, no crate through a person, none in a solid, all keep walking"
+  },
+  {
+   "name": "gsplit_combat",
+   "script": "tools/perfcheck.cjs",
+   "args": [
+    "medium"
+   ],
+   "tier": "desktop",
+   "quality": "medium",
+   "timeout": 60,
+   "env": {
+    "GPU": "1",
+    "SPOTS": "combat",
+    "GSPLIT": "1",
+    "GS_S": "3",
+    "CSECS": "8",
+    "SETTLE": "6",
+    "NOEXTRA": "1",
+    "NOBASEMB": "1",
+    "AUDIT": "0"
+   },
+   "pass": "^(PASS|GSPLIT)",
+   "note": "PROBE BRANCH ONLY (never merge)"
+  },
+  {
+   "name": "gsplit_bosscombat",
+   "script": "tools/perfcheck.cjs",
+   "args": [
+    "medium"
+   ],
+   "tier": "desktop",
+   "quality": "medium",
+   "timeout": 60,
+   "env": {
+    "GPU": "1",
+    "SPOTS": "bosscombat",
+    "GSPLIT": "1",
+    "GS_S": "3",
+    "CSECS": "8",
+    "SETTLE": "6",
+    "NOEXTRA": "1",
+    "NOBASEMB": "1",
+    "AUDIT": "0"
+   },
+   "pass": "^(PASS|GSPLIT)",
+   "note": "PROBE BRANCH ONLY (never merge)"
   }
  ]
 }
