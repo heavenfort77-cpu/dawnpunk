@@ -661,6 +661,19 @@
    "quality": "low",
    "timeout": 30,
    "note": "owner Nov 22: two crate carriers walked through each other; nine recruits stepped 150 s: no two bodies within 0.5 m, no crate through a person, none in a solid, all keep walking"
+  },
+  {
+   "name": "abfps",
+   "script": "tools/abfps.cjs",
+   "args": [
+    "9467e1feb200c060aebfa138a98e7050e3435cee",
+    "combat+combat2,bosscombat+bosscombat2",
+    "3"
+   ],
+   "tier": "desktop",
+   "quality": "medium",
+   "timeout": 150,
+   "note": "PROBE BRANCH ONLY (never merge): same-machine frame-rate A/B next10 vs this commit"
   }
  ]
 }
