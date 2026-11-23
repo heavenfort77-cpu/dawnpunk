@@ -80,3 +80,10 @@ Plan: back to a ground-floor wall, turbine beside, lance in front; with spare Su
 | moon (2nd power maker, no weapon) | 79/85 | 77/94 | 42/96 | 13/100 | 4/100 |
 - Every device that shoots by itself (lance, sling, twin, mist) carries the weakest bot through rings 1-3 untouched; the sling even through the boss. The others need the player's own aim and behave like a real game.
 - Not placeable beside him, so not tested: panel, trellis (they go on an opening), flask (thrown).
+
+## 9. Owner 00:02: two turbines plus Flask (thrown at the nearest Gloom inside within 4 m when the Sun covers it) or Panel (with Sun for one: walk to the nearest open ground-floor opening, panel it, walk back). Win % / hurt %
+| device | ring 1 | ring 2 | ring 3 | ring 4 | ring 5 (boss) | used per night (median) |
+|---|---|---|---|---|---|---|
+| flask | 35/81 | 25/83 | 6/100 | 0/100 | 2/100 | 3-5 throws |
+| panel | 46/79 | 42/88 | 6/96 | 2/100 | 4/100 | 9-18 panels |
+- With either, the turbines are mostly gone by dawn (0-1 standing). Without a device that shoots by itself, the weakest bot loses most nights from ring 1.
