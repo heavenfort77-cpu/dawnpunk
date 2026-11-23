@@ -43,3 +43,24 @@ Tougher machines, same number (fresh saves, 48 nights per ring per bot; win / hu
 | health x1.3 | 50/56, 25/85, 17/92 | 73/42, 50/69, 35/90 | 94/6, 92/10, 67/50 | 94/13, 94/10, 63/54 | 16-19 / 19-25 |
 - Most alive at once does not rise with tougher machines (frame-rate safe).
 - Same pattern as every lever before: weak bots lose long before the strong ones are touched on rings 1-2.
+
+## 6. BUILT (OWNER DECISION Nov 23 23:26 "Tougher + catch-up"), commit 3d5df92
+- CONFIG.tough { hp: [1.5, 1.35, 1.2, 1, 1], ease: 0 }: machines on rings 1-3 have that much more health from the second night on; same number of machines. A lost night brings back the old health for the next try; a win restores the extra (save.lossRun).
+- Calibration, fresh saves, 48 nights per ring: expert / sharp ring 1 x1.5 85 / 85% win, hurt 21 / 25%; ring 2 x1.3 92-94% and x1.4 75-79% (x1.35 picked between); ring 3 x1.2 83 / 77% win, hurt 27 / 29%. Most alive at once unchanged (ring 3 median 17-18, 90% 24-25).
+- Whole saves (tools/nightthreat.mjs 40 mix; NOTOUGH=1 = before). Win % nights 1-6, ring reached in brackets:
+| bot | before | after |
+|---|---|---|
+| novice | 95 80 63 45 28 23 (1 2 3 3 4 4) | 95 23 65 40 40 38 (1 2 2 3 3 4) |
+| average | 100 100 83 63 48 20 (1 2 3 4 4 5) | 100 48 78 60 60 40 (1 2 2 3 4 4) |
+| expert | 100 100 95 83 45 40 (1 2 3 4 5 5) | 100 85 85 85 48 40 (1 2 3 4 5 5) |
+| sharp | 100 100 100 80 58 48 (1 2 3 4 5 5) | 100 90 90 83 60 50 (1 2 3 4 5 5) |
+- Night 2 (first try at ring 2) is now a real wall for novice and average (23 / 48%); the catch-up puts them about one night behind on the climb. Strong bots now lose 10-15% of nights 2-4 instead of never; on nights they win they are still rarely hurt (median damage 0).
+- test.js: 4 new checks (tough values and catch-up; same Gloom count with toughHp x health; most alive on ring 3 not above before + 1; expert ring 1 wins 70-96%, 85% now).
+- Not done: real phone, human play; the boss night (ring 5) unchanged.
+
+## 7. Owner 23:56: the weakest bot with the owner's plan (tools/wallbot.mjs, novice aim 55% and reactions, 48 nights per ring, as released)
+Plan: back to a ground-floor wall, turbine beside, lance in front; with spare Sun the second turbine, then lances to the cap; shoots only Gloom within 6 m.
+- All rings 1-5 (boss included): win 100%, hurt on 0% of nights. Same with CONFIG.tough (3d5df92) on.
+- One traced night per ring: all 2 turbines + 3 lances are down by second 3 of the night (the starting Sun pays for them); lances fire 194-326 shots against 50-96 from the player; the nearest Gloom gets to 0.8-2.8 m and never lands a hit.
+- What does the work (same bot): standing in the room's centre instead of at the wall: still 100% / 0% hurt. Only 1 turbine + 1 lance: ring 1 92%, ring 3 42%, ring 5 0%. Lance cap 3: still 100% everywhere; cap 2: rings 1-4 100%, boss night 92%. Lance damage 5 -> 3: rings 1-3 98-100%, ring 4 90%, ring 5 44%.
+- So the cause is not the wall: it is two turbines plus several lances, all bought in the first seconds of the night. The earlier bots lost because they built slowly and spent Sun on panels, which keep the Gloom outside where the lances cannot see them.
