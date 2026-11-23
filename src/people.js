@@ -7,6 +7,7 @@
 // The model is the packed light model (art/models/<key>.glb in src/modeldata.js); with CONFIG.people.scanFaces on, a person listed in CONFIG.people.scan loads
 // their scan-kit face model instead (desktop file on the high tier, lighter phone file on the low tier; both in art/models_hi beside index.html).
 import * as THREE from 'three';
+import { withKtx2 } from './ktx2.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 // (R3) the model files are stored with lossless EXT_meshopt_compression (build.mjs, tools/meshopt_glb.mjs): the loader decodes them with three.js's decoder
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
@@ -75,7 +76,7 @@ export function createPerson(cfg, key) {
   let phq = null; try { phq = new URLSearchParams(location.search).get('peoplehi'); } catch (e) { phq = null; }
   const PH = cfg.peopleHi, phOn = phq === '1' ? true : phq === '0' ? false : !!(PH && PH.on), hiCopy = !scan && QUALITY === 'high' && PH && phOn && PH.files && PH.files[key];
   const file = scan ? (QUALITY === 'high' ? scan.hi : scan.lo) : (hiCopy || null), isHi = !!((scan && QUALITY === 'high') || hiCopy), HM = scan ? P.hiMat : Object.assign({}, PH, (PH && PH.own && PH.own[key]) || {});
-  const go = (buf, useScan) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, '', (gltf) => {
+  const go = (buf, useScan) => withKtx2(new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)).parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => {
       o.userData.keep = true; if (o.isBone) bones[o.name] = o;
       if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; const conv = (m) => (useScan && isHi ? peopleHiMat(m, o, HM) : lowMat(m)); o.material = Array.isArray(o.material) ? o.material.map(conv) : conv(o.material); }

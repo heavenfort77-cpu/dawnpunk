@@ -1188,6 +1188,9 @@ export const CONFIG = {
   lag: {
     // sharp (high-tier) pictures kept as flipped ImageBitmaps made off the main thread, not <img> (src/quality.js askHi): faster to send to the GPU under the cards
     hiBitmap: true,
+    // ktx2 (Nov 23, owner's list item 1; rule 37): desktop pictures kept compressed on the graphics chip (src/ktx2.js; files from tools/makektx2.mjs): tex = the street /
+    // house / base pictures (normal maps stay JPEG), models = the desktop models' pictures (normal maps stay as they were); workers: transcoding threads
+    ktx2: { tex: true, models: true, workers: 2 },
     // titleDraw: on the title, after the base's shaders are built, its pieces are drawn on screen into a 2 px corner, `pieces` at a time, each part waiting for
     // the GPU (at most cap ms), so the home card finds its draw states made (src/main.js baseSlice0 'draw')
     // film: a film started before the title finished the base finishes that work under its black first (at most filmCap s)

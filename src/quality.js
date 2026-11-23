@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { CONFIG } from './config.js';
 import { TEX } from './texdata.js';
 import { TEXHI } from './texhi.js';
+import { TEXK } from './texhi_ktx2.js';
+import { ktx2Loader, ktx2Load, takeCompressed } from './ktx2.js';
 
 // TIERS (owner's performance rules, Nov 19): low | medium | high. MEDIUM is the default on every device (desktop included), never high by default; the tier is chosen
 // by measured frame time, not by mouse or touch: src/perfstep.js steps the look down while you play and, if frames are still slow after its last step, saves low for the
@@ -41,7 +43,10 @@ export const hiState = { asked: 0, ok: 0, failed: 0, used: 0 };
 // world.dispose() then failed in WebGLTextures deallocateTexture (webglTextures[__cacheKey] undefined). Freed first, it is made again under the new source
 // (Nov 20, home card: 16 sharp 1024 px pictures sent to the GPU as <img> took 465 ms locally, ImageBitmaps of the same size about 3 ms each) a sharp picture is
 // kept as an ImageBitmap made off the main thread, already turned upside down (WebGL ignores flipY for bitmaps), so a texture that takes it is set flipY false
-function upgrade(t, name) { if (!hiImg[name] || (t.userData.hi && t.source === hiSrc[name])) return; t.dispose(); t.source = hiSrc[name]; t.flipY = !hiBm[name]; t.userData.hi = true; t.needsUpdate = true; hiState.used++; }
+// (Nov 23, owner's list item 1) a picture that arrived as KTX2 (hiK) turns the texture itself into the compressed picture (src/ktx2.js takeCompressed)
+const hiK = {};
+function upgrade(t, name) { if (hiK[name]) { if (t.userData.hiK === hiK[name]) return; takeCompressed(t, hiK[name]); t.userData.hi = true; t.userData.hiK = hiK[name]; hiState.used++; return; }
+  if (!hiImg[name] || (t.userData.hi && t.source === hiSrc[name])) return; t.dispose(); t.source = hiSrc[name]; t.flipY = !hiBm[name]; t.userData.hi = true; t.needsUpdate = true; hiState.used++; }
 function readable(img) { try { const c = document.createElement('canvas'); c.width = c.height = 1; const x = c.getContext('2d'); x.drawImage(img, 0, 0, 1, 1); x.getImageData(0, 0, 1, 1); return true; } catch (e) { return false; } }
 // (R3, owner 14:10: under 20 MB before the base) each sharp picture is asked for when a texture of its name is first made (texTrack), not all with the page: the
 // street's pictures then load when the street is built (under the film's black or the ride card, which wait for them: hiPending), not before the base
@@ -56,11 +61,14 @@ function askHi(name) {
   const use = (pic, bm) => { hiImg[name] = pic; hiBm[name] = bm; hiSrc[name] = new THREE.Source(pic); hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
   const ok = () => { if (chk && !readable(img)) { hiState.failed++; delete waiting[name]; return; } use(img, false); };
   const bad = () => { hiState.failed++; delete waiting[name]; };
+  const useK = (k) => { hiK[name] = k; hiImg[name] = k; hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
   const viaImg = () => { img.src = TEXHI[name]; if (img.decode) img.decode().then(ok, bad); else { img.onload = ok; img.onerror = bad; } };
   // CONFIG.lag.hiBitmap: the file fetched and made into a flipped ImageBitmap off the main thread; any failure (no createImageBitmap or fetch, a file:// page) takes the <img> way
-  if (CONFIG.lag && CONFIG.lag.hiBitmap && !chk && typeof createImageBitmap === 'function' && typeof fetch === 'function') {
+  // the KTX2 copy first (desktop, CONFIG.lag.ktx2.tex); if it fails, the JPEG / PNG way below
+  const viaFile = () => { if (CONFIG.lag && CONFIG.lag.hiBitmap && !chk && typeof createImageBitmap === 'function' && typeof fetch === 'function') {
     fetch(TEXHI[name]).then((r) => (r.ok ? r.blob() : Promise.reject(r.status))).then((b) => createImageBitmap(b, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bm) => use(bm, true), viaImg);
-  } else viaImg();
+  } else viaImg(); };
+  if (CONFIG.lag && CONFIG.lag.ktx2 && CONFIG.lag.ktx2.tex && TEXK[name] && ktx2Loader()) ktx2Load(TEXK[name]).then(useK, viaFile); else viaFile();
 }
 // every sharp picture asked for at once: at the film's start, the ride card and the player's first click or key in the base (so the street and the houses have
 // them before they are shown, as when they all came with the page)
@@ -70,6 +78,6 @@ export const hiPending = () => hiState.asked - hiState.ok - hiState.failed;
 // follow a texture made from TEX[name] (also clones, which share its picture): it gets the high-tier picture if and when there is one
 export function texTrack(t, name) { if (!Q.hiTex || !TEXHI[name]) return t; askHi(name); if (hiImg[name]) upgrade(t, name); else (waiting[name] = waiting[name] || []).push(t); return t; }
 // a texture for TEX[name]: the packed picture now, the high-tier file once it has arrived (the packed picture never overwrites it)
-export function texLoad(name) { const t = loader.load(TEX[name], () => { if (t.userData.hi && hiSrc[name]) { hiSrc[name].data = hiImg[name]; t.source = hiSrc[name]; t.needsUpdate = true; } }); return texTrack(t, name); }
+export function texLoad(name) { const t = loader.load(TEX[name], () => { if (t.userData.hi && !t.userData.hiK && hiSrc[name]) { hiSrc[name].data = hiImg[name]; t.source = hiSrc[name]; t.needsUpdate = true; } }); return texTrack(t, name); }
 // round parts: segment count for the tier
 export const seg = (n) => Math.min(Math.max(n, Math.round(n * Q.round)), Q.roundMax);

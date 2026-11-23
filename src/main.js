@@ -27,6 +27,7 @@ import { createMarla } from './marla.js';
 import { createPerson } from './people.js';
 import { createFx } from './fx.js';
 import { createPerfStep } from './perfstep.js';
+import { ktx2Init } from './ktx2.js';
 import { lodTick, lodFull, lodCopy } from './lod.js';
 import { createNightCull } from './nightcull.js';
 import { installHouseLamps, bindHouseLamps, houseLamp, addLamp, listHouseLamps, unlistHouseLamps, houseLampState, houseLampList, houseLampsDrawn, houseLampsForceOff } from './houselamps.js';
@@ -53,6 +54,7 @@ let renderer;
 try { renderer = new THREE.WebGLRenderer({ canvas: cvs, antialias: Q.smooth, stencil: !!(Q.fx && Q.fx.keepOut), powerPreference: CONFIG.render.power }); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; renderer.shadowMap.autoUpdate = false; } catch (e) { document.body.insertAdjacentHTML('beforeend', '<div style="position:fixed;inset:0;z-index:99;background:#0b1020;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px">This game needs WebGL, which your browser could not start. Try another browser or turn on hardware acceleration.</div>'); throw e; }
 // LAG FIX Nov 19 (CPU profile of the night: 30 % of the time in getProgramInfoLog): three.js reads every shader's compile log after building it, which makes the page
 // wait for the driver. Players skip that read (CONFIG.lag.shaderLog); the scripted checks keep it so a broken shader still fails them (?cards=1 perf runs measure as a player)
+if (QUALITY === 'high') ktx2Init(renderer);
 try { renderer.debug.checkShaderErrors = CONFIG.lag.shaderLog || (!!navigator.webdriver && new URLSearchParams(location.search).get('cards') !== '1'); } catch (e) { /* keep the default */ }
 // LAG FIX Nov 19 (owner 09:50; profile: shader switching about 9 % of the night frame): solid things are drawn grouped by the shader they need (a key made from the
 // material's kind and the maps and switches that pick its shader), then by material and distance as before. Solid surfaces hide each other by depth, so the order

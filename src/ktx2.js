@@ -15,12 +15,14 @@ try { window.__ktx2 = ktx2State; } catch (e) { /* no window */ }
 export function ktx2Init(renderer) {
   const K = CONFIG.lag.ktx2; if (loader || !K || !(K.tex || K.models)) return loader;
   try { const mgr = new THREE.LoadingManager(); mgr.setURLModifier((u) => (u.endsWith('basis_transcoder.js') ? FILES.js : u.endsWith('basis_transcoder.wasm') ? FILES.wasm : u));
-    loader = new KTX2Loader(mgr).setTranscoderPath('basis/').setWorkerLimit(K.workers || 2).detectSupport(renderer); ktx2State.on = true;
+    loader = new KTX2Loader(mgr).setWorkerLimit(K.workers || 2).detectSupport(renderer); ktx2State.on = true;
     const c = loader.workerConfig || {}; ktx2State.format = c.bptcSupported ? 'BC7' : c.astcSupported ? 'ASTC' : c.etc2Supported ? 'ETC2' : c.dxtSupported ? 'BC1/3' : 'RGBA (no compressed format)';
   } catch (e) { loader = null; ktx2State.on = false; }
   return loader;
 }
 export const ktx2Loader = () => loader;
+// a GLTFLoader that reads KHR_texture_basisu pictures when the loader is on (the desktop models from tools/makektx2.mjs need it)
+export function withKtx2(gl) { if (loader && CONFIG.lag.ktx2 && CONFIG.lag.ktx2.models) gl.setKTX2Loader(loader); return gl; }
 // a KTX2 file as a CompressedTexture (rejects if the loader is off or the file fails)
 export function ktx2Load(url) {
   if (!loader) return Promise.reject(new Error('ktx2 off'));

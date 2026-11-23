@@ -3,6 +3,7 @@
 // One instance only; it is parked outside any scene when the base is torn down, so nobody disposes it.
 import { GRITTY, GRIT } from './look.js';
 import * as THREE from 'three';
+import { withKtx2 } from './ktx2.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 // (R3) the model files are stored with lossless EXT_meshopt_compression (build.mjs, tools/meshopt_glb.mjs): the loader decodes them with three.js's decoder
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
@@ -35,7 +36,7 @@ export function createMarla(cfg, key = 'marla') {
     + 'reflectedLight.directDiffuse += saturate( dot( normal, mlL ) ) * getDistanceAttenuation( mlD, mlRimR, 2.0 ) * mlRimC * BRDF_Lambert( diffuseColor.rgb ); }';
   const lampMat = (n, o) => { n.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, lampU); sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 mlKeyP; uniform vec3 mlKeyD; uniform vec3 mlKeyC; uniform float mlKeyR; uniform vec2 mlKeyCos; uniform vec3 mlRimP; uniform vec3 mlRimC; uniform float mlRimR;').replace('#include <lights_fragment_end>', LAMP_GLSL); };
     n.customProgramCacheKey = () => 'marlaLamps'; o.onBeforeRender = (r, s, c) => lampHead(c); };
-  const go = (buf, isHi) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, '', (gltf) => {
+  const go = (buf, isHi) => withKtx2(new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)).parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => {
       o.userData.keep = true; if (o.isBone) bones[o.name] = o;
       if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; const conv = (m) => { if (isHi) return hiMat(m, o, cfg.marlaHi); const cut = m.alphaTest > 0 || m.transparent; const skin = /skin|face|head|body|hand|lip|eye/i.test(m.name || ''), col = m.color.clone(); if (GRITTY && !skin) { const h = {}; col.getHSL(h); col.setHSL(h.h, h.s * GRIT.clothSat, h.l * GRIT.clothLight); } const n = GRITTY ? new THREE.MeshPhongMaterial({ map: m.map || null, color: col, shininess: skin ? GRIT.skinShine : GRIT.clothShine, specular: skin ? 0x2a211d : 0x0c0c0c, alphaTest: cut ? Math.max(m.alphaTest, 0.4) : 0, side: cut ? THREE.DoubleSide : THREE.FrontSide }) : new THREE.MeshLambertMaterial({ map: m.map || null, color: m.color, alphaTest: cut ? Math.max(m.alphaTest, 0.4) : 0, side: cut ? THREE.DoubleSide : THREE.FrontSide }); n.name = m.name; n.userData.keep = true; if (lampU) lampMat(n, o); m.dispose(); return n; }; // same simple lighting as the rest of the game

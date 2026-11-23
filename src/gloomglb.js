@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 // (R3) the model files are stored with lossless EXT_meshopt_compression (build.mjs, tools/meshopt_glb.mjs): the loader decodes them with three.js's decoder
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { withKtx2 } from './ktx2.js';
 import { CONFIG } from './config.js';
 import { QUALITY } from './quality.js';
 import { lodPrepare, lodCopy } from './lod.js';
@@ -29,7 +30,7 @@ function load(kind) {
   // a page opened from a folder (file://) cannot fetch the file beside it: the desktop builder stays (the single-file build has the model inside as a data address)
   if (!url.startsWith('data:') && location.protocol === 'file:') { glbState[kind] = 'failed'; return; }
   const fail = (e) => { glbState[kind] = 'failed'; console.warn('gloom model ' + kind + ' not loaded', e); };
-  fetch(url).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, '', (gltf) => {
+  fetch(url).then((r) => { if (!r.ok) throw new Error('no file'); return r.arrayBuffer(); }).then((buf) => withKtx2(new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)).parse(buf, '', (gltf) => {
     const sc = gltf.scene; sc.traverse((o) => { o.userData.keep = true; if (!o.isMesh) return; o.geometry.userData.shared = true; const m = o.material; m.userData.shared = true; m.userData.relief = true; m.userData.pbr = true;
       for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap']) if (m[k]) { m[k].userData.shared = true; m[k].anisotropy = 4; } });
     // LAG FIX Nov 19: the parts drawn as one skinned mesh per material (src/glbmerge.js), before the far copies are made (the merged mesh gets one too)
