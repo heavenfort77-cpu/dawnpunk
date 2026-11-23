@@ -76,3 +76,22 @@ Bots only; reaction and aim numbers are assumptions. Armour changes no attack, s
 - test.js 'breaking the paws is worth it' (pawhunter vs expertNB, both 0-13% now) is ported to the strategy bots (traps, gunner; tools/wallbot.mjs BOSS=hunt). It FAILS at paw spill 18: average traps 54->38 / 21->25 / 17->25%, gunner 63->58 / 25->25 / 38->38% (no hunt -> hunt, houses 5/3/0); expert breaks 1.8-1.9 paws.
 - Paw spill 40 makes it pass (traps 54->63 / 21->38 / 17->33%) but then the src/bots.js 'boss night is the hardest night' check fails (pawhunter on houses 3 and 0). Kept at 18.
 - tools/bosshard.mjs: with the strategy bots the boss night is often not harder than a plain ring-5 night even without hunting (e.g. average turtle house 5 33 vs 29%, expert traps house 0 100 vs 96%). Needs a boss tuning pass on the strategy bots.
+
+## Abuse list pass (owner Nov 24 07:35 "go on"; bots only, CONFIG.tough on, 36 nights per ring per strategy)
+Win % / hit % on rings 1-5:
+| strategy | novice | average | expert |
+|---|---|---|---|
+| prism turtle (lances + prisms), before | 100/0 100/0 100/0 97/3 75/25 | 100/0 x4, 89/11 | 100/0 x5 |
+| prism turtle, after (prism: own shots only, x1.1) | 69 75 78 39 17 | 89 100 83 89 56 | 100 100 97 97 86 |
+| prism gunner (2 Sun makers + prisms), x1.5 own shots only | 83 83 69 64 19 | 100 100 100 100 97 (hit 3-22%) | 100/0 x5 |
+| prism gunner, after (x1.1) | 25 53 28 28 6 | 94 94 92 94 75 | 100 100 100 100 97 |
+| kill box (panels everywhere, head shots over a panel as easy as open ones) | 47 50 36 11 8 | 94 94 94 89 56 (hit 8-19%) | 100/0-3 |
+| press traps | 72 64 58 17 8 | 100 97 86 81 50 | 100 x5 (hit 6-14%) |
+| mist + shard | 58 69 36 14 3 | 89 89 75 56 17 | 100 100 100 100 94 |
+| upstairs fort (stair top panelled, lances) | 81 89 81 81 56 | 92 94 86 83 67 | 100 97 97 94 92 |
+| fort with panels only / two Sun makers only | 28-31 / 17-33 on rings 1-2 | 69 69 42 31 17 / 83 89 69 72 53 | 94-100 |
+- Fixed: Prism boosts the player's own shots only (CONFIG.devices.prism.turrets false) and by x1.1 (was x1.5 on every shot within 3 m, turrets included).
+- Fixed: reload = left (src/base.js markPending / settlePending): a save loaded with a night still pending counts it as left (minimum payout, no ring, the day moves on); not on the first night.
+- Watch, not changed: the upstairs fort is the strongest late strategy for weak aim (novice ring 4 81% vs the turtle's 53%) but is hit on 50-60% of nights; the kill box depends on the assumption that head shots over a panel are as easy as open ones.
+- Not an exploit but open: at expert aim nearly every strategy wins rings 1-3 with hits on 0-17% of nights. The challenge for a strong player on rings 1-3 is still small.
+- New check: test.js 'exploits: none of the known abuse strategies wins every night unhit on rings 1-3 at novice or average aim'.

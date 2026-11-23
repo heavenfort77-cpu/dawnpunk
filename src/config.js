@@ -56,7 +56,9 @@ export const CONFIG = {
     press: { text: 'kills one Gloom that comes next to it, then needs time to reset.', name: 'Press', cost: 14, hp: 40, reach: 1.5, reset: 8, max: 2 },
     shard: { text: 'floor plate that hurts every Gloom walking over it.', name: 'Shard', cost: 6, hp: 60, noTarget: true, radius: 1.3, dps: 6, max: 4 },
     sling: { text: 'lobs slow, heavy shots over walls and shields.', name: 'Sling', cost: 12, hp: 30, shooter: true, lob: true, dmg: 12, rate: 0.5, range: 12, shotCost: 1.0, max: 3 },
-    prism: { text: 'shots fired near it hit harder.', name: 'Prism', cost: 12, hp: 25, radius: 3, boost: 1.5, max: 2 },
+    // turrets: whether the boost also reaches turret shots (Nov 24, abuse list: prisms among a lance cluster won every night unhit, even at novice aim; now your own shots only)
+    // boost 1.5 -> 1.1 (Nov 24): with your cannon alone x1.5 still won 97-100% of rings 1-5 at average aim (tools/strategysuite.mjs prismgunner); 1.1 still makes a Walker two shots
+    prism: { text: 'your own shots fired near it hit harder.', name: 'Prism', cost: 12, hp: 25, radius: 3, boost: 1.1, max: 2, turrets: false },
     chime: { text: 'calls the Gloom toward it, away from you.', name: 'Chime', cost: 6, hp: 70, pull: 10, max: 2 },
     moon: { text: 'strong Sun at night; counts toward the limit of 2 Sun makers.', name: 'Moon', cost: 22, hp: 30, energyPerSec: 1.1, max: 2, group: 'power' },
   },

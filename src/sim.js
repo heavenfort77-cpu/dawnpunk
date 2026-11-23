@@ -443,7 +443,7 @@ export function createSim(opts = {}) {
         if (dv.cd <= 0 && p.energy >= d.shotCost) {
           let tg = null, bd = d.range, bdx = 1e9; // turretPrefer (m): an armoured Gloom (kinds' turret < 1) counts as this much farther, so a turret shoots the others first
           for (const g of s.gloom) { if (!seen(g, dv.floor) || (!d.lob && !openOK(dv.x, dv.z, g))) continue; const dd = dist(g, dv) + (KD(g).turret !== undefined && KD(g).turret < 1 ? cfg.turretPrefer || 0 : 0); if (dd <= bd + (cfg.turretPrefer || 0) && dd <= bdx) { bdx = dd; tg = g; } }
-          if (tg) { dv.cd = 1 / d.rate; addEnergy(-d.shotCost); s.log.push({ e: 'lance', kind: dv.kind, x: dv.x, z: dv.z, tx: tg.x, tz: tg.z, floor: dv.floor }); if (d.slow) tg.slowT = d.slowTime; damageGloom(tg, d.dmg * (d.shots || 1) * boostAt(dv) * (KD(tg).turret !== undefined ? KD(tg).turret : 1)); } // turret: share of a turret's damage this kind takes (CONFIG.gloom.kinds)
+          if (tg) { dv.cd = 1 / d.rate; addEnergy(-d.shotCost); s.log.push({ e: 'lance', kind: dv.kind, x: dv.x, z: dv.z, tx: tg.x, tz: tg.z, floor: dv.floor }); if (d.slow) tg.slowT = d.slowTime; damageGloom(tg, d.dmg * (d.shots || 1) * (cfg.devices.prism.turrets ? boostAt(dv) : 1) * (KD(tg).turret !== undefined ? KD(tg).turret : 1)); } // turret: share of a turret's damage this kind takes (CONFIG.gloom.kinds)
         }
       } else if (dv.kind === 'mine') {
         dv.arm = Math.max(0, (dv.arm === undefined ? d.arm : dv.arm) - dt);
