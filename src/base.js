@@ -89,9 +89,14 @@ export const slots = (cfg, save) => cfg.loadout.slots + (save.up.slots || 0);
 export function loadout(cfg, save) { const ok = unlocked(cfg, save), n = slots(cfg, save), out = []; for (let i = 0; i < n; i++) { const k = save.loadout[i]; out.push(ok.includes(k) ? k : (ok.find((q) => !out.includes(q) && !save.loadout.includes(q)) || ok[i % ok.length])); } return out; }
 export function setLoadout(cfg, save, i, kind) { if (!unlocked(cfg, save).includes(kind) || i < 0 || i >= slots(cfg, save)) return false; const cur = loadout(cfg, save), j = cur.indexOf(kind); if (j >= 0 && j !== i) cur[j] = cur[i]; cur[i] = kind; save.loadout = cur; return true; }
 export function loadSave(cfg, storage) {
-  try { const raw = storage && storage.getItem('solardg.save'); if (raw) { const s = JSON.parse(raw); if (s && s.v === 4 && fill(cfg, s) && Array.isArray(s.cats) && Array.isArray(s.personnel) && Array.isArray(s.quests) && s.up && typeof s.food === 'number' && typeof s.day === 'number') return s; } } catch (e) { /* fall through to a new save */ }
+  try { const raw = storage && storage.getItem('solardg.save'); if (raw) { const s = JSON.parse(raw); if (s && s.v === 4 && fill(cfg, s) && Array.isArray(s.cats) && Array.isArray(s.personnel) && Array.isArray(s.quests) && s.up && typeof s.food === 'number' && typeof s.day === 'number') { settlePending(cfg, s); return s; } } } catch (e) { /* fall through to a new save */ }
   const s = newSave(cfg); makeQuests(cfg, s); return s;
 }
+// RELOAD = LEFT (Nov 24, abuse list: refreshing the page mid-night erased a losing night and let you re-roll it). Riding out marks the night pending (src/main.js startRun);
+// banking it (applyNight) clears the mark; a save loaded with the mark still on counts that night as leaving it: minimum payout, no ring opened, the day moves on.
+// Not on the very first night (save.nights 0): a new player whose page closed simply gets the first night again, lesson included.
+export function markPending(save, ring) { save.pending = { ring: ring || 0, day: save.day }; }
+export function settlePending(cfg, save) { const p = save.pending; if (!p) return null; delete save.pending; if (p.day !== save.day || !save.nights) return null; const r = applyNight(cfg, save, { win: false, left: true, ring: p.ring || 0, lasted: 0, food: cfg.loot.minPayoutFood, essentials: 0, coins: 0 }, 0); save.settledLeave = true; return r; }
 export function writeSave(save, storage) { try { storage && storage.setItem('solardg.save', JSON.stringify(save)); return true; } catch (e) { return false; } }
 
 export const count = (save, role) => save.personnel.filter((p) => p.role === role).length;
@@ -222,6 +227,7 @@ export function recruit(cfg, save) {
 
 // after a night: payout, passive work of the personnel, quest progress, new day and new quests
 export function applyNight(cfg, save, result, kills) {
+  delete save.pending; // the night is banked (RELOAD = LEFT above)
   const win = !!result.win; save.coins = (save.coins || 0) + (result.coins || 0);
   if (win) save.ringOpen = Math.max(save.ringOpen || 1, Math.min(cfg.ring.mult.length, (result.ring || 0) + 2)); // winning ring N opens ring N+1
   const lm = lootMult(cfg, save); result = { ...result, food: Math.round(result.food * lm), essentials: Math.round(result.essentials * lm) };

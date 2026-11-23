@@ -253,6 +253,15 @@ check('eating heals and costs carried food', (() => { const e = createSim({ cfg:
   const before = t.gloom[0].hp; t.fireCannon('auto', 1);
   check('cannon cannot hit a Gloom through a solid wall (no opening on the line)', t.gloom[0].hp === before, 'hp ' + t.gloom[0].hp); }
 
+// RELOAD = LEFT (Nov 24, abuse list): a reload before the night is banked counts as leaving it; never on the first night (src/base.js markPending / settlePending)
+{ const TB = await import('./src/base.js'), mem = {}, st = { getItem: (k) => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = v; } };
+  const a = TB.newSave(CONFIG, 9); a.nights = 2; a.day = 3; a.lossRun = 0; const ro = a.ringOpen || 1; TB.markPending(a, 1); TB.writeSave(a, st); const l = TB.loadSave(CONFIG, st);
+  check('reload = left: a save loaded with a night still pending counts it as left (day and nights +1, no ring opened, loss streak +1, mark cleared)', l.day === 4 && l.nights === 3 && (l.ringOpen || 1) === ro && l.lossRun === 1 && !l.pending && l.settledLeave === true, JSON.stringify({ day: l.day, nights: l.nights, ring: l.ringOpen, lossRun: l.lossRun, pending: !!l.pending }));
+  const b = TB.newSave(CONFIG, 10); TB.markPending(b, 0); TB.writeSave(b, st); const m = TB.loadSave(CONFIG, st);
+  check('reload = left: not on the very first night (the first night is simply played again)', m.day === b.day && m.nights === 0 && !m.pending && !m.settledLeave, 'day ' + m.day + ', nights ' + m.nights);
+  const c = TB.newSave(CONFIG, 11); c.nights = 1; TB.markPending(c, 0); TB.applyNight(CONFIG, c, { win: true, ring: 0, food: 3, essentials: 2, coins: 0 }, 5); TB.writeSave(c, st); const k = TB.loadSave(CONFIG, st);
+  check('reload = left: a banked night leaves no mark (reloading after dawn changes nothing)', !k.pending && !k.settledLeave && k.nights === 2, 'nights ' + k.nights); }
+
 // TOUGH (OWNER DECISION Nov 23 23:26, CONFIG.tough): rings 1-3 tougher machines from the second night, eased after a lost night, same number alive (frame rate)
 { const TB = await import('./src/base.js'), sv = TB.newSave(CONFIG, 5), t0 = TB.toughHp(CONFIG, sv, 0); sv.nights = 1; sv.lossRun = 0; const t1 = TB.toughHp(CONFIG, sv, 0), t4 = TB.toughHp(CONFIG, sv, 3);
   sv.lossRun = 1; const tl = TB.toughHp(CONFIG, sv, 0), want = 1 + (CONFIG.tough.hp[0] - 1) * CONFIG.tough.ease;

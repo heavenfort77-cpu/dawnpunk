@@ -88,7 +88,7 @@ const box = (w, h, d, c) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), M(c))
 const FH = CONFIG.floorH;
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), M(0x24331f)); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.08; scene.add(ground);
 
-let homeMsg = '';
+let homeMsg = '', closedMsg = ''; // closedMsg: the first base line after a night was settled as left by a reload (src/base.js RELOAD = LEFT)
 let run = null, townG = null, world = null, shadowT = 0; const crateMesh = new Map(), townDoors = [];
 let skyShadowK = -1;
 // by day a few machines stand dormant in the settlement (black screen, limp, a jerk now and then); they are part of the world, so they are also seen from inside a house, and they are gone at night
@@ -1019,6 +1019,7 @@ addEventListener('click', (e) => { if (performance.now() < opSwallow) { e.preven
 $('watch').textContent = 'Watch the opening';
 function startRun() { perfRest(); runModels(); queueMicrotask(() => sceneCard('ride'));
   fromBase = true; bview.dispose(); dropWorld(); $('scout').style.display = 'none'; ui = null;
+  if (save) { B.markPending(save, +$('selRing').value); persist(); } // a reload before this night is banked counts as leaving it (src/base.js RELOAD = LEFT)
   run = RUN.createRun(B.makeCfg(CONFIG, save), +$('selRing').value, (() => { try { const q = new URLSearchParams(location.search).get('seed'); if (q) return +q; } catch (e) { /* no address */ } return (Math.random() * 1e9) | 0; })(), { gloomMult: B.gloomMult(CONFIG, save), toughHp: B.toughHp(CONFIG, save, +$('selRing').value), extraEnergy: B.nightEnergyBonus(CONFIG, save), boss: B.bossNight(CONFIG, save, +$('selRing').value) });
   if (run.houses.some((h) => h.sim && h.sim.boss)) bossPreload(); // desktop: the boss model loads while you walk the street (src/bosshi.js)
   $('msg').textContent = ''; flashT = 0;
@@ -1323,15 +1324,16 @@ const gfxPauseLabel = () => 'Graphics: ' + TIER + (TIER === 'medium' ? ' (defaul
 let gfxArm = 0; $('gfxT').textContent = 'Graphics: ' + TIER + (TIER === 'medium' ? ' (default)' : '') + ' - tap to switch'; $('gfxT').onclick = gfxGo;
 $('bGfx').textContent = gfxPauseLabel(); $('bGfx').addEventListener('click', () => { if (!gfxArm) { gfxArm = 1; $('bGfx').textContent = 'Switch to ' + GFX_OTHER + '? Reloads: this night ends. Tap again'; return; } gfxGo(); });
 GK.speak.fn = (kind, line, obj) => sfxVoice(kind, line, obj);
-$('watch').onclick = () => { if (paused) setPause(false); audio(); musicUnlock(true); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = !had && preSave ? preSave : B.loadSave(CONFIG, storage); preSave = null; carry = save.carry || null; if (FILM.pre) { preSave = null; filmGo(); return; } startIntro(); }; $('cineSkip').onclick = () => finishIntro();
+$('watch').onclick = () => { if (paused) setPause(false); audio(); musicUnlock(true); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = !had && preSave ? preSave : B.loadSave(CONFIG, storage); preSave = null; carry = save.carry || null; if (save.settledLeave) { delete save.settledLeave; closedMsg = 'The game closed during your last night: it counts as leaving it (minimum payout).'; persist(); } if (FILM.pre) { preSave = null; filmGo(); return; } startIntro(); }; $('cineSkip').onclick = () => finishIntro();
 // a first-time player (no save yet) gets the opening from "Enter the base" too (coordinator Nov 17); ?film=0 in the address skips that for the scripted checks
 // the scripted checks always open the page with ?quality=..., so a ?quality address also skips it unless ?film=1 asks for it (openingcheck); the player's own Graphics switch (gfxGo) adds film=1 so a real player keeps the film and card
 const NOFILM = (() => { try { const q = new URLSearchParams(location.search); return q.get('film') === '0' || (q.has('quality') && q.get('film') !== '1'); } catch (e) { return false; } })();
-$('enter').onclick = () => { audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = !had && preSave ? preSave : B.loadSave(CONFIG, storage); preSave = null; carry = save.carry || null; persist(); if (FILM.pre) { filmGo(); return; } if (!had && !NOFILM) { startIntro(); return; }
+$('enter').onclick = () => { audio(); musicUnlock(); let had = false; try { had = !!(storage && storage.getItem('solardg.save')); } catch (e) { had = false; } save = !had && preSave ? preSave : B.loadSave(CONFIG, storage); preSave = null; carry = save.carry || null; if (save.settledLeave) { delete save.settledLeave; closedMsg = 'The game closed during your last night: it counts as leaving it (minimum payout).'; } persist(); if (FILM.pre) { filmGo(); return; } if (!had && !NOFILM) { startIntro(); return; }
   // (owner, returning player straight to the base) the 'home' card shows first (painted), then the base is built under it and its shaders and first frames done there
   // (sceneCard); the scripted checks keep the old direct path
-  if (BOTRUN() || !CONFIG.lag.card.on) { enterBase(); return; } $('lct').textContent = CONFIG.lag.card.titles.home || ''; $('lfill').style.width = '10%'; $('lcard').style.display = 'flex';
-  requestAnimationFrame(() => requestAnimationFrame(() => { const tb = performance.now(); enterBase(); LCARD.buildMs = Math.round(performance.now() - tb); sceneCard('home'); })); };
+  const cm = closedMsg || undefined; closedMsg = '';
+  if (BOTRUN() || !CONFIG.lag.card.on) { enterBase(cm); return; } $('lct').textContent = CONFIG.lag.card.titles.home || ''; $('lfill').style.width = '10%'; $('lcard').style.display = 'flex';
+  requestAnimationFrame(() => requestAnimationFrame(() => { const tb = performance.now(); enterBase(cm); LCARD.buildMs = Math.round(performance.now() - tb); sceneCard('home'); })); };
 let resetArm = -1e9; // was 0: a first tap in the first 3 s after the page loaded counted as the second (erasing) tap
 $('reset').onclick = () => { if (performance.now() - resetArm > 3000) { resetArm = performance.now(); $('reset').textContent = 'Tap again to erase your save'; return; } save = B.newSave(CONFIG); B.makeQuests(CONFIG, save); carry = null; persist(); $('reset').textContent = 'New game'; if (paused) setPause(false); audio(); musicUnlock(); startIntro(); }; // a new game plays the opening first (skippable); it lands in the base with Marla at your door
 $('go').onclick = () => { audio(); startRun(); };
