@@ -14,6 +14,8 @@ try { window.__ktx2 = ktx2State; } catch (e) { /* no window */ }
 // once, after the renderer exists (the loader asks the chip which compressed formats it reads)
 export function ktx2Init(renderer) {
   const K = CONFIG.lag.ktx2; if (loader || !K || !(K.tex || K.models)) return loader;
+  // a page opened from a folder (file://) cannot fetch the transcoder beside it (the single-file build carries it inside): no KTX2 there, the pictures as before
+  try { if (location.protocol === 'file:' && !FILES.js.startsWith('data:')) return null; } catch (e) { /* no location */ }
   try { const mgr = new THREE.LoadingManager(); mgr.setURLModifier((u) => (u.endsWith('basis_transcoder.js') ? FILES.js : u.endsWith('basis_transcoder.wasm') ? FILES.wasm : u));
     loader = new KTX2Loader(mgr).setWorkerLimit(K.workers || 2).detectSupport(renderer); ktx2State.on = true;
     const c = loader.workerConfig || {}; ktx2State.format = c.bptcSupported ? 'BC7' : c.astcSupported ? 'ASTC' : c.etc2Supported ? 'ETC2' : c.dxtSupported ? 'BC1/3' : 'RGBA (no compressed format)';
