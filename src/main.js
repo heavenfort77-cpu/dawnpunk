@@ -31,7 +31,7 @@ import { lodTick, lodFull, lodCopy } from './lod.js';
 import { createNightCull } from './nightcull.js';
 import { installHouseLamps, bindHouseLamps, houseLamp, addLamp, listHouseLamps, unlistHouseLamps, houseLampState, houseLampList, houseLampsDrawn, houseLampsForceOff } from './houselamps.js';
 import { freezeStillBones } from './glbmerge.js';
-import { unifyStd } from './unifymat.js';
+import { unifyStd, unifyLite } from './unifymat.js';
 import { mergeStatic, mergeUnder, HIT_LAYER, splitVariants, singlePassFlat, twoPassGroups } from './mergestatic.js';
 import { gloomPreload, glbHooks, glbCopy, glbState } from './gloomglb.js';
 import { openBook, loadBookFonts, closeBook } from './book.js';
@@ -186,9 +186,10 @@ function joinInto(hg, list, mat, cast) { if (list.length < 2) return; const gs =
 // owner's rule (Nov 19): small props cast no shadow (CONFIG.lag.smallCaster: a piece whose bounding sphere is smaller than this radius, m)
 // (Nov 20) the base's plain materials share one shader where only their pictures differed (src/unifymat.js, CONFIG.lag.unifyMats)
 function unifyBase() { if (CONFIG.lag.unifyMats) unifyStd(bview.group); }
+const unifyStreet = (g) => { if (CONFIG.lag.unifyStreet && QUALITY === 'high' && g) unifyLite(g, scene); };
 function noSmallCasters(root) { const R = CONFIG.lag.smallCaster, v = new THREE.Vector3(); root.updateMatrixWorld(true); root.traverse((o) => { if (!o.isMesh || !o.castShadow || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry) return; const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); if (g.boundingSphere && g.boundingSphere.radius * o.getWorldScale(v).x < R) o.castShadow = false; }); }
 // the street built (src/world.js buildWorldIter, which stops between its parts) and set in the scene; needWorld runs it at once, the film in time slices (filmPrep)
-function* worldIter() { if (DESO.place && !run.desoPlaced) { placeSample(run, CONFIG); run.desoPlaced = true; } world = yield* buildWorldIter(CONFIG, run); noSmallCasters(world.g); scene.add(world.g); applyRelief(world.g); buildGrounding(); buildTrim(); shadowT = 1.5; }
+function* worldIter() { if (DESO.place && !run.desoPlaced) { placeSample(run, CONFIG); run.desoPlaced = true; } world = yield* buildWorldIter(CONFIG, run); noSmallCasters(world.g); unifyStreet(world.g); scene.add(world.g); applyRelief(world.g); buildGrounding(); buildTrim(); shadowT = 1.5; }
 // the sun's shadows are static: drawn again only when the world is moved or its textures arrive
 function needWorld() { if (!world) { const it = worldIter(); while (!it.next().done); } renderer.shadowMap.needsUpdate = true; return world; }
 let sim = null, state = 'menu', roomGroup = null, catG = null, catArm = null, camY = 1.6;
@@ -289,7 +290,7 @@ function buildRoomDyn() {
   // read as loot that does not go away): a plain wooden box, no band
   const crate = PR.crateMesh('ess', true); crate.scale.setScalar(2); crate.position.set(sim.cat.x + 1.1, 0.06, sim.cat.z - 1.1); roomGroup.add(crate);
   const c = PR.catMesh(CONFIG.catStyles[((run && run.inside) || 0) % CONFIG.catStyles.length]); catG = c.g; catArm = c.arm; catG.position.set(sim.cat.x, 0.06, sim.cat.z); catG.rotation.y = Math.atan2(-sim.cat.x, -sim.cat.z); // it faces the room
-  roomGroup.add(catG); scene.add(roomGroup); if (HL_ON) listHouseLamps(roomGroup);
+  roomGroup.add(catG); unifyStreet(roomGroup); scene.add(roomGroup); if (HL_ON) listHouseLamps(roomGroup);
 }
 function buildRoom() {
   const H = sim.H, L = sim.L;
@@ -338,7 +339,7 @@ function buildRoom() {
   const cb = box(0.45, 0.55, 0.35, 0xe8c24a); cb.position.y = 0.3; catG.add(cb);
   const ch = box(0.4, 0.32, 0.32, 0xf2d160); ch.position.y = 0.72; catG.add(ch);
   catArm = box(0.12, 0.34, 0.12, 0xf2d160); catArm.position.set(0.28, 0.75, 0); catG.add(catArm);
-  roomGroup.add(catG); scene.add(roomGroup); if (HL_ON) listHouseLamps(roomGroup);
+  roomGroup.add(catG); unifyStreet(roomGroup); scene.add(roomGroup); if (HL_ON) listHouseLamps(roomGroup);
 }
 function buildBreaches() {
   // Nothing marks an opening on the floor (user, 2026-11-14: no rings, no studs). When a shield breaks, the opening itself flashes red for a moment:

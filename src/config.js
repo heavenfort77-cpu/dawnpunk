@@ -1401,6 +1401,8 @@ export const CONFIG = {
     // first slow frames of a new scene (uploads, first draws) happen under the card, not in play
     // unifyMats (Nov 20): the base's plain materials get white / flat pictures and white vertex colours so they share one shader (src/unifymat.js)
     unifyMats: true,
+    // unifyStreet (Nov 23, owner's list item 3): desktop street and house rooms: plain materials share programs (src/unifymat.js unifyLite; no flat relief picture)
+    unifyStreet: true,
     // cardTurns (Nov 20): a card kind set to false skips the four quarter turns (src/main.js sceneCard)
     cardTurns: { home: false },
     card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home', film: 'Loading the street' }, settle: { n: 3, ms: 25, cap: 1.5 } },

@@ -29,3 +29,20 @@ export function unifyStd(root) {
     if (ch) { m.needsUpdate = true; n++; } }
   return n;
 }
+// (Nov 23, owner's list item 3: the first ride card built 69 programs, 4-6.5 s of it on the Mac) the street's and the house rooms' plain materials share programs the
+// same way, without the flat relief picture (that one adds work for every pixel of the street): a 1x1 white colour picture and a 1x1 white roughness picture where a
+// material has none, white vertex colours (one byte a channel) where its pieces have none, white instance colours on repeated pieces without their own. White times a
+// colour is that colour, so the picture is unchanged. A material also drawn by a skinned or morphing piece anywhere in `all` is left as it is. CONFIG.lag.unifyStreet.
+export function unifyLite(root, all) {
+  const t = tex(), mats = new Set(), list = (o) => (Array.isArray(o.material) ? o.material : [o.material]); let n = 0;
+  root.traverse((o) => { if (!o.isMesh || o.isSkinnedMesh) return; for (const m of list(o)) if (plain(m)) mats.add(m); });
+  const users = new Map(), seen = new Set(), take = (o) => { if (!o.isMesh || seen.has(o)) return; seen.add(o); for (const m of list(o)) if (mats.has(m)) { let l = users.get(m); if (!l) users.set(m, l = []); l.push(o); } };
+  root.traverse(take); if (all) all.traverse(take);
+  for (const m of mats) { const us = users.get(m) || []; if (us.some((o) => o.isSkinnedMesh || o.morphTargetInfluences || !o.geometry || !o.geometry.attributes.position)) continue; let ch = false;
+    if (!m.map) { m.map = t.white; ch = true; }
+    if (!m.roughnessMap) { m.roughnessMap = t.rough; ch = true; }
+    if (!m.vertexColors && us.every((o) => !o.geometry.attributes.color)) { for (const o of us) { const g = o.geometry; if (!g.attributes.color) g.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(g.attributes.position.count * 3).fill(255), 3, true)); } m.vertexColors = true; ch = true; }
+    for (const o of us) if (o.isInstancedMesh && !o.instanceColor) { o.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(o.count * 3).fill(1), 3); ch = true; }
+    if (ch) { m.needsUpdate = true; n++; } }
+  return n;
+}
