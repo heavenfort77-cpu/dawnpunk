@@ -1,0 +1,4 @@
+shots/4d389a9f2c065abf7eb41a03f38a59843d38879c/medium_boss.png 796413
+shots/4d389a9f2c065abf7eb41a03f38a59843d38879c/medium_house.png 687364
+shots/d521d9c955f8e2841a0623c1f2fb482baa5dc464/medium_boss.png 788184
+shots/d521d9c955f8e2841a0623c1f2fb482baa5dc464/medium_house.png 687353

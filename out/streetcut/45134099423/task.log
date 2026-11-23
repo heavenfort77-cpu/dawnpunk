@@ -1,0 +1,10 @@
+$ for s in d521d9c955f8e2841a0623c1f2fb482baa5dc464 4d389a9f2c065abf7eb41a03f38a59843d38879c; do git fetch -q --depth 1 origin $s; git worktree add -q ../w_$s $s; (cd ../w_$s && ln -s $GITHUB_WORKSPACE/node_modules node_modules && node build.mjs >/dev/null && SPOTS=house,boss FRAMES=2 NOEXTRA=1 NOBASEMB=1 timeout 2400 node tools/perfcheck.cjs medium $GITHUB_WORKSPACE/shots/$s | grep -E "^PERF|^FAIL"); done   (limit 120 min)
+PERF medium house: calls 498 (screen 468), triangles 1.77 M (screen 1.77 M), frame 4520 ms (software GPU), downloaded 36.2 MB, cam -1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 371/748
+PERF medium boss: calls 530 (screen 500), triangles 2.49 M (screen 2.48 M), frame 4490 ms (software GPU), downloaded 40.3 MB, cam -3.5,1.6,7.5 yaw 2.16 far 36 nightcull 335/739
+PERFJSON [{"tier":"medium","spot":"house","calls":498,"tris":1768545,"sCalls":468,"sTris":1765845,"ms":4520,"mb":36.2,"cam":"-1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 371/748"},{"tier":"medium","spot":"boss","calls":530,"tris":2485709,"sCalls":500,"sTris":2483009,"ms":4490,"mb":40.3,"cam":"-3.5,1.6,7.5 yaw 2.16 far 36 nightcull 335/739"}]
+FAIL medium boss: 530 draw calls per frame (target < 500)
+PERF CHECK FAILED (1)
+PERF medium house: calls 404 (screen 374), triangles 1.19 M (screen 1.19 M), frame 4017 ms (software GPU), downloaded 36.2 MB, cam -1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 516/748
+PERF medium boss: calls 449 (screen 419), triangles 2.24 M (screen 2.23 M), frame 4093 ms (software GPU), downloaded 40.3 MB, cam -3.5,1.6,7.5 yaw 2.16 far 36 nightcull 487/739
+PERFJSON [{"tier":"medium","spot":"house","calls":404,"tris":1190031,"sCalls":374,"sTris":1187331,"ms":4017,"mb":36.2,"cam":"-1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 516/748"},{"tier":"medium","spot":"boss","calls":449,"tris":2236679,"sCalls":419,"sTris":2233979,"ms":4093,"mb":40.3,"cam":"-3.5,1.6,7.5 yaw 2.16 far 36 nightcull 487/739"}]
+exit code 0
