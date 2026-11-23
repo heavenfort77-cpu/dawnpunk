@@ -1,0 +1,65 @@
+$ set -x; for s in f6817ef88689b8e07851264a7828a34a4d65ee60 96d06c0df227764eaa8dd97f5870f2db98e82999 93cf052e69702a05e8c5b9f739db5d79b6e5c9ed; do git fetch -q --depth 1 origin $s; git worktree add -q ../w_$s $s; (cd ../w_$s && ln -s $GITHUB_WORKSPACE/node_modules node_modules && node build.mjs >/dev/null && SPOTS=street,house FRAMES=2 NOEXTRA=1 NOBASEMB=1 timeout 1500 node $GITHUB_WORKSPACE/tools/perfcheck.cjs medium $GITHUB_WORKSPACE/shots/$s | grep -E "^PERF|^FAIL" ; mkdir -p $GITHUB_WORKSPACE/shots/$s/g && timeout 900 node $GITHUB_WORKSPACE/tools/gloompixels.cjs $GITHUB_WORKSPACE/shots/$s/g dist | tail -3); done   (limit 150 min)
++ for s in f6817ef88689b8e07851264a7828a34a4d65ee60 96d06c0df227764eaa8dd97f5870f2db98e82999 93cf052e69702a05e8c5b9f739db5d79b6e5c9ed
++ git fetch -q --depth 1 origin f6817ef88689b8e07851264a7828a34a4d65ee60
++ git worktree add -q ../w_f6817ef88689b8e07851264a7828a34a4d65ee60 f6817ef88689b8e07851264a7828a34a4d65ee60
++ cd ../w_f6817ef88689b8e07851264a7828a34a4d65ee60
++ ln -s /home/runner/work/dawnpunk/dawnpunk/node_modules node_modules
++ node build.mjs
++ SPOTS=street,house
++ FRAMES=2
++ NOEXTRA=1
++ NOBASEMB=1
++ timeout 1500 node /home/runner/work/dawnpunk/dawnpunk/tools/perfcheck.cjs medium /home/runner/work/dawnpunk/dawnpunk/shots/f6817ef88689b8e07851264a7828a34a4d65ee60
++ grep -E '^PERF|^FAIL'
+PERF medium street: calls 426 (screen 396), triangles 1.70 M (screen 1.69 M), frame 7607 ms (software GPU), downloaded 36 MB, cam 0.0,1.6,0.0 yaw 0.00 far 82
+PERF medium house: calls 483 (screen 453), triangles 1.77 M (screen 1.76 M), frame 8254 ms (software GPU), downloaded 36.2 MB, cam -1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 371/748
+PERFJSON [{"tier":"medium","spot":"street","calls":426,"tris":1695642,"sCalls":396,"sTris":1692942,"ms":7607,"mb":36,"cam":"0.0,1.6,0.0 yaw 0.00 far 82"},{"tier":"medium","spot":"house","calls":483,"tris":1765905,"sCalls":453,"sTris":1763205,"ms":8254,"mb":36.2,"cam":"-1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 371/748"}]
++ mkdir -p /home/runner/work/dawnpunk/dawnpunk/shots/f6817ef88689b8e07851264a7828a34a4d65ee60/g
++ timeout 900 node /home/runner/work/dawnpunk/dawnpunk/tools/gloompixels.cjs /home/runner/work/dawnpunk/dawnpunk/shots/f6817ef88689b8e07851264a7828a34a4d65ee60/g dist
++ tail -3
+INFO warden t=1.9: 16 draws, 52592 triangles
+INFO warden t=3.3: 16 draws, 52592 triangles
+PASS no page errors
++ for s in f6817ef88689b8e07851264a7828a34a4d65ee60 96d06c0df227764eaa8dd97f5870f2db98e82999 93cf052e69702a05e8c5b9f739db5d79b6e5c9ed
++ git fetch -q --depth 1 origin 96d06c0df227764eaa8dd97f5870f2db98e82999
++ git worktree add -q ../w_96d06c0df227764eaa8dd97f5870f2db98e82999 96d06c0df227764eaa8dd97f5870f2db98e82999
++ cd ../w_96d06c0df227764eaa8dd97f5870f2db98e82999
++ ln -s /home/runner/work/dawnpunk/dawnpunk/node_modules node_modules
++ node build.mjs
++ SPOTS=street,house
++ FRAMES=2
++ NOEXTRA=1
++ NOBASEMB=1
++ timeout 1500 node /home/runner/work/dawnpunk/dawnpunk/tools/perfcheck.cjs medium /home/runner/work/dawnpunk/dawnpunk/shots/96d06c0df227764eaa8dd97f5870f2db98e82999
++ grep -E '^PERF|^FAIL'
+PERF medium street: calls 426 (screen 396), triangles 1.70 M (screen 1.69 M), frame 7533 ms (software GPU), downloaded 36 MB, cam 0.0,1.6,0.0 yaw 0.00 far 82
+PERF medium house: calls 491 (screen 461), triangles 1.77 M (screen 1.76 M), frame 8238 ms (software GPU), downloaded 36.2 MB, cam -1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 371/748
+PERFJSON [{"tier":"medium","spot":"street","calls":426,"tris":1695642,"sCalls":396,"sTris":1692942,"ms":7533,"mb":36,"cam":"0.0,1.6,0.0 yaw 0.00 far 82"},{"tier":"medium","spot":"house","calls":491,"tris":1767225,"sCalls":461,"sTris":1764525,"ms":8238,"mb":36.2,"cam":"-1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 371/748"}]
++ mkdir -p /home/runner/work/dawnpunk/dawnpunk/shots/96d06c0df227764eaa8dd97f5870f2db98e82999/g
++ timeout 900 node /home/runner/work/dawnpunk/dawnpunk/tools/gloompixels.cjs /home/runner/work/dawnpunk/dawnpunk/shots/96d06c0df227764eaa8dd97f5870f2db98e82999/g dist
++ tail -3
+INFO warden t=1.9: 16 draws, 52592 triangles
+INFO warden t=3.3: 16 draws, 52592 triangles
+PASS no page errors
++ for s in f6817ef88689b8e07851264a7828a34a4d65ee60 96d06c0df227764eaa8dd97f5870f2db98e82999 93cf052e69702a05e8c5b9f739db5d79b6e5c9ed
++ git fetch -q --depth 1 origin 93cf052e69702a05e8c5b9f739db5d79b6e5c9ed
++ git worktree add -q ../w_93cf052e69702a05e8c5b9f739db5d79b6e5c9ed 93cf052e69702a05e8c5b9f739db5d79b6e5c9ed
++ cd ../w_93cf052e69702a05e8c5b9f739db5d79b6e5c9ed
++ ln -s /home/runner/work/dawnpunk/dawnpunk/node_modules node_modules
++ node build.mjs
++ SPOTS=street,house
++ FRAMES=2
++ NOEXTRA=1
++ NOBASEMB=1
++ timeout 1500 node /home/runner/work/dawnpunk/dawnpunk/tools/perfcheck.cjs medium /home/runner/work/dawnpunk/dawnpunk/shots/93cf052e69702a05e8c5b9f739db5d79b6e5c9ed
++ grep -E '^PERF|^FAIL'
+PERF medium street: calls 426 (screen 396), triangles 1.70 M (screen 1.69 M), frame 7624 ms (software GPU), downloaded 36 MB, cam 0.0,1.6,0.0 yaw 0.00 far 82
+PERF medium house: calls 483 (screen 453), triangles 1.77 M (screen 1.76 M), frame 8372 ms (software GPU), downloaded 36.2 MB, cam -1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 371/748
+PERFJSON [{"tier":"medium","spot":"street","calls":426,"tris":1695642,"sCalls":396,"sTris":1692942,"ms":7624,"mb":36,"cam":"0.0,1.6,0.0 yaw 0.00 far 82"},{"tier":"medium","spot":"house","calls":483,"tris":1765905,"sCalls":453,"sTris":1763205,"ms":8372,"mb":36.2,"cam":"-1.9,1.6,-5.2 yaw 1.57 far 37 nightcull 371/748"}]
++ mkdir -p /home/runner/work/dawnpunk/dawnpunk/shots/93cf052e69702a05e8c5b9f739db5d79b6e5c9ed/g
++ timeout 900 node /home/runner/work/dawnpunk/dawnpunk/tools/gloompixels.cjs /home/runner/work/dawnpunk/dawnpunk/shots/93cf052e69702a05e8c5b9f739db5d79b6e5c9ed/g dist
++ tail -3
+INFO warden t=1.9: 16 draws, 52592 triangles
+INFO warden t=3.3: 16 draws, 52592 triangles
+PASS no page errors
+exit code 0

@@ -1,0 +1,86 @@
+{
+ "walker_0.7": {
+  "calls": 11,
+  "tris": 56994
+ },
+ "walker_1.9": {
+  "calls": 5,
+  "tris": 56114
+ },
+ "walker_3.3": {
+  "calls": 5,
+  "tris": 56114
+ },
+ "lurcher_0.7": {
+  "calls": 14,
+  "tris": 58770
+ },
+ "lurcher_1.9": {
+  "calls": 8,
+  "tris": 57890
+ },
+ "lurcher_3.3": {
+  "calls": 8,
+  "tris": 57890
+ },
+ "hauler_0.7": {
+  "calls": 8,
+  "tris": 49900
+ },
+ "hauler_1.9": {
+  "calls": 8,
+  "tris": 49900
+ },
+ "hauler_3.3": {
+  "calls": 8,
+  "tris": 49900
+ },
+ "stilt_0.7": {
+  "calls": 6,
+  "tris": 45316
+ },
+ "stilt_1.9": {
+  "calls": 6,
+  "tris": 45316
+ },
+ "stilt_3.3": {
+  "calls": 6,
+  "tris": 45316
+ },
+ "lantern_0.7": {
+  "calls": 9,
+  "tris": 36674
+ },
+ "lantern_1.9": {
+  "calls": 9,
+  "tris": 36674
+ },
+ "lantern_3.3": {
+  "calls": 9,
+  "tris": 36674
+ },
+ "ticks_0.7": {
+  "calls": 18,
+  "tris": 55116
+ },
+ "ticks_1.9": {
+  "calls": 18,
+  "tris": 55116
+ },
+ "ticks_3.3": {
+  "calls": 18,
+  "tris": 55116
+ },
+ "warden_0.7": {
+  "calls": 16,
+  "tris": 52592
+ },
+ "warden_1.9": {
+  "calls": 16,
+  "tris": 52592
+ },
+ "warden_3.3": {
+  "calls": 16,
+  "tris": 52592
+ }
+}
