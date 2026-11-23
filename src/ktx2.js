@@ -28,9 +28,11 @@ export function ktx2Load(url) {
   if (!loader) return Promise.reject(new Error('ktx2 off'));
   return loader.loadAsync(url).then((t) => { ktx2State.ok++; return t; }, (e) => { ktx2State.failed++; throw e; });
 }
-// turn an existing texture (already on materials, maybe cloned) into the compressed picture k, keeping its own wrap, filters, anisotropy and colour space
+// turn an existing texture (already on materials, maybe cloned) into the compressed picture k, keeping its own wrap, filters, anisotropy and colour space.
+// It becomes a CompressedTexture (prototype), so a clone made from it later is compressed too (Nov 23, Mac 45099295190: a plain clone of an upgraded texture
+// sent the compressed picture down the ordinary upload: 'texSubImage2D ... Overload resolution failed' page error)
 export function takeCompressed(t, k) {
-  t.dispose(); t.isCompressedTexture = true; t.source = k.source; t.mipmaps = k.mipmaps; t.format = k.format; t.type = k.type; t.flipY = false; t.generateMipmaps = false;
+  t.dispose(); Object.setPrototypeOf(t, THREE.CompressedTexture.prototype); t.isCompressedTexture = true; t.source = k.source; t.mipmaps = k.mipmaps; t.format = k.format; t.type = k.type; t.flipY = false; t.generateMipmaps = false;
   if (k.mipmaps.length <= 1 && (t.minFilter === THREE.LinearMipmapLinearFilter || t.minFilter === THREE.LinearMipmapNearestFilter)) t.minFilter = THREE.LinearFilter;
   t.needsUpdate = true;
 }

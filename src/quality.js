@@ -61,7 +61,7 @@ function askHi(name) {
   const use = (pic, bm) => { hiImg[name] = pic; hiBm[name] = bm; hiSrc[name] = new THREE.Source(pic); hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
   const ok = () => { if (chk && !readable(img)) { hiState.failed++; delete waiting[name]; return; } use(img, false); };
   const bad = () => { hiState.failed++; delete waiting[name]; };
-  const useK = (k) => { hiK[name] = k; hiImg[name] = k; hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
+  const useK = (k) => { k.userData.data0 = k.source.data; hiK[name] = k; hiImg[name] = k; hiState.ok++; for (const t of waiting[name] || []) upgrade(t, name); delete waiting[name]; };
   const viaImg = () => { img.src = TEXHI[name]; if (img.decode) img.decode().then(ok, bad); else { img.onload = ok; img.onerror = bad; } };
   // CONFIG.lag.hiBitmap: the file fetched and made into a flipped ImageBitmap off the main thread; any failure (no createImageBitmap or fetch, a file:// page) takes the <img> way
   // the KTX2 copy first (desktop, CONFIG.lag.ktx2.tex); if it fails, the JPEG / PNG way below
@@ -78,6 +78,8 @@ export const hiPending = () => hiState.asked - hiState.ok - hiState.failed;
 // follow a texture made from TEX[name] (also clones, which share its picture): it gets the high-tier picture if and when there is one
 export function texTrack(t, name) { if (!Q.hiTex || !TEXHI[name]) return t; askHi(name); if (hiImg[name]) upgrade(t, name); else (waiting[name] = waiting[name] || []).push(t); return t; }
 // a texture for TEX[name]: the packed picture now, the high-tier file once it has arrived (the packed picture never overwrites it)
-export function texLoad(name) { const t = loader.load(TEX[name], () => { if (t.userData.hi && !t.userData.hiK && hiSrc[name]) { hiSrc[name].data = hiImg[name]; t.source = hiSrc[name]; t.needsUpdate = true; } }); return texTrack(t, name); }
+// (Nov 23) TextureLoader writes the packed picture into t.image when it arrives, i.e. into the shared source the texture already holds: for a KTX2 picture that is
+// the compressed source every copy shares, so its size record is put back and the texture keeps it
+export function texLoad(name) { const t = loader.load(TEX[name], () => { if (t.userData.hiK) { const K = t.userData.hiK; K.source.data = K.userData.data0; t.source = K.source; t.needsUpdate = true; return; } if (t.userData.hi && hiSrc[name]) { hiSrc[name].data = hiImg[name]; t.source = hiSrc[name]; t.needsUpdate = true; } }); return texTrack(t, name); }
 // round parts: segment count for the tier
 export const seg = (n) => Math.min(Math.max(n, Math.round(n * Q.round)), Q.roundMax);
