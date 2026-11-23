@@ -27,3 +27,8 @@ Bots only (logic sim, src/bots.js); no human has played these numbers. Fresh sav
 ## 3. Open (owner)
 - Which nights the player meant (rings 2-3 only, or 4 too) and whether they climbed a ring each night.
 - Direction to test next, only with a yes: threat that scales with how strong the defence is (built devices or the last night's margin), checked so that novice and average win rates stay where they are now.
+
+## 4. Owner 23:18: "2'5" (read as rings 2 to 5). Two more levers aimed at strong players only (none adopted)
+- Signal check (60 nights per ring per bot): on clean nights the bots overlap. Median nearest Gloom 5.1 / 5.5 / 6.5 m (novice / average / expert, ring 2); killed before getting inside 48 / 51 / 61%; the battery reaches 0 after 30 s for all three. No single-night signal picks out the strong player.
+- Surge (temporary src/sim.js patch, reverted): when the house is empty early and the next machine is over 6 s away, the next ones come at once plus 2 extra (up to +25% of the night). Ring 2 win: novice 80 -> 67%, average 90 -> 88%, expert 100 -> 100% (hurt 2 -> 2%). The early waves leave every bot a quiet gap, so it lands on the weak player first.
+- So far no automatic lever is selective. What the numbers do support: extra machines bite a strong player at about x1.3 (expert ring 3: win 98 -> 73%, hurt 5 -> 38%), which would wreck novice (ring 3 win 60 -> 13%). That points to a choice the player makes (a harder night for more loot, like the lure cat), not a change for everyone. Owner's call.
