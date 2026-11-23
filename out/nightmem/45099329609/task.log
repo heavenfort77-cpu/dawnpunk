@@ -1,0 +1,16 @@
+$ timeout 7000 node tools/nightmem.cjs medium 6 | tee shots_nightmem.txt   (limit 125 min)
+INFO {"label":"base after night 1 (ring index 0)","state":"base","geometries":737,"textures":139,"programs":137,"heapMB":418.6,"nodes":2539,"kids":9,"fight":{"kills":6,"frames":252,"alive":2,"t":25.4}}
+INFO {"label":"base after night 2 (ring index 1)","state":"base","geometries":737,"textures":139,"programs":141,"heapMB":409.2,"nodes":2539,"kids":9,"fight":{"kills":8,"frames":252,"alive":2,"t":25.5}}
+INFO {"label":"base after night 3 (ring index 2)","state":"base","geometries":743,"textures":142,"programs":141,"heapMB":415.3,"nodes":2539,"kids":9,"fight":{"kills":7,"frames":252,"alive":5,"t":25.5}}
+INFO {"label":"base after night 4 (ring index 3)","state":"base","geometries":745,"textures":142,"programs":141,"heapMB":426.9,"nodes":2539,"kids":9,"fight":{"kills":5,"frames":252,"alive":7,"t":25.5}}
+INFO {"label":"base after night 5 (ring index 4)","state":"base","geometries":745,"textures":142,"programs":141,"heapMB":422.6,"nodes":2539,"kids":9,"fight":{"kills":3,"frames":252,"alive":12,"t":25.5}}
+INFO {"label":"base after night 6 (ring index 5)","state":"base","geometries":745,"textures":142,"programs":141,"heapMB":419.3,"nodes":2539,"kids":9,"fight":{"kills":6,"frames":252,"alive":2,"t":25.5}}
+INFO first night {"label":"base after night 1 (ring index 0)","state":"base","geometries":737,"textures":139,"programs":137,"heapMB":418.6,"nodes":2539,"kids":9,"fight":{"kills":6,"frames":252,"alive":2,"t":25.4}}
+INFO last night {"label":"base after night 6 (ring index 5)","state":"base","geometries":745,"textures":142,"programs":141,"heapMB":419.3,"nodes":2539,"kids":9,"fight":{"kills":6,"frames":252,"alive":2,"t":25.5}}
+PASS medium: geometries after night 6 745 vs after night 1 737 (allowed growth 20; nights: 737, 737, 743, 745, 745, 745)
+PASS medium: textures after night 6 142 vs after night 1 139 (allowed growth 20; nights: 139, 139, 142, 142, 142, 142)
+PASS medium: programs after night 6 141 vs after night 1 137 (allowed growth 20; nights: 137, 141, 141, 141, 141, 141)
+PASS medium: heapMB after night 6 419.3 MB vs after night 1 418.6 MB (allowed growth 15 MB; nights: 418.6, 409.2, 415.3, 426.9, 422.6, 419.3)
+PASS medium: every night had a real fight (kills 6, 8, 7, 5, 3, 6)
+PASS medium: no page errors
+exit code 0
