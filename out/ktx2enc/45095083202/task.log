@@ -1,0 +1,2000 @@
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex render.jpg 1024x1024 51 KB -> 362 KB, PSNR 53.8 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex render_n.jpg 1024x1024 117 KB -> 691 KB, PSNR 46.0 dB
+Total slices: 11
+Slice: 0, alpha: 1, orig width/height: 1024x256, width/height: 1024x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 512x128, width/height: 512x128, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 256x64, width/height: 256x64, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 128x32, width/height: 128x32, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 64x16, width/height: 64x16, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 32x8, width/height: 32x8, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 16x4, width/height: 16x4, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 8x2, width/height: 8x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 4x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 2x1, width/height: 4x4, first_block: 21847, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21848, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex roadcrack.png 1024x256 alpha 98 KB -> 56 KB, PSNR 43.5 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex roof.jpg 1024x1024 61 KB -> 351 KB, PSNR 49.6 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex roof_n.jpg 1024x1024 190 KB -> 981 KB, PSNR 42.1 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex rust.jpg 1024x1024 82 KB -> 545 KB, PSNR 48.5 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex rust_n.jpg 1024x1024 217 KB -> 1067 KB, PSNR 40.0 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+tex scorch.png 512x512 alpha 123 KB -> 85 KB, PSNR 50.6 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex siding.jpg 1024x1024 75 KB -> 452 KB, PSNR 48.4 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex siding_n.jpg 1024x1024 224 KB -> 1124 KB, PSNR 40.5 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+tex stain.png 512x512 alpha 77 KB -> 50 KB, PSNR 46.6 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+tex streaks.png 512x512 alpha 90 KB -> 74 KB, PSNR 48.6 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex tiles.jpg 1024x1024 92 KB -> 533 KB, PSNR 46.2 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex tiles_n.jpg 1024x1024 255 KB -> 1203 KB, PSNR 39.1 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+tex tuft.png 512x512 alpha 138 KB -> 123 KB, PSNR 39.3 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+tex vine.png 512x512 alpha 155 KB -> 132 KB, PSNR 39.8 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex wood.jpg 1024x1024 167 KB -> 721 KB, PSNR 43.2 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex wood_n.jpg 1024x1024 284 KB -> 1089 KB, PSNR 36.9 dB
+REFUSED wood_n.jpg (PSNR under 38)
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex worn.jpg 1024x1024 83 KB -> 544 KB, PSNR 48.2 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+tex worn_n.jpg 1024x1024 205 KB -> 1030 KB, PSNR 40.5 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model boss_beckoner_hi.glb #0 walker_base (c) 1024x1024 312 KB -> 1148 KB, PSNR 42.0 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model boss_beckoner_hi.glb #1 walker_orm (l) 1024x1024 604 KB -> 1235 KB, PSNR 36.4 dB
+REFUSED boss_beckoner_hi.glb #1
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model boss_beckoner_hi.glb #2 walker_nrm (n) 1024x1024 423 KB -> 1186 KB, PSNR 39.0 dB
+boss_beckoner_hi.glb: 2 pictures, 4.3 MB -> 5.9 MB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model bram_scan_hi.glb #0 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model bram_scan_hi.glb #1 skin_normal_scan (n) 1024x1024 117 KB -> 342 KB, PSNR 47.3 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model bram_scan_hi.glb #2 skin_color_scan (c) 1024x1024 69 KB -> 243 KB, PSNR 52.7 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model bram_scan_hi.glb #3 skin_orm (l) 1024x1024 18 KB -> 15 KB, PSNR 71.8 dB
+Total slices: 10
+Slice: 0, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model bram_scan_hi.glb #4 eye (c) 512x512 15 KB -> 94 KB, PSNR 48.6 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model bram_scan_hi.glb #5 hair (c) 512x512 alpha 26 KB -> 57 KB, PSNR 44.1 dB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model bram_scan_hi.glb #6 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+bram_scan_hi.glb: 7 pictures, 1.2 MB -> 1.8 MB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model bram_scan_lo.glb #0 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+Total slices: 10
+Slice: 0, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model bram_scan_lo.glb #1 skin_color_scan (c) 512x512 20 KB -> 83 KB, PSNR 49.9 dB
+Total slices: 10
+Slice: 0, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model bram_scan_lo.glb #2 eye (c) 512x512 15 KB -> 95 KB, PSNR 48.6 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model bram_scan_lo.glb #3 hair (c) 512x512 alpha 26 KB -> 57 KB, PSNR 44.1 dB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model bram_scan_lo.glb #4 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+bram_scan_lo.glb: 5 pictures, 0.6 MB -> 0.9 MB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_hauler_hi.glb #0 walker_base (c) 1024x1024 224 KB -> 913 KB, PSNR 42.3 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_hauler_hi.glb #1 walker_orm (l) 1024x1024 320 KB -> 849 KB, PSNR 41.6 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_hauler_hi.glb #2 walker_nrm (n) 1024x1024 413 KB -> 1160 KB, PSNR 39.2 dB
+gloom_hauler_hi.glb: 3 pictures, 2.1 MB -> 4.0 MB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_lantern_hi.glb #0 walker_base (c) 1024x1024 227 KB -> 944 KB, PSNR 42.1 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_lantern_hi.glb #1 walker_orm (l) 1024x1024 315 KB -> 841 KB, PSNR 41.6 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_lantern_hi.glb #2 walker_nrm (n) 1024x1024 366 KB -> 1104 KB, PSNR 40.6 dB
+gloom_lantern_hi.glb: 3 pictures, 1.8 MB -> 3.7 MB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_lurcher_hi.glb #0 walker_base (c) 1024x1024 227 KB -> 932 KB, PSNR 42.1 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_lurcher_hi.glb #1 walker_orm (l) 1024x1024 330 KB -> 853 KB, PSNR 41.3 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_lurcher_hi.glb #2 walker_nrm (n) 1024x1024 401 KB -> 1167 KB, PSNR 40.0 dB
+gloom_lurcher_hi.glb: 3 pictures, 2.3 MB -> 4.2 MB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_stilt_hi.glb #0 walker_base (c) 1024x1024 221 KB -> 888 KB, PSNR 42.1 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_stilt_hi.glb #1 walker_orm (l) 1024x1024 315 KB -> 821 KB, PSNR 41.5 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_stilt_hi.glb #2 walker_nrm (n) 1024x1024 357 KB -> 1105 KB, PSNR 40.8 dB
+gloom_stilt_hi.glb: 3 pictures, 2.0 MB -> 3.8 MB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_ticks_hi.glb #0 walker_base (c) 1024x1024 173 KB -> 795 KB, PSNR 43.8 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_ticks_hi.glb #1 walker_orm (l) 1024x1024 187 KB -> 602 KB, PSNR 45.4 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_ticks_hi.glb #2 walker_nrm (n) 1024x1024 306 KB -> 1017 KB, PSNR 42.4 dB
+gloom_ticks_hi.glb: 3 pictures, 1.1 MB -> 2.8 MB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_walker_hi.glb #0 walker_base (c) 1024x1024 247 KB -> 965 KB, PSNR 41.6 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_walker_hi.glb #1 walker_orm (l) 1024x1024 313 KB -> 816 KB, PSNR 41.4 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_walker_hi.glb #2 walker_nrm (n) 1024x1024 477 KB -> 1216 KB, PSNR 38.0 dB
+REFUSED gloom_walker_hi.glb #2
+gloom_walker_hi.glb: 2 pictures, 2.7 MB -> 3.9 MB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_warden_hi.glb #0 walker_base (c) 1024x1024 233 KB -> 949 KB, PSNR 42.2 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_warden_hi.glb #1 walker_orm (l) 1024x1024 298 KB -> 787 KB, PSNR 41.2 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model gloom_warden_hi.glb #2 walker_nrm (n) 1024x1024 474 KB -> 1218 KB, PSNR 37.8 dB
+REFUSED gloom_warden_hi.glb #2
+gloom_warden_hi.glb: 2 pictures, 2.2 MB -> 3.4 MB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model marla_hi.glb #0 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model marla_hi.glb #1 skin_normal (n) 1024x1024 117 KB -> 340 KB, PSNR 47.6 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model marla_hi.glb #2 skin_color (c) 1024x1024 73 KB -> 292 KB, PSNR 52.8 dB
+Total slices: 11
+Slice: 0, alpha: 0, orig width/height: 1024x1024, width/height: 1024x1024, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 65536, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 81920, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 86016, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 87040, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 87296, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 87360, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 87376, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 87380, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 87381, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 87382, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 0.500000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model marla_hi.glb #3 skin_orm (l) 1024x1024 50 KB -> 190 KB, PSNR 53.9 dB
+Total slices: 11
+Slice: 0, alpha: 1, orig width/height: 1024x460, width/height: 1024x460, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 512x230, width/height: 512x232, first_block: 29440, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 256x115, width/height: 256x116, first_block: 36864, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 128x57, width/height: 128x60, first_block: 38720, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 64x28, width/height: 64x28, first_block: 39200, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 32x14, width/height: 32x16, first_block: 39312, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 16x7, width/height: 16x8, first_block: 39344, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 8x3, width/height: 8x4, first_block: 39352, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 4x1, width/height: 4x4, first_block: 39354, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 2x1, width/height: 4x4, first_block: 39355, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 39356, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model marla_hi.glb #4 brow_l (c) 1024x460 alpha 191 KB -> 107 KB, PSNR 38.6 dB
+Total slices: 11
+Slice: 0, alpha: 1, orig width/height: 1024x460, width/height: 1024x460, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 512x230, width/height: 512x232, first_block: 29440, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 256x115, width/height: 256x116, first_block: 36864, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 128x57, width/height: 128x60, first_block: 38720, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 64x28, width/height: 64x28, first_block: 39200, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 32x14, width/height: 32x16, first_block: 39312, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 16x7, width/height: 16x8, first_block: 39344, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 8x3, width/height: 8x4, first_block: 39352, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 4x1, width/height: 4x4, first_block: 39354, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 2x1, width/height: 4x4, first_block: 39355, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 39356, image_index: 0, mip_level: 10, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+Encoding slice 10
+basis_compressor::process: Success
+model marla_hi.glb #5 brow_r (c) 1024x460 alpha 194 KB -> 109 KB, PSNR 38.3 dB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model marla_hi.glb #6 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model marla_hi.glb #7 cloth_weave_s (c) 256x256 10 KB -> 68 KB, PSNR 43.6 dB
+Total slices: 10
+Slice: 0, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model marla_hi.glb #8 eye2 (c) 512x512 13 KB -> 80 KB, PSNR 48.8 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model marla_hi.glb #9 hair (c) 512x512 alpha 29 KB -> 55 KB, PSNR 43.9 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x256, width/height: 512x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x128, width/height: 256x128, first_block: 8192, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x64, width/height: 128x64, first_block: 10240, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x32, width/height: 64x32, first_block: 10752, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x16, width/height: 32x16, first_block: 10880, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x8, width/height: 16x8, first_block: 10912, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x4, width/height: 8x4, first_block: 10920, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x2, width/height: 4x4, first_block: 10922, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x1, width/height: 4x4, first_block: 10923, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 10924, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model marla_hi.glb #10 lash (c) 512x256 alpha 9 KB -> 21 KB, PSNR 51.7 dB
+marla_hi.glb: 11 pictures, 2.4 MB -> 3.1 MB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model oko_hi.glb #0 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+Total slices: 10
+Slice: 0, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model oko_hi.glb #1 skin_color (c) 512x512 14 KB -> 53 KB, PSNR 51.0 dB
+Total slices: 10
+Slice: 0, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model oko_hi.glb #2 eye (c) 512x512 14 KB -> 90 KB, PSNR 49.1 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model oko_hi.glb #3 hair (c) 512x512 alpha 15 KB -> 40 KB, PSNR 45.7 dB
+Total slices: 9
+Slice: 0, alpha: 1, orig width/height: 256x64, width/height: 256x64, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 128x32, width/height: 128x32, first_block: 1024, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 64x16, width/height: 64x16, first_block: 1280, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 32x8, width/height: 32x8, first_block: 1344, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 16x4, width/height: 16x4, first_block: 1360, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 8x2, width/height: 8x4, first_block: 1364, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 4x1, width/height: 4x4, first_block: 1366, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 2x1, width/height: 4x4, first_block: 1367, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 1368, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model oko_hi.glb #4 lash (c) 256x64 alpha 1 KB -> 4 KB, PSNR 99.0 dB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model oko_hi.glb #5 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+oko_hi.glb: 6 pictures, 0.5 MB -> 0.7 MB
+Total slices: 10
+Slice: 0, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model pip_hi.glb #0 skin_color (c) 512x512 20 KB -> 73 KB, PSNR 48.8 dB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model pip_hi.glb #1 cloth_weave_s (c) 256x256 10 KB -> 68 KB, PSNR 43.6 dB
+Total slices: 10
+Slice: 0, alpha: 0, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model pip_hi.glb #2 eye (c) 512x512 15 KB -> 97 KB, PSNR 48.3 dB
+Total slices: 10
+Slice: 0, alpha: 1, orig width/height: 512x512, width/height: 512x512, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 256x256, width/height: 256x256, first_block: 16384, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 128x128, width/height: 128x128, first_block: 20480, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 64x64, width/height: 64x64, first_block: 21504, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 32x32, width/height: 32x32, first_block: 21760, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 16x16, width/height: 16x16, first_block: 21824, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 8x8, width/height: 8x8, first_block: 21840, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 4x4, width/height: 4x4, first_block: 21844, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 21845, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 21846, image_index: 0, mip_level: 9, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+Encoding slice 9
+basis_compressor::process: Success
+model pip_hi.glb #3 hair (c) 512x512 alpha 22 KB -> 48 KB, PSNR 44.2 dB
+Total slices: 9
+Slice: 0, alpha: 1, orig width/height: 256x64, width/height: 256x64, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 128x32, width/height: 128x32, first_block: 1024, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 64x16, width/height: 64x16, first_block: 1280, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 32x8, width/height: 32x8, first_block: 1344, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 16x4, width/height: 16x4, first_block: 1360, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 8x2, width/height: 8x4, first_block: 1364, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 4x1, width/height: 4x4, first_block: 1366, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 2x1, width/height: 4x4, first_block: 1367, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 1368, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model pip_hi.glb #4 lash (c) 256x64 alpha 0 KB -> 1 KB, PSNR 99.0 dB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model pip_hi.glb #5 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+Total slices: 9
+Slice: 0, alpha: 0, orig width/height: 256x256, width/height: 256x256, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 0, orig width/height: 128x128, width/height: 128x128, first_block: 4096, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 0, orig width/height: 64x64, width/height: 64x64, first_block: 5120, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 0, orig width/height: 32x32, width/height: 32x32, first_block: 5376, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 0, orig width/height: 16x16, width/height: 16x16, first_block: 5440, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 0, orig width/height: 8x8, width/height: 8x8, first_block: 5456, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 0, orig width/height: 4x4, width/height: 4x4, first_block: 5460, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 0, orig width/height: 2x2, width/height: 4x4, first_block: 5461, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 0, orig width/height: 1x1, width/height: 4x4, first_block: 5462, image_index: 0, mip_level: 8, iframe: 0
+Mode: UASTC LDR 4x4 Effort Level (0-4): 1, using RDO lambda: 1.000000
+Encoding slice 0
+Encoding slice 1
+Encoding slice 2
+Encoding slice 3
+Encoding slice 4
+Encoding slice 5
+Encoding slice 6
+Encoding slice 7
+Encoding slice 8
+basis_compressor::process: Success
+model pip_hi.glb #6 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+pip_hi.glb: 7 pictures, 0.5 MB -> 0.9 MB
+TOTAL pictures 126: files 16.0 MB -> 52.0 MB; on the graphics chip (with mipmaps) 398 MB as RGBA -> 100 MB as BC7/ASTC
+exit code 0

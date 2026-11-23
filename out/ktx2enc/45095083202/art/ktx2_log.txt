@@ -1,0 +1,126 @@
+tex asphalt.jpg 1024x1024 55 KB -> 327 KB, PSNR 51.8 dB
+tex asphalt_n.jpg 1024x1024 206 KB -> 1072 KB, PSNR 41.9 dB
+tex bark.jpg 512x512 43 KB -> 230 KB, PSNR 42.2 dB
+tex bark_n.jpg 512x512 91 KB -> 315 KB, PSNR 36.0 dB
+tex block.jpg 1024x1024 73 KB -> 440 KB, PSNR 48.7 dB
+tex block_n.jpg 1024x1024 222 KB -> 1139 KB, PSNR 41.0 dB
+tex brick.jpg 1024x1024 73 KB -> 437 KB, PSNR 47.9 dB
+tex brick_n.jpg 1024x1024 192 KB -> 1001 KB, PSNR 42.2 dB
+tex canopy.png 512x512 alpha 141 KB -> 120 KB, PSNR 41.0 dB
+tex carrust.png 1024x320 alpha 308 KB -> 170 KB, PSNR 39.0 dB
+tex catcalico_b.jpg 512x256 8 KB -> 29 KB, PSNR 47.4 dB
+tex catcalico_h.jpg 512x256 7 KB -> 28 KB, PSNR 47.3 dB
+tex catkuro_b.jpg 512x256 12 KB -> 25 KB, PSNR 44.3 dB
+tex catkuro_h.jpg 512x256 7 KB -> 20 KB, PSNR 47.1 dB
+tex catkutani_b.jpg 512x256 15 KB -> 39 KB, PSNR 42.3 dB
+tex catkutani_h.jpg 512x256 8 KB -> 21 KB, PSNR 47.5 dB
+tex cell.jpg 512x512 33 KB -> 191 KB, PSNR 44.9 dB
+tex chalk.jpg 1024x1024 67 KB -> 405 KB, PSNR 49.3 dB
+tex chalk_n.jpg 1024x1024 148 KB -> 870 KB, PSNR 44.7 dB
+tex cobweb.png 512x512 alpha 67 KB -> 63 KB, PSNR 43.0 dB
+tex crack.png 512x512 alpha 15 KB -> 14 KB, PSNR 49.8 dB
+tex debris.png 512x512 alpha 128 KB -> 86 KB, PSNR 42.6 dB
+tex dust.png 512x512 alpha 84 KB -> 71 KB, PSNR 50.1 dB
+tex edge.png 512x512 alpha 95 KB -> 55 KB, PSNR 46.0 dB
+tex fabric.jpg 512x512 30 KB -> 170 KB, PSNR 44.6 dB
+tex flowers.png 512x512 alpha 76 KB -> 78 KB, PSNR 41.4 dB
+tex footgrime.png 1024x256 alpha 123 KB -> 102 KB, PSNR 47.6 dB
+tex glaze.jpg 1024x1024 46 KB -> 304 KB, PSNR 53.9 dB
+tex glaze_n.jpg 1024x1024 61 KB -> 391 KB, PSNR 49.7 dB
+tex grass.jpg 1024x1024 58 KB -> 374 KB, PSNR 50.3 dB
+tex grass_n.jpg 1024x1024 180 KB -> 1020 KB, PSNR 43.8 dB
+tex grime.png 512x512 alpha 81 KB -> 64 KB, PSNR 50.9 dB
+tex hole.png 512x512 alpha 156 KB -> 105 KB, PSNR 45.9 dB
+tex interior.jpg 1024x1024 64 KB -> 392 KB, PSNR 50.2 dB
+tex interior_n.jpg 1024x1024 166 KB -> 947 KB, PSNR 43.5 dB
+tex ivy.png 512x512 alpha 235 KB -> 202 KB, PSNR 39.6 dB
+tex leak.png 512x512 alpha 93 KB -> 77 KB, PSNR 51.0 dB
+tex leaves.jpg 512x512 63 KB -> 279 KB, PSNR 41.3 dB
+tex litter.png 512x512 alpha 89 KB -> 79 KB, PSNR 42.6 dB
+tex meadow.png 512x512 alpha 264 KB -> 171 KB, PSNR 36.2 dB
+tex metal.jpg 1024x1024 90 KB -> 495 KB, PSNR 49.3 dB
+tex metal_n.jpg 1024x1024 189 KB -> 938 KB, PSNR 39.5 dB
+tex moss.png 512x512 alpha 129 KB -> 86 KB, PSNR 44.1 dB
+tex plaster.jpg 1024x1024 74 KB -> 469 KB, PSNR 50.2 dB
+tex plaster_n.jpg 1024x1024 194 KB -> 1073 KB, PSNR 42.0 dB
+tex pool.png 256x256 alpha 53 KB -> 32 KB, PSNR 44.5 dB
+tex render.jpg 1024x1024 51 KB -> 362 KB, PSNR 53.8 dB
+tex render_n.jpg 1024x1024 117 KB -> 691 KB, PSNR 46.0 dB
+tex roadcrack.png 1024x256 alpha 98 KB -> 56 KB, PSNR 43.5 dB
+tex roof.jpg 1024x1024 61 KB -> 351 KB, PSNR 49.6 dB
+tex roof_n.jpg 1024x1024 190 KB -> 981 KB, PSNR 42.1 dB
+tex rust.jpg 1024x1024 82 KB -> 545 KB, PSNR 48.5 dB
+tex rust_n.jpg 1024x1024 217 KB -> 1067 KB, PSNR 40.0 dB
+tex scorch.png 512x512 alpha 123 KB -> 85 KB, PSNR 50.6 dB
+tex siding.jpg 1024x1024 75 KB -> 452 KB, PSNR 48.4 dB
+tex siding_n.jpg 1024x1024 224 KB -> 1124 KB, PSNR 40.5 dB
+tex stain.png 512x512 alpha 77 KB -> 50 KB, PSNR 46.6 dB
+tex streaks.png 512x512 alpha 90 KB -> 74 KB, PSNR 48.6 dB
+tex tiles.jpg 1024x1024 92 KB -> 533 KB, PSNR 46.2 dB
+tex tiles_n.jpg 1024x1024 255 KB -> 1203 KB, PSNR 39.1 dB
+tex tuft.png 512x512 alpha 138 KB -> 123 KB, PSNR 39.3 dB
+tex vine.png 512x512 alpha 155 KB -> 132 KB, PSNR 39.8 dB
+tex wood.jpg 1024x1024 167 KB -> 721 KB, PSNR 43.2 dB
+tex wood_n.jpg 1024x1024 284 KB -> 1089 KB, PSNR 36.9 dB
+tex worn.jpg 1024x1024 83 KB -> 544 KB, PSNR 48.2 dB
+tex worn_n.jpg 1024x1024 205 KB -> 1030 KB, PSNR 40.5 dB
+model boss_beckoner_hi.glb #0 walker_base (c) 1024x1024 312 KB -> 1148 KB, PSNR 42.0 dB
+model boss_beckoner_hi.glb #1 walker_orm (l) 1024x1024 604 KB -> 1235 KB, PSNR 36.4 dB
+model boss_beckoner_hi.glb #2 walker_nrm (n) 1024x1024 423 KB -> 1186 KB, PSNR 39.0 dB
+model bram_scan_hi.glb #0 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+model bram_scan_hi.glb #1 skin_normal_scan (n) 1024x1024 117 KB -> 342 KB, PSNR 47.3 dB
+model bram_scan_hi.glb #2 skin_color_scan (c) 1024x1024 69 KB -> 243 KB, PSNR 52.7 dB
+model bram_scan_hi.glb #3 skin_orm (l) 1024x1024 18 KB -> 15 KB, PSNR 71.8 dB
+model bram_scan_hi.glb #4 eye (c) 512x512 15 KB -> 94 KB, PSNR 48.6 dB
+model bram_scan_hi.glb #5 hair (c) 512x512 alpha 26 KB -> 57 KB, PSNR 44.1 dB
+model bram_scan_hi.glb #6 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+model bram_scan_lo.glb #0 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+model bram_scan_lo.glb #1 skin_color_scan (c) 512x512 20 KB -> 83 KB, PSNR 49.9 dB
+model bram_scan_lo.glb #2 eye (c) 512x512 15 KB -> 95 KB, PSNR 48.6 dB
+model bram_scan_lo.glb #3 hair (c) 512x512 alpha 26 KB -> 57 KB, PSNR 44.1 dB
+model bram_scan_lo.glb #4 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+model gloom_hauler_hi.glb #0 walker_base (c) 1024x1024 224 KB -> 913 KB, PSNR 42.3 dB
+model gloom_hauler_hi.glb #1 walker_orm (l) 1024x1024 320 KB -> 849 KB, PSNR 41.6 dB
+model gloom_hauler_hi.glb #2 walker_nrm (n) 1024x1024 413 KB -> 1160 KB, PSNR 39.2 dB
+model gloom_lantern_hi.glb #0 walker_base (c) 1024x1024 227 KB -> 944 KB, PSNR 42.1 dB
+model gloom_lantern_hi.glb #1 walker_orm (l) 1024x1024 315 KB -> 841 KB, PSNR 41.6 dB
+model gloom_lantern_hi.glb #2 walker_nrm (n) 1024x1024 366 KB -> 1104 KB, PSNR 40.6 dB
+model gloom_lurcher_hi.glb #0 walker_base (c) 1024x1024 227 KB -> 932 KB, PSNR 42.1 dB
+model gloom_lurcher_hi.glb #1 walker_orm (l) 1024x1024 330 KB -> 853 KB, PSNR 41.3 dB
+model gloom_lurcher_hi.glb #2 walker_nrm (n) 1024x1024 401 KB -> 1167 KB, PSNR 40.0 dB
+model gloom_stilt_hi.glb #0 walker_base (c) 1024x1024 221 KB -> 888 KB, PSNR 42.1 dB
+model gloom_stilt_hi.glb #1 walker_orm (l) 1024x1024 315 KB -> 821 KB, PSNR 41.5 dB
+model gloom_stilt_hi.glb #2 walker_nrm (n) 1024x1024 357 KB -> 1105 KB, PSNR 40.8 dB
+model gloom_ticks_hi.glb #0 walker_base (c) 1024x1024 173 KB -> 795 KB, PSNR 43.8 dB
+model gloom_ticks_hi.glb #1 walker_orm (l) 1024x1024 187 KB -> 602 KB, PSNR 45.4 dB
+model gloom_ticks_hi.glb #2 walker_nrm (n) 1024x1024 306 KB -> 1017 KB, PSNR 42.4 dB
+model gloom_walker_hi.glb #0 walker_base (c) 1024x1024 247 KB -> 965 KB, PSNR 41.6 dB
+model gloom_walker_hi.glb #1 walker_orm (l) 1024x1024 313 KB -> 816 KB, PSNR 41.4 dB
+model gloom_walker_hi.glb #2 walker_nrm (n) 1024x1024 477 KB -> 1216 KB, PSNR 38.0 dB
+model gloom_warden_hi.glb #0 walker_base (c) 1024x1024 233 KB -> 949 KB, PSNR 42.2 dB
+model gloom_warden_hi.glb #1 walker_orm (l) 1024x1024 298 KB -> 787 KB, PSNR 41.2 dB
+model gloom_warden_hi.glb #2 walker_nrm (n) 1024x1024 474 KB -> 1218 KB, PSNR 37.8 dB
+model marla_hi.glb #0 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+model marla_hi.glb #1 skin_normal (n) 1024x1024 117 KB -> 340 KB, PSNR 47.6 dB
+model marla_hi.glb #2 skin_color (c) 1024x1024 73 KB -> 292 KB, PSNR 52.8 dB
+model marla_hi.glb #3 skin_orm (l) 1024x1024 50 KB -> 190 KB, PSNR 53.9 dB
+model marla_hi.glb #4 brow_l (c) 1024x460 alpha 191 KB -> 107 KB, PSNR 38.6 dB
+model marla_hi.glb #5 brow_r (c) 1024x460 alpha 194 KB -> 109 KB, PSNR 38.3 dB
+model marla_hi.glb #6 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+model marla_hi.glb #7 cloth_weave_s (c) 256x256 10 KB -> 68 KB, PSNR 43.6 dB
+model marla_hi.glb #8 eye2 (c) 512x512 13 KB -> 80 KB, PSNR 48.8 dB
+model marla_hi.glb #9 hair (c) 512x512 alpha 29 KB -> 55 KB, PSNR 43.9 dB
+model marla_hi.glb #10 lash (c) 512x256 alpha 9 KB -> 21 KB, PSNR 51.7 dB
+model oko_hi.glb #0 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
+model oko_hi.glb #1 skin_color (c) 512x512 14 KB -> 53 KB, PSNR 51.0 dB
+model oko_hi.glb #2 eye (c) 512x512 14 KB -> 90 KB, PSNR 49.1 dB
+model oko_hi.glb #3 hair (c) 512x512 alpha 15 KB -> 40 KB, PSNR 45.7 dB
+model oko_hi.glb #4 lash (c) 256x64 alpha 1 KB -> 4 KB, PSNR 99.0 dB
+model oko_hi.glb #5 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+model pip_hi.glb #0 skin_color (c) 512x512 20 KB -> 73 KB, PSNR 48.8 dB
+model pip_hi.glb #1 cloth_weave_s (c) 256x256 10 KB -> 68 KB, PSNR 43.6 dB
+model pip_hi.glb #2 eye (c) 512x512 15 KB -> 97 KB, PSNR 48.3 dB
+model pip_hi.glb #3 hair (c) 512x512 alpha 22 KB -> 48 KB, PSNR 44.2 dB
+model pip_hi.glb #4 lash (c) 256x64 alpha 0 KB -> 1 KB, PSNR 99.0 dB
+model pip_hi.glb #5 cloth_twill_s (c) 256x256 18 KB -> 77 KB, PSNR 41.1 dB
+model pip_hi.glb #6 cloth_hide_s (c) 256x256 15 KB -> 74 KB, PSNR 41.2 dB
