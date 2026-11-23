@@ -1406,7 +1406,9 @@ export const CONFIG = {
     // unifyMats (Nov 20): the base's plain materials get white / flat pictures and white vertex colours so they share one shader (src/unifymat.js)
     unifyMats: true,
     // unifyStreet (Nov 23, owner's list item 3): desktop street and house rooms: plain materials share programs (src/unifymat.js unifyLite; no flat relief picture)
-    unifyStreet: true,
+    // OFF (Nov 23, same-machine A/B 45118634463 + 45118638619, 24 pairs vs the commit before: night fight -2.3 fps, boss fight -5.0 fps, worst frame +9-11 ms; the two extra
+    // picture reads per pixel cost more on the graphics chip than the 14 fewer programs save under the ride card)
+    unifyStreet: false,
     // cardTurns (Nov 20): a card kind set to false skips the four quarter turns (src/main.js sceneCard)
     cardTurns: { home: false },
     card: { on: true, sfxWait: 1.5, min: { ride: 0.7, night: 0.3, home: 0.7 }, maxWait: 12, titles: { ride: 'Riding out', night: 'Night falls', home: 'Home', film: 'Loading the street' }, settle: { n: 3, ms: 25, cap: 1.5 } },
