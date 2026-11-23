@@ -108,7 +108,7 @@ const BREAKDOWN = (spot) => {
     served = []; T0 = Date.now(); const errs = [];
     const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 }); await ctx.addInitScript(INIT, { seed: SEED });
     const p = await ctx.newPage(); p.setDefaultTimeout(900000); p.on('pageerror', (e) => errs.push(String(e).slice(0, 200))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 200)); });
-    const tGo = Date.now(); await p.goto(URL0 + '?quality=' + tier + '&seed=' + SEED + (GPU ? '&cards=1' : '') + ((process.env.PROFILE === '3') ? '&fdtime=1' : '') + (process.env.PROFILE ? '&proglog=1&gputime=1' : ''), { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info(tier + ': page up ' + el() + ', ' + MB(sumB()) + ' MB so far');
+    const tGo = Date.now(); await p.goto(URL0 + '?quality=' + tier + '&seed=' + SEED + (GPU ? '&cards=1' : '') + ((process.env.PROFILE === '3') ? '&fdtime=1' : '') + (process.env.PROFILE ? '&proglog=1&gputime=1' : (process.env.GSPLIT ? '&gputime=1' : '')), { timeout: 900000 }); await p.waitForFunction(() => window.__game && window.__game.enterBase, null, { timeout: 900000 }); info(tier + ': page up ' + el() + ', ' + MB(sumB()) + ' MB so far');
     const frames = (n) => p.evaluate((n) => new Promise((res) => { let k = 0; const f = () => (++k >= n ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
     const waitGame = (secs, cap) => p.evaluate(([secs, cap]) => new Promise((res) => { window.__dtMax = cap; let acc = 0, last = performance.now(), n = 0; const f = (now) => { acc += Math.min(cap, (now - last) / 1000); last = now; if (acc >= secs || ++n > 400) res(n); else requestAnimationFrame(f); }; requestAnimationFrame(f); }), [secs, cap || 0.3]);
     async function waitLoads(what) { for (let k = 0; k < 400; k++) { const s = await p.evaluate(() => { const q = window.__game.quality().hi, G = window.__gloomGlb || {}, B = window.__boss || {}; return { hi: q.ok + q.failed >= q.asked, marla: window.__game.marla.ready, glb: Object.values(G).every((v) => v !== 'loading'), boss: B.model !== 'loading' }; }); if (s.hi && s.marla && s.glb && s.boss) { info(what + ' loaded ' + el() + ' ' + MB(sumB()) + ' MB so far'); return; } await p.waitForTimeout(1000); } info(what + ': loads not all done'); }
@@ -415,6 +415,29 @@ const BREAKDOWN = (spot) => {
       // (Nov 23, owner's list 1-14) report only, never a gate: after the timed window (so it costs the timing nothing), AUDIT_S s more of the same fight with the bot on,
       // then the counts of tools/audit_page.js (textures, programs, draws per machine, culling, lights, shadows, see-through draws, sim and posing cost) as 'AUDIT <tier> <spot> {...}'. AUDIT=0: off
       if (process.env.AUDIT !== '0') { try { await p.addScriptTag({ path: path.join(__dirname, 'audit_page.js') }); await p.evaluate(() => window.__auditStart()); await p.waitForTimeout(1000 * +(process.env.AUDIT_S || 5)); console.log('AUDIT ' + tier + ' ' + spot + ' ' + JSON.stringify(await p.evaluate(() => window.__audit()))); } catch (e) { console.log('INFO AUDIT failed: ' + String(e).slice(0, 160)); } }
+      // GSPLIT=1 (Nov 23, owner 13:10 "all this was done to increase frame rate"): what the night picture costs the graphics chip, part by part. With the fight still
+      // running, each part is hidden for GS_S s between two stretches with everything shown, GPU ms of the main pass and of all passes (?gputime=1) and frame times read
+      // for each; report only. Parts: street (world), room, Gloom, see-through, scenery (grass/trees), house lamps (shader lamps off), hands, pixel ratio 1.0.
+      if (process.env.GSPLIT) { try { const S = +(process.env.GS_S || 3);
+        const res = await p.evaluate(async (S) => { const g = window.__game, sc = g.scene, R = g.renderer, raf = () => new Promise((r) => requestAnimationFrame(r)), wait = (ms) => new Promise((r) => setTimeout(r, ms));
+          const meas = async () => { g.gpuTime(true); const t0 = performance.now(); let n = 0, worst = 0, last = t0; while (performance.now() - t0 < S * 1000) { await raf(); const now = performance.now(); worst = Math.max(worst, now - last); last = now; n++; } const q = g.gpuTime(false) || {}; const ms = q; return { fps: +(n / ((performance.now() - t0) / 1000)).toFixed(1), main: ms.main !== undefined ? +ms.main.toFixed(2) : null, gpu: q.gpu !== undefined ? +q.gpu.toFixed(2) : null, shadow: ms.shadow !== undefined ? +ms.shadow.toFixed(2) : 0, worst: Math.round(worst) }; };
+          const hideList = (pred) => { const l = []; sc.traverse((o) => { if (o !== sc && pred(o) && o.visible) l.push(o); }); return { on: () => l.forEach((o) => { o.visible = false; }), off: () => l.forEach((o) => { o.visible = true; }), n: l.length }; };
+          const isGloom = (o) => !!(o.userData && o.userData.kind && o.userData.anim && o.parent === sc);
+          const W = g.world && g.world.g; let room = null; for (const c of sc.children) if (c !== W && c.isGroup && c.children.length && c.getObjectByProperty && !isGloom(c) && c.userData && c.userData.room) room = c;
+          const parts = {
+            street: W ? { on: () => { W.visible = false; }, off: () => { W.visible = true; }, n: 1 } : null,
+            scenery: W ? hideList((o) => o.isMesh && o.userData && o.userData.scenery) : null,
+            gloom: hideList(isGloom),
+            seeThrough: hideList((o) => (o.isMesh || o.isSprite || o.isPoints) && o.material && !Array.isArray(o.material) && o.material.transparent),
+            lamps: { on: () => g.lampsOff(true), off: () => g.lampsOff(false), n: 1 },
+            hands: { on: () => { window.__noHands = true; }, off: () => { window.__noHands = false; }, n: 1 },
+            ratio10: { on: () => { window.__pr0 = R.getPixelRatio(); R.setPixelRatio(1); }, off: () => { R.setPixelRatio(window.__pr0); }, n: 1 } };
+          const out = []; await meas();
+          for (const [k, P] of Object.entries(parts)) { if (!P) continue; const a = await meas(); P.on(); await raf(); await raf(); const b = await meas(); P.off(); await raf(); await raf(); const c = await meas();
+            out.push({ part: k, pieces: P.n, shown: { fps: +((a.fps + c.fps) / 2).toFixed(1), main: a.main !== null && c.main !== null ? +((a.main + c.main) / 2).toFixed(2) : null, gpu: a.gpu !== null && c.gpu !== null ? +((a.gpu + c.gpu) / 2).toFixed(2) : null }, hidden: b }); }
+          return out; }, S);
+        for (const r of res) console.log('GSPLIT ' + tier + ' ' + spot + ' ' + r.part + ' (' + r.pieces + ' pieces): shown ' + r.shown.fps + ' fps, GPU main ' + r.shown.main + ' ms, all ' + r.shown.gpu + ' ms | hidden ' + r.hidden.fps + ' fps, GPU main ' + r.hidden.main + ' ms, all ' + r.hidden.gpu + ' ms | saves ' + (r.shown.gpu !== null && r.hidden.gpu !== null ? (r.shown.gpu - r.hidden.gpu).toFixed(2) : '?') + ' ms GPU a frame');
+      } catch (e) { console.log('INFO GSPLIT failed: ' + String(e).slice(0, 200)); } }
       // scene nodes per kind at this moment (owner 09:50: the matrix pass is a top cost): street, room, each Gloom machine, boss, devices, the rest; and bones
       console.log('INFO combat ' + tier + ' ' + spot + ' scene nodes: ' + await p.evaluate(() => { const g = window.__game, sc = (() => { let q = g.world.g; while (q.parent) q = q.parent; return q; })(); const cnt = (o) => { let n = 0; o.traverse(() => n++); return n; };
         const out = { street: 0, frozenStreet: 0, gloom: 0, gloomN: 0, gloomCulled: 0, boss: 0, other: 0 }, bones = { n: 0, max: 0 }; const dev = new Set();
