@@ -1,0 +1,196 @@
+$ set -x; for s in title house gloom boss street base; do SCALE=1.5 timeout 1500 node tools/itchshot.cjs $s shots/$s 2>&1 | grep -E "^INFO|^FAIL|CATVIEW" | cut -c1-200; done; ls -R shots | head -80   (limit 150 min)
++ for s in title house gloom boss street base
++ SCALE=1.5
++ timeout 1500 node tools/itchshot.cjs title shots/title
++ grep -E '^INFO|^FAIL|CATVIEW'
++ cut -c1-200
+INFO page up 4 s
+INFO splash phase title
+INFO title font Georgia, serif 700 110px | tag Georgia, serif
+INFO stitle box {"x":51.203125,"y":266,"w":1177.59375,"h":188}
+INFO wrote title_card.png and title_alpha.png
++ for s in title house gloom boss street base
++ SCALE=1.5
++ timeout 1500 node tools/itchshot.cjs house shots/house
++ grep -E '^INFO|^FAIL|CATVIEW'
++ cut -c1-200
+INFO page up 3 s
+INFO base loaded 99 s {"hi":true,"q":{"asked":31,"ok":31,"failed":0,"used":48},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"r
+INFO run loaded 197 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":121},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"
+INFO run {"ring":2,"cat":2,"houses":[{"i":0,"n":18,"L":2,"door":["42.7","-5.6"],"row":-1},{"i":1,"n":16,"L":2,"door":["-4.7","-6.0"],"row":-1},{"i":2,"n":14,"L":2,"door":["-44.0","6.5"],"row":1},{"i":
+INFO house 5
+INFO openings [[0,"door","69.8/135.1"],[1,"window","8.6/42.7/73.6/100.1"],[2,"gap","6/38/102.6/136"],[4,"window","6.7/36.4/99/103.8"],[5,"door","11/39.3/40.3/68.4"],[7,"window","5.4/37.9/68.9/73.6"],[
+INFO second opening {"x":5.9750000000000005,"z":-7.275,"d":4.014285714285717,"type":"window","i":4}
+INFO placed ok,ok,ok,ok
+INFO moment 5 m {"ok":true,"t":14.850000000000085} [["lantern","approach",2,13,1.6],["walker","block",4,6,-8.7],["lurcher","cross",1,2.2,6.5],["stilt","approach",5,2.4,-11.8]]
+INFO wrote shots/house/house_00.png (484 s) cam 1.96,1.60,-1.88 yaw 0.000 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_00: none
+INFO wrote shots/house/house_01.png (576 s) cam 2.96,1.60,-2.68 yaw 0.275 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_01: none
+INFO wrote shots/house/house_02.png (662 s) cam 0.96,1.60,-2.68 yaw -0.275 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_02: none
+INFO wrote shots/house/house_03.png (744 s) cam 1.36,1.60,-1.08 yaw -0.116 | HUD marla="Shadows on your left. Your problem, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_03: none
+INFO moment 2.5 m {"ok":true,"t":16.950000000000095} [["lantern","approach",2,13,1.6],["lurcher","inside",1,2,3],["stilt","approach",5,2,-9.2]]
+INFO wrote shots/house/house_10.png (881 s) cam 1.96,1.60,-1.88 yaw 0.000 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_10: none
+INFO wrote shots/house/house_11.png (972 s) cam 2.96,1.60,-2.68 yaw 0.275 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_11: none
+INFO wrote shots/house/house_12.png (1057 s) cam 0.96,1.60,-2.68 yaw -0.275 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_12: none
+INFO wrote shots/house/house_13.png (1138 s) cam 1.36,1.60,-1.08 yaw -0.116 | HUD marla="Ticks. Weak, but quick. Aim low." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs=""
+CATVIEW house_13: none
++ for s in title house gloom boss street base
++ SCALE=1.5
++ timeout 1500 node tools/itchshot.cjs gloom shots/gloom
++ grep -E '^INFO|^FAIL|CATVIEW'
++ cut -c1-200
+INFO page up 4 s
+INFO base loaded 82 s {"hi":true,"q":{"asked":31,"ok":31,"failed":0,"used":48},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"r
+INFO run loaded 179 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":121},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"
+INFO run {"ring":2,"cat":2,"houses":[{"i":0,"n":18,"L":2,"door":["42.7","-5.6"],"row":-1},{"i":1,"n":16,"L":2,"door":["-4.7","-6.0"],"row":-1},{"i":2,"n":14,"L":2,"door":["-44.0","6.5"],"row":1},{"i":
+INFO house 5
+INFO night: first Gloom {"t":4.399999999999992,"kind":"walker","bp":7,"b":{"x":-7.275,"z":-5.196428571428571,"nx":1,"nz":0,"type":"window","floor":0},"H":7.275,"n":11}
+INFO turbine ok
+INFO close Gloom {"ok":true,"t":12.800000000000047}
+INFO target {"kind":"walker","d":"3.14","phase":"inside"}
+INFO fired [{"hit":true,"head":false}]
+INFO wrote shots/gloom/gloom_0.png (527 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="Gloom on your left. Look awake, Potts." csay="" msg="" bprompt="" bstat="" time="DAWN IN 11h 00m" hs=""
+CATVIEW gloom_0: none
+INFO close Gloom {"ok":true,"t":15.700000000000037}
+INFO target {"kind":"walker","d":"0.90","phase":"inside"}
+INFO fired [{"hit":true,"head":true}]
+INFO wrote shots/gloom/gloom_1.png (899 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="I am not carrying you home twice." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 40m" hs="HEADSHOT x2"
+CATVIEW gloom_1: none
+INFO close Gloom {"ok":true,"t":18.40000000000007}
+INFO target {"kind":"walker","d":"0.90","phase":"inside"}
+INFO fired [{"hit":true,"head":true}]
+INFO wrote shots/gloom/gloom_2.png (1253 s) cam -2.68,1.60,-5.20 yaw 1.571 | HUD marla="I am not carrying you home twice." csay="" msg="" bprompt="" bstat="" time="DAWN IN 10h 30m" hs="HEADSHOT x2"
+CATVIEW gloom_2: none
+INFO close Gloom {"ok":true,"t":21.100000000000108}
+INFO target {"kind":"walker","d":"0.90","phase":"inside"}
+INFO fired [{"hit":true,"head":false}]
+FAIL crashed: page.screenshot: Target page, context or browser has been closed
++ for s in title house gloom boss street base
++ grep -E '^INFO|^FAIL|CATVIEW'
++ SCALE=1.5
++ timeout 1500 node tools/itchshot.cjs boss shots/boss
++ cut -c1-200
+INFO page up 4 s
+INFO base loaded 82 s {"hi":true,"q":{"asked":31,"ok":31,"failed":0,"used":48},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"r
+INFO run loaded 184 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":121},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"
+INFO run {"ring":4,"cat":2,"houses":[{"i":0,"n":22,"L":3,"door":["43.5","-6.3"],"row":-1},{"i":1,"n":20,"L":3,"door":["-4.3","-6.6"],"row":-1},{"i":2,"n":18,"L":2,"door":["-42.7","5.6"],"row":1},{"i":
+INFO boss {"model":"none","built":null,"boss":false}
+FAIL crashed: page.evaluate: TypeError: Cannot read properties of null (reading 'act')
++ for s in title house gloom boss street base
++ SCALE=1.5
++ timeout 1500 node tools/itchshot.cjs street shots/street
++ grep -E '^INFO|^FAIL|CATVIEW'
++ cut -c1-200
+INFO page up 4 s
+INFO base loaded 82 s {"hi":true,"q":{"asked":31,"ok":31,"failed":0,"used":48},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"r
+INFO run loaded 176 s {"hi":true,"q":{"asked":66,"ok":66,"failed":0,"used":121},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"
+INFO run {"ring":1,"cat":2,"houses":[{"i":0,"n":16,"L":2,"door":["43.3","-6.0"],"row":-1},{"i":1,"n":14,"L":2,"door":["-4.0","-6.5"],"row":-1},{"i":2,"n":12,"L":2,"door":["-44.8","6.9"],"row":1},{"i":
+INFO street wait marla="Something waves in a house with 12 openings." csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 11h 00m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 10h 30m" hs=""
+INFO looted house 0 {"n":4,"food":4,"ess":2}
+INFO looted house 1 {"n":2,"food":10,"ess":2}
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 9h 00m" hs=""
+INFO street wait marla="" csay="" msg="" bprompt="" bstat="" time="DAYLIGHT LEFT 8h 30m" hs=""
+INFO sleepers [{"i":0,"kind":"stilt","x":14.13647524267435,"z":10.076746499165893,"awake":0},{"i":1,"kind":"lurcher","x":17.997025337070227,"z":-10.164966720389202,"awake":0},{"i":2,"kind":"walker","x
+INFO wrote shots/street/street_0.png (537 s) cam 8.64,1.60,-0.80 yaw -2.973 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 8h 10m" hs=""
+CATVIEW street_0: none
+INFO wrote shots/street/street_1.png (635 s) cam 6.14,1.60,1.50 yaw -2.141 | HUD marla="" csay="" msg="" bprompt="Stand by Marla to change your devices" bstat="" time="DAYLIGHT LEFT 8h 10m" hs=""
+CATVIEW street_1: none
+INFO wrote shots/street/street_2.png (719 s) cam 12.50,1.60,0.80 yaw -0.765 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 8h 10m" hs=""
+CATVIEW street_2: none
+INFO wrote shots/street/street_3.png (813 s) cam 10.00,1.60,-1.50 yaw -0.496 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 8h 10m" hs=""
+CATVIEW street_3: none
+INFO wrote shots/street/street_4.png (908 s) cam -15.71,1.60,0.80 yaw 0.843 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 8h 10m" hs=""
+CATVIEW street_4: none
+INFO wrote shots/street/street_5.png (1032 s) cam -13.21,1.60,-1.50 yaw 0.616 | HUD marla="" csay="" msg="" bprompt="Walk to a house door" bstat="" time="DAYLIGHT LEFT 8h 10m" hs=""
+CATVIEW street_5: none
+INFO wrote shots/street/street_6.png (1140 s) cam -5.89,1.60,0.80 yaw 0.777 | HUD marla="" csay="" msg="" bprompt="Walk in the door: 9 food, 6 essentials inside · 14 openings to guard · 2 floors" bsta
+CATVIEW street_6: none
+INFO wrote shots/street/street_7.png (1249 s) cam -3.39,1.60,-1.50 yaw 0.514 | HUD marla="" csay="" msg="" bprompt="Walk in the door: 9 food, 6 essentials inside · 14 openings to guard · 2 floors" bst
+CATVIEW street_7: none
++ for s in title house gloom boss street base
++ SCALE=1.5
++ timeout 1500 node tools/itchshot.cjs base shots/base
++ grep -E '^INFO|^FAIL|CATVIEW'
++ cut -c1-200
+INFO page up 4 s
+INFO base loaded 85 s {"hi":true,"q":{"asked":31,"ok":31,"failed":0,"used":48},"marla":true,"glb":true,"people":true,"G":{"walker":"ready","lurcher":"ready","ticks":"ready","hauler":"ready","stilt":"r
+INFO wrote shots/base/base_0.png (221 s) cam 10.74,1.60,-7.09 yaw -0.071 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · Peop
+CATVIEW base_0: none
+INFO wrote shots/base/base_1.png (302 s) cam 11.22,1.60,-6.92 yaw 0.142 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · Peopl
+CATVIEW base_1: none
+INFO wrote shots/base/base_2.png (383 s) cam 8.73,1.60,-8.12 yaw -0.367 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · Peopl
+CATVIEW base_2: none
+INFO wrote shots/base/base_3.png (461 s) cam 14.73,1.60,-9.37 yaw 0.437 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · ne
+CATVIEW base_3: none
+INFO wrote shots/base/base_4.png (541 s) cam 7.61,1.60,-9.22 yaw -0.629 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · ne
+CATVIEW base_4: none
+INFO wrote shots/base/base_5.png (624 s) cam 11.86,1.60,-6.67 yaw 0.219 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · Peopl
+CATVIEW base_5: none
+INFO wrote shots/base/base_6.png (710 s) cam 16.00,1.61,-9.00 yaw 0.785 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · ne
+CATVIEW base_6: base hideout 2 at 24.5 m
+INFO wrote shots/base/base_7.png (790 s) cam 10.60,1.62,-11.25 yaw -0.427 | HUD marla="" csay="" msg="" bprompt="" bstat="Day 6 · Food 23 · Essentials 9 · People 3 · Goal: survive a night in ring 5 · 
+CATVIEW base_7: none
+INFO wrote shots/base/base_8.png (869 s) cam 7.00,1.62,-8.00 yaw -0.512 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · Peopl
+CATVIEW base_8: none
+INFO wrote shots/base/base_9.png (955 s) cam 6.47,1.62,-6.52 yaw -0.507 | HUD marla="" csay="" msg="" bprompt="E: Garden (food, and welcoming new people)" bstat="Day 6 · Food 23 · Essentials 9 · Peopl
+CATVIEW base_9: none
++ ls -R shots
++ head -80
+shots:
+base
+boss
+gloom
+house
+street
+title
+
+shots/base:
+base_0.png
+base_1.png
+base_2.png
+base_3.png
+base_4.png
+base_5.png
+base_6.png
+base_7.png
+base_8.png
+base_9.png
+
+shots/boss:
+
+shots/gloom:
+gloom_0.png
+gloom_1.png
+gloom_2.png
+
+shots/house:
+house_00.png
+house_01.png
+house_02.png
+house_03.png
+house_10.png
+house_11.png
+house_12.png
+house_13.png
+
+shots/street:
+street_0.png
+street_1.png
+street_2.png
+street_3.png
+street_4.png
+street_5.png
+street_6.png
+street_7.png
+
+shots/title:
+title_alpha.png
+title_card.png
+exit code 0
