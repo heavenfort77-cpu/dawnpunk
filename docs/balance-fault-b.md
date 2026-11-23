@@ -32,3 +32,14 @@ Bots only (logic sim, src/bots.js); no human has played these numbers. Fresh sav
 - Signal check (60 nights per ring per bot): on clean nights the bots overlap. Median nearest Gloom 5.1 / 5.5 / 6.5 m (novice / average / expert, ring 2); killed before getting inside 48 / 51 / 61%; the battery reaches 0 after 30 s for all three. No single-night signal picks out the strong player.
 - Surge (temporary src/sim.js patch, reverted): when the house is empty early and the next machine is over 6 s away, the next ones come at once plus 2 extra (up to +25% of the night). Ring 2 win: novice 80 -> 67%, average 90 -> 88%, expert 100 -> 100% (hurt 2 -> 2%). The early waves leave every bot a quiet gap, so it lands on the weak player first.
 - So far no automatic lever is selective. What the numbers do support: extra machines bite a strong player at about x1.3 (expert ring 3: win 98 -> 73%, hurt 5 -> 38%), which would wreck novice (ring 3 win 60 -> 13%). That points to a choice the player makes (a harder night for more loot, like the lure cat), not a change for everyone. Owner's call.
+
+## 5. Owner 23:23-23:25: "no challenge for ring 1 to 3"; no more machines (frame rate has no headroom, see the lag hand-overs)
+Tougher machines, same number (fresh saves, 48 nights per ring per bot; win / hurt; most alive at once median / 90%):
+| change | novice r1 / r2 / r3 | average r1 / r2 / r3 | expert r1 / r2 / r3 | sharp (97% aim) r1 / r2 / r3 | most alive r3 |
+|---|---|---|---|---|---|
+| now | 94/23, 81/42, 56/58 | 100/2, 88/31, 85/21 | 100/0, 100/2, 98/4 | 100/0, 100/2, 98/4 | 17-18 / 24-25 |
+| damage x1.5 | 83/33, 58/58, 54/67 | 96/13, 75/48, 73/31 | 100/0, 100/2, 92/15 | 100/2, 100/2, 92/8 | 17-18 / 24-25 |
+| damage x2 | 77/33, 52/56, 42/71 | 90/23, 58/56, 67/52 | 98/4, 98/6, 88/15 | 100/2, 98/4, 92/10 | 17-18 / 22-25 |
+| health x1.3 | 50/56, 25/85, 17/92 | 73/42, 50/69, 35/90 | 94/6, 92/10, 67/50 | 94/13, 94/10, 63/54 | 16-19 / 19-25 |
+- Most alive at once does not rise with tougher machines (frame-rate safe).
+- Same pattern as every lever before: weak bots lose long before the strong ones are touched on rings 1-2.

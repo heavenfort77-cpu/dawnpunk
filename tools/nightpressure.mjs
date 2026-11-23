@@ -5,6 +5,7 @@
 import { runBot, SKILLS } from '../src/bots.js'; import { CONFIG } from '../src/config.js';
 const LEARN = ['turbine', 'turbine', 'panel', 'panel', 'lance', 'panel', 'panel', 'lance', 'lance', 'panel', 'panel', 'lance', 'lance', 'lance', 'panel'];
 SKILLS.learned = { ...SKILLS.average, startAt: 1, gap: 1, reserve: 4, build: LEARN };
+SKILLS.sharp = { ...SKILLS.expert, hit: 0.97, react: 0.15 }; // stand-in for a strong human: near-perfect aim, fast reaction
 const cm = JSON.parse(process.env.CM || 'null') || CONFIG.ring.countMult, cfg = { ...CONFIG, gloom: { ...CONFIG.gloom, ...JSON.parse(process.env.G || '{}') }, ring: { ...CONFIG.ring, countMult: cm } };
 const med = (a) => (a.length ? a.slice().sort((x, y) => x - y)[a.length >> 1] : NaN);
 for (const prof of (process.env.P || 'novice,average,expert,learned').split(',')) { const out = [];
