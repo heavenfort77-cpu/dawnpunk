@@ -416,12 +416,12 @@ export function createSim(opts = {}) {
         if (c.t <= 0) { g.floor = c.to; g.climb = null; }
       } else {
         let tgt = p, td = dist(g, p) + FP * Math.abs(g.floor - p.floor);
-        for (const dv of s.devices) { const dc = cfg.devices[dv.kind]; if (dc.noTarget) continue; const dd = dist(g, dv) + FP * Math.abs(g.floor - dv.floor) - (dc.pull || 0); if (dd < td) { td = dd; tgt = dv; } }
+        for (const dv of s.devices) { const dc = cfg.devices[dv.kind]; if (dc.noTarget) continue; const dd = dist(g, dv) + FP * Math.abs(g.floor - dv.floor) - (dc.pull || 0) - (dc.group === 'power' ? (KD(g).seekPower || 0) : 0); if (dd < td) { td = dd; tgt = dv; } }
         if (tgt.floor === g.floor) {
           // a tamed lesson machine halts this far short of you (g.tm.stop), facing you, and does not strike
           if (g.tm && g.tm.stop > 0 && tgt === p && dist(g, p) <= g.tm.stop) g.face = Math.atan2(g.x - p.x, g.z - p.z);
           else if (dist(g, tgt) > cfg.gloom.reach * KD(g).reach) moveToward(g, tgt.x, tgt.z, dt);
-          else if (g.cd <= 0) { g.cd = cfg.gloom.cooldown; if (tgt === p) { p.hp -= dmg * KD(g).dmg * (g.tm ? g.tm.dmg : 1); s.log.push({ e: 'hurt', id: g.id, kind: g.kind }); } else hurtDevice(tgt, dmg * KD(g).wall); }
+          else if (g.cd <= 0) { g.cd = cfg.gloom.cooldown; if (tgt === p) { p.hp -= dmg * KD(g).dmg * (g.tm ? g.tm.dmg : 1); s.log.push({ e: 'hurt', id: g.id, kind: g.kind }); } else { hurtDevice(tgt, dmg * KD(g).wall); const sp = KD(g).splash; if (sp) for (const o of s.devices.slice()) if (o !== tgt && o.floor === tgt.floor && !cfg.devices[o.kind].wall && Math.hypot(o.x - tgt.x, o.z - tgt.z) <= sp) hurtDevice(o, dmg * KD(g).wall); } } // splash: m round its target that a blow on a device also reaches (other devices)
         } else {
           // different floor: use the stairs (never the ladder)
           const up = tgt.floor > g.floor, st = stairs.find((q) => q.f === (up ? g.floor : g.floor - 1));
@@ -441,9 +441,9 @@ export function createSim(opts = {}) {
       else if (d.shooter) {
         dv.cd = Math.max(0, dv.cd - dt);
         if (dv.cd <= 0 && p.energy >= d.shotCost) {
-          let tg = null, bd = d.range;
-          for (const g of s.gloom) { if (!seen(g, dv.floor) || (!d.lob && !openOK(dv.x, dv.z, g))) continue; const dd = dist(g, dv); if (dd <= bd) { bd = dd; tg = g; } }
-          if (tg) { dv.cd = 1 / d.rate; addEnergy(-d.shotCost); s.log.push({ e: 'lance', kind: dv.kind, x: dv.x, z: dv.z, tx: tg.x, tz: tg.z, floor: dv.floor }); if (d.slow) tg.slowT = d.slowTime; damageGloom(tg, d.dmg * (d.shots || 1) * boostAt(dv)); }
+          let tg = null, bd = d.range, bdx = 1e9; // turretPrefer (m): an armoured Gloom (kinds' turret < 1) counts as this much farther, so a turret shoots the others first
+          for (const g of s.gloom) { if (!seen(g, dv.floor) || (!d.lob && !openOK(dv.x, dv.z, g))) continue; const dd = dist(g, dv) + (KD(g).turret !== undefined && KD(g).turret < 1 ? cfg.turretPrefer || 0 : 0); if (dd <= bd + (cfg.turretPrefer || 0) && dd <= bdx) { bdx = dd; tg = g; } }
+          if (tg) { dv.cd = 1 / d.rate; addEnergy(-d.shotCost); s.log.push({ e: 'lance', kind: dv.kind, x: dv.x, z: dv.z, tx: tg.x, tz: tg.z, floor: dv.floor }); if (d.slow) tg.slowT = d.slowTime; damageGloom(tg, d.dmg * (d.shots || 1) * boostAt(dv) * (KD(tg).turret !== undefined ? KD(tg).turret : 1)); } // turret: share of a turret's damage this kind takes (CONFIG.gloom.kinds)
         }
       } else if (dv.kind === 'mine') {
         dv.arm = Math.max(0, (dv.arm === undefined ? d.arm : dv.arm) - dt);

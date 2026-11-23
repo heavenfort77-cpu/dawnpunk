@@ -1,0 +1,6 @@
+// The test.js ring-1 balance checks (200 nights) under kind overrides, measuring only. Usage: node tools/strategygates.mjs '{"walker+hauler+warden":{"turret":0.4}}'   env PREF.
+import { CONFIG } from '../src/config.js'; import { runBot } from '../src/bots.js';
+const V = JSON.parse(process.argv[2]), K = { ...CONFIG.gloom.kinds }; for (const [k, o] of Object.entries(V)) for (const kk of (k === '*' ? Object.keys(K) : k.split('+'))) K[kk] = { ...K[kk], ...o };
+const cfg = { ...CONFIG, turretPrefer: +(process.env.PREF || 0), gloom: { ...CONFIG.gloom, kinds: K } }, N = 200, w = (h, sk) => { let k = 0; for (let s = 1; s <= N; s++) if (runBot(sk, cfg, 0, h, s).win) k++; return Math.round(100 * k / N); };
+const NB = { ...cfg, boss: { ...cfg.boss, on: false } }, rc = [0, 1, 2, 3, 4].map((r) => { let k = 0; for (let i = 1; i <= 60; i++) if (runBot('stacker', NB, r, 0, i).win) k++; return Math.round(100 * k / 60); });
+console.log(process.argv[2], '| test.js ring-1 gates: 4-BP novice', w(5, 'novice') + '% (>=85)', '| 14-BP stacker', w(0, 'stacker') + '% (75-95)', '| 14-BP novice', w(0, 'novice') + '% (< stacker)', '| 14-BP expert', w(0, 'expert') + '% (>= stacker)', '| ring curve stacker', rc.join('/'), '(r1>=60, r5<=40, steps<=50)');
