@@ -325,7 +325,8 @@ export const MARLA_JOURNAL = [
 ];
 export const MARLA_JOURNAL_END = 'Same as always. He came back. Good.';
 // the unlocked lines in order: trips + 1 of them, the closing line after the 30th
-export function marlaJournal(save) { const n = ((save && save.trips) || 0) + 1, out = []; for (let i = 0; i < n; i++) out.push(i < MARLA_JOURNAL.length ? MARLA_JOURNAL[i] : MARLA_JOURNAL_END); return out; }
+// capped at 5000 entries: a damaged save's trips (bugprobe_logic: 1e12) must not build a 1e12-line journal; real saves never reach it (one trip a night)
+export function marlaJournal(save) { const t = save && Number.isFinite(save.trips) ? Math.max(0, save.trips) : 0, n = Math.min(t + 1, 5000), out = []; for (let i = 0; i < n; i++) out.push(i < MARLA_JOURNAL.length ? MARLA_JOURNAL[i] : MARLA_JOURNAL_END); return out; }
 export const marlaJournalUnread = (save) => marlaJournal(save).length > ((save && save.mjRead) || 0);
 export function readMarlaJournal(save) { const L = marlaJournal(save); save.mjRead = L.length; return L; }
 // the margin label of entry i (owner Nov 17 13:22): the first entry is there before any trip, so it is "First day."; entry i after it is "Trip i."
