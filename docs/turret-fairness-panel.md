@@ -95,3 +95,21 @@ Win % / hit % on rings 1-5:
 - Watch, not changed: the upstairs fort is the strongest late strategy for weak aim (novice ring 4 81% vs the turtle's 53%) but is hit on 50-60% of nights; the kill box depends on the assumption that head shots over a panel are as easy as open ones.
 - Not an exploit but open: at expert aim nearly every strategy wins rings 1-3 with hits on 0-17% of nights. The challenge for a strong player on rings 1-3 is still small.
 - New check: test.js 'exploits: none of the known abuse strategies wins every night unhit on rings 1-3 at novice or average aim'.
+
+## Panel round 4 (owner Nov 24 10:53: "panel decide a version that suits all 5 rings without increasing frame rate")
+Whole-game numbers (tools/campaignsuite.mjs: 16 saves x 10 nights per strategy and aim, the highest open ring each night). Before: novice aim beats the boss within 10 nights only with the upstairs fort (night 6); average aim by night 6 with half the strategies; expert aim wins almost every night, the gunner / traps / prism gunner hit on 0-16% of nights on every ring.
+- **Lane-defence designer:** "One fixed curve can't serve a 55% aimer and a 90% aimer. Let the curve follow the player."
+- **FPS-tower designer:** "No new machines, so raise what each machine can take and deal, and only for a house that keeps winning clean."
+- **Phone player:** "If I get hurt, leave me alone."
+- **Veteran:** "And tell me on the night card, or it's a hidden rubber band."
+- **Trap designer:** "A menu choice ('hard nights') is the other way; it needs a screen and players pick wrong. Do the automatic one first."
+Versions tested (health and damage per level; expert / average first boss win, median night):
+| version | expert | average | note |
+|---|---|---|---|
+| +10% per level, every clean win | rings 2-5 hit 6-70% | boss nights 8-9 (was 6) | slows average: everyone wins night 1 clean |
+| same, a hit night -1 | rings 2-5 hit 6-58% | boss nights 7-9 | still slows average |
+| +10%, two clean wins in a row | rings 3-5 hit 6-63% | unchanged (6-7) | strongest strategies still barely hit on ring 4 |
+| **+15%, two clean wins in a row, a hit night -1, a loss -2, max 5** | rings 3-4 hit 19-76%, boss 36-88% win (the hardest night for every strategy) | unchanged (6-7); novice unchanged (fort night 6) | **chosen** |
+- Agreed: CONFIG.attention as above; the night card says "They have noticed this house: tougher tonight (level n of 5)."; nights 1-2 stay gentle for everyone (onboarding; a strong player replaying rings 1-2 later meets his level there).
+- Frame rate: no extra machines; most alive at once unchanged.
+- Built: src/base.js applyNight keeps save.attn / attnStreak from result.dmgTaken (src/sim.js records it); attentionMul; sim opts.toughDmg; test.js 5 attention checks.

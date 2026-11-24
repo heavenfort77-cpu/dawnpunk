@@ -385,7 +385,7 @@ export function createSim(opts = {}) {
       s.gloom.push({ id: s.nextId++, kind, x: fr ? fr.x : b.outX - b.nx * 9 + tx * j, z: fr ? fr.z : b.outZ - b.nz * 9 + tz * j, floor: 0, hp: cfg.gloom.hp * strength * toughHp * sp.hpv * khp, maxhp: cfg.gloom.hp * strength * toughHp * sp.hpv * khp, phase: 'approach', bp: sp.bp, timer: 0, cd: 0, face: 0 }); s.log.push({ e: 'alert', k: b.floor > 0 ? 'upper' : 'inbound', floor: b.floor, x: b.x, z: b.z });
     }
     // gloom
-    const dmg = cfg.gloom.dmg * strength, FP = cfg.floorPenalty;
+    const dmg = cfg.gloom.dmg * strength * (opts.toughDmg || 1), FP = cfg.floorPenalty; // toughDmg: CONFIG.attention (src/base.js attentionMul)
     // a Lantern hurries every other Gloom within its ring radius
     { const L = KINDS.lantern, ls = L && L.hurry ? s.gloom.filter((q) => q.kind === 'lantern') : []; for (const q of s.gloom) q.hurry = ls.some((l) => l !== q && Math.hypot(l.x - q.x, l.z - q.z) <= L.hurryR); }
     for (const g of s.gloom.slice()) {
@@ -502,8 +502,8 @@ export function createSim(opts = {}) {
     const lasted = s.t;
     const total = cfg.loot.perBP * n * cfg.ring.mult[ring];
     s.result = win
-      ? { win, ring, food: s.food, eaten: s.eaten, essentials: day ? s.ess + Math.max(s.devices.some((q) => q.kind === 'collector') ? 1 : 0, Math.round((s.devices.filter((q) => q.kind === 'collector').length / cfg.devices.collector.max) * cfg.day.collectorBonus * essTotal)) : Math.round(total * (1 - cfg.loot.foodShare)), collectors: s.devices.filter((q) => q.kind === 'collector').length, coins: s.coins }
-      : { win, ring, lasted, food: cfg.loot.minPayoutFood, essentials: 0, coins: s.coins };
+      ? { win, ring, dmgTaken: s.dmgTaken, food: s.food, eaten: s.eaten, essentials: day ? s.ess + Math.max(s.devices.some((q) => q.kind === 'collector') ? 1 : 0, Math.round((s.devices.filter((q) => q.kind === 'collector').length / cfg.devices.collector.max) * cfg.day.collectorBonus * essTotal)) : Math.round(total * (1 - cfg.loot.foodShare)), collectors: s.devices.filter((q) => q.kind === 'collector').length, coins: s.coins }
+      : { win, ring, lasted, dmgTaken: s.dmgTaken, food: cfg.loot.minPayoutFood, essentials: 0, coins: s.coins };
     if (s.boss) s.boss.reward(s.result); // the boss's bonus for broken paws and the coin-core (won nights only)
   }
   s.abandon = () => { if (!s.done) { finish(false); s.result.left = true; } }; // quitting counts as a loss: minimum payout only
@@ -511,5 +511,7 @@ export function createSim(opts = {}) {
   s.openAt = (ax, az, bx, bz, fl) => openOK(ax, az, { phase: 'approach', bp: 0, x: bx, z: bz, floor: fl, _fl: fl });
   // THE BECKONER (CONFIG.boss): on the boss ring's nights; opts.boss = false leaves it out (tests), true forces it
   s.boss = (opts.boss !== undefined ? opts.boss : !!(cfg.boss && cfg.boss.on && ring === cfg.boss.ring)) ? createBoss(s, cfg, opts, { spawns, breaches, finish, hurtDevice, openAt: s.openAt, addGloom: (k, o) => s.addGloom(k, o) }) : null;
+  // dmgTaken: health the player lost this night, from any cause (CONFIG.attention: a won night with less than attention.clean is a clean night)
+  { const stepIn = s.step; s.dmgTaken = 0; s.step = (dt) => { const h0 = s.player.hp; stepIn(dt); if (s.player.hp < h0) s.dmgTaken += h0 - s.player.hp; }; }
   return s;
 }

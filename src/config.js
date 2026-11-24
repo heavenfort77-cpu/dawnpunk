@@ -80,6 +80,11 @@ export const CONFIG = {
   //   (bots, 40 saves: ease 0 leaves novice and average about one night behind on the ring climb; 0.25 and 0.5 left them further behind)
   //   (Nov 24, with the turret armour on: re-tuned on tools/strategysuite.mjs so the rings still rise; [1.5, 1.35, 1.2] made rings 1-3 as hard as ring 4 at average aim)
   tough: { hp: [1.3, 1.2, 1.1, 1, 1], ease: 0 },
+  // ATTENTION (OWNER: "panel decide a version that suits all 5 rings without increasing frame rate", Nov 24; docs/turret-fairness-panel.md, tools/campaignsuite.mjs):
+  // the Gloom notice a house that keeps beating them. Level 0 to max, kept in the save. streak won nights in a row with less than clean damage taken -> level +1;
+  // a won night with more damage -> level - hitDown; a lost night -> level - down. Each level: machines' health x (1 + hp), their damage x (1 + dmg). Never more machines (frame rate).
+  //   bots, 16 saves x 10 nights: novice and average unchanged (first boss win nights 6-7 at average); expert hit on 19-76% of nights on rings 3-4, the boss night the hardest
+  attention: { hp: 0.15, dmg: 0.15, max: 5, clean: 1, streak: 2, hitDown: 1, down: 2, line: 'They have noticed this house: tougher tonight (level {n} of {max}).' },
   gloom: {
     hp: 20, speed: 1.4, dmg: 8, cooldown: 1.0, reach: 1.0,
     // maxAlive (OWNER DECISION Nov 20 14:51): most Gloom alive at once on any night, spawns and boss summons wait above it (src/sim.js); set from the Mac fps runs

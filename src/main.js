@@ -1020,7 +1020,7 @@ $('watch').textContent = 'Watch the opening';
 function startRun() { perfRest(); runModels(); queueMicrotask(() => sceneCard('ride'));
   fromBase = true; bview.dispose(); dropWorld(); $('scout').style.display = 'none'; ui = null;
   if (save) { B.markPending(save, +$('selRing').value); persist(); } // a reload before this night is banked counts as leaving it (src/base.js RELOAD = LEFT)
-  run = RUN.createRun(B.makeCfg(CONFIG, save), +$('selRing').value, (() => { try { const q = new URLSearchParams(location.search).get('seed'); if (q) return +q; } catch (e) { /* no address */ } return (Math.random() * 1e9) | 0; })(), { gloomMult: B.gloomMult(CONFIG, save), toughHp: B.toughHp(CONFIG, save, +$('selRing').value), extraEnergy: B.nightEnergyBonus(CONFIG, save), boss: B.bossNight(CONFIG, save, +$('selRing').value) });
+  run = RUN.createRun(B.makeCfg(CONFIG, save), +$('selRing').value, (() => { try { const q = new URLSearchParams(location.search).get('seed'); if (q) return +q; } catch (e) { /* no address */ } return (Math.random() * 1e9) | 0; })(), { gloomMult: B.gloomMult(CONFIG, save), toughHp: B.toughHp(CONFIG, save, +$('selRing').value) * B.attentionMul(CONFIG, save).hp, toughDmg: B.attentionMul(CONFIG, save).dmg, extraEnergy: B.nightEnergyBonus(CONFIG, save), boss: B.bossNight(CONFIG, save, +$('selRing').value) });
   if (run.houses.some((h) => h.sim && h.sim.boss)) bossPreload(); // desktop: the boss model loads while you walk the street (src/bosshi.js)
   $('msg').textContent = ''; flashT = 0;
   // a base line still on Marla's card (a base tip, said just before riding out) is cleared: it held back her first street line for the rest of its time, and base talk stays in the base
@@ -1117,7 +1117,7 @@ function start(viaBase) {
   fromBase = !!viaBase; run = null; hintQ.length = 0; clearScene(); dropWorld(); bview.dispose(); scene.remove(marla.root); kitOpen = false; $('kit').style.display = 'none'; sky.mesh.visible = false; scene.background = new THREE.Color(0x0b1020); scene.fog = new THREE.Fog(0x0b1020, 8, 34);
   $('hud').className = ''; $('bFire').textContent = 'FIRE'; $('scout').style.display = 'none';
   const ring = +$('selRing').value, house = +$('selHouse').value;
-  sim = createSim(fromBase ? { cfg: B.makeCfg(CONFIG, save), ring, house, seed: (Math.random() * 1e9) | 0, gloomMult: B.gloomMult(CONFIG, save), toughHp: B.toughHp(CONFIG, save, ring), extraEnergy: B.nightEnergyBonus(CONFIG, save), day: true, boss: B.bossNight(CONFIG, save, ring) } : { cfg: CONFIG, ring, house, seed: (Math.random() * 1e9) | 0, boss: false });
+  sim = createSim(fromBase ? { cfg: B.makeCfg(CONFIG, save), ring, house, seed: (Math.random() * 1e9) | 0, gloomMult: B.gloomMult(CONFIG, save), toughHp: B.toughHp(CONFIG, save, ring) * B.attentionMul(CONFIG, save).hp, toughDmg: B.attentionMul(CONFIG, save).dmg, extraEnergy: B.nightEnergyBonus(CONFIG, save), day: true, boss: B.bossNight(CONFIG, save, ring) } : { cfg: CONFIG, ring, house, seed: (Math.random() * 1e9) | 0, boss: false });
   yaw = 0; pitch = 0; camY = 1.6; buildRoom(); buildBreaches();
   $('menu').style.display = 'none'; $('end').style.display = 'none'; $('hud').style.display = 'block';
   state = 'play'; hurtT = 0; paused = false; $('pause').style.display = 'none';
@@ -1983,6 +1983,8 @@ function gpuDone(cap) { const gl = renderer.getContext(); let f = null; try { if
     if (ok || ms > cap) { try { gl.deleteSync(f); } catch (e) { /* lost */ } GPUQ.waits++; GPUQ.ms += ms; GPUQ.worst = Math.max(GPUQ.worst, ms); res(ms); } else requestAnimationFrame(poll); }; requestAnimationFrame(poll); }); }
 // the night card's second line (CONFIG.gloom.armourLine): the kinds tonight's ring can send that turrets barely scratch (kinds' turret < 1), e.g. 'Walkers, Haulers and Wardens'
 function armourLine(ring) { const K = CONFIG.gloom.kinds, n = Object.keys(K).filter((k) => K[k].turret !== undefined && K[k].turret < 1 && (K[k].minRing || 0) <= ring).map((k) => K[k].name + 's'); return n.length && CONFIG.gloom.armourLine ? CONFIG.gloom.armourLine.replace('{names}', n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0]) : ''; }
+// the night card's attention line (CONFIG.attention.line) when the save's level is above 0
+function attentionLine() { const A = CONFIG.attention, l = save ? save.attn || 0 : 0; return A && A.line && l > 0 ? ' ' + A.line.replace('{n}', l).replace('{max}', A.max) : ''; }
 async function sceneCard(kind) {
   const L = CONFIG.lag.card; if (!L || !L.on || LCARD.on) return; const id = ++LCARD.n, t0 = performance.now(), bot = BOTRUN(), fill = (k) => { $('lfill').style.width = Math.round(k * 100) + '%'; };
   // (owner 12:35) the card's time per step (LCARD.steps: [step, ms]), for perfcheck
@@ -2008,7 +2010,7 @@ async function sceneCard(kind) {
     add('hud', { up: 1 }); add('arc', { on: 1 }); add('darrow', { on: 1, up: 1 }); for (const k of ['marla', 'aim', 'msg']) add(k, { text: 1 }); }
   // (H, owner 13:04: the home card's draws were no-ops: draw() returns while holdDraw is set, and the held title menu left it set) the card's own draws always draw
   holdDraw = false; pauseDrawn = false; const pf0 = [RSTAT.renders, RSTAT.calls, nProg(), UPL.n, UPL.ms, UPL.bn, UPL.bms, GPUQ.waits, GPUQ.ms]; GPUQ.worst = 0;
-  LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; $('lcs').textContent = kind === 'night' ? armourLine(run ? run.ring || 0 : 0) : ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
+  LCARD.on = true; $('lct').textContent = L.titles[kind] || ''; $('lcs').textContent = kind === 'night' ? armourLine(run ? run.ring || 0 : 0) + attentionLine() : ''; if (kind === 'night') for (const l of glights) l.visible = true; else if (kind === 'ride') for (const l of glights) l.visible = false; fill(0.1); $('lcard').style.display = 'flex';
   try {
     // the night's models are waited for under the NIGHT card only: the ride card shows the day street, which does not need them (they keep loading behind it).
     // (Waiting on the ride card held the street hidden for up to maxWait s in the checks: playershadowcheck_desktop saw the card, not the street.)

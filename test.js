@@ -263,6 +263,19 @@ check('eating heals and costs carried food', (() => { const e = createSim({ cfg:
   const c = TB.newSave(CONFIG, 11); c.nights = 1; TB.markPending(c, 0); TB.applyNight(CONFIG, c, { win: true, ring: 0, food: 3, essentials: 2, coins: 0 }, 5); TB.writeSave(c, st); const k = TB.loadSave(CONFIG, st);
   check('reload = left: a banked night leaves no mark (reloading after dawn changes nothing)', !k.pending && !k.settledLeave && k.nights === 2, 'nights ' + k.nights); }
 
+// ATTENTION (Nov 24, panel: suits all 5 rings without more machines; CONFIG.attention)
+{ const TB = await import('./src/base.js'), A = CONFIG.attention, sv = TB.newSave(CONFIG, 12), night = (win, dmgTaken) => TB.applyNight(CONFIG, sv, { win, ring: 0, dmgTaken, food: 1, essentials: 1, coins: 0, lasted: 10 }, 1), lv = [];
+  for (let i = 0; i < A.streak; i++) night(true, 0); lv.push(sv.attn); night(true, A.clean + 5); lv.push(sv.attn); for (let i = 0; i < A.streak * 3; i++) night(true, 0); lv.push(sv.attn); night(false, 50); lv.push(sv.attn);
+  const want = [1, Math.max(0, 1 - A.hitDown), Math.min(A.max, Math.max(0, 1 - A.hitDown) + 3), Math.max(0, Math.min(A.max, Math.max(0, 1 - A.hitDown) + 3) - A.down)];
+  check('attention: streak clean wins raise the level, a hit night lowers it by hitDown, a loss by down, capped at max', JSON.stringify(lv) === JSON.stringify(want), lv.join('/') + ' want ' + want.join('/'));
+  const m = TB.attentionMul(CONFIG, { attn: 2 }); check('attention: level 2 = health and damage x (1 + 2 step)', Math.abs(m.hp - (1 + 2 * A.hp)) < 1e-9 && Math.abs(m.dmg - (1 + 2 * A.dmg)) < 1e-9, m.hp + '/' + m.dmg);
+  const s1 = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 4, toughDmg: 1.5 }), s0 = createSim({ cfg: CONFIG, ring: 0, house: 0, seed: 4 });
+  for (const w of [s1, s0]) { w.spawns.length = 0; w.player.x = 0; w.player.z = 0; w.player.hp = 1000; w.gloom.push({ id: 900, kind: 'walker', x: 0.3, z: 0, floor: 0, hp: 100, maxhp: 100, phase: 'inside', bp: 0, timer: 0, cd: 0, face: 0 }); for (let i = 0; i < 5; i++) w.step(0.05); }
+  check('attention: toughDmg x the damage a Gloom deals; the night records damage taken', Math.abs((1000 - s1.player.hp) - 1.5 * (1000 - s0.player.hp)) < 1e-6 && s0.player.hp < 1000 && Math.abs(s0.dmgTaken - (1000 - s0.player.hp)) < 1e-6, (1000 - s1.player.hp).toFixed(1) + ' vs ' + (1000 - s0.player.hp).toFixed(1));
+  const { campaign } = await import('./tools/campaignsuite.mjs'), V = { adapt: A }, cE = ['gunner', 'traps'].map((st) => [st, campaign(CONFIG, st, 'expert', 16, 10, V)]), cA = ['gunner', 'fort', 'traps'].map((st) => [st, campaign(CONFIG, st, 'average', 16, 10, V)]), cN = campaign(CONFIG, 'fort', 'novice', 16, 10, V);
+  check('attention: expert aim (gunner, traps) is hit on >= 15% of nights on rings 3 and 4, and wins the boss night less often than ring 4', cE.every(([, r]) => r.ring[2].hit >= 15 && r.ring[3].hit >= 15 && r.ring[4].win < r.ring[3].win), cE.map(([st, r]) => st + ' r3 ' + r.ring[2].win + '/' + r.ring[2].hit + ' r4 ' + r.ring[3].win + '/' + r.ring[3].hit + ' r5 ' + r.ring[4].win + '/' + r.ring[4].hit).join(' | '));
+  check('attention: average aim still beats the boss by night 8 (gunner, fort, traps; median of 16 saves) and novice aim (fort) within 10 nights', cA.every(([, r]) => r.boss <= 8) && cN.boss <= 10, cA.map(([st, r]) => st + ' night ' + r.boss).join(', ') + ', novice fort night ' + cN.boss); }
+
 // TOUGH (OWNER DECISION Nov 23 23:26, CONFIG.tough): rings 1-3 tougher machines from the second night, eased after a lost night, same number alive (frame rate)
 { const TB = await import('./src/base.js'), sv = TB.newSave(CONFIG, 5), t0 = TB.toughHp(CONFIG, sv, 0); sv.nights = 1; sv.lossRun = 0; const t1 = TB.toughHp(CONFIG, sv, 0), t4 = TB.toughHp(CONFIG, sv, 3);
   sv.lossRun = 1; const tl = TB.toughHp(CONFIG, sv, 0), want = 1 + (CONFIG.tough.hp[0] - 1) * CONFIG.tough.ease;
